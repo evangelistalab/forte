@@ -38,18 +38,18 @@ namespace forte {
 
 class ActiveSpaceIntegrals;
 
-class StateVector {
+class SparseState {
   public:
     /// Constructor
-    StateVector() = default;
+    SparseState() = default;
     /// Constructor from a map/dictionary (python friendly)
-    StateVector(const det_hash<double>& state_vec);
+    SparseState(const det_hash<double>& state_vec);
     /// @return the map that holds the determinants
     det_hash<double>& map() { return state_vec_; }
     /// @return the map that holds the determinants
     const det_hash<double>& map() const { return state_vec_; }
     /// @return true if the two states are identical
-    bool operator==(const StateVector& lhs) const;
+    bool operator==(const SparseState& lhs) const;
     /// @return a string representation of the object
     std::string str(int n = 0) const;
     /// @return the number of elements (determinants)
@@ -75,9 +75,9 @@ class StateVector {
     /// @param d the determinant to search
     double& operator[](const Determinant& d) { return state_vec_[d]; }
 
-    StateVector& operator+=(const StateVector& rhs);
-    StateVector& operator-=(const StateVector& rhs);
-    StateVector& operator*=(double rhs);
+    SparseState& operator+=(const SparseState& rhs);
+    SparseState& operator-=(const SparseState& rhs);
+    SparseState& operator*=(double rhs);
     double norm() const;
 
   private:
@@ -88,19 +88,19 @@ class StateVector {
 // Functions to apply operators, gop |state>
 
 /// apply the number projection operator P^alpha_na P^beta_nb |state>
-StateVector apply_number_projector(int na, int nb, const StateVector& state);
+SparseState apply_number_projector(int na, int nb, const SparseState& state);
 
 /// compute the projection  <state0 | op | ref>, for each operator op in gop
-std::vector<double> get_projection(const SparseOperatorList& sop, const StateVector& ref,
-                                   const StateVector& state0);
+std::vector<double> get_projection(const SparseOperatorList& sop, const SparseState& ref,
+                                   const SparseState& state0);
 
 /// compute the overlap value <left_state|right_state>
-double overlap(const StateVector& left_state, const StateVector& right_state);
+double overlap(const SparseState& left_state, const SparseState& right_state);
 
 /// fast implementation of apply operator based on sorting
-StateVector apply_operator_lin(const SparseOperator& sop, const StateVector& state0,
+SparseState apply_operator_lin(const SparseOperator& sop, const SparseState& state0,
                                double screen_thresh = 1.0e-12);
-StateVector apply_operator_antiherm(const SparseOperator& sop, const StateVector& state0,
+SparseState apply_operator_antiherm(const SparseOperator& sop, const SparseState& state0,
                                     double screen_thresh = 1.0e-12);
 
 } // namespace forte

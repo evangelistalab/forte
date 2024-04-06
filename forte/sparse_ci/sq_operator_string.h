@@ -168,13 +168,15 @@ double apply_operator_to_det(DeterminantImpl<N>& d, const SQOperatorString& sqop
 }
 
 template <size_t N>
-double apply_operator_to_det_fast(DeterminantImpl<N>& d, const SQOperatorString& sqop) {
-    return apply_operator_to_det_fast(d, sqop.cre(), sqop.ann());
+double fast_apply_operator_to_det(DeterminantImpl<N>& d, const SQOperatorString& sqop) {
+    return fast_apply_operator_to_det(d, sqop.cre(), sqop.ann());
 }
 
 bool do_ops_commute(const SQOperatorString& lhs, const SQOperatorString& rhs);
 
 std::vector<std::pair<SQOperatorString, double>> commutator_fast(const SQOperatorString& lhs,
                                                                  const SQOperatorString& rhs);
+
+Determinant compute_sign_mask(const Determinant& cre, const Determinant& ann);
 
 } // namespace forte

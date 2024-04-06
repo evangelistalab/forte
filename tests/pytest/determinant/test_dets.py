@@ -19,6 +19,29 @@ def test_det_constructors():
     assert d1 == d3
 
 
+def test_det_fill():
+    if forte.Determinant.norb() >= 64:
+        n = 128
+        print("Testing determinant fill function")
+        for i in range(n + 1):
+            d = forte.Determinant()
+            d.fill_up_to(i)
+            for j in range(i):
+                assert d.get_bit(j) == 1
+            for j in range(i, n):
+                assert d.get_bit(j) == 0
+    if forte.Determinant.norb() >= 128:
+        n = 256
+        print("Testing determinant fill function")
+        for i in range(n + 1):
+            d = forte.Determinant()
+            d.fill_up_to(i)
+            for j in range(i):
+                assert d.get_bit(j) == 1
+            for j in range(i, n):
+                assert d.get_bit(j) == 0
+
+
 def test_det_getset():
     """Test get/set operations"""
     print("Testing determinant interface")
@@ -257,6 +280,7 @@ def test_det_slater_sign():
 
 if __name__ == "__main__":
     test_det_constructors()
+    test_det_fill()
     test_det_getset()
     test_det_exciting()
     test_det_get_occ_vir()

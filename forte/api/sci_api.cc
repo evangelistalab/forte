@@ -48,7 +48,7 @@
 
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/determinant_hashvector.h"
-#include "sparse_ci/sparse_state_vector.h"
+#include "sparse_ci/sparse_state.h"
 #include "sparse_ci/sparse_operator.h"
 #include "sparse_ci/sparse_fact_exp.h"
 #include "sparse_ci/sparse_exp.h"
@@ -69,6 +69,10 @@ void export_Determinant(py::module& m) {
         .def(py::init<>())
         .def(py::init<const Determinant&>())
         .def(py::init<const std::vector<bool>&, const std::vector<bool>&>())
+        .def("zero", &Determinant::zero, "Set all bits to zero")
+        .def("fill_up_to", &Determinant::fill_up_to, "Set all bits up index n to one")
+        .def("get_bit", &Determinant::get_bit, "Get the value of a bit")
+        .def("set_bit", &Determinant::set_bit, "n"_a, "value"_a, "Set the value of a bit")
         .def("get_alfa_bits", &Determinant::get_alfa_bits, "Get alpha bits")
         .def("get_beta_bits", &Determinant::get_beta_bits, "Get beta bits")
         .def("get_alfa_occ", &Determinant::get_alfa_occ,
@@ -499,27 +503,27 @@ void export_Determinant(py::module& m) {
         },
         "op"_a, "A"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12);
 
-    py::class_<StateVector, std::shared_ptr<StateVector>>(
-        m, "StateVector", "A class to represent a vector of determinants")
+    py::class_<SparseState, std::shared_ptr<SparseState>>(
+        m, "SparseState", "A class to represent a vector of determinants")
         .def(py::init<const det_hash<double>&>())
-        .def(py::init<const StateVector&>())
+        .def(py::init<const SparseState&>())
         .def(
-            "items", [](const StateVector& v) { return py::make_iterator(v.begin(), v.end()); },
+            "items", [](const SparseState& v) { return py::make_iterator(v.begin(), v.end()); },
             py::keep_alive<0, 1>()) // Essential: keep object alive while iterator exists
-        .def("str", &StateVector::str)
-        .def("size", &StateVector::size)
-        .def("norm", &StateVector::norm)
-        .def("__iadd__", &StateVector::operator+=, "Add a StateVector to this StateVector")
-        .def("__isub__", &StateVector::operator-=, "Subtract a StateVector from this StateVector")
-        .def("__len__", &StateVector::size)
-        .def("__eq__", &StateVector::operator==)
-        .def("__repr__", [](const StateVector& v) { return v.str(); })
-        .def("__str__", [](const StateVector& v) { return v.str(); })
-        .def("map", [](const StateVector& v) { return v.map(); })
-        .def("__getitem__", [](StateVector& v, const Determinant& d) { return v[d]; })
+        .def("str", &SparseState::str)
+        .def("size", &SparseState::size)
+        .def("norm", &SparseState::norm)
+        .def("__iadd__", &SparseState::operator+=, "Add a SparseState to this SparseState")
+        .def("__isub__", &SparseState::operator-=, "Subtract a SparseState from this SparseState")
+        .def("__len__", &SparseState::size)
+        .def("__eq__", &SparseState::operator==)
+        .def("__repr__", [](const SparseState& v) { return v.str(); })
+        .def("__str__", [](const SparseState& v) { return v.str(); })
+        .def("map", [](const SparseState& v) { return v.map(); })
+        .def("__getitem__", [](SparseState& v, const Determinant& d) { return v[d]; })
         .def("__setitem__",
-             [](StateVector& v, const Determinant& d, const double val) { v[d] = val; })
-        .def("__contains__", [](StateVector& v, const Determinant& d) { return v.map().count(d); });
+             [](SparseState& v, const Determinant& d, const double val) { v[d] = val; })
+        .def("__contains__", [](SparseState& v, const Determinant& d) { return v.map().count(d); });
 
     py::class_<SparseHamiltonian>(m, "SparseHamiltonian",
                                   "A class to represent a sparse Hamiltonian")
@@ -530,37 +534,32 @@ void export_Determinant(py::module& m) {
         .def("timings", &SparseHamiltonian::timings);
 
     py::class_<SparseExp>(m, "SparseExp", "A class to compute the exponential of a sparse operator")
-        .def(py::init<>())
+        .def(py::init<int, double>(), "maxk"_a = 19, "screen_thresh"_a = 1.0e-12)
         .def("apply_op",
-             py::overload_cast<const SparseOperator&, const StateVector&, const std::string&,
-                               double, int, double>(&SparseExp::apply_op),
-             "sop"_a, "state"_a, "algorithm"_a = "cached", "scaling_factor"_a = 1.0, "maxk"_a = 19,
-             "screen_thresh"_a = 1.0e-12)
+             py::overload_cast<const SparseOperator&, const SparseState&, double>(
+                 &SparseExp::apply_op),
+             "sop"_a, "state"_a, "scaling_factor"_a = 1.0)
         .def("apply_op",
-             py::overload_cast<const SparseOperatorList&, const StateVector&, const std::string&,
-                               double, int, double>(&SparseExp::apply_op),
-             "sop"_a, "state"_a, "algorithm"_a = "cached", "scaling_factor"_a = 1.0, "maxk"_a = 19,
-             "screen_thresh"_a = 1.0e-12)
+             py::overload_cast<const SparseOperatorList&, const SparseState&, double>(
+                 &SparseExp::apply_op),
+             "sop"_a, "state"_a, "scaling_factor"_a = 1.0)
         .def("apply_antiherm",
-             py::overload_cast<const SparseOperator&, const StateVector&, const std::string&,
-                               double, int, double>(&SparseExp::apply_antiherm),
-             "sop"_a, "state"_a, "algorithm"_a = "cached", "scaling_factor"_a = 1.0, "maxk"_a = 19,
-             "screen_thresh"_a = 1.0e-12)
+             py::overload_cast<const SparseOperator&, const SparseState&, double>(
+                 &SparseExp::apply_antiherm),
+             "sop"_a, "state"_a, "scaling_factor"_a = 1.0)
         .def("apply_antiherm",
-             py::overload_cast<const SparseOperatorList&, const StateVector&, const std::string&,
-                               double, int, double>(&SparseExp::apply_antiherm),
-             "sop"_a, "state"_a, "algorithm"_a = "cached", "scaling_factor"_a = 1.0, "maxk"_a = 19,
-             "screen_thresh"_a = 1.0e-12)
-        .def("timings", &SparseExp::timings);
+             py::overload_cast<const SparseOperatorList&, const SparseState&, double>(
+                 &SparseExp::apply_antiherm),
+             "sop"_a, "state"_a, "scaling_factor"_a = 1.0);
 
     py::class_<SparseFactExp>(
         m, "SparseFactExp",
         "A class to compute the product exponential of a sparse operator using factorization")
-        .def(py::init<>())
+        .def(py::init<double>(), "screen_thresh"_a = 1.0e-12)
         .def("apply_op", &SparseFactExp::apply_op, "sop"_a, "state"_a, "algorithm"_a = "cached",
-             "inverse"_a = false, "screen_thresh"_a = 1.0e-13)
+             "inverse"_a = false)
         .def("apply_antiherm", &SparseFactExp::apply_antiherm, "sop"_a, "state"_a,
-             "algorithm"_a = "cached", "inverse"_a = false, "screen_thresh"_a = 1.0e-13)
+             "algorithm"_a = "cached", "inverse"_a = false)
         .def("timings", &SparseFactExp::timings);
 
     m.def("apply_op", &apply_operator_lin, "sop"_a, "state0"_a, "screen_thresh"_a = 1.0e-12);
@@ -642,7 +641,7 @@ void export_GAS(py::module& m) {
         .def("print", &GenCIVector::print, "Print the GAS vector")
         .def("size", &GenCIVector::size, "Return the size of the GAS vector")
         .def("__len__", &GenCIVector::size, "Return the size of the GAS vector")
-        .def("as_state_vector", &GenCIVector::as_state_vector, "Return a StateVector object")
+        .def("as_state_vector", &GenCIVector::as_state_vector, "Return a SparseState object")
         .def("set_to", &GenCIVector::set_to, "Set the GAS vector to a given value");
 }
 } // namespace forte

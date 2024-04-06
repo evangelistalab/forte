@@ -22,7 +22,6 @@ def run_cc(
     r_convergence=1.0e-5,
     compute_threshold=1.0e-14,
     selection_threshold=1.0e-14,
-    on_the_fly=False,
     linked=True,
     maxk=19,
     diis_start=3,
@@ -53,9 +52,6 @@ def run_cc(
         The compute cutoff (default = 1.0e-14)
     selection_threshold : float
         The selection cutoff (default = 1.0e-14)
-    on_the_fly : bool
-        Use the on-the-fly algorithms? By default this code uses a caching algorithm
-        that can be faster when using very small compute threshold values (default = False)
     Returns
     -------
     list(tuple(int,float))
@@ -110,7 +106,7 @@ def run_cc(
     print(f"Reference determinant: {hfref.str(nmo)}")
     print(f"Energy of the reference determinant: {eref}")
 
-    ref = forte.StateVector({hfref: 1.0})
+    ref = forte.SparseState({hfref: 1.0})
 
     nops_old = 0
 
@@ -126,7 +122,7 @@ def run_cc(
     for macro_iter in range(max_macro_iter):
 
         # solve the cc equations and update the amplitudes
-        t, e, e_proj, micro_iter, timing = solve_cc_equations(
+        t, e, e_proj, micro_iter = solve_cc_equations(
             cc_type,
             t,
             op,
@@ -138,7 +134,6 @@ def run_cc(
             compute_threshold,
             e_convergence,
             r_convergence,
-            on_the_fly,
             linked,
             maxk,
             diis_start,
@@ -166,7 +161,6 @@ def run_cc(
     print(f"\n{cc_type.upper()} proj. energy:     {e_proj:20.12f}")
     print(f"{cc_type.upper()} proj. corr energy:{e_proj - eref:20.12f}")
     print(f"omega: {omega}")
-    print(f"{timing}")
 
     return calc_data
 
@@ -299,7 +293,6 @@ def solve_cc_equations(
     compute_threshold,
     e_convergence=1.0e-10,
     r_convergence=1.0e-5,
-    on_the_fly=False,
     linked=True,
     maxk=19,
     diis_start=3,
@@ -329,9 +322,6 @@ def solve_cc_equations(
         The energy convergence criterion (default = 1.0e-10)
     r_convergence : float
         The residual convergence criterion (default = 1.0e-5)
-    on_the_fly : bool
-        Use the on-the-fly algorithms? By default this code uses a caching algorithm
-        that can be faster when using very small compute threshold values (default = False)
     maxiter : int
         The maximum number of iterations
     Returns
@@ -343,18 +333,16 @@ def solve_cc_equations(
     diis = DIIS(t, diis_start)
     ham = forte.SparseHamiltonian(as_ints)
     if cc_type == "cc" or cc_type == "ucc":
-        exp = forte.SparseExp()
+        exp = forte.SparseExp(maxk=maxk, screen_thresh=compute_threshold)
     if cc_type == "dcc" or cc_type == "ducc":
-        exp = forte.SparseFactExp()
+        exp = forte.SparseFactExp(screen_thresh=compute_threshold)
 
     old_e_micro = 0.0
 
     for micro_iter in range(maxiter):
         micro_start = time.time()
         t_old = copy.deepcopy(t)
-        residual, e, e_proj = residual_equations(
-            cc_type, t, op, selected_op, ref, ham, exp, compute_threshold, on_the_fly, linked, maxk
-        )
+        residual, e, e_proj = residual_equations(cc_type, t, op, selected_op, ref, ham, exp, compute_threshold, linked)
 
         residual_norm = 0.0
         for l in range(selected_op.size()):
@@ -377,10 +365,10 @@ def solve_cc_equations(
 
         old_e_micro = e
 
-    return (t, e, e_proj, micro_iter + 1, exp.timings())
+    return (t, e, e_proj, micro_iter + 1)
 
 
-def residual_equations(cc_type, t, op, sop, ref, ham, exp, compute_threshold, on_the_fly=False, linked=True, maxk=19):
+def residual_equations(cc_type, t, op, sop, ref, ham, exp, compute_threshold, linked=True):
     """Evaluate the residual equations
 
     Parameters
@@ -393,9 +381,6 @@ def residual_equations(cc_type, t, op, sop, ref, ham, exp, compute_threshold, on
         The number of alpha electrons per irrep
     psi4_wfn : psi4 Wavefunction
         A psi4 Wavefunction object (to read the number of alpha/beta electrons)
-    on_the_fly : bool
-        Use the on-the-fly algorithms? By default this code uses a caching algorithm
-        that can be faster when using very small compute threshold values (default = False)
     linked : bool
         Use a linked formulation of the CC equations (a commutator series)?
     Returns
@@ -408,27 +393,22 @@ def residual_equations(cc_type, t, op, sop, ref, ham, exp, compute_threshold, on
     sop.set_coefficients(t)
 
     c0 = 0.0
-    algorithm = "onthefly" if on_the_fly else "default"
     if cc_type == "cc":
-        wfn = exp.apply_op(sop, ref, algorithm=algorithm, screen_thresh=compute_threshold, maxk=maxk)
+        wfn = exp.apply_op(sop, ref)
         Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
-        R = exp.apply_op(
-            sop, Hwfn, scaling_factor=-1.0, algorithm=algorithm, screen_thresh=compute_threshold, maxk=maxk
-        )
+        R = exp.apply_op(sop, Hwfn, scaling_factor=-1.0)
     elif cc_type == "ucc":
-        wfn = exp.apply_antiherm(sop, ref, algorithm=algorithm, screen_thresh=compute_threshold, maxk=maxk)
+        wfn = exp.apply_antiherm(sop, ref)
         Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
-        R = exp.apply_antiherm(
-            sop, Hwfn, scaling_factor=-1.0, algorithm=algorithm, screen_thresh=compute_threshold, maxk=maxk
-        )
+        R = exp.apply_antiherm(sop, Hwfn, scaling_factor=-1.0)
     elif cc_type == "dcc":
-        wfn = exp.apply_op(sop, ref, algorithm=algorithm, screen_thresh=compute_threshold)
+        wfn = exp.apply_op(sop, ref)
         Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
-        R = exp.apply_op(sop, Hwfn, inverse=True, algorithm=algorithm, screen_thresh=compute_threshold)
+        R = exp.apply_op(sop, Hwfn, inverse=True)
     elif cc_type == "ducc":
-        wfn = exp.apply_antiherm(sop, ref, algorithm=algorithm, screen_thresh=compute_threshold)
+        wfn = exp.apply_antiherm(sop, ref)
         Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
-        R = exp.apply_antiherm(sop, Hwfn, inverse=True, algorithm=algorithm, screen_thresh=compute_threshold)
+        R = exp.apply_antiherm(sop, Hwfn, inverse=True)
     else:
         raise ValueError("Incorrect value for cc_type")
 

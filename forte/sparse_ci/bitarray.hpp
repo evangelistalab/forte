@@ -223,6 +223,21 @@ template <size_t N> class BitArray {
         }
     }
 
+    void fill_up_to(int n) {
+        zero();
+        if (static_cast<size_t>(n) >= bits_per_word) {
+            size_t last_full_word = whichword(n);
+            for (size_t k = 0; k < last_full_word; ++k) {
+                words_[k] = ~u_int64_t(0);
+            }
+        }
+        if (whichbit(n) == 0)
+            return;
+        uint64_t mask = ~0;
+        mask = mask >> (64 - n);
+        words_[whichword(n)] = mask;
+    }
+
     /// flip all bits
     void flip() {
         for (word_t& w : words_)
@@ -491,6 +506,60 @@ template <size_t N> class BitArray {
         return not result;
     }
 
+    // det.fast_a_and_b_equal_b(sqop.ann()) and det.fast_a_and_b_eq_zero(ucre)
+    inline bool fast_can_apply_operator(const BitArray<N>& ann, const BitArray<N>& ucre) const {
+        auto all_bits_in_b_set_in_a = [](uint64_t a, uint64_t b) -> bool { return (a & b) == b; };
+
+        auto none_of_bits_in_b_set_in_a = [](uint64_t a, uint64_t b) -> bool {
+            return (a & b) == 0;
+        };
+
+        if constexpr (N == 64) {
+            return all_bits_in_b_set_in_a(words_[0], ann.words_[0]) &&
+                   none_of_bits_in_b_set_in_a(words_[0], ucre.words_[0]);
+        } else if constexpr (N == 128) {
+            return all_bits_in_b_set_in_a(words_[0], ann.words_[0]) &&
+                   none_of_bits_in_b_set_in_a(words_[0], ucre.words_[0]) &&
+                   all_bits_in_b_set_in_a(words_[1], ann.words_[1]) &&
+                   none_of_bits_in_b_set_in_a(words_[1], ucre.words_[1]);
+        } else if constexpr (N == 192) {
+            return all_bits_in_b_set_in_a(words_[0], ann.words_[0]) &&
+                   none_of_bits_in_b_set_in_a(words_[0], ucre.words_[0]) &&
+                   all_bits_in_b_set_in_a(words_[1], ann.words_[1]) &&
+                   none_of_bits_in_b_set_in_a(words_[1], ucre.words_[1]) &&
+                   all_bits_in_b_set_in_a(words_[2], ann.words_[2]) &&
+                   none_of_bits_in_b_set_in_a(words_[2], ucre.words_[2]);
+        } else if constexpr (N == 256) {
+            return all_bits_in_b_set_in_a(words_[0], ann.words_[0]) &&
+                   none_of_bits_in_b_set_in_a(words_[0], ucre.words_[0]) &&
+                   all_bits_in_b_set_in_a(words_[1], ann.words_[1]) &&
+                   none_of_bits_in_b_set_in_a(words_[1], ucre.words_[1]) &&
+                   all_bits_in_b_set_in_a(words_[2], ann.words_[2]) &&
+                   none_of_bits_in_b_set_in_a(words_[2], ucre.words_[2]) &&
+                   all_bits_in_b_set_in_a(words_[3], ann.words_[3]) &&
+                   none_of_bits_in_b_set_in_a(words_[3], ucre.words_[3]);
+        } else {
+            // For sizes not explicitly specialized, we fall back to a loop.
+            for (size_t n = 0; n < N / 64; ++n) {
+                if (!all_bits_in_b_set_in_a(words_[n], ann.words_[n]) ||
+                    !none_of_bits_in_b_set_in_a(words_[n], ucre.words_[n])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        // for (size_t n = 0; n < nwords_; ++n) {
+        //     word_t a = words_[n];
+        //     word_t b_ann = ann.words_[n];
+        //     word_t b_cre = cre.words_[n];
+        //     // Check if all bits in b_ann are set in a and no bits in b_ucre are set in a
+        //     if ((a & b_ann) != b_ann || (a & b_cre) != 0) {
+        //         return false;
+        //     }
+        // }
+        // return true;
+    }
+
     /// Implements the operation: a & b == 0
     bool fast_a_and_b_eq_zero(const BitArray<N>& b) const {
         bool result = false;
@@ -498,6 +567,52 @@ template <size_t N> class BitArray {
             result += words_[n] & b.words_[n];
         }
         return not result;
+    }
+
+    /// Implements the operation: a &= ~b
+    void fast_a_and_eq_not_b(const BitArray<N>& b) {
+        if constexpr (N == 64) {
+            words_[0] &= ~b.words_[0];
+        } else if constexpr (N == 128) {
+            words_[0] &= ~b.words_[0];
+            words_[1] &= ~b.words_[1];
+        } else if constexpr (N == 192) {
+            words_[0] &= ~b.words_[0];
+            words_[1] &= ~b.words_[1];
+            words_[2] &= ~b.words_[2];
+        } else if constexpr (N == 256) {
+            words_[0] &= ~b.words_[0];
+            words_[1] &= ~b.words_[1];
+            words_[2] &= ~b.words_[2];
+            words_[3] &= ~b.words_[3];
+        } else {
+            for (size_t n = 0; n < nwords_; n++) {
+                words_[n] &= ~b.words_[n];
+            }
+        }
+    }
+
+    /// Implements the operation: a |= b
+    void fast_a_or_eq_b(const BitArray<N>& b) {
+        if constexpr (N == 64) {
+            words_[0] |= b.words_[0];
+        } else if constexpr (N == 128) {
+            words_[0] |= b.words_[0];
+            words_[1] |= b.words_[1];
+        } else if constexpr (N == 192) {
+            words_[0] |= b.words_[0];
+            words_[1] |= b.words_[1];
+            words_[2] |= b.words_[2];
+        } else if constexpr (N == 256) {
+            words_[0] |= b.words_[0];
+            words_[1] |= b.words_[1];
+            words_[2] |= b.words_[2];
+            words_[3] |= b.words_[3];
+        } else {
+            for (size_t n = 0; n < nwords_; n++) {
+                words_[n] |= b.words_[n];
+            }
+        }
     }
 
     /// Implements the operation: count(a ^ b)

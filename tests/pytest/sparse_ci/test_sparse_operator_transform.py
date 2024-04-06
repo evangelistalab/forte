@@ -26,29 +26,9 @@ def compute_st_antihermitian(O, unormA, theta):
     cOA = O.commutator(A)
     cOAA = cOA.commutator(A)
     N = -1.0 * A @ A
-    # NO = N @ O
-    # AO = A @ O
 
-    # NOA = NO @ A
-    # AON = AO @ N
-    # print(f"{NOA = }")
-    # print(f"{AON = }")
-
-    # aNcOA = N @ cOA + cOA @ N
-    # print(f"{aNcOA = }")
-    # print(f"{cOA = }")
-
-    # stO += O
-    # stO += np.sin(theta) * cOA
-    # stO += 0.5 * np.sin(theta) ** 2 * cOAA
-    # stO += -2.0 * np.sin(theta / 2) ** 4 * (N @ O + O @ N)
-    # stO += np.sin(theta) * (np.cos(theta) - 1) * (N @ O @ A)
-    # stO += -np.sin(theta) * (np.cos(theta) - 1) * (A @ O @ N)
-    # stO += 4.0 * np.sin(theta / 2) ** 4 * (N @ O @ N)
-
-    # working version
     stO += O
-    stO += np.sin(theta) * (2 - np.cos(theta)) * cOA
+    stO += cOA * np.sin(theta) * (2 - np.cos(theta))
     stO += cOAA * 0.5 * np.sin(theta) ** 2
     stO += (N @ O + O @ N) * (-2.0 * np.sin(theta / 2) ** 4)
     stO += (N @ cOA + cOA @ N) * np.sin(theta) * (np.cos(theta) - 1)

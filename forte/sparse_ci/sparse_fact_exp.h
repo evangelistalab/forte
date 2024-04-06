@@ -31,7 +31,7 @@
 #include "integrals/active_space_integrals.h"
 #include "helpers/timer.h"
 
-#include "sparse_ci/sparse_state_vector.h"
+#include "sparse_ci/sparse_state.h"
 #include "sparse_ci/sparse_operator.h"
 
 #include "sparse_ci/determinant_hashvector.h"
@@ -47,8 +47,11 @@ namespace forte {
  */
 class SparseFactExp {
   public:
-    /// Constructor
-    SparseFactExp();
+    /// @brief Constructor
+    /// @param screen_thresh a threshold to select which elements of the operator applied to the
+    /// state. An operator in the form exp(t ...), where t is an amplitude, will be applied to a
+    /// determinant Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
+    SparseFactExp(double screen_thresh);
 
     /// @brief Compute the factorized exponential applied to a state using an exact algorithm
     ///
@@ -69,11 +72,8 @@ class SparseFactExp {
     ///
     ///             exp(-op1) exp(-op2) ... |state>
     ///
-    /// @param screen_thresh a threshold to select which elements of the operator applied to the
-    /// state. An operator in the form exp(t ...), where t is an amplitude, will be applied to a
-    /// determinant Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
-    StateVector apply_op(const SparseOperatorList& sop, const StateVector& state,
-                         const std::string& algorithm, bool inverse, double screen_thresh);
+    SparseState apply_op(const SparseOperatorList& sop, const SparseState& state,
+                         const std::string& algorithm, bool inverse);
 
     /// @brief Compute the factorized exponential applied to a state using an exact algorithm
     ///
@@ -94,29 +94,24 @@ class SparseFactExp {
     ///
     ///             exp(-op1 + op1^dagger) exp(-op2 + op2^dagger) ... |state>
     ///
-    /// @param screen_thresh a threshold to select which elements of the operator applied to the
-    /// state. An operator in the form exp(t ...), where t is an amplitude, will be applied to a
-    /// determinant Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
-    StateVector apply_antiherm(const SparseOperatorList& sop, const StateVector& state,
-                               const std::string& algorithm, bool inverse, double screen_thresh);
+    SparseState apply_antiherm(const SparseOperatorList& sop, const SparseState& state,
+                               const std::string& algorithm, bool inverse);
     /// @return timings for this class
     std::map<std::string, double> timings() const;
 
   private:
     void apply_exp_op_fast(const Determinant& d, Determinant& new_d, const Determinant& cre,
-                           const Determinant& ann, double amp, double c, StateVector& new_terms);
-    void compute_couplings(const SparseOperatorList& sop, const StateVector& state0, bool inverse);
-    StateVector compute_exp(const SparseOperatorList& sop, const StateVector& state0, bool inverse,
-                            double screen_thresh);
-    StateVector compute_cached(const SparseOperatorList& sop, const StateVector& state,
-                               bool inverse, double screen_thresh);
-    StateVector compute_on_the_fly_antihermitian(const SparseOperatorList& sop,
-                                                 const StateVector& state0, bool inverse,
-                                                 double screen_thresh);
-    StateVector compute_on_the_fly_excitation(const SparseOperatorList& sop,
-                                              const StateVector& state0, bool inverse,
-                                              double screen_thresh);
+                           const Determinant& ann, double amp, double c, SparseState& new_terms);
+    void compute_couplings(const SparseOperatorList& sop, const SparseState& state0, bool inverse);
+    SparseState compute_exp(const SparseOperatorList& sop, const SparseState& state0, bool inverse);
+    SparseState compute_cached(const SparseOperatorList& sop, const SparseState& state,
+                               bool inverse);
+    SparseState compute_on_the_fly_antihermitian(const SparseOperatorList& sop,
+                                                 const SparseState& state0, bool inverse);
+    SparseState compute_on_the_fly_excitation(const SparseOperatorList& sop,
+                                              const SparseState& state0, bool inverse);
 
+    double screen_thresh_;
     /// Are the coupling initialized?
     bool initialized_ = false;
     /// Are the inverse couplings initialized?

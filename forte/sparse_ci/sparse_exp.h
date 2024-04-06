@@ -31,7 +31,7 @@
 #include "integrals/active_space_integrals.h"
 #include "helpers/timer.h"
 
-#include "sparse_ci/sparse_state_vector.h"
+#include "sparse_ci/sparse_state.h"
 #include "sparse_ci/sparse_operator.h"
 
 #include "sparse_ci/determinant_hashvector.h"
@@ -46,10 +46,16 @@ namespace forte {
  *
  */
 class SparseExp {
-    enum class Algorithm { Cached, OnTheFlySorted, OnTheFlyStd };
     enum class OperatorType { Excitation, Antihermitian };
 
   public:
+    /// @brief Constructor
+    /// @param maxk the maximum power of op used in the Taylor expansion of exp(op)
+    /// @param screen_thresh a threshold to select which elements of the operator applied to the
+    /// state. An operator in the form exp(t ...), where t is an amplitude, will be applied to a
+    /// determinant Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
+    SparseExp(int maxk, double screen_thresh);
+
     /// @brief Compute the exponential applied to a state via a Taylor expansion
     ///
     ///             exp(op) |state>
@@ -62,22 +68,13 @@ class SparseExp {
     ///
     /// @param sop the operator. Each term in this operator is applied in the order provided
     /// @param state the state to which the factorized exponential will be applied
-    /// @param algorithm the algorithm used to compute the exponential. If algorithm = "onthefly"
-    /// this function will compute the factorized exponential using an on-the-fly implementation
-    /// (slow). If algorithm = "cached", a cached approach is used.
     /// @param scaling_factor A scalar factor that multiplies the operator exponentiated. If set to
     /// -1.0 it allows to compute the inverse of the exponential exp(-op)
-    /// @param maxk the maximum power of op used in the Taylor expansion of exp(op)
-    /// @param screen_thresh a threshold to select which elements of the operator applied to the
-    /// state. An operator in the form exp(t ...), where t is an amplitude, will be applied to a
-    /// determinant Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
-    StateVector apply_op(const SparseOperator& sop, const StateVector& state,
-                         const std::string& algorithm = "cached", double scaling_factor = 1.0,
-                         int maxk = 19, double screen_thresh = 1.0e-12);
+    SparseState apply_op(const SparseOperator& sop, const SparseState& state,
+                         double scaling_factor = 1.0);
 
-    StateVector apply_op(const SparseOperatorList& sop, const StateVector& state,
-                         const std::string& algorithm = "cached", double scaling_factor = 1.0,
-                         int maxk = 19, double screen_thresh = 1.0e-12);
+    SparseState apply_op(const SparseOperatorList& sop, const SparseState& state,
+                         double scaling_factor = 1.0);
 
     /// @brief Compute the exponential of the antihermitian of an operator applied to a state via a
     /// Taylor expansion
@@ -92,45 +89,20 @@ class SparseExp {
     ///
     /// @param sop the operator. Each term in this operator is applied in the order provided
     /// @param state the state to which the factorized exponential will be applied
-    /// @param algorithm the algorithm used to compute the exponential. If algorithm = "onthefly"
-    /// this function will compute the factorized exponential using an on-the-fly implementation
-    /// (slow). If algorithm = "cached", a cached approach is used.
     /// @param scaling_factor A scalar factor that multiplies the operator exponentiated. If set to
     /// -1.0 it allows to compute the inverse of the exponential exp(-op)
-    /// @param maxk the maximum power of op used in the Taylor expansion of exp(op)
-    /// @param screen_thresh a threshold to select which elements of the operator applied to the
-    /// state. An operator in the form exp(t ...), where t is an amplitude, will be applied to a
-    /// determinant Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
-    StateVector apply_antiherm(const SparseOperator& sop, const StateVector& state,
-                               const std::string& algorithm = "cached", double scaling_factor = 1.0,
-                               int maxk = 19, double screen_thresh = 1.0e-12);
+    SparseState apply_antiherm(const SparseOperator& sop, const SparseState& state,
+                               double scaling_factor = 1.0);
 
-    StateVector apply_antiherm(const SparseOperatorList& sop, const StateVector& state,
-                               const std::string& algorithm = "cached", double scaling_factor = 1.0,
-                               int maxk = 19, double screen_thresh = 1.0e-12);
-    /// @return timings for this class
-    std::map<std::string, double> timings() const;
+    SparseState apply_antiherm(const SparseOperatorList& sop, const SparseState& state,
+                               double scaling_factor = 1.0);
 
   private:
-    StateVector compute(OperatorType op_type, const SparseOperator& sop, const StateVector& state,
-                        const std::string& algorithm, double scaling_factor, int maxk,
-                        double screen_thresh);
+    int maxk_ = 19;
+    double screen_thresh_ = 1e-12;
 
-    StateVector apply_exp_operator(OperatorType op_type, const SparseOperator& sop,
-                                   const StateVector& state0, double scaling_factor, int maxk,
-                                   double screen_thresh, Algorithm alg);
-    StateVector apply_operator_cached(OperatorType op_type, const SparseOperator& sop,
-                                      const StateVector& state0, double screen_thresh);
-    StateVector apply_operator_sorted(OperatorType op_type, const SparseOperator& sop,
-                                      const StateVector& state0, double screen_thresh);
-    StateVector apply_operator_std(OperatorType op_type, const SparseOperator& sop,
-                                   const StateVector& state0, double screen_thresh);
-
-    std::map<std::string, double> timings_;
-    DeterminantHashVec exp_hash_;
-    // map Determinant -> [(operator, new determinant, factor),...]
-    det_hash<std::vector<std::tuple<SQOperatorString, Determinant, double>>> couplings_;
-    det_hash<std::vector<std::tuple<SQOperatorString, Determinant, double>>> couplings_dexc_;
+    SparseState apply_exp_operator(OperatorType op_type, const SparseOperator& sop,
+                                   const SparseState& state, double scaling_factor);
 };
 
 } // namespace forte
