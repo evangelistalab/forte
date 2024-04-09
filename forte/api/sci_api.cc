@@ -556,11 +556,9 @@ void export_Determinant(py::module& m) {
         m, "SparseFactExp",
         "A class to compute the product exponential of a sparse operator using factorization")
         .def(py::init<double>(), "screen_thresh"_a = 1.0e-12)
-        .def("apply_op", &SparseFactExp::apply_op, "sop"_a, "state"_a, "algorithm"_a = "cached",
-             "inverse"_a = false)
+        .def("apply_op", &SparseFactExp::apply_op, "sop"_a, "state"_a, "inverse"_a = false)
         .def("apply_antiherm", &SparseFactExp::apply_antiherm, "sop"_a, "state"_a,
-             "algorithm"_a = "cached", "inverse"_a = false)
-        .def("timings", &SparseFactExp::timings);
+             "inverse"_a = false);
 
     m.def("apply_op", &apply_operator_lin, "sop"_a, "state0"_a, "screen_thresh"_a = 1.0e-12);
 

@@ -93,7 +93,7 @@ class SQOperatorString {
     /// annihilation  operators)
     bool is_number() const;
     /// @return true if this operator is such that op - op^dagger != 0
-    bool is_antihermitian_compatible() const;
+    bool is_nilpotent() const;
     /// @return the number of creation + annihilation operators in this operator
     int count() const;
     /// @return compare this operator with another operator

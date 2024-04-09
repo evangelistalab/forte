@@ -28,6 +28,12 @@
 
 #pragma once
 
+#include <cassert>
+#include <map>
+#include <string>
+#include <utility> // std::forward
+#include <vector>
+
 namespace forte {
 
 /**
@@ -59,5 +65,50 @@ template <typename T> std::pair<double, std::string> to_xb2(size_t nele) {
     }
     return out;
 }
+
+/// @brief A templated buffer class
+template <typename T> class Buffer {
+  public:
+    Buffer(size_t initial_size = 0) : buffer_(initial_size) {}
+
+    // Non-modifying (const) begin and end iterators
+    auto begin() const noexcept { return buffer_.cbegin(); }
+    auto end() const noexcept { return buffer_.cbegin() + num_stored_; }
+
+    size_t size() const noexcept { return num_stored_; }
+
+    size_t capacity() const noexcept { return buffer_.size(); }
+
+    void reset() noexcept { num_stored_ = 0; }
+
+    void push_back(const T& el) {
+        if (num_stored_ < buffer_.size()) {
+            buffer_[num_stored_] = el;
+        } else {
+            buffer_.push_back(el);
+        }
+        num_stored_++;
+    }
+
+    template <typename... Args> void emplace_back(Args&&... args) {
+        if (num_stored_ < buffer_.size()) {
+            buffer_[num_stored_] = T(std::forward<Args>(args)...);
+        } else {
+            buffer_.emplace_back(std::forward<Args>(args)...);
+        }
+        ++num_stored_;
+    }
+
+    const T& operator[](size_t n) const {
+        assert(n < num_stored_); // Add bounds checking to prevent undefined behavior
+        return buffer_[n];
+    }
+
+  private:
+    // the number of elements currently stored in the buffer
+    size_t num_stored_ = 0;
+    // the buffer element container
+    std::vector<T> buffer_;
+};
 
 } // namespace forte

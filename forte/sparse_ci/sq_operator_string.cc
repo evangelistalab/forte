@@ -71,7 +71,7 @@ Determinant& SQOperatorString::ann_mod() { return ann_; }
 
 bool SQOperatorString::is_number() const { return (cre().count() == 0) and (ann().count() == 0); }
 
-bool SQOperatorString::is_antihermitian_compatible() const {
+bool SQOperatorString::is_nilpotent() const {
     // here we test that op != op^dagger, otherwise op - op^dagger = 0
     return (cre() != ann());
 }
