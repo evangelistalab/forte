@@ -379,8 +379,8 @@ class ActiveSpaceMethod {
     bool read_wfn_guess_ = false;
     /// Dump transition density matrix to disk?
     bool dump_trdm_ = false;
-    /// Dump natural transition orbitals to disk?
-    bool dump_nto_ = false;
+    // /// Dump natural transition orbitals to disk?
+    // bool dump_nto_ = false;
     /// Dump wave function to disk?
     bool dump_wfn_ = false;
     /// The file name for storing wave function (determinants, CI coefficients)

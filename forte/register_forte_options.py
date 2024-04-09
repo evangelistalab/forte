@@ -1122,10 +1122,10 @@ def register_old_options(options):
 
     options.add_double("PT2NO_OCC_THRESHOLD", 0.98, "Occupancy smaller than which is considered as active")
     options.add_double("PT2NO_VIR_THRESHOLD", 0.02, "Occupancy greater than which is considered as active")
-    
+
     options.add_bool("MRPT2NO_ACTV_ROTATE", False,
                      "Rotate orbitals so that the active is in the position suggested by natural orbitals")
-    
+
     options.add_bool("MEMORY_SUMMARY", False, "Print summary of memory")
 
     options.add_str("REFERENCE", "", "The SCF refernce type")
