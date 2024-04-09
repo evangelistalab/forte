@@ -92,7 +92,8 @@ class SQOperatorString {
     /// @return true if this operator is a number operator (i.e. it contains no creation or
     /// annihilation  operators)
     bool is_number() const;
-    /// @return true if this operator is such that op - op^dagger != 0
+    /// @return true if this operator is such that op^2 = 0.
+    /// Numbers and number operators are not nilpotent.
     bool is_nilpotent() const;
     /// @return the number of creation + annihilation operators in this operator
     int count() const;
@@ -159,7 +160,6 @@ std::pair<SQOperatorString, double> make_sq_operator_string(const std::string& s
                                                             bool allow_reordering);
 
 std::pair<SQOperatorString, double> make_sq_operator_string_from_list(const op_tuple_t& ops,
-
                                                                       bool allow_reordering);
 
 template <size_t N>
@@ -177,6 +177,7 @@ bool do_ops_commute(const SQOperatorString& lhs, const SQOperatorString& rhs);
 std::vector<std::pair<SQOperatorString, double>> commutator_fast(const SQOperatorString& lhs,
                                                                  const SQOperatorString& rhs);
 
+// Compute the sign mask associated with a set of creation and annihilation operators
 Determinant compute_sign_mask(const Determinant& cre, const Determinant& ann);
 
 } // namespace forte
