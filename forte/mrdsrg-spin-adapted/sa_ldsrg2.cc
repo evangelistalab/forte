@@ -79,6 +79,8 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
     setup_ldsrg2_tensors();
 
     // setup DIIS
+    double T1rms = 1.0, T2rms = 1.0;
+    int bad_update_count = 0;
     if (diis_start_ > 0) {
         diis_manager_init();
     }
@@ -113,6 +115,8 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
 
         // update amplitudes
         local_timer t_amp;
+        T1rms = T1rms_;
+        T2rms = T2rms_;
         update_t();
         double time_amp = t_amp.get();
         od.stop();
@@ -125,6 +129,11 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
         timer diis("DIIS");
         // DIIS amplitudes
         if (diis_start_ > 0 and cycle >= diis_start_) {
+            if (bad_update_count > 3) {
+                psi::outfile->Printf("  R/");
+                diis_manager_->reset_subspace();
+                bad_update_count = 0;
+            }
             diis_manager_add_entry();
             outfile->Printf("  S");
 
@@ -132,6 +141,10 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
                 diis_manager_->subspace_size() >= diis_min_vec_) {
                 diis_manager_extrapolate();
                 outfile->Printf("/E");
+                auto tratio = T1rms_ / T1rms + T2rms_ / T2rms;
+                if (tratio > 1.0 and T1rms_ < 4.0e-3 and T2rms_ < 4.0e-3) {
+                    bad_update_count++;
+                }
             }
         }
         diis.stop();
