@@ -391,6 +391,8 @@ PYBIND11_MODULE(_forte, m) {
              "Set the map from state to the weights of all computed roots")
         .def("set_read_cwd_amps", &SADSRG::set_read_amps_cwd,
              "Set if reading amplitudes in the current directory or not")
+        .def("set_die_if_not_converged", &SADSRG::set_die_if_not_converged,
+             "Set if throw an error for nonconverging amplitudes")
         .def("clean_checkpoints", &SADSRG::clean_checkpoints, "Delete amplitudes checkpoint files");
 
     // export MRDSRG_SO

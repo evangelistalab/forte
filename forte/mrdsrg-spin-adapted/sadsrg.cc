@@ -719,6 +719,10 @@ void SADSRG::set_Uactv(ambit::Tensor& U) {
     Uactv_.block("aa")("pq") = U("pq");
 }
 
+void SADSRG::set_die_if_not_converged(bool die_if_not_converged) {
+    die_if_not_converged_ = die_if_not_converged;
+}
+
 void SADSRG::rotate_one_ints_to_original(BlockedTensor& H1) {
     auto Ua = Uactv_.block("aa");
     auto temp = H1.block("aa").clone(tensor_type_);

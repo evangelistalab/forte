@@ -176,7 +176,7 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
     dump_amps_to_disk();
 
     // fail to converge
-    if (!converged) {
+    if ((!converged) and die_if_not_converged_) {
         clean_checkpoints(); // clean amplitudes in scratch directory
         throw psi::PSIEXCEPTION("The MR-LDSRG(2) computation does not converge.");
     }

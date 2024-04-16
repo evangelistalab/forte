@@ -183,6 +183,7 @@ class ProcedureDSRG:
 
         if self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
             self.dsrg_solver.set_Uactv(self.Ua)
+            self.dsrg_solver.set_die_if_not_converged(self.relax_ref != "ITERATE")
 
         if self.solver_type in ["MRDSRG", "DSRG-MRPT2", "DSRG-MRPT3", "THREE-DSRG-MRPT2"]:
             self.dsrg_solver.set_Uactv(self.Ua, self.Ub)
