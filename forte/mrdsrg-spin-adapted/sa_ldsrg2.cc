@@ -129,13 +129,14 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
         timer diis("DIIS");
         // DIIS amplitudes
         if (diis_start_ > 0 and cycle >= diis_start_) {
+            outfile->Printf("  ");
             if (bad_update_count > 3) {
-                psi::outfile->Printf("  R/");
+                psi::outfile->Printf("R/");
                 diis_manager_->reset_subspace();
                 bad_update_count = 0;
             }
             diis_manager_add_entry();
-            outfile->Printf("  S");
+            outfile->Printf("S");
 
             if ((cycle - diis_start_) % diis_freq_ == 0 and
                 diis_manager_->subspace_size() >= diis_min_vec_) {
