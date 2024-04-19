@@ -312,6 +312,9 @@ class ActiveSpaceMethod {
     /// @param value the maximum number of iterations
     void set_maxiter(size_t value);
 
+    /// Enable/disable core determinants as initial guess for Davidson-Liu
+    void set_core_guess(bool core_guess);
+
     /// Set if we dump the wave function to disk
     void set_read_wfn_guess(bool read);
 
@@ -378,6 +381,9 @@ class ActiveSpaceMethod {
 
     /// The maximum number of iterations
     size_t maxiter_ = 100;
+
+    /// Use core determinants as initial guess for Davidson-Liu?
+    bool core_guess_ = false;
 
     /// The root used to compute properties (zero based, default = 0)
     int root_ = 0;

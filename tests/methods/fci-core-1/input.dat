@@ -1,0 +1,41 @@
+# LiH 6-31g basis FCI core excited roots
+import forte
+
+refscf = -7.9791777935853290
+reffci = -5.851395993559
+reffci_avg = -5.5360452551438
+
+molecule {
+0 1
+Li
+H 1 R
+
+R = 3.0
+units bohr 
+}
+
+set {
+  basis 6-31g
+  scf_type pk
+  e_convergence 12
+}
+
+set forte {
+  active_space_solver   genci
+  dl_core_initial_guess 1
+}
+
+energy('scf')
+compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
+
+energy('forte')
+compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST
+
+set forte {
+  active_space_solver   genci
+  avg_state             [[1,1,3]]
+  dl_core_initial_guess [1]
+}
+
+energy('forte')
+compare_values(reffci_avg, variable("CURRENT ENERGY"),11, "FCI avg energy") #TEST

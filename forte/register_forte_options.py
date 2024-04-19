@@ -428,6 +428,7 @@ def register_fci_options(options):
     options.add_bool("PRINT_NO", False, "Print the NO from the rdm of FCI")
     options.add_bool("CI_SPIN_ADAPT", False, "Spin-adapt the CI wavefunction?")
     options.add_bool("CI_SPIN_ADAPT_FULL_PRECONDITIONER", False, "Use full preconditioner for spin-adapted CI?")
+    options.add_int_list("DL_CORE_INITIAL_GUESS", "Use core determinants as initial guess")
 
 
 def register_sci_options(options):
