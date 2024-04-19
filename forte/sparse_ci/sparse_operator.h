@@ -36,27 +36,23 @@
 
 namespace forte {
 
-class ActiveSpaceIntegrals;
-
-/**
- * @brief The SparseOperator class
- * Base class for second quantized operators.
- *
- * An operator is a linear combination of terms, where each term is a numerical factor
- * times a product of second quantized operators (a SQOperator object)
- *
- * For example:
- *   0.1 * [2a+ 0a-] - 0.5 * [2a+ 0a-] + ...
- *       Term 0            Term 1
- *
- *        This class stores operators in each term in the following canonical form
- *            a+_p1 a+_p2 ...  a+_P1 a+_P2 ...   ... a-_Q2 a-_Q1   ... a-_q2 a-_q1
- *            alpha creation   beta creation    beta annihilation  alpha annihilation
- *
- *        with indices sorted as
- *
- *            (p1 < p2 < ...) (P1 < P2 < ...)  (... > Q2 > Q1) (... > q2 > q1)
- */
+/// @brief A class to represent general second quantized operators
+///
+/// An operator is a linear combination of terms, where each term is a numerical factor
+/// times a product of second quantized operators (a SQOperatorString object)
+///
+/// For example:
+///   0.1 * [2a+ 0a-] - 0.5 * [2a+ 0a-] + ...
+///           Term 0            Term 1
+///
+/// This class stores operators in each term in the following canonical form
+///   a+_p1 a+_p2 ...  a+_P1 a+_P2 ...   ... a-_Q2 a-_Q1   ... a-_q2 a-_q1
+///   alpha creation   beta creation    beta annihilation  alpha annihilation
+///
+/// with indices sorted as
+///
+///   (p1 < p2 < ...) (P1 < P2 < ...)  (... > Q2 > Q1) (... > q2 > q1)
+///
 class SparseOperator
     : public VectorSpace<SparseOperator, SQOperatorString, double, SQOperatorString::Hash> {
   public:
@@ -116,22 +112,8 @@ class SparseOperatorList : public VectorSpaceList<SparseOperatorList, SQOperator
     SparseOperator to_operator() const;
 };
 
-// double norm(const SparseOperator& op);
-
-// /// @return The product of two second quantized operators
-// SparseOperator operator+(SparseOperator lhs, const SparseOperator& rhs);
-
-// /// @return The product of two second quantized operators
-// SparseOperator operator-(SparseOperator lhs, const SparseOperator& rhs);
-
 /// @return The product of two second quantized operators
 SparseOperator operator*(const SparseOperator& lhs, const SparseOperator& rhs);
-
-// /// @return The product of a second quantized operator and a numerical factor
-// SparseOperator operator*(double scalar, const SparseOperator& op);
-
-// /// @return A second quantized operator divided by a numerical factor
-// SparseOperator operator/(double scalar, const SparseOperator& op);
 
 /// @return The commutator of two second quantized operators
 SparseOperator commutator(const SparseOperator& lhs, const SparseOperator& rhs);

@@ -36,71 +36,39 @@
 
 namespace forte {
 
-class ActiveSpaceIntegrals;
-
-class SparseState {
+/// @brief A class to represent general Fock space states
+class SparseState : public VectorSpace<SparseState, Determinant, double, Determinant::Hash> {
   public:
-    /// Constructor
-    SparseState() = default;
-    /// Constructor from a map/dictionary (python friendly)
-    SparseState(const det_hash<double>& state_vec);
-    /// @return the map that holds the determinants
-    det_hash<double>& map() { return state_vec_; }
-    /// @return the map that holds the determinants
-    const det_hash<double>& map() const { return state_vec_; }
-    /// @return true if the two states are identical
-    bool operator==(const SparseState& lhs) const;
     /// @return a string representation of the object
+    /// @param n the number of spatial orbitals to print
     std::string str(int n = 0) const;
-    /// @return the number of elements (determinants)
-    auto size() const { return state_vec_.size(); }
-    /// @brief reset this state
-    void clear() { state_vec_.clear(); }
-    /// @brief find and return the element corresponding to a determinant
-    /// @param d the determinant to search for
-    /// @return the element found
-    auto find(const Determinant& d) const { return state_vec_.find(d); }
-    /// @return count the number of elements corresponding to a determinant
-    auto count(const Determinant& d) const { return state_vec_.count(d); }
-
-    /// @return the beginning of the map
-    auto begin() { return state_vec_.begin(); }
-    /// @return the beginning of the map (const)
-    auto begin() const { return state_vec_.begin(); }
-    /// @return the end of the map
-    auto end() { return state_vec_.end(); }
-    /// @return the end of the map (const)
-    auto end() const { return state_vec_.end(); }
-    /// @return the coefficient corresponding to a determinant
-    /// @param d the determinant to search
-    double& operator[](const Determinant& d) { return state_vec_[d]; }
-
-    SparseState& operator+=(const SparseState& rhs);
-    SparseState& operator-=(const SparseState& rhs);
-    SparseState& operator*=(double rhs);
-    double norm() const;
-
-  private:
-    /// Holds an unordered map Determinant -> double
-    det_hash<double> state_vec_;
 };
 
-// Functions to apply operators, gop |state>
+// Functions to apply operators to a state
+/// @brief Apply an operator to a state
+/// @param op the operator to apply
+/// @param state the state to apply the operator to
+/// @param screen_thresh the threshold to screen the operator
+/// @return the new state
+SparseState apply_operator_lin(const SparseOperator& op, const SparseState& state,
+                               double screen_thresh = 1.0e-12);
 
-/// apply the number projection operator P^alpha_na P^beta_nb |state>
-SparseState apply_number_projector(int na, int nb, const SparseState& state);
+/// @brief Apply the antihermitian combination of an operator to a state
+/// @param op the operator to apply
+/// @param state the state to apply the operator to
+/// @param screen_thresh the threshold to screen the operator
+/// @return the new state
+SparseState apply_operator_antiherm(const SparseOperator& op, const SparseState& state,
+                                    double screen_thresh = 1.0e-12);
 
 /// compute the projection  <state0 | op | ref>, for each operator op in gop
 std::vector<double> get_projection(const SparseOperatorList& sop, const SparseState& ref,
                                    const SparseState& state0);
 
+/// apply the number projection operator P^alpha_na P^beta_nb |state>
+SparseState apply_number_projector(int na, int nb, const SparseState& state);
+
 /// compute the overlap value <left_state|right_state>
 double overlap(const SparseState& left_state, const SparseState& right_state);
-
-/// fast implementation of apply operator based on sorting
-SparseState apply_operator_lin(const SparseOperator& sop, const SparseState& state0,
-                               double screen_thresh = 1.0e-12);
-SparseState apply_operator_antiherm(const SparseOperator& sop, const SparseState& state0,
-                                    double screen_thresh = 1.0e-12);
 
 } // namespace forte

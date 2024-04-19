@@ -78,7 +78,7 @@ class GenCIVector {
     /// @brief print the vector
     void print(double threshold = 1e-9) const;
     /// @brief return the state as a SparseState object
-    std::shared_ptr<SparseState> as_state_vector() const;
+    SparseState as_state_vector() const;
 
     /// copy the wave function object
     void copy(GenCIVector& wfn);

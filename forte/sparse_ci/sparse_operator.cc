@@ -44,118 +44,6 @@ void sim_trans_op_impl(SparseOperator& O, const SQOperatorString& T_op, double t
 void sim_trans_antiherm_impl(SparseOperator& O, const SQOperatorString& T_op, double theta,
                              double screen_threshold);
 
-// SparseOperator::SparseOperator(
-//     const std::unordered_map<SQOperatorString, double, SQOperatorString::Hash>& op_map)
-//     : op_map_(op_map) {
-//     // populate the insertion list in the order of the map since we don't have a specific order
-//     for (const auto& [sqop, _] : op_map_) {
-//         op_insertion_list_.push_back(sqop);
-//     }
-// }
-
-// void SparseOperator::add_term(const std::vector<std::tuple<bool, bool, int>>& op_list,
-//                               double coefficient, bool allow_reordering) {
-//     auto [sqop, phase] = make_sq_operator_string_from_list(op_list, allow_reordering);
-//     // add the term only if the operator is not antihermitian or if the operator is
-//     // antihermitian and the term is antihermitian compatible
-//     add_term(sqop, phase * coefficient);
-// }
-
-// void SparseOperator::add_term(const SQOperatorString& sqop, double c) {
-//     auto result = op_map_.insert({sqop, c});
-//     if (!result.second) {
-//         // the element already exists, so add c to the existing value
-//         result.first->second += c;
-//     } else {
-//         // this is a new element, so add sqop to the insertion order tracking list
-//         op_insertion_list_.push_back(sqop);
-//     }
-// }
-
-// std::pair<SQOperatorString, double> SparseOperator::term(size_t n) const {
-//     if (n >= op_insertion_list_.size()) {
-//         throw std::out_of_range("Index out of range");
-//     }
-//     const SQOperatorString& key = op_insertion_list_[n];
-//     double value = op_map_.at(key); // This will throw std::out_of_range if key is not found,
-//     which
-//                                     // should never happen if the class is correctly maintained.
-//     return {key, value};
-// }
-
-// const SQOperatorString& SparseOperator::term_operator(size_t n) const {
-//     if (n >= op_insertion_list_.size()) {
-//         throw std::out_of_range("Index out of range");
-//     }
-//     return op_insertion_list_[n];
-// }
-
-// void SparseOperator::copy(const SparseOperator& other) { *this = other; }
-
-void SparseOperator::add_term_from_str(std::string s, double coefficient, bool allow_reordering) {
-    auto [sqop, phase] = make_sq_operator_string(s, allow_reordering);
-    add(sqop, phase * coefficient);
-
-    // // the regex to parse the entries
-    // std::regex re("\\s*(\\[[0-9ab\\+\\-\\s]*\\])");
-    // // the match object
-    // std::smatch m;
-
-    // // here we match terms of the form [<orb><a/b><+/-> ...], then parse the operator part
-    // // and translate it into a term that is added to the operator.
-    // //
-    // if (std::regex_match(str, m, re)) {
-    //     if (m.ready()) {
-    //         auto [sqop, phase] = make_sq_operator_string(m[1], allow_reordering);
-    //         add(sqop, phase * coefficient);
-    //     }
-    // } else {
-    //     std::string msg =
-    //         "add_term_from_str(std::string str, double value) could not parse the string " + str;
-    //     throw std::runtime_error(msg);
-    // }
-}
-
-// std::vector<double> SparseOperator::coefficients() const {
-//     std::vector<double> v;
-//     v.reserve(op_insertion_list_.size());
-//     for (const auto& sqop : op_insertion_list_) {
-//         v.push_back(op_map_.at(sqop));
-//     }
-//     return v;
-// }
-
-// void SparseOperator::set_coefficients(const std::vector<double>& values) {
-//     if (values.size() != op_insertion_list_.size()) {
-//         throw std::invalid_argument("Mismatch in sizes of values and operator list.");
-//     }
-//     for (size_t n = 0, nmax = values.size(); n < nmax; ++n) {
-//         op_map_[op_insertion_list_[n]] = values[n];
-//     }
-// }
-
-// void SparseOperator::set_coefficient(size_t n, double value) {
-//     op_map_[op_insertion_list_[n]] = value;
-// }
-
-// double SparseOperator::coefficient(size_t n) const { return op_map_.at(op_insertion_list_[n]); }
-
-// void SparseOperator::pop_term() {
-//     if (!op_insertion_list_.empty()) {
-//         const auto& last_sqop = op_insertion_list_.back();
-//         op_map_.erase(last_sqop);
-//         op_insertion_list_.pop_back();
-//     }
-// }
-
-SparseOperator SparseOperatorList::to_operator() const {
-    SparseOperator op;
-    for (const auto& [sqop, c] : elements()) {
-        op.add(sqop, c);
-    }
-    return op;
-}
-
 std::string format_term_in_sum(double coefficient, const std::string& term) {
     if (term == "[ ]") {
         if (coefficient == 0.0) {
@@ -203,16 +91,20 @@ std::string SparseOperator::latex() const {
     return join(v, " ");
 }
 
-// SparseOperator SparseOperator::adjoint() const {
-//     SparseOperator adjoint_operator;
-//     for (const auto& [sqop, c] : this->elements()) {
-//         adjoint_operator.add(sqop.adjoint(), c);
-//     }
-//     return adjoint_operator;
-// }
+void SparseOperator::add_term_from_str(std::string s, double coefficient, bool allow_reordering) {
+    auto [sqop, phase] = make_sq_operator_string(s, allow_reordering);
+    add(sqop, phase * coefficient);
+}
+
+SparseOperator SparseOperatorList::to_operator() const {
+    SparseOperator op;
+    for (const auto& [sqop, c] : elements()) {
+        op.add(sqop, c);
+    }
+    return op;
+}
 
 SparseOperator operator*(const SparseOperator& lhs, const SparseOperator& rhs) {
-    std::unordered_map<SQOperatorString, double, SQOperatorString::Hash> result_map;
     SparseOperator result;
     for (const auto& [sqop_lhs, c_lhs] : lhs.elements()) {
         for (const auto& [sqop_rhs, c_rhs] : rhs.elements()) {
@@ -252,63 +144,7 @@ SparseOperator commutator(const SparseOperator& lhs, const SparseOperator& rhs) 
         }
     }
     return C;
-    // std::unordered_map<SQOperatorString, double, SQOperatorString::Hash> result_map;
-    // // this works when one or none of the operators is antihermitian
-    // for (const auto& [sqop_lhs, c_lhs] : lhs.elements()) {
-    //     for (const auto& [sqop_rhs, c_rhs] : rhs.elements()) {
-    //         const auto prod = commutator(sqop_lhs, sqop_rhs);
-    //         for (const auto& [sqop, c] : prod) {
-    //             if (c * c_lhs * c_rhs != 0.0) {
-    //                 result_map[sqop] += c * c_lhs * c_rhs;
-    //             }
-    //         }
-    //     }
-    // }
-    // return SparseOperator(result_map);
 }
-
-// void similarity_transform_test(SparseOperator& op, const SQOperatorString& sqop, double theta) {
-//     SparseOperator A;
-//     SparseOperator T;
-//     SparseOperator Td;
-//     A.add_term(sqop, 1.0);
-//     A.add_term(sqop.adjoint(), -1.0);
-//     T.add_term(sqop, 1.0);
-//     Td.add_term(sqop.adjoint(), 1.0);
-//     auto cOA = commutator(op, A);
-//     auto cOT = commutator(op, T);
-//     auto cOTd = commutator(op, Td);
-//     auto cOAA = commutator(cOA, A);
-//     auto N = -1.0 * A * A;
-//     auto aNO = N * op + op * N;
-//     auto aNcOA = N * cOA + cOA * N;
-//     auto NON = N * op * N;
-//     auto AOA = A * op * A;
-//     auto NOA_AON = N * op * A - A * op * N;
-//     auto TOT = T * op * T;
-//     auto TdOTd = Td * op * Td;
-
-//     auto Td_cOT_T = Td * cOT * T;
-//     auto Td_cOT_Td = Td * cOT * Td;
-//     auto T_cOT_Td = T * cOT * Td;
-
-//     auto T_cOTd_T = T * cOTd * T;
-//     auto T_cOTd_Td = T * cOTd * Td;
-//     auto Td_cOTd_T = Td * cOTd * T;
-
-//     op += std::sin(theta) * cOA;
-//     op += -std::pow(std::sin(theta), 2.0) * AOA;
-//     op += (std::cos(theta) - 1) * aNO;
-//     op += std::pow(std::cos(theta) - 1, 2.0) * NON;
-
-//     // op += std::sin(theta) * (std::cos(theta) - 1) * NOA_AON;
-//     op += -std::sin(theta) * (std::cos(theta) - 1) * Td_cOT_T;
-//     op += -std::sin(theta) * (std::cos(theta) - 1) * T_cOT_Td;
-//     op += +std::sin(theta) * (std::cos(theta) - 1) * Td_cOT_Td;
-//     op += -std::sin(theta) * (std::cos(theta) - 1) * T_cOTd_T;
-//     op += +std::sin(theta) * (std::cos(theta) - 1) * Td_cOTd_T;
-//     op += +std::sin(theta) * (std::cos(theta) - 1) * T_cOTd_Td;
-// }
 
 void sim_trans_fact_op(SparseOperator& O, const SparseOperatorList& T, bool reverse,
                        double screen_threshold) {

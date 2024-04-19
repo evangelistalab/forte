@@ -505,25 +505,28 @@ void export_Determinant(py::module& m) {
 
     py::class_<SparseState, std::shared_ptr<SparseState>>(
         m, "SparseState", "A class to represent a vector of determinants")
-        .def(py::init<const det_hash<double>&>())
+        .def(py::init<>())
         .def(py::init<const SparseState&>())
+        .def(py::init<const SparseState::container&>())
         .def(
             "items", [](const SparseState& v) { return py::make_iterator(v.begin(), v.end()); },
             py::keep_alive<0, 1>()) // Essential: keep object alive while iterator exists
         .def("str", &SparseState::str)
         .def("size", &SparseState::size)
-        .def("norm", &SparseState::norm)
+        .def("norm", &SparseState::norm, "p"_a = 2,
+             "Compute the p-norm of the vector (default p = 2, p = -1 for infinity norm)")
         .def("__iadd__", &SparseState::operator+=, "Add a SparseState to this SparseState")
         .def("__isub__", &SparseState::operator-=, "Subtract a SparseState from this SparseState")
         .def("__len__", &SparseState::size)
         .def("__eq__", &SparseState::operator==)
         .def("__repr__", [](const SparseState& v) { return v.str(); })
         .def("__str__", [](const SparseState& v) { return v.str(); })
-        .def("map", [](const SparseState& v) { return v.map(); })
+        .def("map", [](const SparseState& v) { return v.elements(); })
+        .def("elements", [](const SparseState& v) { return v.elements(); })
         .def("__getitem__", [](SparseState& v, const Determinant& d) { return v[d]; })
         .def("__setitem__",
              [](SparseState& v, const Determinant& d, const double val) { v[d] = val; })
-        .def("__contains__", [](SparseState& v, const Determinant& d) { return v.map().count(d); });
+        .def("__contains__", [](SparseState& v, const Determinant& d) { return v.count(d); });
 
     py::class_<SparseHamiltonian>(m, "SparseHamiltonian",
                                   "A class to represent a sparse Hamiltonian")
