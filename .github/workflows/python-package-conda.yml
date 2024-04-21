@@ -73,8 +73,9 @@ jobs:
         # -DENABLE_ForteTests=TRUE \        
         # make -j2        
 
-    - name: Run forte tests
-      run: |
+    # - name: Run forte tests
+    #   run: |
+
 
 # name: Python Package using Conda
 
