@@ -72,44 +72,50 @@ class VectorSpace {
   public:
     using container = std::unordered_map<T, F, Hash>;
 
-    // Constructor
+    /// @brief Constructor
     VectorSpace() = default;
-    // Copy constructor
+    /// @brief Copy constructor
     VectorSpace(const VectorSpace& other) : elements_(other.elements_) {}
-    // Constructor from a map/dictionary (python friendly)
+    /// @brief Constructor from a map/dictionary (python friendly)
     VectorSpace(const container& elements) : elements_(elements) {}
+    /// Move constructor
+    VectorSpace(VectorSpace&& other) : elements_(std::move(other.elements_)) {}
 
+    /// @brief Zero element of the field
     constexpr static F zero_{0};
+    /// @brief Small number for comparison
     constexpr static F small_{1.0e-12};
 
     /// @return the list of operators
     const container& elements() const { return elements_; }
 
+    /// @return convert this object to the derived class
     inline auto self() { return static_cast<Derived&>(*this); }
+    /// @return convert this object to the derived class (const)
     inline auto self() const { return static_cast<const Derived&>(*this); }
 
-    // implement a copy operator
+    /// @brief Copy operator
     VectorSpace& operator=(const VectorSpace& other) {
         elements_ = other.elements_;
         return *this;
     }
 
+    /// @brief Copy function
     void copy(const Derived& other) { elements_ = other.elements_; }
 
-    // implement the move constructor
-    VectorSpace(VectorSpace&& other) : elements_(std::move(other.elements_)) {}
-
+    /// @return the number of elements in the vector space
     size_t size() const { return elements_.size(); }
 
-    /// @return the beginning of the map
-    auto begin() { return elements_.begin(); }
-    /// @return the beginning of the map (const)
-    auto begin() const { return elements_.begin(); }
-    /// @return the end of the map
-    auto end() { return elements_.end(); }
-    /// @return the end of the map (const)
-    auto end() const { return elements_.end(); }
+    /// @return an iterator to the beginning of the object
+    inline auto begin() { return elements_.begin(); }
+    /// @return an iterator to the beginning of the object (const)
+    inline auto begin() const { return elements_.begin(); }
+    /// @return an iterator to the end of the object
+    inline auto end() { return elements_.end(); }
+    /// @return an iterator to the end of the object (const)
+    inline auto end() const { return elements_.end(); }
 
+    /// @return the element corresponding to the key e
     const F& operator[](const T& e) const {
         auto it = elements_.find(e);
         if (it == elements_.end()) {
@@ -118,15 +124,20 @@ class VectorSpace {
         return it->second;
     }
 
+    /// @return the element corresponding to the key e
     inline F& operator[](const T& e) { return elements_[e]; }
 
+    /// @return a copy the element corresponding to the key e
     inline F operator()(const T& e) const { return (*this)[e]; }
 
     /// @return count how many times an element appears in the vector space
     inline auto count(const T& e) const { return elements_.count(e); }
 
+    /// @return find an element in the vector space
     inline auto find(const T& e) const { return elements_.find(e); }
 
+    /// @return the norm of the vector space
+    /// @param p the norm to calculate (default is 2, -1 is infinity norm)
     F norm(int p = 2) const {
         F result{0};
         // If p is -1, we calculate the infinity norm
@@ -143,8 +154,10 @@ class VectorSpace {
         return std::pow(result, 1. / static_cast<F>(p));
     }
 
+    /// @brief Add an element to the vector space
     void add(const T& e, F c) { elements_[e] += c; }
 
+    /// @brief Remove an element from the vector space
     F remove(const T& e) {
         auto it = elements_.find(e);
         if (it == elements_.end()) {
@@ -155,24 +168,32 @@ class VectorSpace {
         return c;
     }
 
+    /// @brief Add two vectors
     Derived operator+(const Derived& rhs) const {
         Derived result = self();
         result += rhs;
         return result;
     }
 
+    /// @brief Subtract two vectors
     Derived operator-(const Derived& rhs) const {
         Derived result = self();
         result -= rhs;
         return result;
     }
 
+    /// @brief Multiply a vector by a scalar
+    /// @param scalar the scalar to multiply by
+    /// @return the result of the multiplication
     Derived operator*(F scalar) const {
         Derived result = self();
         result *= scalar;
         return result;
     }
 
+    /// @brief Divide a vector by a scalar
+    /// @param scalar the scalar to divide by
+    /// @return the result of the division
     Derived operator/(F scalar) const {
         assert(scalar != 0); // Prevent division by zero
         Derived result = self();
@@ -180,6 +201,7 @@ class VectorSpace {
         return result;
     }
 
+    /// @brief Add two vectors
     Derived& operator+=(const Derived& rhs) {
         for (const auto& [e, c] : rhs.elements_) {
             elements_[e] += c;
@@ -187,6 +209,7 @@ class VectorSpace {
         return static_cast<Derived&>(*this);
     }
 
+    /// @brief Subtract two vectors
     Derived& operator-=(const Derived& rhs) {
         for (const auto& [e, c] : rhs.elements_) {
             elements_[e] -= c;
@@ -194,6 +217,7 @@ class VectorSpace {
         return static_cast<Derived&>(*this);
     }
 
+    /// @brief Multiply a vector by a scalar
     Derived& operator*=(F scalar) {
         for (auto& [_, c] : elements_) {
             c *= scalar;
@@ -201,6 +225,7 @@ class VectorSpace {
         return static_cast<Derived&>(*this);
     }
 
+    /// @brief Divide a vector by a scalar
     Derived& operator/=(F scalar) {
         assert(scalar != 0); // Prevent division by zero
         for (auto& [_, c] : elements_) {
@@ -209,6 +234,7 @@ class VectorSpace {
         return static_cast<Derived&>(*this);
     }
 
+    /// @brief Check if two vectors are equal
     bool operator==(const Derived& other) const {
         const double nonzero = 1.0e-14;
         const auto& smaller = size() < other.size() ? elements() : other.elements();
@@ -241,6 +267,7 @@ class VectorSpace {
         return true;
     }
 
+    /// @brief Get the adjoint of the vector
     Derived adjoint() const {
         Derived result;
         for (const auto& [e, c] : elements_) {
@@ -249,6 +276,7 @@ class VectorSpace {
         return result;
     }
 
+    /// @brief Calculate the dot product of two vectors
     F dot(const Derived& other) const {
         F result{0};
         const auto& smaller = size() < other.size() ? elements() : other.elements();
@@ -289,45 +317,64 @@ template <typename Derived, typename T, Arithmetic F> class VectorSpaceList {
   public:
     using container = std::vector<std::pair<T, F>>;
 
+    /// @brief Constructor
     VectorSpaceList() = default;
+    /// @brief Copy constructor
+    VectorSpaceList(const VectorSpaceList& other) : elements_(other.elements_) {}
+    /// Move constructor
+    VectorSpaceList(VectorSpaceList&& other) : elements_(std::move(other.elements_)) {}
 
+    /// @brief Zero element of the field
     constexpr static F zero_{0};
 
     /// @return the list of operators
     const container& elements() const { return elements_; }
 
-    // implement the copy constructor
-    VectorSpaceList(const VectorSpaceList& other) : elements_(other.elements_) {}
-
-    // implement a copy operator
+    /// @brief Copy operator
     VectorSpaceList& operator=(const VectorSpaceList& other) {
         elements_ = other.elements_;
         return *this;
     }
 
+    /// @brief Copy function
     void copy(const VectorSpaceList& other) { elements_ = other.elements_; }
 
-    // implement the move constructor
-    VectorSpaceList(VectorSpaceList&& other) : elements_(std::move(other.elements_)) {}
-
+    /// @return the number of elements in the vector
     size_t size() const { return elements_.size(); }
 
+    /// @return an element of the vector
     const F& operator[](size_t n) const { return elements_[n].second; }
 
+    /// @return an element of the vector
     F& operator[](size_t n) { return elements_[n].second; }
 
+    /// @return an element of the vector
     const auto& operator()(size_t n) const { return elements_[n]; }
 
-    F norm() const {
-        F result = 0;
-        for (const auto& [e, c] : elements_) {
-            result += c * c;
+    /// @return the norm of the vector space
+    /// @param p the norm to calculate (default is 2, -1 is infinity norm)
+    F norm(int p = 2) const {
+        F result{zero_};
+        // If p is -1, we calculate the infinity norm
+        if (p == -1) {
+            for (const auto& [_, c] : elements_) {
+                result = std::max(result, std::abs(c));
+            }
+            return result;
         }
-        return result;
+        // Otherwise, we calculate the p-norm
+        for (const auto& [_, c] : elements_) {
+            result += std::pow(std::abs(c), p);
+        }
+        return std::pow(result, 1. / static_cast<F>(p));
     }
 
-    void add(const T& e, F c) { elements_.emplace_back(e, c); }
+    /// @brief Add an element to the vector space
+    void add(const T& e, const F& c) { elements_.emplace_back(e, c); }
 
+    /// @brief Multiply a vector by a scalar
+    /// @param scalar
+    /// @return the result of the multiplication
     Derived& operator*=(F scalar) {
         for (auto& [e, c] : elements_) {
             c *= scalar;
@@ -335,6 +382,9 @@ template <typename Derived, typename T, Arithmetic F> class VectorSpaceList {
         return static_cast<Derived&>(*this);
     }
 
+    /// @brief Divide a vector by a scalar
+    /// @param scalar
+    /// @return the result of the division
     Derived& operator/=(F scalar) {
         assert(scalar != 0); // Prevent division by zero
         for (auto& [e, c] : elements_) {
@@ -343,10 +393,10 @@ template <typename Derived, typename T, Arithmetic F> class VectorSpaceList {
         return static_cast<Derived&>(*this);
     }
 
+    /// @brief Check if two vectors lists are equal
     bool operator==(const VectorSpaceList& rhs) const { return elements_ == rhs.elements_; }
 
-    void insert(const T& e, const F& c) { elements_.emplace_back(e, c); }
-
+    /// @brief  Get the adjoint of the vector
     VectorSpaceList adjoint() const {
         VectorSpaceList result;
         for (const auto& [e, c] : elements_) {

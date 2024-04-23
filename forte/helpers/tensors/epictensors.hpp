@@ -231,8 +231,8 @@ template <typename T> class Tensor {
             .def("__repr__", &Tensor<T>::to_string)
             .def("__str__", &Tensor<T>::to_string)
             // TODO: this is dangerous because we ignore the args and kwargs
-            .def("__array__", [](Tensor<T>& self, py::args args,
-                                 py::kwargs kwargs) { return self.numpy_array(); })
+            .def("__array__",
+                 [](Tensor<T>& self, py::args, py::kwargs) { return self.numpy_array(); })
 
             .def_property_readonly("shape", &Tensor<T>::shape)
             .def_static("from_numpy", &Tensor<T>::from_numpy)

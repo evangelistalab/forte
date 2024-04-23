@@ -398,12 +398,12 @@ std::vector<std::pair<SQOperatorString, double>> commutator_fast(const SQOperato
 std::vector<std::pair<SQOperatorString, double>> commutator(const SQOperatorString& lhs,
                                                             const SQOperatorString& rhs) {
 
-    const auto common_l_cre_r_cre = lhs.cre().fast_a_and_b_count(rhs.cre());
-    const auto common_l_cre_r_ann = lhs.cre().fast_a_and_b_count(rhs.ann());
-    const auto common_l_ann_r_ann = lhs.ann().fast_a_and_b_count(rhs.ann());
-    const auto common_l_ann_r_cre = lhs.ann().fast_a_and_b_count(rhs.cre());
-    const auto nl = lhs.count();
-    const auto nr = rhs.count();
+    // const auto common_l_cre_r_cre = lhs.cre().fast_a_and_b_count(rhs.cre());
+    // const auto common_l_cre_r_ann = lhs.cre().fast_a_and_b_count(rhs.ann());
+    // const auto common_l_ann_r_ann = lhs.ann().fast_a_and_b_count(rhs.ann());
+    // const auto common_l_ann_r_cre = lhs.ann().fast_a_and_b_count(rhs.cre());
+    // const auto nl = lhs.count();
+    // const auto nr = rhs.count();
 
     // if the operators do not have any common creation or annihilation operators
     // if (common_l_cre_r_cre == 0 and common_l_ann_r_ann == 0 and common_l_ann_r_cre == 0 and

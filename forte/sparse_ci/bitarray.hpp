@@ -390,7 +390,7 @@ template <size_t N> class BitArray {
         return c;
     }
 
-    int count_all() const {
+    size_t count_all() const {
         // with constexpr we compile only one of these cases
         if constexpr (N == 128) {
             return ui64_bit_count(words_[0]) + ui64_bit_count(words_[1]);
@@ -398,7 +398,7 @@ template <size_t N> class BitArray {
             return ui64_bit_count(words_[0]) + ui64_bit_count(words_[1]) +
                    ui64_bit_count(words_[2]) + ui64_bit_count(words_[3]);
         } else {
-            int c{0};
+            size_t c{0};
             for (const auto& w : words_) {
                 c += ui64_bit_count(w);
             }
@@ -475,7 +475,7 @@ template <size_t N> class BitArray {
     /// @param n the number of bits set to one
     /// @param begin the index of the first word to test
     /// @param end the index of the last word to test (not included)
-    void find_set_bits(std::vector<short>& occ, int& n, size_t begin = 0,
+    void find_set_bits(std::vector<short>& occ, size_t& n, size_t begin = 0,
                        size_t end = nwords_) const {
         n = 0;
         uint64_t x;
