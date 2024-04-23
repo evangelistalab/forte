@@ -297,13 +297,11 @@ void export_Determinant(py::module& m) {
 
     py::class_<SparseOperator>(m, "SparseOperator", "A class to represent a sparse operator")
         .def(py::init<>())
-        // .def("add_term",
-        //      py::overload_cast<const std::vector<std::tuple<bool, bool, int>>&, double, bool>(
-        //          &SparseOperator::add),
-        //      "op_list"_a, "value"_a = 0.0, "allow_reordering"_a = false)
         .def("add", py::overload_cast<const SQOperatorString&, double>(&SparseOperator::add))
-        .def("add_term_from_str", &SparseOperator::add_term_from_str, "str"_a,
-             "coefficient"_a = 1.0, "allow_reordering"_a = false)
+        .def(
+            "add",
+            py::overload_cast<const std::string&, double, bool>(&SparseOperator::add_term_from_str),
+            "str"_a, "coefficient"_a = 1.0, "allow_reordering"_a = false)
         .def(
             "__iter__",
             [](const SparseOperator& v) {
@@ -377,8 +375,8 @@ void export_Determinant(py::module& m) {
                                    "A class to represent a list of sparse operators")
         .def(py::init<>())
         .def("add", &SparseOperatorList::add)
-        .def("add_term_from_str", &SparseOperatorList::add_term_from_str, "str"_a,
-             "coefficient"_a = 1.0, "allow_reordering"_a = false)
+        .def("add", &SparseOperatorList::add_term_from_str, "str"_a, "coefficient"_a = 1.0,
+             "allow_reordering"_a = false)
         .def("to_operator", &SparseOperatorList::to_operator)
         .def("__len__", &SparseOperatorList::size)
         .def(
@@ -449,7 +447,7 @@ void export_Determinant(py::module& m) {
     });
 
     m.def(
-        "make_sparse_operator",
+        "sparse_operator",
         [](const std::string& s, double coefficient, bool allow_reordering) {
             SparseOperator sop;
             sop.add_term_from_str(s, coefficient, allow_reordering);
@@ -458,7 +456,7 @@ void export_Determinant(py::module& m) {
         "s"_a, "coefficient"_a = 1.0, "allow_reordering"_a = false);
 
     m.def(
-        "make_sparse_operator",
+        "sparse_operator",
         [](const std::vector<std::pair<std::string, double>>& list, bool allow_reordering) {
             SparseOperator sop;
             for (const auto& [s, coefficient] : list) {
@@ -572,17 +570,17 @@ void export_Determinant(py::module& m) {
     m.def("get_projection", &get_projection);
     m.def("overlap", &overlap);
     m.def("spin2", &spin2<Determinant::nbits>);
-    m.def("make_hamiltonian_matrix", &make_hamiltonian_matrix, "dets"_a, "as_ints"_a,
+    m.def("hamiltonian_matrix", &make_hamiltonian_matrix, "dets"_a, "as_ints"_a,
           "Make a Hamiltonian matrix (psi::Matrix) from a list of determinants and an "
           "ActiveSpaceIntegrals object");
-    m.def("make_s2_matrix", &make_s2_matrix, "dets"_a,
+    m.def("s2_matrix", &make_s2_matrix, "dets"_a,
           "Make a matrix (psi::Matrix) of the S^2 operator from a list of determinants");
 }
 
 void export_SigmaVector(py::module& m) {
     py::class_<SigmaVector, std::shared_ptr<SigmaVector>>(m, "SigmaVector");
 
-    m.def("make_sigma_vector",
+    m.def("sigma_vector",
           (std::shared_ptr<SigmaVector>(*)(const std::vector<Determinant>& space,
                                            std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                            size_t max_memory, SigmaVectorType sigma_type)) &

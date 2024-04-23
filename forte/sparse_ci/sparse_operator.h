@@ -79,7 +79,8 @@ class SparseOperator
     ///
     /// For example, '[0a+ 1b+ 12b- 0a-]'
     ///
-    void add_term_from_str(std::string str, double coefficient, bool allow_reordering = false);
+    void add_term_from_str(const std::string& str, double coefficient,
+                           bool allow_reordering = false);
 
     /// @return a string representation of this operator
     std::vector<std::string> str() const;

@@ -268,7 +268,7 @@ def make_cluster_operator(max_exc, naelpi, mo_space_info, psi4_wfn):
                                 for i in reversed(ao):
                                     op.append(f"{i}a-")
 
-                                sop.add_term_from_str(f"[{' '.join(op)}]", 0.0)
+                                sop.add(f"[{' '.join(op)}]", 0.0)
 
                                 e_aocc = functools.reduce(lambda x, y: x + ea[y], ao, 0.0)
                                 e_avir = functools.reduce(lambda x, y: x + ea[y], av, 0.0)

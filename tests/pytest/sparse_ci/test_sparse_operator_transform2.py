@@ -123,14 +123,14 @@ def test_sparse_operator_transform_cc_1():
     # one-body operator
     for i in range(n):
         for j in range(n):
-            H += forte.make_sparse_operator(f"[{i}a+ {j}a-]", -0.5 / (abs(i - j) ** 4 + 0.5))
+            H += forte.sparse_operator(f"[{i}a+ {j}a-]", -0.5 / (abs(i - j) ** 4 + 0.5))
 
     # two-body operator
     for i in range(n):
         for j in range(i + 1, n):
             for a in range(n):
                 for b in range(a + 1, n):
-                    H += forte.make_sparse_operator(f"[{a}a+ {b}a+ {j}a- {i}a-]", 0.1 / (abs(i + j - a - b) ** 2 + 0.5))
+                    H += forte.sparse_operator(f"[{a}a+ {b}a+ {j}a- {i}a-]", 0.1 / (abs(i + j - a - b) ** 2 + 0.5))
 
     Hbar = forte.SparseOperator()
     Hbar += H
@@ -138,14 +138,14 @@ def test_sparse_operator_transform_cc_1():
     T = forte.SparseOperatorList()
     for i in range(o):
         for a in range(o, n):
-            T.add_term_from_str(f"[{a}a+ {i}a-]", 0.1 / (abs(a - i) ** 2 + 0.5))
+            T.add(f"[{a}a+ {i}a-]", 0.1 / (abs(a - i) ** 2 + 0.5))
 
     # double excitation
     for i in range(o):
         for j in range(i + 1, o):
             for a in range(o, n):
                 for b in range(a + 1, n):
-                    T.add_term_from_str(f"[{a}a+ {b}a+ {j}a- {i}a-]", 1 / (abs(a + b - i - j) ** 2 + 0.5))
+                    T.add(f"[{a}a+ {b}a+ {j}a- {i}a-]", 1 / (abs(a + b - i - j) ** 2 + 0.5))
 
     Top = T.to_operator()
 
@@ -183,14 +183,14 @@ def test_sparse_operator_transform_ucc_1():
     # one-body operator
     for i in range(n):
         for j in range(n):
-            H += forte.make_sparse_operator(f"[{i}a+ {j}a-]", -0.5 / (abs(i - j) ** 4 + 0.5))
+            H += forte.sparse_operator(f"[{i}a+ {j}a-]", -0.5 / (abs(i - j) ** 4 + 0.5))
 
     # two-body operator
     for i in range(n):
         for j in range(i + 1, n):
             for a in range(n):
                 for b in range(a + 1, n):
-                    H += forte.make_sparse_operator(f"[{a}a+ {b}a+ {j}a- {i}a-]", 0.1 / (abs(i + j - a - b) ** 2 + 0.5))
+                    H += forte.sparse_operator(f"[{a}a+ {b}a+ {j}a- {i}a-]", 0.1 / (abs(i + j - a - b) ** 2 + 0.5))
 
     Hbar = forte.SparseOperator()
     Hbar += H
@@ -198,14 +198,14 @@ def test_sparse_operator_transform_ucc_1():
     T = forte.SparseOperatorList()
     for i in range(o):
         for a in range(o, n):
-            T.add_term_from_str(f"[{a}a+ {i}a-]", 0.1 / (abs(a - i) ** 2 + 0.5))
+            T.add(f"[{a}a+ {i}a-]", 0.1 / (abs(a - i) ** 2 + 0.5))
 
     # double excitation
     for i in range(o):
         for j in range(i + 1, o):
             for a in range(o, n):
                 for b in range(a + 1, n):
-                    T.add_term_from_str(f"[{a}a+ {b}a+ {j}a- {i}a-]", 1 / (abs(a + b - i - j) ** 2 + 0.5))
+                    T.add(f"[{a}a+ {b}a+ {j}a- {i}a-]", 1 / (abs(a + b - i - j) ** 2 + 0.5))
 
     # Top = T.to_operator()
 

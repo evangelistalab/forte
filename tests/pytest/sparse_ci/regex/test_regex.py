@@ -9,7 +9,7 @@ def test_regex():
 
     ### Operator parsing tests ###
     gop = forte.SparseOperator()
-    gop.add_term_from_str("[1a+ 0a-]", 1.0)
+    gop.add("[1a+ 0a-]", 1.0)
     test_str = gop.str()
     print(test_str)
     ref_str = "+ [ 1a+ 0a- ]"

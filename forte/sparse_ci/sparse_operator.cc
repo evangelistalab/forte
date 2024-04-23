@@ -91,7 +91,8 @@ std::string SparseOperator::latex() const {
     return join(v, " ");
 }
 
-void SparseOperator::add_term_from_str(std::string s, double coefficient, bool allow_reordering) {
+void SparseOperator::add_term_from_str(const std::string& s, double coefficient,
+                                       bool allow_reordering) {
     auto [sqop, phase] = make_sq_operator_string(s, allow_reordering);
     add(sqop, phase * coefficient);
 }

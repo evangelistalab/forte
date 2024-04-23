@@ -11,13 +11,13 @@ def test_sparse_exp_1():
     ### Test the linear operator ###
     op = forte.SparseOperator()
     ref = forte.SparseState({det("22"): 1.0})
-    op.add_term_from_str("[2a+ 0a-]", 0.1)
-    op.add_term_from_str("[2b+ 0b-]", 0.2)
-    op.add_term_from_str("[2a+ 0a-]", 0.2)
-    op.add_term_from_str("[2b+ 0b-]", 0.1)
-    op.add_term_from_str("[2a+ 2b+ 0b- 0a-]", 0.15)
-    op.add_term_from_str("[3a+ 3b+ 1b- 1a-]", -0.21)
-    op.add_term_from_str("[1a+ 1b+ 3b- 3a-]", 0.13 * 0.17)
+    op.add("[2a+ 0a-]", 0.1)
+    op.add("[2b+ 0b-]", 0.2)
+    op.add("[2a+ 0a-]", 0.2)
+    op.add("[2b+ 0b-]", 0.1)
+    op.add("[2a+ 2b+ 0b- 0a-]", 0.15)
+    op.add("[3a+ 3b+ 1b- 1a-]", -0.21)
+    op.add("[1a+ 1b+ 3b- 3a-]", 0.13 * 0.17)
 
     wfn = forte.apply_op(op, ref)
     assert det("2200") not in wfn
@@ -29,10 +29,10 @@ def test_sparse_exp_1():
     ### Test the exponential operator with excitation operator ###
     op = forte.SparseOperator()
     ref = forte.SparseState({det("22"): 1.0})
-    op.add_term_from_str("[2a+ 0a-]", 0.1)
-    op.add_term_from_str("[2b+ 0b-]", 0.1)
-    op.add_term_from_str("[2a+ 2b+ 0b- 0a-]", 0.15)
-    op.add_term_from_str("[3a+ 3b+ 1b- 1a-]", -0.077)
+    op.add("[2a+ 0a-]", 0.1)
+    op.add("[2b+ 0b-]", 0.1)
+    op.add("[2a+ 2b+ 0b- 0a-]", 0.15)
+    op.add("[3a+ 3b+ 1b- 1a-]", -0.077)
 
     exp = forte.SparseExp()
     wfn = exp.apply_op(op, ref)
@@ -56,9 +56,9 @@ def test_sparse_exp_1():
     ### Test the exponential operator with antihermitian operator ###
     op = forte.SparseOperator()
     ref = forte.SparseState({det("22"): 1.0})
-    op.add_term_from_str("[2a+ 0a-]", 0.1)
-    op.add_term_from_str("[2b+ 0b-]", 0.1)
-    op.add_term_from_str("[2a+ 2b+ 0b- 0a-]", 0.15)
+    op.add("[2a+ 0a-]", 0.1)
+    op.add("[2b+ 0b-]", 0.1)
+    op.add("[2a+ 2b+ 0b- 0a-]", 0.15)
 
     exp = forte.SparseExp()
     wfn = exp.apply_antiherm(op, ref)
@@ -77,9 +77,9 @@ def test_sparse_exp_1():
 
     ### Test the factorized exponential operator with an antihermitian operator ###
     op = forte.SparseOperatorList()
-    op.add_term_from_str("[2a+ 0a-]", 0.1)
-    op.add_term_from_str("[2b+ 0b-]", 0.2)
-    op.add_term_from_str("[2a+ 2b+ 0b- 0a-]", 0.15)
+    op.add("[2a+ 0a-]", 0.1)
+    op.add("[2b+ 0b-]", 0.2)
+    op.add("[2a+ 2b+ 0b- 0a-]", 0.15)
     ref = forte.SparseState({det("22"): 1.0})
 
     factexp = forte.SparseFactExp()
@@ -107,10 +107,10 @@ def test_sparse_exp_1():
     assert wfn2[det("2200")] == pytest.approx(1.0, abs=1e-9)
 
     op = forte.SparseOperatorList()
-    op.add_term_from_str("[1a+ 0a-]", 0.1)
-    op.add_term_from_str("[1a+ 1b+ 0b- 0a-]", -0.3)
-    op.add_term_from_str("[1b+ 0b-]", 0.05)
-    op.add_term_from_str("[2a+ 2b+ 1b- 1a-]", -0.07)
+    op.add("[1a+ 0a-]", 0.1)
+    op.add("[1a+ 1b+ 0b- 0a-]", -0.3)
+    op.add("[1b+ 0b-]", 0.05)
+    op.add("[2a+ 2b+ 1b- 1a-]", -0.07)
 
     dtest = det("20")
     ref = forte.SparseState({det("20"): 0.5, det("02"): 0.8660254038})
@@ -137,17 +137,17 @@ def test_sparse_exp_2():
 
     for i in range(nocc):
         for a in range(nocc, norb):
-            oplist.add_term_from_str(f"[{a}a+ {i}a-]", amp / (1 + (a - i) ** 2))
-            oplist.add_term_from_str(f"[{a}b+ {i}b-]", amp / (1 + (a - i) ** 2))
+            oplist.add(f"[{a}a+ {i}a-]", amp / (1 + (a - i) ** 2))
+            oplist.add(f"[{a}b+ {i}b-]", amp / (1 + (a - i) ** 2))
 
     for i in range(nocc):
         for j in range(nocc):
             for a in range(nocc, norb):
                 for b in range(nocc, norb):
                     if i < j and a < b:
-                        oplist.add_term_from_str(f"[{a}a+ {b}a+ {j}a- {i}a-]", amp / (1 + (a + b - i - j) ** 2))
-                        oplist.add_term_from_str(f"[{a}b+ {b}b+ {j}b- {i}b-]", amp / (1 + (a + b - i - j) ** 2))
-                    oplist.add_term_from_str(f"[{a}a+ {b}b+ {j}b- {i}a-]", amp / (1 + (a + b - i - j) ** 2))
+                        oplist.add(f"[{a}a+ {b}a+ {j}a- {i}a-]", amp / (1 + (a + b - i - j) ** 2))
+                        oplist.add(f"[{a}b+ {b}b+ {j}b- {i}b-]", amp / (1 + (a + b - i - j) ** 2))
+                    oplist.add(f"[{a}a+ {b}b+ {j}b- {i}a-]", amp / (1 + (a + b - i - j) ** 2))
 
     op = oplist.to_operator()
 

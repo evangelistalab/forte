@@ -17,7 +17,7 @@ def test_sparse_ci3():
     ### Operator ordering tests ###
     # test ordering: 0a+ 0b+ 0b- 0a- |2> = +|2>
     op = forte.SparseOperator()
-    op.add_term_from_str("[0a+ 0b+ 0b- 0a-]", 1.0)
+    op.add("[0a+ 0b+ 0b- 0a-]", 1.0)
     dtest = det("20")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
@@ -25,7 +25,7 @@ def test_sparse_ci3():
 
     # test ordering: 0a+ 0b+ 0a- 0b- |2> = -|2>
     op = forte.SparseOperator()
-    op.add_term_from_str("[0a+ 0b+ 0a- 0b-]", 1.0, allow_reordering=True)
+    op.add("[0a+ 0b+ 0a- 0b-]", 1.0, allow_reordering=True)
     dtest = det("20")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
@@ -33,7 +33,7 @@ def test_sparse_ci3():
 
     # test ordering: 0b+ 0a+ 0b- 0a- |2> = -|2>
     op = forte.SparseOperator()
-    op.add_term_from_str("[0b+ 0a+ 0b- 0a-]", 1.0, allow_reordering=True)
+    op.add("[0b+ 0a+ 0b- 0a-]", 1.0, allow_reordering=True)
     dtest = det("20")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
@@ -41,7 +41,7 @@ def test_sparse_ci3():
 
     # test ordering: 0b+ 0a+ 0a- 0b- |2> = +|2>
     op = forte.SparseOperator()
-    op.add_term_from_str("[0b+ 0a+ 0a- 0b-]", 1.0, allow_reordering=True)
+    op.add("[0b+ 0a+ 0a- 0b-]", 1.0, allow_reordering=True)
     dtest = det("20")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
@@ -54,75 +54,75 @@ def test_sparse_ci3():
     #                             = - 3a+ |-+-0+>
     #                             = + 3a+ |-+-++>
     op = forte.SparseOperator()
-    op.add_term_from_str("[3a+ 4a+ 2b+ 1b- 0a-]", 1.0)
+    op.add("[3a+ 4a+ 2b+ 1b- 0a-]", 1.0)
     ref = forte.SparseState({det("22"): 1.0})
     wfn = forte.apply_op(op, ref)
     assert wfn[det("-+-++")] == pytest.approx(1.0, abs=1e-9)
 
     op = forte.SparseOperator()
-    op.add_term_from_str("[0a+]", 1.0)
+    op.add("[0a+]", 1.0)
     wfn = forte.apply_op(op, forte.SparseState({det(""): 1.0}))
     assert wfn[det("+")] == pytest.approx(1.0, abs=1e-9)
 
     op = forte.SparseOperator()
-    op.add_term_from_str("[0a+ 1a+]", 1.0)
+    op.add("[0a+ 1a+]", 1.0)
     wfn = forte.apply_op(op, forte.SparseState({det(""): 1.0}))
     assert wfn[det("++")] == pytest.approx(1.0, abs=1e-9)
 
     op = forte.SparseOperator()
-    op.add_term_from_str("[0a+ 1a+ 2a+]", 1.0)
+    op.add("[0a+ 1a+ 2a+]", 1.0)
     wfn = forte.apply_op(op, forte.SparseState({det(""): 1.0}))
     assert wfn[det("+++")] == pytest.approx(1.0, abs=1e-9)
 
     op = forte.SparseOperator()
-    op.add_term_from_str("[0a+ 1a+ 2a+ 3a+]", 1.0)
+    op.add("[0a+ 1a+ 2a+ 3a+]", 1.0)
     wfn = forte.apply_op(op, forte.SparseState({det(""): 1.0}))
     assert wfn[det("++++")] == pytest.approx(1.0, abs=1e-9)
 
     op = forte.SparseOperator()
-    op.add_term_from_str("[0a+ 1a+ 2a+ 3a+ 4a+]", 1.0)
+    op.add("[0a+ 1a+ 2a+ 3a+ 4a+]", 1.0)
     wfn = forte.apply_op(op, forte.SparseState({det(""): 1.0}))
     assert wfn[det("+++++")] == pytest.approx(1.0, abs=1e-9)
 
     op = forte.SparseOperator()
-    op.add_term_from_str("[2a+ 0a+ 3a+ 1a+ 4a+]", 1.0, allow_reordering=True)
+    op.add("[2a+ 0a+ 3a+ 1a+ 4a+]", 1.0, allow_reordering=True)
     wfn = forte.apply_op(op, forte.SparseState({det(""): 1.0}))
     assert wfn[det("+++++")] == pytest.approx(-1.0, abs=1e-9)
 
     op = forte.SparseOperator()
-    op.add_term_from_str("[0a-]", 1.0)
+    op.add("[0a-]", 1.0)
     wfn = forte.apply_op(op, forte.SparseState({det("22222"): 1.0}))
     assert wfn[det("-2222")] == pytest.approx(1.0, abs=1e-9)
 
     op = forte.SparseOperator()
-    op.add_term_from_str("[1a- 0a-]", 1.0)
+    op.add("[1a- 0a-]", 1.0)
     wfn = forte.apply_op(op, forte.SparseState({det("22222"): 1.0}))
     assert wfn[det("--222")] == pytest.approx(1.0, abs=1e-9)
 
     op = forte.SparseOperator()
-    op.add_term_from_str("[2a- 1a- 0a-]", 1.0)
+    op.add("[2a- 1a- 0a-]", 1.0)
     wfn = forte.apply_op(op, forte.SparseState({det("22222"): 1.0}))
     assert wfn[det("---22")] == pytest.approx(1.0, abs=1e-9)
 
     op = forte.SparseOperator()
-    op.add_term_from_str("[3a- 2a- 1a- 0a-]", 1.0)
+    op.add("[3a- 2a- 1a- 0a-]", 1.0)
     wfn = forte.apply_op(op, forte.SparseState({det("22222"): 1.0}))
     assert wfn[det("----2")] == pytest.approx(1.0, abs=1e-9)
 
     op = forte.SparseOperator()
-    op.add_term_from_str("[4a- 3a- 2a- 1a- 0a-]", 1.0)
+    op.add("[4a- 3a- 2a- 1a- 0a-]", 1.0)
     wfn = forte.apply_op(op, forte.SparseState({det("22222"): 1.0}))
     assert wfn[det("-----")] == pytest.approx(1.0, abs=1e-9)
 
     op = forte.SparseOperator()
-    op.add_term_from_str("[1a- 3a- 2a- 4a- 0a-]", 1.0, allow_reordering=True)
+    op.add("[1a- 3a- 2a- 4a- 0a-]", 1.0, allow_reordering=True)
     wfn = forte.apply_op(op, forte.SparseState({det("22222"): 1.0}))
     assert wfn[det("-----")] == pytest.approx(-1.0, abs=1e-9)
 
     ### Test for cases that are supposed to return zero ###
     # test destroying empty orbitals: (0a+ 0b+ 0b- 0a-) |0> = 0
     op = forte.SparseOperator()
-    op.add_term_from_str("[0a+ 0b+ 0b- 0a-]", 1.0)
+    op.add("[0a+ 0b+ 0b- 0a-]", 1.0)
     dtest = det("00")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
@@ -130,7 +130,7 @@ def test_sparse_ci3():
 
     # test destroying empty orbitals: (0a+ 0b+ 0b- 0a-) |0> = 0
     op = forte.SparseOperator()
-    op.add_term_from_str("[0a+ 0b+ 0b-]", 1.0)
+    op.add("[0a+ 0b+ 0b-]", 1.0)
     dtest = det("00")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
@@ -138,7 +138,7 @@ def test_sparse_ci3():
 
     # test creating in filled orbitals: (0a+ 1a+ 0a-) |22> = 0
     op = forte.SparseOperator()
-    op.add_term_from_str("[1a+ 0a+ 0a-]", 1.0, allow_reordering=True)
+    op.add("[1a+ 0a+ 0a-]", 1.0, allow_reordering=True)
     dtest = det("+")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
@@ -146,7 +146,7 @@ def test_sparse_ci3():
 
     # test creating in filled orbitals: (0a+ 1a+ 0a-) |22> = 0
     op = forte.SparseOperator()
-    op.add_term_from_str("[1b+ 0a+ 0a-]", 1.0, allow_reordering=True)
+    op.add("[1b+ 0a+ 0a-]", 1.0, allow_reordering=True)
     dtest = det("+")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
@@ -155,7 +155,7 @@ def test_sparse_ci3():
     ### Number operator tests ###
     # test number operator: (0a+ 0a-) |0> = 0
     op = forte.SparseOperator()
-    op.add_term_from_str("[0a+ 0a-]", 1.0)
+    op.add("[0a+ 0a-]", 1.0)
     dtest = det("0")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
@@ -163,7 +163,7 @@ def test_sparse_ci3():
 
     # test number operator: (0a+ 0a-) |+> = |+>
     op = forte.SparseOperator()
-    op.add_term_from_str("[0a+ 0a-]", 1.0)
+    op.add("[0a+ 0a-]", 1.0)
     dtest = det("+")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
@@ -171,7 +171,7 @@ def test_sparse_ci3():
 
     # test number operator: (0a+ 0a-) |-> = 0
     op = forte.SparseOperator()
-    op.add_term_from_str("[0a+ 0a-]", 1.0)
+    op.add("[0a+ 0a-]", 1.0)
     dtest = det("-")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
@@ -179,7 +179,7 @@ def test_sparse_ci3():
 
     # test number operator: (0a+ 0a-) |2> = |2>
     op = forte.SparseOperator()
-    op.add_term_from_str("[0a+ 0a-]", 1.0)
+    op.add("[0a+ 0a-]", 1.0)
     dtest = det("2")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
@@ -187,7 +187,7 @@ def test_sparse_ci3():
 
     # test number operator: (0b+ 0b-) |0> = 0
     op = forte.SparseOperator()
-    op.add_term_from_str("[0b+ 0b-]", 1.0)
+    op.add("[0b+ 0b-]", 1.0)
     dtest = det("0")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
@@ -195,7 +195,7 @@ def test_sparse_ci3():
 
     # test number operator: (0b+ 0b-) |+> = 0
     op = forte.SparseOperator()
-    op.add_term_from_str("[0b+ 0b-]", 1.0)
+    op.add("[0b+ 0b-]", 1.0)
     dtest = det("+")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
@@ -203,7 +203,7 @@ def test_sparse_ci3():
 
     # test number operator: (0b+ 0b-) |-> = |->
     op = forte.SparseOperator()
-    op.add_term_from_str("[0b+ 0b-]", 1.0)
+    op.add("[0b+ 0b-]", 1.0)
     dtest = det("-")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
@@ -211,7 +211,7 @@ def test_sparse_ci3():
 
     # test number operator: (0b+ 0b-) |2> = |2>
     op = forte.SparseOperator()
-    op.add_term_from_str("[0b+ 0b-]", 1.0)
+    op.add("[0b+ 0b-]", 1.0)
     ref = forte.SparseState({det("2"): 1.0})
     wfn = forte.apply_op(op, ref)
     assert wfn[det("2")] == pytest.approx(1.0, abs=1e-9)
@@ -219,12 +219,12 @@ def test_sparse_ci3():
     # make sure that the  number operator throws an exception: (2a+ 2a- + 2b+ 2b-) |222> = |222>
     op = forte.SparseOperator()
     with pytest.raises(RuntimeError):
-        op.add_term_from_str("[2a+ 2a-] + [2b+ 2b-]", 1.0)
+        op.add("[2a+ 2a-] + [2b+ 2b-]", 1.0)
 
     ### Excitation operator tests ###
     # test excitation operator: (3a+ 0a-) |2200> = 3a+ |-200> = -|-20+>
     op = forte.SparseOperator()
-    op.add_term_from_str("[3a+ 0a-]", 1.0)
+    op.add("[3a+ 0a-]", 1.0)
     dtest = det("22")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
@@ -232,7 +232,7 @@ def test_sparse_ci3():
 
     # test excitation operator: (0a- 3a+) |22> = 0a- |220+> = |-20+>
     op = forte.SparseOperator()
-    op.add_term_from_str("[0a- 3a+]", 1.0, allow_reordering=True)
+    op.add("[0a- 3a+]", 1.0, allow_reordering=True)
     dtest = det("22")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
@@ -240,7 +240,7 @@ def test_sparse_ci3():
 
     # test number operator: (3b+ 0b-) |2200> = 3b+ |+200> = |+20->
     op = forte.SparseOperator()
-    op.add_term_from_str("[3b+ 0b-]", 1.0)
+    op.add("[3b+ 0b-]", 1.0)
     dtest = det("22")
     ref = forte.SparseState({dtest: 1.0})
     wfn = forte.apply_op(op, ref)
