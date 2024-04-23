@@ -53,8 +53,8 @@
 #include "sparse_ci/sparse_fact_exp.h"
 #include "sparse_ci/sparse_exp.h"
 #include "sparse_ci/sparse_hamiltonian.h"
-#include "sparse_ci/sq_operator.h"
 #include "sparse_ci/sq_operator_string.h"
+#include "sparse_ci/sq_operator_string_ops.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
