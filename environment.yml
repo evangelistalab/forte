@@ -1,7 +1,8 @@
 name: forte
 
 dependencies:
-    - pip>=19.0
+    - python=3.11
+    - pip
     - pybind11
     - cxx-compiler
     - mkl
@@ -9,7 +10,6 @@ dependencies:
     - numpy
     - scipy
     - eigen
-    - boost
     - pint
     - pydantic
     - pyyaml
@@ -18,5 +18,4 @@ dependencies:
     - yaml
     - pytest
     - conda-forge::lcov
-    - conda-forge/label/libint_dev::libint
-    #-psi4::libint2  # high AM
+    - conda-forge::libint
