@@ -5,15 +5,13 @@ on: [push, pull_request]
 jobs:
   build-linux:
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 5
     defaults:
       run:
-        shell: bash -el {0}      
+        shell: bash -el {0}   
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: 'true'
 
@@ -22,13 +20,13 @@ jobs:
       with:
         activate-environment: forte
         environment-file: environment.yml
+        channels: conda-forge
         show-channel-urls: true
-        python-version: '3.9'
+        python-version: '3.10'
         auto-activate-base: false
         miniforge-variant: Mambaforge
         use-mamba: true        
         add-pip-as-python-dependency: true
-        channels: conda-forge
 
     - name: Install ambit
       run: |
@@ -44,7 +42,8 @@ jobs:
 
     - name: Compile psi4
       run: |
-        # export LD_LIBRARY_PATH=/home/runner/miniconda3/envs/forte/x86_64-conda-linux-gnu/lib:$LD_LIBRARY_PATH      
+        conda info
+        conda list
         cd $HOME        
         git clone https://github.com/psi4/psi4.git
         cd psi4
@@ -53,10 +52,11 @@ jobs:
         cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$HOME/psi4bin -DENABLE_ecpint=ON
         cd objdir
         make -j2
-        # make install
 
     - name: Compile forte
       run: |
+        conda info
+        conda list
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib
         export AMBITPATH=$HOME/bin/ambit
         export PATH=$PATH:$HOME/psi4/objdir/stage/bin
@@ -65,49 +65,3 @@ jobs:
         pip list
         cd $HOME/work/forte/forte/tests/pytest
         pytest
-        # cd $HOME/work/forte/forte/tests/methods
-        # python run_forte_tests.py --failed_dump --bw
-        # cmake_psi4=$(psi4 --plugin-compile)
-        # $cmake_psi4 --debug-output \
-        # -Dambit_DIR=$HOME/bin/ambit/share/cmake/ambit/ \
-        # -DENABLE_ForteTests=TRUE \        
-        # make -j2        
-
-    # - name: Run forte tests
-    #   run: |
-
-
-# name: Python Package using Conda
-
-# on: [push]
-
-# jobs:
-#   build-linux:
-#     runs-on: ubuntu-latest
-#     strategy:
-#       max-parallel: 5
-
-#     steps:
-#     - uses: actions/checkout@v3
-#     - name: Set up Python 3.10
-#       uses: actions/setup-python@v3
-#       with:
-#         python-version: '3.10'
-#     - name: Add conda to system path
-#       run: |
-#         # $CONDA is an environment variable pointing to the root of the miniconda directory
-#         echo $CONDA/bin >> $GITHUB_PATH
-#     - name: Install dependencies
-#       run: |
-#         conda env update --file environment.yml --name base
-#     - name: Lint with flake8
-#       run: |
-#         conda install flake8
-#         # stop the build if there are Python syntax errors or undefined names
-#         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-#         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-#         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-#     - name: Test with pytest
-#       run: |
-#         conda install pytest
-#         # pytest
