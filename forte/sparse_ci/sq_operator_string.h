@@ -29,6 +29,7 @@
 #pragma once
 
 #include <vector>
+#include <bitset>
 
 #include "sparse_ci/determinant.h"
 
