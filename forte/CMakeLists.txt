@@ -282,8 +282,6 @@ if(TARGET block2::block2)
     add_definitions(-DHAVE_BLOCK2)
 endif()
 
-target_include_directories(_forte PRIVATE .)
-
 if(ENABLE_MPI)
     target_link_libraries(_forte PRIVATE ${MPI_CXX_LIBRARIES})  # MPI option A
     #target_link_libraries(forte PRIVATE MPI::MPI_CXX)  # MPI option B
