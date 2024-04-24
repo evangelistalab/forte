@@ -61,4 +61,4 @@ jobs:
         # pytest
         export OPENBLAS_NUM_THREADS=1
         cd $HOME/work/forte/forte/tests/methods
-        python run_forte_tests.py
+        run_forte_tests.py --failed_dump --bw
