@@ -61,5 +61,7 @@ jobs:
         cd $HOME/work/forte/forte
         python setup.py develop
         pip list
-        cd $HOME/work/forte/forte/tests/pytest
-        pytest
+        # cd $HOME/work/forte/forte/tests/pytest
+        # pytest
+        cd $HOME/work/forte/forte/tests/methods
+        python run_forte_tests.py
