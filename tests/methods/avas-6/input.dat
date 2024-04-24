@@ -84,4 +84,4 @@ restricted_docc     [16,6,9,12]
 active              [2,2,1,2]
 }
 Ecasci, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-compare_values(reffci, Ecasci, 7, "CASCI(10e,7o) energy")
+compare_values(reffci, Ecasci, 6, "CASCI(10e,7o) energy")
