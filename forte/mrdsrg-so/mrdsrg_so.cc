@@ -685,8 +685,8 @@ double MRDSRG_SO::compute_eom() {
 
     /// Overlap matrix
     std::shared_ptr<psi::Matrix> S = std::make_shared<psi::Matrix>("EOM-S-sub", nh_, nh_);
-    // std::shared_ptr<psi::Matrix> Sevec = std::make_shared<psi::Matrix>("S-evec", nh_, nh_);
-    // std::shared_ptr<psi::Vector> Seval = std::make_shared<psi::Vector>("S-eval", nh_);
+    std::shared_ptr<psi::Matrix> Sevec = std::make_shared<psi::Matrix>("S-evec", nh_, nh_);
+    std::shared_ptr<psi::Vector> Seval = std::make_shared<psi::Vector>("S-eval", nh_);
     // std::shared_ptr<psi::Matrix> Eevec = std::make_shared<psi::Matrix>("E-evec", nh_, nh_);
     // std::shared_ptr<psi::Vector> Eeval = std::make_shared<psi::Vector>("E-eval", nh_);
     S->identity();
@@ -698,29 +698,41 @@ double MRDSRG_SO::compute_eom() {
         S->set(i[0] + 2 * ncore + nactv, i[1] + 2 * ncore + nactv, value);
     });
     S->print();
-    // S->diagonalize(Sevec, Seval);
-    auto Sevec = S->partial_cholesky_factorize(1e-10);
-    auto Seval = std::make_shared<psi::Vector>("S-eval", Sevec->rowdim());
+    S->diagonalize(Sevec, Seval);
+    // auto Sevec = S->partial_cholesky_factorize(1e-10);
+    // auto Seval = std::make_shared<psi::Vector>("S-eval", Sevec->rowdim());
 
-    // for (size_t i = 0; i < Sevec->coldim(); i++) {
-    //     for (size_t j = 0; j < Sevec->rowdim(); j++) {
-    //         double value = Sevec->get(j, i) / std::sqrt(Seval->get(i));
-    //         Sevec->set(j, i, value);
-    //     }
-    // }
+    std::vector<size_t> s_list;
+    for (size_t i = 0; i < Sevec->coldim(); i++) {
+        double value = abs(Seval->get(i));
+        if (value > 1e-8) {
+            s_list.push_back(i);
+        }
+    }
 
-    EOM_Hbar_mat_ = psi::linalg::triplet(Sevec, EOM_Hbar_mat_, Sevec, true, false, false);
+    size_t num_s_list = s_list.size();
 
-    EOM_Hbar_mat_->diagonalize(Sevec, Seval);
+    std::shared_ptr<psi::Matrix> S_new = std::make_shared<psi::Matrix>("S-new", nh_, num_s_list);
+    for (size_t i = 0; i < num_s_list; i++) {
+        psi::SharedVector temp = Sevec->get_column(0, s_list[i]);
+        temp->scale(1.0 / Seval->get(s_list[i]));
+        S_new->set_column(0, i, temp);
+    }
+    std::shared_ptr<psi::Matrix> Eevec = std::make_shared<psi::Matrix>("E-evec", nh_, num_s_list);
+    std::shared_ptr<psi::Vector> Eeval = std::make_shared<psi::Vector>("E-eval", num_s_list);
+
+    EOM_Hbar_mat_ = psi::linalg::triplet(S_new, EOM_Hbar_mat_, S_new, true, false, false);
+
+    EOM_Hbar_mat_->diagonalize(Eevec, Eeval);
 
     outfile->Printf("\n    "
                     "----------------------------------------------------------"
                     "----------------------------------------");
     outfile->Printf("\n\n\n   EOM-DSRG          ");
 
-    Seval->print();
+    Eeval->print();
 
-    return Seval->get(0);
+    return Eeval->get(0);
 }
 
 void MRDSRG_SO::compute_hbar() {
