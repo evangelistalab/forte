@@ -158,8 +158,9 @@ void GenCIVector::print(double threshold) const {
     });
 }
 
-std::shared_ptr<StateVector> GenCIVector::as_state_vector() const {
-    det_hash<double> state_vector;
+SparseState GenCIVector::as_state_vector() const {
+    // det_hash<double> state_vector;
+    SparseState state_vector;
     const_for_each_element([&](const size_t& /*n*/, const int& class_Ia, const int& class_Ib,
                                const size_t& Ia, const size_t& Ib, const double& c) {
         if (std::fabs(c) > 1.0e-12) {
@@ -167,7 +168,7 @@ std::shared_ptr<StateVector> GenCIVector::as_state_vector() const {
             state_vector[I] = c;
         }
     });
-    return std::make_shared<StateVector>(state_vector);
+    return state_vector;
 }
 
 void GenCIVector::copy(GenCIVector& wfn) {

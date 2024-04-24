@@ -60,7 +60,7 @@ class CMakeBuild(build_ext):
     def build_extension(self, ext):
         import subprocess
 
-        cfg = "Debug" if self.debug else "Release"
+        cfg = "Debug" if self.debug else "RelWithDebInfo"
 
         # if nprocs is not specified we use os.cpu_count() to find the CPU count
         if self.nprocs in [None, "None", ""]:

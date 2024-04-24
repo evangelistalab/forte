@@ -392,18 +392,18 @@ mrdsrg-spin-adapted-pt3:
       - mrdsrg-spin-adapted-pt3-1
    medium:
       - mrdsrg-spin-adapted-pt3-2
-pci:
-   short:
-      - pci-1
-      - pci-3
-      - pci-4
-   medium:
-      #- pci-2
-      #- pci-5
-      - pci-6
-      #- pci-7
-      - pci-8
-      #- pci-9
+# pci:
+#    short:
+#       - pci-1
+#       - pci-3
+#       - pci-4
+#    medium:
+#       #- pci-2
+#       #- pci-5
+#       - pci-6
+#       #- pci-7
+#       - pci-8
+#       #- pci-9
 read-orbitals:
    short:
       - read-orbitals-1
