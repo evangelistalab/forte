@@ -31,6 +31,7 @@
 
 #include <bit>
 #include <cstdint>
+#include <limits>
 
 /// a function to accumulate hash values of 64 bit unsigned integers
 /// based on boost/functional/hash/hash.hpp
