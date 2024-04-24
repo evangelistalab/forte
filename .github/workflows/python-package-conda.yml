@@ -40,8 +40,6 @@ jobs:
 
     - name: Compile psi4
       run: |
-        conda info
-        conda list
         cd $HOME        
         git clone https://github.com/psi4/psi4.git
         cd psi4
@@ -53,8 +51,6 @@ jobs:
 
     - name: Compile forte
       run: |
-        conda info
-        conda list
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib
         export AMBITPATH=$HOME/bin/ambit
         export PATH=$PATH:$HOME/psi4/objdir/stage/bin
@@ -63,5 +59,6 @@ jobs:
         pip list
         # cd $HOME/work/forte/forte/tests/pytest
         # pytest
+        export OPENBLAS_NUM_THREADS=1
         cd $HOME/work/forte/forte/tests/methods
         python run_forte_tests.py
