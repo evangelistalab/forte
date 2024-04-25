@@ -153,7 +153,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name="forte",
-    version="0.2.3",
+    version="0.3.0",
     author="Forte developers",
     description="A hybrid Python/C++ quantum chemistry package for strongly correlated electrons.",
     long_description="Forte is an open-source plugin to Psi4 that implements a variety of quantum chemistry methods for strongly correlated electrons.",
