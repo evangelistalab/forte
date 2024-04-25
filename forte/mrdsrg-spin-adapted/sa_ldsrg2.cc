@@ -74,7 +74,7 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
 
     // iteration variables
     double Ecorr = 0.0;
-    bool converged = false;
+    converged_ = false;
 
     setup_ldsrg2_tensors();
 
@@ -153,7 +153,7 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
         if (std::fabs(Edelta) < e_conv_ && rms < r_conv_) {
-            converged = true;
+            converged_ = true;
             break;
         }
 
@@ -189,11 +189,6 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
     // dump amplitudes to disk
     dump_amps_to_disk();
 
-    // fail to converge
-    if ((!converged) and die_if_not_converged_) {
-        clean_checkpoints(); // clean amplitudes in scratch directory
-        throw psi::PSIEXCEPTION("The MR-LDSRG(2) computation does not converge.");
-    }
     final.stop();
 
     Hbar0_ = Ecorr;

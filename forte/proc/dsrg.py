@@ -183,7 +183,6 @@ class ProcedureDSRG:
 
         if self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
             self.dsrg_solver.set_Uactv(self.Ua)
-            self.dsrg_solver.set_die_if_not_converged(self.relax_ref != "ITERATE")
 
         if self.solver_type in ["MRDSRG", "DSRG-MRPT2", "DSRG-MRPT3", "THREE-DSRG-MRPT2"]:
             self.dsrg_solver.set_Uactv(self.Ua, self.Ub)
@@ -355,6 +354,9 @@ class ProcedureDSRG:
 
         e_current = e_dsrg if len(self.energies) == 0 else e_relax
         psi4.core.set_scalar_variable("CURRENT ENERGY", e_current)
+
+        if not self.dsrg_solver.converged():
+            raise RuntimeError("DSRG amplitudes did not converge!");
 
         return e_current
 
