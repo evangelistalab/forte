@@ -726,7 +726,7 @@ double MRDSRG::compute_energy_ldsrg2() {
 
     // iteration variables
     double Ecorr = 0.0;
-    int maxiter = foptions_->get_int("MAXITER");
+    int maxiter = foptions_->get_int("DSRG_MAXITER");
     double e_conv = foptions_->get_double("E_CONVERGENCE");
     double r_conv = foptions_->get_double("R_CONVERGENCE");
     converged_ = false;
@@ -998,7 +998,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
 
     // iteration variables
     double Ecorr = 0.0;
-    int maxiter = foptions_->get_int("MAXITER");
+    int maxiter = foptions_->get_int("DSRG_MAXITER");
     double e_conv = foptions_->get_double("E_CONVERGENCE");
     double r_conv = foptions_->get_double("R_CONVERGENCE");
     converged_ = false;
