@@ -22,7 +22,7 @@ def test_sparse_operator2():
 
     ham_op = forte.SparseHamiltonian(as_ints)
 
-    ref = forte.StateVector({det("20"): 1.0})
+    ref = forte.SparseState({det("20"): 1.0})
     Href1 = ham_op.compute(ref, 0.0)
     Href2 = ham_op.compute_on_the_fly(ref, 0.0)
     assert Href1[det("20")] == pytest.approx(-1.094572, abs=1e-6)

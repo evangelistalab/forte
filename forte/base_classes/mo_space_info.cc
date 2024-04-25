@@ -99,7 +99,7 @@ psi::Dimension MOSpaceInfo::dimension(const std::string& space) const {
 std::vector<int> MOSpaceInfo::symmetry(const std::string& space) const {
     psi::Dimension dims = dimension(space);
     std::vector<int> result;
-    for (int h = 0; h < dims.n(); ++h) {
+    for (size_t h = 0; h < dims.n(); ++h) {
         fill_n(back_inserter(result), dims[h], h); // insert h for dims[h] times
     }
     return result;
