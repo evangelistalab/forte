@@ -257,7 +257,8 @@ double MCSCF_2STEP::compute_energy() {
 
         // start iterations
         lbfgs_param->maxiter = micro_miniter_;
-        bool skip_de_conv = (ci_type_.find("DMRG") != std::string::npos);
+        bool skip_de_conv = (ci_type_.find("DMRG") != std::string::npos or
+                             ci_type_.find("BLOCK2") != std::string::npos);
 
         std::vector<CASSCF_HISTORY> history;
 
