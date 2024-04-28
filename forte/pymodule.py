@@ -97,7 +97,7 @@ def forte_driver(data: ForteData):
     if options.get_bool("WRITE_RDM"):
         max_rdm_level = 3  # TODO allow the user to change this variable
         data = ActiveSpaceRDMs(max_rdm_level=max_rdm_level).run(data)
-        write_external_rdm_file(data.rdms)
+        write_external_rdm_file(data.rdms, data.active_space_solver)
 
     if options.get_bool("SPIN_ANALYSIS"):
         data = ActiveSpaceRDMs(max_rdm_level=2, rdms_type=forte.RDMsType.spin_dependent).run(data)

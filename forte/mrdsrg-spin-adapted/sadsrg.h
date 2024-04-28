@@ -69,6 +69,9 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Set unitary matrix (in active space) from original to semicanonical
     void set_Uactv(ambit::Tensor& U);
 
+    /// If the amplitudes are converged or not
+    bool converged() {return converged_; }
+
   protected:
     /// Startup function called in constructor
     void startup();
@@ -108,6 +111,9 @@ class SADSRG : public DynamicCorrelationSolver {
     size_t ntamp_;
     /// Threshold for amplitudes considered as intruders
     double intruder_tamp_;
+
+    /// If the amplitudes are converged or not
+    bool converged_ = true;
 
     /// How to consider internal amplitudes
     std::string internal_amp_;

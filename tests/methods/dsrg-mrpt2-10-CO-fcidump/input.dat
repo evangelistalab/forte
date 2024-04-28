@@ -6,6 +6,9 @@ refpt2_relax = -113.10890275212
 refdm        =    0.078159
 refdm_relax  =    0.008678
 
+# we need to pass a molecule to psi4 anyway
+molecule {H}
+
 set forte {
   int_type             fcidump
   correlation_solver   dsrg-mrpt2
