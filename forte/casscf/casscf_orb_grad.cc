@@ -122,7 +122,7 @@ void CASSCF_ORB_GRAD::setup_mos() {
         outfile->Printf("\n  This path freeze_core_ = true!\n");
     } else {
         psi::outfile->Printf("\n  freeze_core = false\n");
-        nfrzcpi_ = psi::Dimension(nirrep_, 0);
+        nfrzcpi_ = psi::Dimension(nirrep_);
         core_mos_ = mo_space_info_->absolute_mo("INACTIVE_DOCC");
         outfile->Printf("\n  This path freeze_core_ = false!\n");
     }
