@@ -68,7 +68,7 @@ namespace forte {
 CASSCF_ORB_GRAD::CASSCF_ORB_GRAD(std::shared_ptr<ForteOptions> options,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
                                  std::shared_ptr<ForteIntegrals> ints, bool freeze_core)
-    : options_(options), mo_space_info_(mo_space_info), ints_(ints) {
+    : options_(options), mo_space_info_(mo_space_info), ints_(ints), freeze_core_(freeze_core) {
     startup();
 }
 
@@ -631,7 +631,7 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
                 size_t np = mos_rel_space_[p].second;
 
                 std::string block = mos_rel_space_[p].first + "aaa";
-                outfile->Printf("\n HERE string block %s\n", block.c_str());
+                // outfile->Printf("\n HERE string block %s\n", block.c_str());
                 auto& data = V_.block(block).data();
 
                 for (size_t u = 0; u < nactv_; ++u) {

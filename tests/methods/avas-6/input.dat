@@ -1,5 +1,8 @@
 # Test AO Subspace regular expression on 3d orbitals
 
+import forte
+
+refscf = -1646.6261575497
 ref_occ = {
     'RESTRICTED_DOCC': np.array([14, 6, 8, 11]),
     'ACTIVE': np.array([7, 3, 4, 4]),
@@ -7,7 +10,6 @@ ref_occ = {
 }
 reffci = -1646.6659904820
 
-import forte
 memory 2 gb
 
 molecule FeCp2 {
@@ -53,19 +55,20 @@ Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refscf, Escf, 6, "SCF energy")
 
 set forte {
-job_type            none
-avas                true
-avas_diagonalize    true
-# the hard way
-subspace            ["Fe(3dxy)","Fe(3dxz)","Fe(3dyz)","Fe(3dz2)","Fe(3dx2-y2)",
-                     "C1(2pz)","C2(2pz)","C3(2pz)","C4(2pz)","C5(2pz)",
-                     "C6(2pz)","C7(2pz)","C8(2pz)","C9(2pz)","C10(2pz)"]
-# the easier way
-#subspace            ["Fe(3d)","C1-10(2pz)"]
-# the easiest way
-#subspace            ["Fe(3d)","C(2pz)"]
-casscf_reference false
+  job_type            none
+  avas                true
+  avas_diagonalize    true
+  # the hard way
+  subspace            ["Fe(3dxy)","Fe(3dxz)","Fe(3dyz)","Fe(3dz2)","Fe(3dx2-y2)",
+                       "C1(2pz)","C2(2pz)","C3(2pz)","C4(2pz)","C5(2pz)",
+                       "C6(2pz)","C7(2pz)","C8(2pz)","C9(2pz)","C10(2pz)"]
+  # the easier way
+  #subspace            ["Fe(3d)","C1-10(2pz)"]
+  # the easiest way
+  #subspace            ["Fe(3d)","C(2pz)"]
+  casscf_reference false
 }
+
 Ezero, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 
 # check AVAS suggested orbital dimensions
@@ -74,14 +77,15 @@ for space_name, occ_array in ref_occ.items():
     compare_values(occ_array, array, 6, 'AVAS ' + space_name)
 
 set forte {
-job_type            newdriver
-subspace            ["Fe(3d)"]
-avas                true
-avas_cutoff         0.15
-int_type            df
-active_space_solver fci
-restricted_docc     [16,6,9,12]
-active              [2,2,1,2]
+  job_type            newdriver
+  subspace            ["Fe(3d)"]
+  avas                true
+  avas_cutoff         0.15
+  int_type            df
+  active_space_solver fci
+  restricted_docc     [16,6,9,12]
+  active              [2,2,1,2]
 }
+
 Ecasci, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(reffci, Ecasci, 6, "CASCI(10e,7o) energy")

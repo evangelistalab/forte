@@ -40,6 +40,7 @@ set forte{
   casscf_maxiter          25
   casscf_e_convergence    7
   casscf_g_convergence    7
+  casscf_freeze_core      true
   print                   0
 }
 Ecas_1 = energy('forte')
