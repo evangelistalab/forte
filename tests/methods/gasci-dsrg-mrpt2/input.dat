@@ -36,7 +36,6 @@ set forte {
   e_convergence         8
   r_convergence         7
   casscf_reference      false
-  semi_canonical_mix_inactive false
 }
 
 edsrg = energy('forte', ref_wfn = wfn)

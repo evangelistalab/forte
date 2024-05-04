@@ -50,7 +50,6 @@ set forte {
   correlation_solver      three-dsrg-mrpt2
   active_space_solver     fci
   casscf_reference        false
-  semi_canonical_mix_inactive false
 }
 
 scf, wfn = energy('mcscf', return_wfn=True)

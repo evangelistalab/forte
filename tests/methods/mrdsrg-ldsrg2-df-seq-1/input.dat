@@ -78,7 +78,6 @@ set forte {
   dsrg_hbar_seq          true
   relax_ref              twice
   casscf_reference       false
-  semi_canonical_mix_inactive false
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

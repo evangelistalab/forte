@@ -48,7 +48,6 @@ set forte{
   dsrg_hbar_seq          true
   dsrg_nivo              true
   relax_ref              twice
-  semi_canonical_mix_inactive false
 }
 
 energy('forte', ref_wfn=wfn)

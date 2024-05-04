@@ -20,7 +20,6 @@ set forte{
   frozen_docc             [1,0,0,0]
   restricted_docc         [1,0,1,1]
   active                  [2,0,0,0]
-  casscf_freeze_core      false
   root_sym                0
   nroot                   1
   dsrg_s                  1.0

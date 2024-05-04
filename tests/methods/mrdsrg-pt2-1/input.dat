@@ -70,7 +70,6 @@ set forte {
   dsrg_s             1.0
   maxiter            100
   casscf_reference   false
-  semi_canonical_mix_inactive false
 }
 
 energy('forte')

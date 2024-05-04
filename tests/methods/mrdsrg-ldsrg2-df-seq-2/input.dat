@@ -49,7 +49,6 @@ set forte{
   e_convergence          8
   dsrg_hbar_seq          true
   relax_ref              twice
-  semi_canonical_mix_inactive false
 }
 
 energy('forte', ref_wfn=wfn)

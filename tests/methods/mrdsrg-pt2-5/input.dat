@@ -44,7 +44,6 @@ set forte{
   dsrg_diis_start        3
   dsrg_diis_min_vec      4
   dsrg_diis_max_vec      8
-  semi_canonical_mix_inactive false
 }
 
 # Diagonal Fock

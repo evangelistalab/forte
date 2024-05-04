@@ -65,7 +65,6 @@ set forte {
   relax_ref once
   e_convergence 13
   casscf_reference false
-  semi_canonical_mix_inactive false
 }
 set_num_threads(8)
 

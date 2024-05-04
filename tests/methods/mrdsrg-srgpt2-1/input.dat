@@ -70,8 +70,7 @@ set forte {
   root               0
   dsrg_s             0.1
   maxiter            1000
-  srg_odeint_abserr  1.0e-8
-  semi_canonical_mix_inactive false 
+  srg_odeint_abserr  1.0e-8 
   casscf_reference   false
 }
 

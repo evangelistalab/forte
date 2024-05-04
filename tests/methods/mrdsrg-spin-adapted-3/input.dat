@@ -51,7 +51,6 @@ set forte{
   dsrg_read_amps         true
   dsrg_rsc_ncomm         4
   casscf_reference       false
-  semi_canonical_mix_inactive false
 }
 
 energy('forte', ref_wfn=wfn)

@@ -49,7 +49,6 @@ set forte {
   nroot                1
   multiplicity         1
   casscf_reference     false
-  semi_canonical_mix_inactive false
 }
 
 scf, wfn = energy('mcscf', return_wfn=True)

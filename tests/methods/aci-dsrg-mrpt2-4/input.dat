@@ -63,7 +63,6 @@ set forte {
   charge 0
   dsrg_s 1.0e10
   casscf_reference false
-  semi_canonical_mix_inactive false
 }
 
 set_num_threads(8)

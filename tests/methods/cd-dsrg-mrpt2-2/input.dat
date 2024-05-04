@@ -43,7 +43,6 @@ set forte{
   cholesky_tolerance     1e-14
   casscf_reference       false
   print_denom2           true
-  semi_canonical_mix_inactive false
 }
 
 energy('forte', ref_wfn = refwfn )

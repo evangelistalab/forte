@@ -42,7 +42,6 @@ set forte{
   relax_ref              iterate
   maxiter                100
   e_convergence          8
-  semi_canonical_mix_inactive false
 }
 
 energy('forte', ref_wfn=wfn)

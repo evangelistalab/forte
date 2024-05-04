@@ -27,7 +27,6 @@ set forte{
   casscf_e_convergence    12
   casscf_g_convergence    9
   casscf_final_orbital    natural
-  semi_canonical_mix_inactive false
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)

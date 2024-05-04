@@ -54,7 +54,6 @@ set forte {
   e_convergence       6
   r_convergence       4
   dsrg_dump_amps      true
-  semi_canonical_mix_inactive false
 }
 
 Eforte, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
