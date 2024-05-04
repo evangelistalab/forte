@@ -17,7 +17,6 @@ set globals{
 set forte{
   active_space_solver     fci
   correlation_solver      dsrg-mrpt2
-  casscf_reference        true
   frozen_docc             [1,0,0,0]
   restricted_docc         [1,0,1,1]
   active                  [2,0,0,0]
@@ -31,5 +30,5 @@ set forte{
 
 energy('forte')
 
-compare_values(refmcscf,variable("DSRG REFERENCE ENERGY"),8,"CASSCF energy")
+compare_values(refmcscf,variable("DSRG REFERENCE ENERGY"),10,"CASSCF energy")
 compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8,"DSRG-MRPT2 energy")

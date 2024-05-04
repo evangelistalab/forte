@@ -58,8 +58,8 @@ FCISolver::FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo>
       active_dim_(mo_space_info->dimension("ACTIVE")), nirrep_(as_ints->ints()->nirrep()),
       symmetry_(state.irrep()) {
     // TODO: read this info from the base class
-    na_ = state.na() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
-    nb_ = state.nb() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
+    na_ = state.na() - mo_space_info->size("INACTIVE_DOCC");
+    nb_ = state.nb() - mo_space_info->size("INACTIVE_DOCC");
 }
 
 void FCISolver::set_maxiter_davidson(int value) { maxiter_davidson_ = value; }
@@ -122,7 +122,7 @@ void FCISolver::startup() {
     lists_ = std::make_shared<FCIStringLists>(mo_space_info_, na_, nb_, print_, gas_size, gas_min,
                                               gas_max);
 #else
-    lists_ = std::make_shared<FCIStringLists>(active_dim_, core_mo_, active_mo_, na_, nb_, print_);
+    lists_ = std::make_shared<FCIStringLists>(active_dim_, active_mo_, na_, nb_, print_);
 #endif
 
     nfci_dets_ = 0;

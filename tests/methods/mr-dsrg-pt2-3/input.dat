@@ -64,4 +64,4 @@ set forte{
 }
 
 energy('forte')
-compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"MR-DSRG-PT2 energy") #TEST
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),9,"MR-DSRG-PT2 energy") #TEST

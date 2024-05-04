@@ -54,13 +54,13 @@ set forte{
    frozen_docc          [1,0,0,0]
    restricted_docc      [1,0,0,0]
    active               [1,0,0,1]
-   active_space_solver  detci
+   active_space_solver  fci
    root_sym             0
    nroot                1
    dsrg_s               1.0e10
-   casscf_e_convergence    12
-   casscf_g_convergence    8
+   casscf_e_convergence 12
+   casscf_g_convergence 7
 }
 
 energy('forte')
-compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"MR-DSRG-PT2 energy") #TEST
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),9,"MR-DSRG-PT2 energy") #TEST

@@ -24,7 +24,7 @@ set global {
 set forte {
   active_space_solver aci
   ms                  0.0
-  sigma               0.001  
+  sigma               0.001
   sci_enforce_spin_complete true
   e_convergence       12
   r_convergence       8

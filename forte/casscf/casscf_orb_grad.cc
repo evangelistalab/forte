@@ -53,13 +53,6 @@
 
 #include "casscf/casscf_orb_grad.h"
 
-#ifdef _OPENMP
-#include <omp.h>
-#else
-#define omp_get_max_threads() 1
-#define omp_get_thread_num() 0
-#endif
-
 using namespace psi;
 using namespace ambit;
 
@@ -85,17 +78,11 @@ void CASSCF_ORB_GRAD::startup() {
     // setup JK
     JK_ = ints_->jk();
 
-    outfile->Printf("\n HERE 1\n");
-
     // allocate memory for tensors and matrices
     init_tensors();
 
-    outfile->Printf("\n HERE 2\n");
-
     // compute the initial MO integrals
     build_mo_integrals();
-
-    outfile->Printf("\n HERE 3\n");
 }
 
 void CASSCF_ORB_GRAD::setup_mos() {
@@ -116,46 +103,14 @@ void CASSCF_ORB_GRAD::setup_mos() {
     nfrzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
 
     if (freeze_core_) {
-        psi::outfile->Printf("\n  freeze_core = true\n");
         nfrzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
         core_mos_ = mo_space_info_->absolute_mo("RESTRICTED_DOCC");
-        outfile->Printf("\n  This path freeze_core_ = true!\n");
     } else {
-        psi::outfile->Printf("\n  freeze_core = false\n");
         nfrzcpi_ = psi::Dimension(nirrep_);
         core_mos_ = mo_space_info_->absolute_mo("INACTIVE_DOCC");
-        outfile->Printf("\n  This path freeze_core_ = false!\n");
-    }
-
-    outfile->Printf("\n Done\n");
-
-    // if (freeze_core_) {
-
-    // } else {
-    //     nfrzcpi_ = psi::Dimension(nirrep_, 0);
-    //     core_mos_ = mo_space_info_->absolute_mo("INACTIVE_DOCC");
-    //     outfile->Printf("\n  This path freeze_core_ = false!\n");
-    // }
-    // print core_mos_
-    outfile->Printf("\n  core_mos_ size: %zu", core_mos_.size());
-    for (size_t i = 0; i < core_mos_.size(); ++i) {
-        outfile->Printf("\n  core_mos_[%zu]: %zu", i, core_mos_[i]);
-    }
-
-    auto fd = mo_space_info_->absolute_mo("FROZEN_DOCC");
-    auto rd = mo_space_info_->absolute_mo("RESTRICTED_DOCC");
-    // print fd and rd
-    outfile->Printf("\n  fd size: %zu", fd.size());
-    for (size_t i = 0; i < fd.size(); ++i) {
-        outfile->Printf("\n  fd[%zu]: %zu", i, fd[i]);
-    }
-    outfile->Printf("\n  rd size: %zu", rd.size());
-    for (size_t i = 0; i < rd.size(); ++i) {
-        outfile->Printf("\n  rd[%zu]: %zu", i, rd[i]);
     }
 
     nactvpi_ = mo_space_info_->dimension("ACTIVE");
-
     actv_mos_ = mo_space_info_->absolute_mo("ACTIVE");
 
     nso_ = nsopi_.sum();
@@ -179,11 +134,13 @@ void CASSCF_ORB_GRAD::setup_mos() {
     label_to_cmos_.clear();
     if (freeze_core_) {
         label_to_cmos_["c"] = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+        label_to_cmos_["a"] = mo_space_info_->corr_absolute_mo("ACTIVE");
+        label_to_cmos_["v"] = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
     } else {
-        label_to_cmos_["c"] = mo_space_info_->corr_absolute_mo("INACTIVE_DOCC");
+        label_to_cmos_["c"] = mo_space_info_->absolute_mo("INACTIVE_DOCC");
+        label_to_cmos_["a"] = mo_space_info_->absolute_mo("ACTIVE");
+        label_to_cmos_["v"] = mo_space_info_->absolute_mo("RESTRICTED_UOCC");
     }
-    label_to_cmos_["a"] = mo_space_info_->corr_absolute_mo("ACTIVE");
-    label_to_cmos_["v"] = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
 
     // in Pitzer ordering
     mos_rel_.resize(nmo_);
@@ -197,8 +154,6 @@ void CASSCF_ORB_GRAD::setup_mos() {
     // in Pitzer ordering
     mos_rel_space_.resize(nmo_);
     for (const std::string& space : {"f", "c", "a", "v", "u"}) {
-        psi::outfile->Printf("\n  space: %s has size %zu", space.c_str(),
-                             label_to_mos_[space].size());
         const auto& mos = label_to_mos_[space];
         for (size_t p = 0, size = mos.size(); p < size; ++p) {
             mos_rel_space_[mos[p]] = std::make_pair(space, p);
@@ -497,16 +452,11 @@ void CASSCF_ORB_GRAD::init_tensors() {
 void CASSCF_ORB_GRAD::build_mo_integrals() {
     // form closed-shell Fock matrix
     build_fock_inactive();
-
-    outfile->Printf("\n HERE 2a\n");
     // form the MO 2e-integrals
     if (ints_->integral_type() == Custom) {
         fill_tei_custom(V_);
-        outfile->Printf("\n HERE 2b\n");
     } else {
-        outfile->Printf("\n HERE 2c\n");
         build_tei_from_ao();
-        outfile->Printf("\n HERE 2d\n");
     }
 }
 
@@ -631,7 +581,6 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
                 size_t np = mos_rel_space_[p].second;
 
                 std::string block = mos_rel_space_[p].first + "aaa";
-                // outfile->Printf("\n HERE string block %s\n", block.c_str());
                 auto& data = V_.block(block).data();
 
                 for (size_t u = 0; u < nactv_; ++u) {
