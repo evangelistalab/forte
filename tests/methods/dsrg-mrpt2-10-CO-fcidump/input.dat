@@ -13,16 +13,17 @@ set forte {
   int_type             fcidump
   correlation_solver   dsrg-mrpt2
   active_space_solver  fci
-  frozen_docc        [0,0,0,0]
-  frozen_uocc        [0,0,0,0]
-  restricted_docc    [2,0,0,0]
-  active             [4,0,2,2]
-  root_sym           0
-  nroot              1
-  dsrg_s             0.5
-  relax_ref          once
-  e_convergence      12
-  r_convergence      6
+  frozen_docc          [0,0,0,0]
+  frozen_uocc          [0,0,0,0]
+  restricted_docc      [2,0,0,0]
+  active               [4,0,2,2]
+  root_sym             0
+  nroot                1
+  dsrg_s               0.5
+  relax_ref            once
+  e_convergence        12
+  r_convergence        6
+  casscf_reference     false
 }
 
 Eforte = energy('forte')
