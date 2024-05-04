@@ -23,7 +23,7 @@ set forte {
   relax_ref            once
   e_convergence        12
   r_convergence        6
-  casscf_reference     false
+  casscf_reference     false # skip MCSCF computation
 }
 
 Eforte = energy('forte')
