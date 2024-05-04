@@ -76,6 +76,12 @@ class SemiCanonical {
     /// Return if the orbital ordering and phases are fixed successfully
     bool fix_orbital_success() const { return fix_orbital_success_; }
 
+    /// Set the inactive_mix flag
+    void set_inactive_mix(bool inactive_mix) { inactive_mix_ = inactive_mix; }
+
+    /// Set the active_mix flag
+    void set_active_mix(bool active_mix) { active_mix_ = active_mix; }
+
   private:
     /// startup function to find dimensions and variables
     void startup();

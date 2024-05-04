@@ -168,7 +168,7 @@ double MCSCF_2STEP::compute_energy() {
     };
 
     // prepare for orbital gradients
-    bool freeze_core = options_->get_bool("CASSCF_FREEZE_CORE");
+    const bool freeze_core = options_->get_bool("CASSCF_FREEZE_CORE");
     CASSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_, freeze_core);
     auto nrot = cas_grad.nrot();
     auto dG = std::make_shared<psi::Vector>("dG", nrot);
@@ -426,6 +426,11 @@ double MCSCF_2STEP::compute_energy() {
             ints_->set_fock_matrix(F, F);
 
             SemiCanonical semi(mo_space_info_, ints_, options_);
+            // if we freeze the core, we need to set the inactive_mix flag to make sure
+            // the core orbitals are mixed with the active orbitals
+            if (freeze_core) {
+                semi.set_inactive_mix(true);
+            }
             semi.semicanonicalize(rdms, false, final_orbs == "NATURAL", false);
 
             cas_grad.canonicalize_final(semi.Ua());
