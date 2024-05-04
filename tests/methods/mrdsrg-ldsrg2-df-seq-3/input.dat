@@ -19,28 +19,29 @@ molecule H4{
 }
 
 set globals{
-   basis                   cc-pvdz
-   reference               rhf
-   scf_type                pk
-   d_convergence           10
-   e_convergence           12
-   maxiter                 300
+  basis                   cc-pvdz
+  reference               rhf
+  scf_type                pk
+  d_convergence           10
+  e_convergence           12
+  maxiter                 300
 }
 
 set forte{
-   active_space_solver     fci
-   correlation_solver      mrdsrg
-   int_type                cholesky
-   cholesky_tolerance      1e-4
-   corr_level              ldsrg2
-   restricted_docc         [0,0,0,0,0,0,0,0]
-   active                  [1,0,0,1,0,1,1,0]
-   root_sym                0
-   nroot                   1
-   dsrg_s                  0.5
-   e_convergence           8
-   dsrg_hbar_seq           true
-#  relax_ref               iterate
+  active_space_solver     fci
+  correlation_solver      mrdsrg
+  int_type                cholesky
+  cholesky_tolerance      1e-4
+  corr_level              ldsrg2
+  restricted_docc         [0,0,0,0,0,0,0,0]
+  active                  [1,0,0,1,0,1,1,0]
+  root_sym                0
+  nroot                   1
+  dsrg_s                  0.5
+  e_convergence           8
+  dsrg_hbar_seq           true
+  casscf_reference        false
+# relax_ref               iterate
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

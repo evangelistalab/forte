@@ -92,6 +92,7 @@ set forte {
   semi_canonical        true
   print                 1
   casscf_reference      false
+  semi_canonical_mix_inactive false
 }
 
 energy('forte')

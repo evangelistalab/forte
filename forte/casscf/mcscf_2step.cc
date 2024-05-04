@@ -184,7 +184,6 @@ double MCSCF_2STEP::compute_energy() {
     auto as_maxiter = options_->get_int("DL_MAXITER");
 
     auto active_space_ints = cas_grad.active_space_ints();
-    active_space_ints->print();
     as_solver_->set_active_space_integrals(active_space_ints);
 
     as_solver_->set_print(PrintLevel::Quiet);
@@ -195,7 +194,7 @@ double MCSCF_2STEP::compute_energy() {
     // initial CI and resulting RDMs
     const auto state_energies_map = as_solver_->compute_energy();
     auto e_c = compute_average_state_energy(state_energies_map, state_weights_map_);
-    psi::outfile->Printf("\n\n  Initial CI energy: %.15f", e_c);
+    // psi::outfile->Printf("\n\n  Initial CI energy: %.15f", e_c);
 
     auto rdms = as_solver_->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
     cas_grad.set_rdms(rdms);

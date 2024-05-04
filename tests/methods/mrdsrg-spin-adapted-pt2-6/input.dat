@@ -60,6 +60,7 @@ set forte{
   avg_weight           [[1,2], [2], [0,1], [0,1], [0.25,0.25], [0.5,0.5]]
   print                2
   casscf_reference     false
+  semi_canonical_mix_inactive false
 }
 
 energy('forte', ref_wfn=wfn)

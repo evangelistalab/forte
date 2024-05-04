@@ -12,43 +12,45 @@ refdsrgpt2 =  -226.854315197443555
 
 molecule mbenzyne{
   0 3
-   C   0.0000000000  -2.5451795941   0.0000000000
-   C   0.0000000000   2.5451795941   0.0000000000
-   C  -2.2828001669  -1.3508352528   0.0000000000
-   C   2.2828001669  -1.3508352528   0.0000000000
-   C   2.2828001669   1.3508352528   0.0000000000
-   C  -2.2828001669   1.3508352528   0.0000000000
-   H  -4.0782187459  -2.3208602146   0.0000000000
-   H   4.0782187459  -2.3208602146   0.0000000000
-   H   4.0782187459   2.3208602146   0.0000000000
-   H  -4.0782187459   2.3208602146   0.0000000000
+  C   0.0000000000  -2.5451795941   0.0000000000
+  C   0.0000000000   2.5451795941   0.0000000000
+  C  -2.2828001669  -1.3508352528   0.0000000000
+  C   2.2828001669  -1.3508352528   0.0000000000
+  C   2.2828001669   1.3508352528   0.0000000000
+  C  -2.2828001669   1.3508352528   0.0000000000
+  H  -4.0782187459  -2.3208602146   0.0000000000
+  H   4.0782187459  -2.3208602146   0.0000000000
+  H   4.0782187459   2.3208602146   0.0000000000
+  H  -4.0782187459   2.3208602146   0.0000000000
 
   units bohr
 }
 
 set globals{
-   basis                   sto-3g
-   df_basis_mp2            cc-pvdz-ri
-   df_basis_scf            cc-pvdz-jkfit
-   scf_type                df
-   d_convergence           10
-   e_convergence           12
-   docc                   [5, 3, 1, 1, 0, 1, 4, 4]
-   socc                   [1, 0, 0, 0, 0, 0, 1, 0]
-   maxiter                 500
+  basis                   sto-3g
+  df_basis_mp2            cc-pvdz-ri
+  df_basis_scf            cc-pvdz-jkfit
+  scf_type                df
+  d_convergence           10
+  e_convergence           12
+  docc                   [5, 3, 1, 1, 0, 1, 4, 4]
+  socc                   [1, 0, 0, 0, 0, 0, 1, 0]
+  maxiter                 500
 }
 
 set forte {
-   frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
-   restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
-   active                 [1, 0, 0, 0, 0, 0, 1, 0]
-   root_sym                0
-   nroot                   1
-   multiplicity            1
-   dsrg_s                  0.5
-   int_type                diskdf
-   correlation_solver      three-dsrg-mrpt2
-   active_space_solver     fci
+  frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
+  restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
+  active                 [1, 0, 0, 0, 0, 0, 1, 0]
+  root_sym                0
+  nroot                   1
+  multiplicity            1
+  dsrg_s                  0.5
+  int_type                diskdf
+  correlation_solver      three-dsrg-mrpt2
+  active_space_solver     fci
+  casscf_reference        false
+  semi_canonical_mix_inactive false
 }
 
 scf, wfn = energy('mcscf', return_wfn=True)

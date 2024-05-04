@@ -12,43 +12,44 @@ molecule HF{
 }
 
 set globals{
-   basis                  3-21g
-   scf_type               cd
-   cholesky_tolerance     1e-4
-   docc                   [3,0,1,1]
+  basis                  3-21g
+  scf_type               cd
+  cholesky_tolerance     1e-4
+  docc                   [3,0,1,1]
 }
 
 set forte{
-   job_type                mcscf_two_step
-   active_space_solver     fci
-   restricted_docc         [2,0,1,1]
-   active                  [2,0,0,0]
-   root_sym                0
-   nroot                   1
-   casscf_e_convergence    12
-   casscf_g_convergence    8
+  job_type                mcscf_two_step
+  active_space_solver     fci
+  restricted_docc         [2,0,1,1]
+  active                  [2,0,0,0]
+  root_sym                0
+  nroot                   1
+  casscf_e_convergence    12
+  casscf_g_convergence    8
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)
 compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy")
 
 set forte{
-   job_type               newdriver
-   correlation_solver     mrdsrg
-   active_space_solver    fci
-   int_type               cholesky
-   cholesky_tolerance     1e-4
-   corr_level             ldsrg2
-   frozen_docc            [1,0,0,0]
-   restricted_docc        [1,0,1,1]
-   active                 [2,0,0,0]
-   root_sym               0
-   nroot                  1
-   dsrg_s                 1.0
-   maxiter                100
-   e_convergence          8
-   dsrg_hbar_seq          true
-   relax_ref              twice
+  job_type               newdriver
+  correlation_solver     mrdsrg
+  active_space_solver    fci
+  int_type               cholesky
+  cholesky_tolerance     1e-4
+  corr_level             ldsrg2
+  frozen_docc            [1,0,0,0]
+  restricted_docc        [1,0,1,1]
+  active                 [2,0,0,0]
+  root_sym               0
+  nroot                  1
+  dsrg_s                 1.0
+  maxiter                100
+  e_convergence          8
+  dsrg_hbar_seq          true
+  relax_ref              twice
+  semi_canonical_mix_inactive false
 }
 
 energy('forte', ref_wfn=wfn)

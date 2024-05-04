@@ -16,24 +16,27 @@ molecule HF{
 }
 
 set globals{
-   basis                   cc-pvdz
-   df_basis_mp2            cc-pvdz-ri
-   df_basis_scf            cc-pvdz-jkfit
-   reference               rohf
-   scf_type                df
-   d_convergence           10
-   e_convergence           12
+  basis                   cc-pvdz
+  df_basis_mp2            cc-pvdz-ri
+  df_basis_scf            cc-pvdz-jkfit
+  reference               rohf
+  scf_type                df
+  d_convergence           10
+  e_convergence           12
 }
+
 set forte {
-   frozen_docc            [1,0,0,0]
-   restricted_docc        [1,0,1,1]
-   active                 [2,0,0,0]
-   root_sym                0
-   nroot                   1
-   dsrg_s                  1.0
-   int_type                diskdf
-   correlation_solver      three-dsrg-mrpt2
-   active_space_solver     fci
+  frozen_docc            [1,0,0,0]
+  restricted_docc        [1,0,1,1]
+  active                 [2,0,0,0]
+  root_sym                0
+  nroot                   1
+  dsrg_s                  1.0
+  int_type                diskdf
+  correlation_solver      three-dsrg-mrpt2
+  active_space_solver     fci
+  casscf_reference        false
+  semi_canonical_mix_inactive false
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

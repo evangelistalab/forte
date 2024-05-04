@@ -38,6 +38,7 @@ set forte {
   maxiter                100
   e_convergence          9
   relax_ref              once
+  casscf_reference       false
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

@@ -35,7 +35,10 @@ set forte {
   transition_dipoles    true
   e_convergence         8
   r_convergence         7
+  casscf_reference      false
+  semi_canonical_mix_inactive false
 }
+
 edsrg = energy('forte', ref_wfn = wfn)
 
 dip_a1 = variable("SINGLET <0A1|DM_Z|0A1> ENTRY 0")

@@ -15,25 +15,26 @@ molecule N2{
 }
 
 set globals{
-   basis                   cc-pvdz
-   df_basis_mp2            cc-pvdz-ri
-   df_basis_scf            cc-pvdz-jkfit
-   reference               rhf
-   scf_type                pk
-   d_convergence           10
-   e_convergence           12
+  basis                   cc-pvdz
+  df_basis_mp2            cc-pvdz-ri
+  df_basis_scf            cc-pvdz-jkfit
+  reference               rhf
+  scf_type                pk
+  d_convergence           10
+  e_convergence           12
 }
 
 set forte {
-   restricted_docc         [2,0,0,0,0,2,0,0]
-   active                  [1,0,1,1,0,1,1,1]
-   root_sym                0
-   nroot                   1
-   dsrg_s                  1.0
-   semi_canonical          true
-   int_type                df
-   correlation_solver      three-dsrg-mrpt2
-   active_space_solver     detci
+  restricted_docc         [2,0,0,0,0,2,0,0]
+  active                  [1,0,1,1,0,1,1,1]
+  root_sym                0
+  nroot                   1
+  dsrg_s                  1.0
+  semi_canonical          true
+  int_type                df
+  correlation_solver      three-dsrg-mrpt2
+  active_space_solver     detci
+  casscf_reference        false
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

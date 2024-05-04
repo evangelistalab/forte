@@ -53,6 +53,8 @@ set forte{
   semi_canonical      false # a trick to make  ForteIntegral
                             # and FCIIntegral in the same basis
                             # for re-diagonalization
+  casscf_reference    false
+  semi_canonical_mix_inactive false
 }
 E, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(r_0ag, variable("ENERGY ROOT 0 1A"), 8, "abs. energy of singlet 0Ag")

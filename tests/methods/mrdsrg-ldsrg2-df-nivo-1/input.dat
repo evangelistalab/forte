@@ -79,6 +79,7 @@ set forte {
   dsrg_nivo              true
   dsrg_read_amps         true
   casscf_reference       false
+  semi_canonical_mix_inactive false
 }
 
 energy('forte')

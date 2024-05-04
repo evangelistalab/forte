@@ -71,7 +71,9 @@ set forte {
   maxiter               100
   relax_ref             iterate
   e_convergence         9
+  semi_canonical_mix_inactive false
   maxiter_relax_ref     15
+  casscf_reference      false
 }
 
 energy('scf')

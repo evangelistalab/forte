@@ -24,31 +24,32 @@ molecule mbenzyne{
 }
 
 set globals{
-   basis                sto-3g
-   df_basis_mp2         cc-pvdz-ri
-   df_basis_scf         cc-pvdz-jkfit
-   scf_type             df
-   d_convergence        10
-   e_convergence        12
-   docc                 [5, 3, 1, 1, 0, 1, 4, 4]
-   socc                 [1, 0, 0, 0, 0, 0, 1, 0]
-   maxiter              500
+  basis                sto-3g
+  df_basis_mp2         cc-pvdz-ri
+  df_basis_scf         cc-pvdz-jkfit
+  scf_type             df
+  d_convergence        10
+  e_convergence        12
+  docc                 [5, 3, 1, 1, 0, 1, 4, 4]
+  socc                 [1, 0, 0, 0, 0, 0, 1, 0]
+  maxiter              500
 }
 
 set forte {
-   active_space_solver  aci
-   correlation_solver   three-dsrg-mrpt2
-   int_type             df
-   sigma                0.0
-   gamma                0.0
-   frozen_docc          [2, 1, 0, 0, 0, 0, 2, 1]
-   restricted_docc      [3, 2, 1, 1, 0, 1, 2, 3]
-   active               [1, 0, 0, 0, 0, 0, 1, 0]
-   dsrg_s               0.5
-   root_sym             0
-   nroot                1
-   multiplicity         1
-   casscf_reference     false
+  active_space_solver  aci
+  correlation_solver   three-dsrg-mrpt2
+  int_type             df
+  sigma                0.0
+  gamma                0.0
+  frozen_docc          [2, 1, 0, 0, 0, 0, 2, 1]
+  restricted_docc      [3, 2, 1, 1, 0, 1, 2, 3]
+  active               [1, 0, 0, 0, 0, 0, 1, 0]
+  dsrg_s               0.5
+  root_sym             0
+  nroot                1
+  multiplicity         1
+  casscf_reference     false
+  semi_canonical_mix_inactive false
 }
 
 scf, wfn = energy('mcscf', return_wfn=True)
