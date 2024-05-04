@@ -50,7 +50,9 @@ set forte {
   active_ref_type gas_single
   active_space_solver aci
   sigma 0.5
+  casscf_reference false
 }
+
 energy('forte')
 
 compare_values(eaci, variable("ACI ENERGY"), 7, "ACI energy") #TEST
