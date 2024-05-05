@@ -10,37 +10,37 @@ molecule {
   Be        0.000000000000     0.000000000000     0.000000000000
   H         0.000000000000     1.390000000000     2.500000000000
   H         0.000000000000    -1.390000000000     2.500000000000
-  #symmetry c1
+  symmetry c1
   units bohr
   no_reorient
 }
 
 set globals {
-   scf_type             out_of_core
+   scf_type             pk
    mcscf_e_convergence  8
    mcscf_r_convergence  6
    basis                3-21g
-   restricted_docc      [2,0,0,0]
-   active               [1,0,0,1]
+   restricted_docc      [2]
+   active               [2]
+#  restricted_docc      [2,0,0,0]
+#  active               [1,0,0,1]
    maxiter              20
    reference            rhf
    mcscf_type           conv
-   diag_method          rsp
 }
-refscf = energy('casscf')
-
-set scf_type direct
+ecas_psi4 = energy('casscf')
+compare_values(refcasscf, ecas_psi4, 6, "PSI4 CASSCF ENERGY")
 
 set forte{
    job_type             mcscf_two_step
    active_space_solver  fci
    casscf_g_convergence 1e-6
    casscf_e_convergence 1e-8
-   restricted_docc      [2,0,0,0]
-   active               [1,0,0,1]
-   int_type             conventional
+   restricted_docc      [2]
+   active               [2]
+#  restricted_docc      [2,0,0,0]
+#  active               [1,0,0,1]
 }
 e_casscf = energy('forte')
 
-compare_values(refcasscf, e_casscf, 6, "CASSCF ENERGY")
-
+compare_values(refcasscf, e_casscf, 6, "FORTE CASSCF ENERGY")

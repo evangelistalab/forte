@@ -870,6 +870,13 @@ void CASSCF_ORB_GRAD::compute_orbital_grad() {
     A_["ru"] = Fc_["rt"] * D1_["tu"];
     A_["ru"] += V_["rtvw"] * D2_["tuvw"];
 
+    for (const auto& block : A_.block_labels()) {
+        A_.block(block).iterate([&](const std::vector<size_t>&, double& value) {
+            if (std::fabs(value) < 1.0e-12)
+                value = 0.0;
+        });
+    }
+
     // build orbital gradients
     g_["pq"] = 2.0 * A_["pq"];
     g_["pq"] -= 2.0 * A_["qp"];
