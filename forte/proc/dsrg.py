@@ -148,8 +148,10 @@ class ProcedureDSRG:
             print("Warning DSRG Python driver:", err)
             self.state_ci_wfn_map = None
 
+        inactive_mix = options.get_bool("SEMI_CANONICAL_MIX_INACTIVE")
+        active_mix = options.get_bool("SEMI_CANONICAL_MIX_ACTIVE")
         # Semi-canonicalize orbitals and rotation matrices
-        self.semi = forte.SemiCanonical(mo_space_info, ints, options)
+        self.semi = forte.SemiCanonical(mo_space_info, ints, options, inactive_mix, active_mix)
         if self.do_semicanonical:
             self.semi.semicanonicalize(self.rdms)
         self.Ua, self.Ub = self.semi.Ua_t(), self.semi.Ub_t()
@@ -357,7 +359,7 @@ class ProcedureDSRG:
 
         if self.solver_type in ["MRDSRG", "SA-MRDSRG", "SA_MRDSRG"]:
             if not self.dsrg_solver.converged():
-                raise RuntimeError("DSRG amplitudes did not converge!");
+                raise RuntimeError("DSRG amplitudes did not converge!")
 
         return e_current
 

@@ -425,18 +425,19 @@ double MCSCF_2STEP::compute_energy() {
             auto F = cas_grad.fock(rdms);
             ints_->set_fock_matrix(F, F);
 
-            SemiCanonical semi(mo_space_info_, ints_, options_);
-            // if we freeze the core, we need to set the inactive_mix flag to make sure
-            // the core orbitals are mixed with the active orbitals
-            if (freeze_core) {
-                semi.set_inactive_mix(true);
+            auto inactive_mix = options_->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
+            auto active_mix = options_->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
+
+            // if we do not freeze the core, we need to set the inactive_mix flag to make sure
+            // the core orbitals are canonicalized together with the active orbitals
+            if (not freeze_core) {
+                inactive_mix = true;
             }
+
+            SemiCanonical semi(mo_space_info_, ints_, options_, inactive_mix, active_mix, false);
             semi.semicanonicalize(rdms, false, final_orbs == "NATURAL", false);
 
             cas_grad.canonicalize_final(semi.Ua());
-
-            // TODO: need to implement the transformation of CI coefficients due to orbital
-            // changes
         }
 
         // pass to wave function

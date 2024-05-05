@@ -50,6 +50,7 @@ set forte{
   maxiter                100
   e_convergence          8
   relax_ref              twice
+  casscf_reference       false
 }
 
 energy('forte', ref_wfn=wfn)

@@ -55,7 +55,8 @@ class SemiCanonical {
      * @param quiet_banner Method banner is not printed if set to true
      */
     SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
-                  std::shared_ptr<ForteOptions> options, bool quiet = false);
+                  std::shared_ptr<ForteOptions> options, bool inactive_mix, bool active_mix,
+                  bool quiet_banner = false);
 
     /// Transforms integrals and RDMs
     void semicanonicalize(std::shared_ptr<RDMs> rdms, const bool& build_fock = true,

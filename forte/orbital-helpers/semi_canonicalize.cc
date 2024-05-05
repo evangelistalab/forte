@@ -51,22 +51,21 @@ using namespace ambit;
 
 SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
                              std::shared_ptr<ForteIntegrals> ints,
-                             std::shared_ptr<ForteOptions> foptions, bool quiet)
-    : mo_space_info_(mo_space_info), ints_(ints), print_(not quiet), fix_orbital_success_(true) {
-    read_options(foptions);
+                             std::shared_ptr<ForteOptions> options, bool inactive_mix,
+                             bool active_mix, bool quiet)
+    : mo_space_info_(mo_space_info), ints_(ints), print_(not quiet), inactive_mix_(inactive_mix),
+      active_mix_(active_mix), fix_orbital_success_(true) {
+    read_options(options);
     // initialize the dimension objects
     startup();
 }
 
-void SemiCanonical::read_options(const std::shared_ptr<ForteOptions>& foptions) {
-    inactive_mix_ = foptions->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
-    active_mix_ = foptions->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
-
+void SemiCanonical::read_options(const std::shared_ptr<ForteOptions>& options) {
     // compute thresholds from options
-    double econv = foptions->get_double("E_CONVERGENCE");
+    double econv = options->get_double("E_CONVERGENCE");
     threshold_tight_ = (econv < 1.0e-12) ? 1.0e-12 : econv;
     if (ints_->integral_type() == Cholesky) {
-        double cd_tlr = foptions->get_double("CHOLESKY_TOLERANCE");
+        double cd_tlr = options->get_double("CHOLESKY_TOLERANCE");
         threshold_tight_ = (threshold_tight_ < 0.5 * cd_tlr) ? 0.5 * cd_tlr : threshold_tight_;
     }
     threshold_loose_ = 10.0 * threshold_tight_;

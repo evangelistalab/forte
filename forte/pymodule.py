@@ -373,7 +373,10 @@ def mr_dsrg_pt2(job_type, data):
     ci.compute_energy()
 
     rdms = ci.compute_average_rdms(state_weights_map, max_rdm_level, forte.RDMsType.spin_dependent)
-    semi = forte.SemiCanonical(mo_space_info, ints, options)
+    inactive_mix = options.get_bool("SEMI_CANONICAL_MIX_INACTIVE")
+    active_mix = options.get_bool("SEMI_CANONICAL_MIX_ACTIVE")
+    # Semi-canonicalize orbitals and rotation matrices
+    semi = forte.SemiCanonical(mo_space_info, ints, options, inactive_mix, active_mix)
     semi.semicanonicalize(rdms)
 
     mcsrgpt2_mo = forte.MCSRGPT2_MO(rdms, options, ints, mo_space_info)

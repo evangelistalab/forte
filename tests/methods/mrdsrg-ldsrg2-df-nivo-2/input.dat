@@ -51,6 +51,7 @@ set forte{
   e_convergence          8
   relax_ref              twice
   dsrg_nivo              true
+  casscf_reference       false
 }
 
 energy('forte', ref_wfn=wfn)

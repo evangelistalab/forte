@@ -316,7 +316,10 @@ double CASSCF::compute_energy() {
     auto final_orbital_type = options_->get_str("CASSCF_FINAL_ORBITAL");
     if (final_orbital_type != "UNSPECIFIED" or options_->get_str("DERTYPE") == "FIRST") {
 
-        SemiCanonical semi(mo_space_info_, ints_, options_);
+        auto inactive_mix = options_->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
+        auto active_mix = options_->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
+
+        SemiCanonical semi(mo_space_info_, ints_, options_, inactive_mix, active_mix);
         semi.semicanonicalize(cas_ref_, true, final_orbital_type == "NATURAL", false);
 
         auto U = semi.Ua();

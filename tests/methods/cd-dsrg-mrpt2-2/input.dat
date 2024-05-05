@@ -80,8 +80,6 @@ set forte{
   nroot                  1
   dsrg_s                 1.0
   int_type               cholesky
-  semi_canonical_mix_inactive true
-  casscf_freeze_core     true
   cholesky_tolerance     1e-14
   print_denom2           true
 }
