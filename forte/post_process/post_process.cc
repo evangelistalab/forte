@@ -34,23 +34,38 @@
 #include "base_classes/forte_options.h"
 #include "helpers/printing.h"
 #include "helpers/helpers.h"
-#include "post_process/spin_corr.h"
+#include "post_process/post_process.h"
 
 using namespace psi;
 
 namespace forte {
 
-SpinCorr::SpinCorr(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info,
-                   std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : rdms_(rdms), options_(options), mo_space_info_(mo_space_info), as_ints_(as_ints) {
+PostProcess::PostProcess(const std::string method, std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
+                  std::shared_ptr<MOSpaceInfo> mo_space_info,
+                  std::shared_ptr<ForteIntegrals> ints,
+                  std::shared_ptr<ActiveSpaceIntegrals> as_ints)
+    : method_(method), rdms_(rdms), options_(options), mo_space_info_(mo_space_info), ints_(ints), as_ints_(as_ints) {
 
     nactpi_ = mo_space_info_->dimension("ACTIVE");
     nirrep_ = nactpi_.n();
     nact_ = nactpi_.sum();
+
+    print_h1("Wavefunction Post-processing");
+
 }
 
-std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>> SpinCorr::compute_nos() {
+void PostProcess::process() {
+
+	if (method_ == "SPIN_CORRELATION"){
+		spin_analysis();
+	}else if (method_ == "UNPAIRED_DENSITY"){
+        unpaired_density();
+	}
+
+}
+
+
+std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Vector>,std::shared_ptr<psi::Vector>> PostProcess::compute_active_nos() {
 
     print_h2("Natural Orbitals");
 
@@ -105,10 +120,10 @@ std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>> SpinCorr::
             }
         }
     }
-    return std::make_pair(Ua, Ub);
+    return std::make_tuple(Ua, Ub, OCC_A,OCC_B);
 }
 
-void SpinCorr::spin_analysis() {
+void PostProcess::spin_analysis() {
     size_t nact = static_cast<unsigned long>(nact_);
     size_t nact2 = nact * nact;
     size_t nact3 = nact * nact2;
@@ -116,60 +131,11 @@ void SpinCorr::spin_analysis() {
     auto UA = std::make_shared<psi::Matrix>(nact, nact);
     auto UB = std::make_shared<psi::Matrix>(nact, nact);
 
-    // if (options_->get_str("SPIN_BASIS") == "IAO") {
-    // outfile->Printf("\n  Computing spin correlation in IAO basis \n");
-    // auto Ca = ints_->Ca();
-    // std::shared_ptr<IAOBuilder> IAO =
-    //     IAOBuilder::build(reference_wavefunction_->basisset(),
-    //                       reference_wavefunction_->get_basisset("MINAO_BASIS"), Ca,
-    //                       options_->;
-    // outfile->Printf("\n  Computing IAOs\n");
-    // std::map<std::string, std::shared_ptr<psi::Matrix>> iao_info = IAO->build_iaos();
-    // std::shared_ptr<psi::Matrix> iao_orbs(iao_info["A"]->clone());
-
-    // std::shared_ptr<psi::Matrix> Cainv(Ca->clone());
-    // Cainv->invert();
-    // auto iao_coeffs = psi::Matrix::doublet(Cainv, iao_orbs, false,
-    // false);
-
-    // size_t new_dim = iao_orbs->colspi()[0];
-
-    // auto labels = IAO->print_IAO(iao_orbs, new_dim, nmo_, reference_wavefunction_);
-    // std::vector<int> IAO_inds;
-    // if (options_->get_bool("PI_ACTIVE_SPACE")) {
-    //     for (size_t i = 0, maxi = labels.size(); i < maxi; ++i) {
-    //         std::string label = labels[i];
-    //         if (label.find("z") != std::string::npos) {
-    //             IAO_inds.push_back(i);
-    //         }
-    //     }
-    // } else {
-    //     nact = new_dim;
-    //     for (size_t i = 0; i < new_dim; ++i) {
-    //         IAO_inds.push_back(i);
-    //     }
-    // }
-
-    // std::vector<size_t> active_mo = mo_space_info_->get_absolute_mo("ACTIVE");
-    // for (size_t i = 0; i < nact; ++i) {
-    //     int idx = IAO_inds[i];
-    //     outfile->Printf("\n Using IAO %d", idx);
-    //     for (size_t j = 0; j < nact; ++j) {
-    //         int mo = active_mo[j];
-    //         UA->set(j, i, iao_coeffs->get(mo, idx));
-    //     }
-    // }
-    // UB->copy(UA);
-    // outfile->Printf("\n");
-
-    //} else
     if (options_->get_str("SPIN_BASIS") == "NO") {
         outfile->Printf("\n  Computing spin correlation in NO basis \n");
 
-        auto pair = compute_nos();
-
-        UA = pair.first;
-        UB = pair.second;
+        auto no_tuple = compute_active_nos();
+        std::tie(UA, UB,std::ignore,std::ignore) = no_tuple; 
 
         int nmo = mo_space_info_->size("ALL");
 
@@ -361,11 +327,58 @@ void SpinCorr::spin_analysis() {
     }
 }
 
-void perform_spin_analysis(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
+void PostProcess::unpaired_density() {
+
+    outfile->Printf("\n Computing unpaired electron numbers/density in NO basis.");
+    size_t nact = static_cast<unsigned long>(nact_);
+
+    auto UA = std::make_shared<psi::Matrix>(nact, nact);
+    auto UB = std::make_shared<psi::Matrix>(nact, nact);
+    auto OCC_A = std::make_shared<psi::Vector>(nact);
+    auto OCC_B = std::make_shared<psi::Vector>(nact);
+
+    // Get natural orbitals
+    auto no_tuple = compute_active_nos();
+    std::tie(UA, UB,OCC_A,OCC_B) = no_tuple; 
+
+    std::vector<double> nus(nact);
+
+    outfile->Printf("\n    N.O.      occ        nu_i  ");
+    outfile->Printf("\n  --------  ---------  --------");
+
+    // the total unpaired electrons (alpha only)
+    double nu_total = 0.0;
+    for (size_t i = 0; i < nact; ++i){
+        double ni = OCC_A->get(i);// + OCC_B->get(i);
+        //double nu_i = (ni*ni)*(1.0-ni)*(1.0-ni);
+        double nu_i = (ni)*(1.0-ni);
+        nus[i] = nu_i;
+        nu_total += nu_i;
+        outfile->Printf("\n    %2d  \t %7.5f   \t %7.5f ", i, ni,nu_i);
+    }
+
+    outfile->Printf("\n  total: %5.3f", nu_total);
+
+    // Plotting of unpaired densities should be handled externally
+    // Here, I'll put the unpaired numbers in a file and
+    // transform the orbitals, so the plots can be made
+    std::ofstream ofile;
+    ofile.open("unpaired_electrons_alpha.txt", std::ofstream::out | std::ofstream::trunc);
+    for (size_t i = 0; i < nact; ++i) {
+        ofile << std::setprecision(12) << nus[i]  << "\n";
+    }
+    ofile.close();
+
+    ints_->rotate_orbitals(UA,UB);
+}
+
+
+void perform_post_processing(const std::string method, std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
                            std::shared_ptr<MOSpaceInfo> mo_space_info,
+                           std::shared_ptr<ForteIntegrals> ints,
                            std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
-    SpinCorr spin(rdms, options, mo_space_info, as_ints);
-    spin.spin_analysis();
+    PostProcess proc(method, rdms, options, mo_space_info,ints, as_ints);
+    proc.process();
 }
 
 } // namespace forte
