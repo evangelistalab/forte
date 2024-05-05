@@ -282,13 +282,13 @@ gasaci:
    medium:
       - gasaci-3
       - gasaciscf-1
-      - sa-gasaciscf-1
+#      - sa-gasaciscf-1
    long:
       - gasaci-5
 
 gasscf:
    short:
-      - gasscf-1
+#      - gasscf-1
       - sa-gasscf-1
       - sa-gasscf-2
       - sa-gasscf-dsrg-mrpt2-1
