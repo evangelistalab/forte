@@ -35,6 +35,7 @@ set forte {
   gas1min             [6]
   gas2max             [2]
   casscf_maxiter      200
+  casscf_micro_maxiter 4
   casscf_e_convergence 1e-10
   casscf_g_convergence 1e-8
 }
