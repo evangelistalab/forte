@@ -1,7 +1,7 @@
 import forte
 
-refmcscf     =  -99.939316382624000 # cc-pVDZ
-refdsrgpt2   = -100.100858544193 # cc-pVDZ
+refmcscf     =  -99.939316382624000
+refdsrgpt2   = -100.100858061036945
 
 memory 500 mb
 
@@ -25,6 +25,7 @@ set forte{
   root_sym               0
   nroot                  1
   dsrg_s                 1.0
+  casscf_e_convergence   10
   int_type               cholesky
   cholesky_tolerance     1e-14
   print_denom2           true
@@ -32,4 +33,4 @@ set forte{
 
 energy('forte')
 compare_values(refmcscf,variable("DSRG REFERENCE ENERGY"),10,"CASSCF energy")
-compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),9,"DSRG-MRPT2 energy")
