@@ -430,8 +430,7 @@ double MCSCF_2STEP::compute_energy() {
                 inactive_mix = true;
             }
 
-            psi::outfile->Printf("\n  Canonicalizing orbitals (inactive_mix = %s, active_mix = %s)",
-                                 inactive_mix ? "true" : "false", active_mix ? "true" : "false");
+            psi::outfile->Printf("\n  Canonicalizing final MCSCF orbitals");
             SemiCanonical semi(mo_space_info_, ints_, options_, inactive_mix, active_mix);
             semi.semicanonicalize(rdms, false, final_orbs == "NATURAL", false);
 
