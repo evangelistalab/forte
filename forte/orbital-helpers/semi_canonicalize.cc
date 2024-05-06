@@ -162,10 +162,9 @@ bool SemiCanonical::check_orbitals(std::shared_ptr<RDMs> rdms, const bool& nat_o
 
     // print orbitals requested
     std::string nat = nat_orb ? "NATURAL" : "CANONICAL";
-    for (const auto& pair : mo_dims_) {
-        std::string name = pair.first;
+    for (const auto& [name, npi] : mo_dims_) {
         if (name.find("GAS") != std::string::npos) {
-            if (pair.second.sum() != 0) {
+            if (npi.sum() != 0) {
                 outfile->Printf("\n    %-15s              %10s", name.c_str(), nat.c_str());
             }
         } else if (name.find("ACTIVE") != std::string::npos) {
@@ -187,9 +186,8 @@ bool SemiCanonical::check_orbitals(std::shared_ptr<RDMs> rdms, const bool& nat_o
         outfile->Printf("\n    %s", dash.c_str());
     }
 
-    for (const auto& pair : mats_) {
-        std::string name = pair.first;
-        auto M = pair.second->clone();
+    for (const auto& [name, M_orig] : mats_) {
+        auto M = M_orig->clone();
         M->zero_diagonal();
         double v_max = M->absmax();
         double v_norm = std::sqrt(M->sum_of_squares());
@@ -229,21 +227,20 @@ void SemiCanonical::prepare_matrix_blocks(std::shared_ptr<RDMs> rdms, const bool
     auto docc_offset = mo_space_info_->dimension("INACTIVE_DOCC");
 
     // loop over orbital spaces
-    for (const auto& name_dim_pair : mo_dims_) {
-        std::string name = name_dim_pair.first;
-        psi::Dimension npi = name_dim_pair.second;
-
+    for (const auto& [name, npi] : mo_dims_) {
         // filter out zero dimension blocks
         if (npi.sum() == 0)
             continue;
 
         // fill data
         auto slice = mo_space_info_->range(name);
-        if (nat_orb and name.find("OCC") == std::string::npos) {
+        if (nat_orb and mo_space_info_->contained_in_space(name, "ACTIVE")) {
+            // For natural orbitals, diagonalize the 1-RDM in the active space
             auto actv_slice = psi::Slice(slice.begin() - docc_offset, slice.end() - docc_offset);
             mats_[name] = d1->get_block(actv_slice, actv_slice);
             mats_[name]->set_name("D1 " + name);
         } else {
+            // for all other spaces always diagonalize the Fock matrix
             mats_[name] = fock->get_block(slice, slice);
             mats_[name]->set_name("Fock " + name);
         }
@@ -260,11 +257,8 @@ void SemiCanonical::build_transformation_matrices(const bool& semi) {
     }
 
     // loop over data blocks
-    for (const auto& pair : mats_) {
-        std::string name = pair.first;
-
+    for (const auto& [name, M] : mats_) {
         if (checked_results_[name]) {
-            auto M = pair.second;
             // natural orbital in descending order, canonical orbital in ascending order
             bool ascending = M->name().find("Fock") != std::string::npos;
 
@@ -303,12 +297,11 @@ void SemiCanonical::fill_Uactv(const std::shared_ptr<psi::Matrix>& U, ambit::Ten
         auto pos = mo_space_info_->pos_in_space(name, "ACTIVE");
         auto relative_mos = mo_space_info_->relative_mo(name);
         for (size_t p = 0; p < size; ++p) {
-            size_t hp = relative_mos[p].first;
-            size_t np = relative_mos[p].second;
+            const auto& [hp, np] = relative_mos[p];
             for (size_t q = 0; q < size; ++q) {
-                if (hp != relative_mos[q].first)
+                const auto& [hq, nq] = relative_mos[q];
+                if (hp != hq)
                     continue;
-                size_t nq = relative_mos[q].second;
                 Ut_data[pos[p] * nact_ + pos[q]] = U->get(hp, np, nq);
             }
         }
