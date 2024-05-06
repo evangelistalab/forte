@@ -162,8 +162,6 @@ class CASSCF_ORB_GRAD {
     std::vector<size_t> core_mos_;
     /// List of active MOs (Absolute)
     std::vector<size_t> actv_mos_;
-    /// List of virtual MOs (Absolute)
-    std::vector<size_t> virt_mos_;
     /// Map from MO space label to the absolute MO indices
     std::map<std::string, std::vector<size_t>> label_to_mos_;
     /// Map from MO space label to the correlated MO indices

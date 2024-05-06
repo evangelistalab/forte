@@ -1083,6 +1083,9 @@ void CASSCF_ORB_GRAD::canonicalize_final(const std::shared_ptr<psi::Matrix>& U) 
     test_orbital_rotations(U_, "WARNING: Final Active Orbitals Maybe Different from the Original");
 
     C_->gemm(false, false, 1.0, C0_, U_, 0.0);
+
+    C_->print();
+
     if (ints_->integral_type() == Custom) {
         ints_->update_orbitals(C_, C_);
     } else {

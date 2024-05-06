@@ -14,14 +14,11 @@ molecule HF{
 
 set globals{
   basis                  cc-pvdz
-  scf_type               pk
 }
 
 set forte{
   active_space_solver    fci
-  #correlation_solver     three-dsrg-mrpt2
-  correlation_solver      sa-mrdsrg
-  corr_level              pt2
+  correlation_solver     three-dsrg-mrpt2
   frozen_docc            [1,0,0,0]
   restricted_docc        [1,0,1,1]
   active                 [2,0,0,0]

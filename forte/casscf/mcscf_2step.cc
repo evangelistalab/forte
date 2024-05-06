@@ -194,7 +194,6 @@ double MCSCF_2STEP::compute_energy() {
     // initial CI and resulting RDMs
     const auto state_energies_map = as_solver_->compute_energy();
     auto e_c = compute_average_state_energy(state_energies_map, state_weights_map_);
-    // psi::outfile->Printf("\n\n  Initial CI energy: %.15f", e_c);
 
     auto rdms = as_solver_->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
     cas_grad.set_rdms(rdms);
@@ -219,9 +218,6 @@ double MCSCF_2STEP::compute_energy() {
     LBFGS lbfgs(lbfgs_param);
 
     bool converged = false;
-
-    // }
-    // psi::outfile->Printf("\n    %s", dash2.c_str());
 
     if (is_single_reference()) { // Case 2: if there is only 1 determinant
         lbfgs_param->maxiter = micro_maxiter_ > maxiter_ ? micro_maxiter_ : maxiter_;
@@ -434,7 +430,9 @@ double MCSCF_2STEP::compute_energy() {
                 inactive_mix = true;
             }
 
-            SemiCanonical semi(mo_space_info_, ints_, options_, inactive_mix, active_mix, false);
+            psi::outfile->Printf("\n  Canonicalizing orbitals (inactive_mix = %s, active_mix = %s)",
+                                 inactive_mix ? "true" : "false", active_mix ? "true" : "false");
+            SemiCanonical semi(mo_space_info_, ints_, options_, inactive_mix, active_mix);
             semi.semicanonicalize(rdms, false, final_orbs == "NATURAL", false);
 
             cas_grad.canonicalize_final(semi.Ua());

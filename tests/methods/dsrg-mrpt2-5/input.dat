@@ -21,7 +21,6 @@ molecule pbenzyne{
 
 set globals{
    basis                  sto-3g
-   scf_type               pk
 }
 
 set forte{
@@ -33,8 +32,8 @@ set forte{
   root_sym               0
   nroot                  1
   dsrg_s                 0.5
-  casscf_e_convergence    12
-  casscf_g_convergence    8
+  casscf_e_convergence   12
+  casscf_g_convergence   8
 }
 
 energy('forte')

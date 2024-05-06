@@ -59,6 +59,11 @@ class SemiCanonical {
                   bool quiet_banner = false);
 
     /// Transforms integrals and RDMs
+    /// @brief Semicanonicalize the orbitals and transform the integrals and RDMs
+    /// @param rdms The RDMs of the state to be semicanonicalized
+    /// @param build_fock If true, the Fock matrix is built and diagonalized
+    /// @param nat_orb If true, the natural orbitals are used to semicanonicalize
+    /// @param transform If true, the orbitals are transformed
     void semicanonicalize(std::shared_ptr<RDMs> rdms, const bool& build_fock = true,
                           const bool& nat_orb = false, const bool& transform = true);
 
@@ -76,12 +81,6 @@ class SemiCanonical {
 
     /// Return if the orbital ordering and phases are fixed successfully
     bool fix_orbital_success() const { return fix_orbital_success_; }
-
-    /// Set the inactive_mix flag
-    void set_inactive_mix(bool inactive_mix) { inactive_mix_ = inactive_mix; }
-
-    /// Set the active_mix flag
-    void set_active_mix(bool active_mix) { active_mix_ = active_mix; }
 
   private:
     /// startup function to find dimensions and variables
