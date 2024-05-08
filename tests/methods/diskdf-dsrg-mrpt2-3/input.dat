@@ -37,7 +37,7 @@ set forte{
    int_type                diskdf
    correlation_solver      three-dsrg-mrpt2
    active_space_solver     fci
-   casscf_reference        false
+   mcscf_reference        false
 }
 
 energy('forte')

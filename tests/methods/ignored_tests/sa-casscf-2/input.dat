@@ -34,12 +34,12 @@ set forte{
   restricted_docc         [1,0,1,1]
   active                  [2,0,0,0]
   active_space_solver     fci
-  casscf_maxiter          25
+  mcscf_maxiter          25
   print                   1
   avg_state               [[0, 1, 2]]
-  casscf_debug_printing   false
-  casscf_e_convergence    1e-12
-  casscf_g_convergence    1e-8
+  mcscf_debug_printing   false
+  mcscf_e_convergence    1e-12
+  mcscf_g_convergence    1e-8
 }
 
 casscf = energy('forte')

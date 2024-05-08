@@ -22,7 +22,7 @@ set globals{
 set forte{
   active_space_solver     fci
   frozen_docc             [1,0,0,0]
-  casscf_freeze_core      true
+  mcscf_freeze_core      true
 }
 
 Eopt = optimize('forte')

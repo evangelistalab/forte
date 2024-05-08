@@ -26,7 +26,7 @@ set forte {
   restricted_docc      [0, 0, 0, 0, 0, 0, 0, 0] 
   relax_ref            once        # generate dsrg_ints.json
   external_partial_relax true
-  casscf_reference     false
+  mcscf_reference     false
 }
 
 energy('forte')

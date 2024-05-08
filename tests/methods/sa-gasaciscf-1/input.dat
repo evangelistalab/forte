@@ -34,10 +34,11 @@ set forte {
   gas1min             [0,0]
   gas1max             [2,1]
   avg_state           [[0,1,1],[2,3,1]]  
-  casscf_e_convergence 1e-10
-  casscf_g_convergence 1e-8     
-  casscf_active_frozen_orbital [0]
-  casscf_diis_start   15 
+  mcscf_e_convergence 1e-10
+  mcscf_g_convergence 1e-8     
+  mcscf_active_frozen_orbital [0]
+  mcscf_micro_maxiter 1
+  mcscf_diis_start    15 
 }
 
 escf ,wfn = energy('scf',return_wfn = True)

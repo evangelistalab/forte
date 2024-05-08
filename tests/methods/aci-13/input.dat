@@ -28,7 +28,7 @@ set forte {
   sci_enforce_spin_complete true
   diag_algorithm sparse
   active_ref_type hf
-  casscf_reference false
+  mcscf_reference false
 }
 
 energy('forte')

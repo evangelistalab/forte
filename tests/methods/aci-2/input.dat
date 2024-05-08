@@ -25,7 +25,7 @@ set forte {
   sigma 0.001
   sci_enforce_spin_complete false
   diag_algorithm full 
-  casscf_reference false
+  mcscf_reference false
 }
 
 energy('forte')

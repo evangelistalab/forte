@@ -48,7 +48,7 @@ set forte{
   nroot               1
   root_sym            0
   charge              0
-  casscf_reference    false
+  mcscf_reference    false
 }
 
 E = energy('forte')

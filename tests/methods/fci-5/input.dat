@@ -30,7 +30,7 @@ set forte {
   root_sym            5
   ms                  0.0
   e_convergence       1e-10
-  casscf_reference    false
+  mcscf_reference    false
 }
 
 escf = energy('scf')
@@ -44,7 +44,7 @@ set forte {
   active              [1,0,0,0,0,1,0,0]
   multiplicity        1
   root_sym            0
-  casscf_reference    false
+  mcscf_reference    false
 }
 
 singlet = energy('forte')

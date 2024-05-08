@@ -24,9 +24,9 @@ set forte{
   active_space_solver     fci
   restricted_docc         [2,0,1,1]
   active                  [2,0,0,0]
-  casscf_e_convergence    12
-  casscf_g_convergence    9
-  casscf_final_orbital    natural
+  mcscf_e_convergence    12
+  mcscf_g_convergence    9
+  mcscf_final_orbital    natural
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)
@@ -43,7 +43,7 @@ set forte{
   int_type               df
   active_space_solver    fci
   correlation_solver     three-dsrg-mrpt2
-  casscf_reference       false
+  mcscf_reference       false
 }
 
 energy('forte', ref_wfn=wfn)

@@ -34,7 +34,7 @@ set forte {
   int_type                df
   correlation_solver      three-dsrg-mrpt2
   active_space_solver     detci
-  casscf_reference        false
+  mcscf_reference        false
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

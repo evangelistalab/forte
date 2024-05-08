@@ -35,7 +35,7 @@ set forte {
   transition_dipoles    true
   e_convergence         8
   r_convergence         7
-  casscf_reference      false
+  mcscf_reference      false
 }
 
 edsrg = energy('forte', ref_wfn = wfn)

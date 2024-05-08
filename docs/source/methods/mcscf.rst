@@ -132,9 +132,9 @@ Specifically, this is a CASSCF(6,6)/cc-pCVDZ calculation with 2 frozen-core orbi
       active                [2,0,2,2]
       e_convergence         8  # energy convergence of the FCI iterations
       r_convergence         8  # residual convergence of the FCI iterations
-      casscf_e_convergence  8  # energy convergence of the MCSCF iterations
-      casscf_g_convergence  6  # gradient convergence of the MCSCF iterations
-      casscf_micro_maxiter  4  # do at least 4 micro iterations per macro iteration
+      mcscf_e_convergence  8  # energy convergence of the MCSCF iterations
+      mcscf_g_convergence  6  # gradient convergence of the MCSCF iterations
+      mcscf_micro_maxiter  4  # do at least 4 micro iterations per macro iteration
     }
 
     Eforte = energy('forte')
@@ -255,45 +255,45 @@ Options
 Basic Options
 ~~~~~~~~~~~~~
 
-**CASSCF_MAXITER**
+**MCSCF_MAXITER**
 
 The maximum number of macro iterations.
 
 * Type: int
 * Default: 100
 
-**CASSCF_MICRO_MAXITER**
+**MCSCF_MICRO_MAXITER**
 
 The maximum number of micro iterations.
 
 * Type: int
 * Default: 40
 
-**CASSCF_MICRO_MINITER**
+**MCSCF_MICRO_MINITER**
 
 The minimum number of micro iterations.
 
 * Type: int
 * Default: 6
 
-**CASSCF_E_CONVERGENCE**
+**MCSCF_E_CONVERGENCE**
 
 The convergence criterion for the energy (two consecutive energies).
 
 * Type: double
 * Default: 1.0e-8
 
-**CASSCF_G_CONVERGENCE**
+**MCSCF_G_CONVERGENCE**
 
 The convergence criterion for the orbital gradient (RMS of gradient vector).
-This value should be roughly in the same order of magnitude as CASSCF_E_CONVERGENCE.
+This value should be roughly in the same order of magnitude as MCSCF_E_CONVERGENCE.
 For example, given the default energy convergence (1.0e-8),
-set CASSCF_G_CONVERGENCE to 1.0e-7 -- 1.0e-8 for a better convergence behavior.
+set MCSCF_G_CONVERGENCE to 1.0e-7 -- 1.0e-8 for a better convergence behavior.
 
 * Type: double
 * Default: 1.0e-7
 
-**CASSCF_MAX_ROTATION**
+**MCSCF_MAX_ROTATION**
 
 The max value allowed in orbital update vector.
 If a value in the orbital update vector is greater than this number,
@@ -302,7 +302,7 @@ the update vector will be scaled by this number / max value.
 * Type: double
 * Default: 0.2
 
-**CASSCF_DIIS_START**
+**MCSCF_DIIS_START**
 
 The iteration number to start DIIS on orbital rotation matrix R.
 DIIS will not be used if this number is smaller than 1.
@@ -310,21 +310,21 @@ DIIS will not be used if this number is smaller than 1.
 * Type: int
 * Default: 15
 
-**CASSCF_DIIS_MIN_VEC**
+**MCSCF_DIIS_MIN_VEC**
 
 The minimum number of DIIS vectors allowed for DIIS extrapolation.
 
 * Type: int
 * Default: 3
 
-**CASSCF_DIIS_MAX_VEC**
+**MCSCF_DIIS_MAX_VEC**
 
 The maximum number of DIIS vectors, exceeding which the oldest vector will be discarded.
 
 * Type: int
 * Default: 8
 
-**CASSCF_DIIS_FREQ**
+**MCSCF_DIIS_FREQ**
 
 How often to do a DIIS extrapolation.
 For example, 1 means do DIIS every iteration and 2 is for every other iteration, etc.
@@ -332,7 +332,7 @@ For example, 1 means do DIIS every iteration and 2 is for every other iteration,
 * Type: int
 * Default: 1
 
-**CASSCF_CI_SOLVER**
+**MCSCF_CI_SOLVER**
 
 Which active space solver to be used.
 
@@ -340,14 +340,14 @@ Which active space solver to be used.
 * Options: CAS, FCI, ACI, PCI
 * Default: CAS
 
-**CASSCF_DEBUG_PRINTING**
+**MCSCF_DEBUG_PRINTING**
 
 Whether to enable debug printing.
 
 * Type: Boolean
 * Default: False
 
-**CASSCF_FINAL_ORBITAL**
+**MCSCF_FINAL_ORBITAL**
 
 What type of orbitals to be used for redundant orbital pairs for a converged calculation.
 
@@ -355,14 +355,14 @@ What type of orbitals to be used for redundant orbital pairs for a converged cal
 * Options: CANONICAL, NATURAL, UNSPECIFIED
 * Default: CANONICAL
 
-**CASSCF_NO_ORBOPT**
+**MCSCF_NO_ORBOPT**
 
 Turn off orbital optimization procedure if true.
 
 * Type: Boolean
 * Default: False
 
-**CASSCF_DIE_IF_NOT_CONVERGED**
+**MCSCF_DIE_IF_NOT_CONVERGED**
 
 Stop Forte if MCSCF did not converge.
 
@@ -372,14 +372,14 @@ Stop Forte if MCSCF did not converge.
 Expert Options
 ~~~~~~~~~~~~~~~
 
-**CASSCF_INTERNAL_ROT**
+**MCSCF_INTERNAL_ROT**
 
 Whether to enable pure internal (GASn-GASn) orbital rotations.
 
 * Type: Boolean
 * Default: False
 
-**CASSCF_ZERO_ROT**
+**MCSCF_ZERO_ROT**
 
 Zero the optimization between orbital pairs.
 Format: [[irrep1, mo1, mo2], [irrep1, mo3, mo4], ...] where
@@ -389,13 +389,13 @@ For example, zeroing the mixing of 3A1 and 2A1 translates to [[0, 3, 2]].
 * Type: array
 * Default: No Default
 
-**CASSCF_ACTIVE_FROZEN_ORBITAL**
+**MCSCF_ACTIVE_FROZEN_ORBITAL**
 
 A list of active orbitals to be frozen in the casscf optimization.
 Active orbitals contain all GAS1, GAS2, ..., GAS6 orbitals.
 Orbital indices are zero-based and in Pitzer ordering.
 For example, GAS1 [1,0,0,1]; GAS2 [1,2,2,1];
-CASSCF_ACTIVE_FROZEN_ORBITAL [2,6]
+MCSCF_ACTIVE_FROZEN_ORBITAL [2,6]
 means we freeze the first A2 orbital in GAS2 and the B2 orbital in GAS1.
 This option is useful when doing core-excited state computations.
 

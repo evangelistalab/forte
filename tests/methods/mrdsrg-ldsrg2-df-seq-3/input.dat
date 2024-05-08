@@ -40,7 +40,7 @@ set forte{
   dsrg_s                  0.5
   e_convergence           8
   dsrg_hbar_seq           true
-  casscf_reference        false
+  mcscf_reference        false
 # relax_ref               iterate
 }
 

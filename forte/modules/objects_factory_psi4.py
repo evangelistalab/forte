@@ -105,7 +105,7 @@ def prepare_psi4_ref_wfn(options, **kwargs):
 
         # no warning printing for MCSCF
         job_type = options.get_str("JOB_TYPE")
-        do_mcscf = job_type in ["CASSCF", "MCSCF_TWO_STEP"] or options.get_bool("CASSCF_REFERENCE")
+        do_mcscf = job_type in ["CASSCF", "MCSCF_TWO_STEP"] or options.get_bool("MCSCF_REFERENCE")
 
         # run Psi4 SCF or MCSCF
         ref_wfn = run_psi4_ref(ref_type, molecule, not do_mcscf, **kwargs)

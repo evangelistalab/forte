@@ -91,7 +91,7 @@ set forte {
   relax_ref             once
   semi_canonical        true
   print                 1
-  casscf_reference      false
+  mcscf_reference      false
 }
 
 energy('forte')

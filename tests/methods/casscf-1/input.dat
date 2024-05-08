@@ -34,8 +34,8 @@ set scf_type direct
 set forte{
    job_type             mcscf_two_step
    active_space_solver  fci
-   casscf_g_convergence 1e-6
-   casscf_e_convergence 1e-8
+   mcscf_g_convergence 1e-6
+   mcscf_e_convergence 1e-8
    restricted_docc      [2,0,0,0]
    active               [1,0,0,1]
    int_type             conventional

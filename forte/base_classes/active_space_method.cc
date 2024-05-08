@@ -41,7 +41,6 @@
 #include "integrals/one_body_integrals.h"
 #include "fci/fci_solver.h"
 #include "genci/genci_solver.h"
-#include "casscf/casscf.h"
 #include "sci/aci.h"
 #include "sci/asci.h"
 #include "sci/detci.h"

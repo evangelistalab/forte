@@ -36,8 +36,8 @@
 #include "helpers/printing.h"
 #include "lbfgs.h"
 #include "rosenbrock.h"
-#include "casscf/casscf_orb_grad.h"
-#include "casscf/cpscf.h"
+#include "mcscf/mcscf_orb_grad.h"
+#include "mcscf/cpscf.h"
 
 using namespace psi;
 
@@ -439,7 +439,7 @@ void LBFGS::reset() {
 }
 
 template double LBFGS::minimize(ROSENBROCK& func, std::shared_ptr<psi::Vector> x);
-template double LBFGS::minimize(CASSCF_ORB_GRAD& func, std::shared_ptr<psi::Vector> x);
+template double LBFGS::minimize(MCSCF_ORB_GRAD& func, std::shared_ptr<psi::Vector> x);
 template double LBFGS::minimize(CPSCF& func, std::shared_ptr<psi::Vector> x);
 
 } // namespace forte

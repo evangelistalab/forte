@@ -35,7 +35,7 @@ set forte {
   gas2            [1,0,0,1]
   gas1min         [6]
   fci_test_rdms   true
-  casscf_reference false 
+  mcscf_reference false 
 }
 
 energy('forte')

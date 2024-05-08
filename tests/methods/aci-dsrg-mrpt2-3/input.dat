@@ -37,7 +37,7 @@ set forte{
    multiplicity     1
    relax_ref        once
    sci_direct_rdms true
-   casscf_reference false
+   mcscf_reference false
 }
 
 energy('forte')

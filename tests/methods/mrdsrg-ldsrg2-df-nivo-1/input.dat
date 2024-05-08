@@ -78,7 +78,7 @@ set forte {
   relax_ref              twice
   dsrg_nivo              true
   dsrg_read_amps         true
-  casscf_reference       false
+  mcscf_reference       false
 }
 
 energy('forte')

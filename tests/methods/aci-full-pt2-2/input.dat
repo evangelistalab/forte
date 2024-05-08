@@ -38,7 +38,7 @@ set forte {
   charge 0
   full_mrpt2 true
   r_convergence 8
-  casscf_reference false
+  mcscf_reference false
 }
 set_num_threads(2)
 

@@ -41,13 +41,13 @@ set forte {
   restricted_docc      [2,0,0,0,0,2,0,0]
   active               [1,0,1,1,0,1,1,1]
   active_space_solver  detci
-  casscf_max_rotation  0.2
-  casscf_g_convergence 1.0e-8
-  casscf_e_convergence 1.0e-10
+  mcscf_max_rotation  0.2
+  mcscf_g_convergence 1.0e-8
+  mcscf_e_convergence 1.0e-10
   r_convergence        1.0e-8
   e_convergence        1.0e-10
-  casscf_diis_start    5
-  casscf_diis_freq     4
+  mcscf_diis_start    5
+  mcscf_diis_freq     4
 }
 Ecasscf, wfn = energy('forte', ref_wfn=wfnSCF, return_wfn=True)
 compare_values(refcasscf, Ecasscf, 9, "FORTE CASSCF energy")

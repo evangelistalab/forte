@@ -95,12 +95,10 @@ base_classes/orbitals.cc
 base_classes/rdms.cc
 base_classes/scf_info.cc
 base_classes/state_info.cc
-casscf/casscf.cc
-casscf/casscf_gradient.cc
-casscf/casscf_orb_grad.cc
-casscf/casscf_orb_grad_deriv.cc
-casscf/cpscf.cc
-casscf/mcscf_2step.cc
+mcscf/mcscf_orb_grad.cc
+mcscf/mcscf_orb_grad_deriv.cc
+mcscf/cpscf.cc
+mcscf/mcscf_2step.cc
 ci_ex_states/excited_state_solver.cc
 ci_rdm/ci_rdms.cc
 ci_rdm/ci_rdms_dynamic.cc

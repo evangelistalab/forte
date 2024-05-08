@@ -1,7 +1,7 @@
 import forte
 memory 1 gb
 
-e_casscf_psi4 = -115.191969103946292
+e_mcscf_psi4 = -115.191969103946292
 
 molecule cyclopropene {
 H   0.912650   0.000000   1.457504
@@ -24,7 +24,7 @@ set globals{
   scf_type            direct
 }
 e_casscf = energy('casscf')
-compare_values(e_casscf_psi4, e_casscf, 6, "CASSCF ENERGY PSI4")
+compare_values(e_mcscf_psi4, e_casscf, 6, "CASSCF ENERGY PSI4")
 
 set forte {
   job_type            mcscf_two_step
@@ -35,8 +35,8 @@ set forte {
   root_sym            0
   nroot               1
   root                0
-  casscf_maxiter      40
+  mcscf_maxiter      40
   print               0
 }
-e_casscf_forte = energy('forte')
-compare_values(e_casscf_psi4, e_casscf_forte, 6, "CASSCF ENERGY FORTE")
+e_mcscf_forte = energy('forte')
+compare_values(e_mcscf_psi4, e_mcscf_forte, 6, "CASSCF ENERGY FORTE")

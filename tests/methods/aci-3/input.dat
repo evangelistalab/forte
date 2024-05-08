@@ -37,7 +37,7 @@ set forte {
   aci_nbatch 2
   spin_analysis true
   spin_test true
-  casscf_reference false
+  mcscf_reference false
 }
 
 energy('forte')

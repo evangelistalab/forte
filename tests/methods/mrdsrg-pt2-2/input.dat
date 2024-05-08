@@ -71,7 +71,7 @@ set forte {
   maxiter             100
   relax_ref           once
   maxiter_relax_ref   15
-  casscf_reference    false
+  mcscf_reference    false
 }
 
 energy('forte')

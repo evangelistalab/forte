@@ -25,7 +25,7 @@ set forte {
   sci_project_out_spin_contaminants false
   active_ref_type hf
   DL_DETS_PER_GUESS 2
-  casscf_reference false
+  mcscf_reference false
 }
 
 energy('forte')

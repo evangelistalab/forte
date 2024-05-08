@@ -31,7 +31,7 @@ set forte{
   root_sym          0
   nroot             1
   int_type          conventional
-  casscf_reference  false
+  mcscf_reference  false
 }
 
 energy('scf')

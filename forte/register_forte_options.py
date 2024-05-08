@@ -26,7 +26,7 @@ def register_forte_options(options):
     register_dwms_options(options)
     register_davidson_liu_options(options)
     register_localize_options(options)
-    register_casscf_options(options)
+    register_mcscf_options(options)
     register_old_options(options)
     register_psi_options(options)
     register_gas_options(options)
@@ -38,7 +38,7 @@ def register_driver_options(options):
     options.add_str(
         "JOB_TYPE",
         "NEWDRIVER",
-        ["NONE", "NEWDRIVER", "MR-DSRG-PT2", "CASSCF", "MCSCF_TWO_STEP", "TDCI"],
+        ["NONE", "NEWDRIVER", "MR-DSRG-PT2", "MCSCF_TWO_STEP", "TDCI"],
         "Specify the job type",
     )
 
@@ -990,73 +990,73 @@ def register_localize_options(options):
     options.add_int_list("LOCALIZE_SPACE", "Sets the orbital space for localization")
 
 
-def register_casscf_options(options):
+def register_mcscf_options(options):
     options.set_group("CASSCF")
 
-    options.add_int("CASSCF_MAXITER", 100, "The maximum number of CASSCF macro iterations")
+    options.add_int("MCSCF_MAXITER", 100, "The maximum number of CASSCF macro iterations")
 
-    options.add_int("CASSCF_MICRO_MAXITER", 40, "The maximum number of CASSCF micro iterations")
+    options.add_int("MCSCF_MICRO_MAXITER", 40, "The maximum number of CASSCF micro iterations")
 
-    options.add_int("CASSCF_MICRO_MINITER", 6, "The minimum number of CASSCF micro iterations")
+    options.add_int("MCSCF_MICRO_MINITER", 6, "The minimum number of CASSCF micro iterations")
 
     options.add_int("CPSCF_MAXITER", 50, "Max iteration of solving coupled perturbed SCF equation")
 
     options.add_double("CPSCF_CONVERGENCE", 1e-8, "Convergence criterion for CP-SCF equation")
 
-    options.add_double("CASSCF_E_CONVERGENCE", 1e-8, "The energy convergence criterion (two consecutive energies)")
+    options.add_double("MCSCF_E_CONVERGENCE", 1e-8, "The energy convergence criterion (two consecutive energies)")
 
     options.add_double(
-        "CASSCF_G_CONVERGENCE", 1e-7, "The orbital gradient convergence criterion (RMS of gradient vector)"
+        "MCSCF_G_CONVERGENCE", 1e-7, "The orbital gradient convergence criterion (RMS of gradient vector)"
     )
 
-    options.add_bool("CASSCF_DEBUG_PRINTING", False, "Enable debug printing if True")
+    options.add_bool("MCSCF_DEBUG_PRINTING", False, "Enable debug printing if True")
 
-    options.add_bool("CASSCF_NO_ORBOPT", False, "No orbital optimization if true")
+    options.add_bool("MCSCF_NO_ORBOPT", False, "No orbital optimization if true")
 
-    options.add_bool("CASSCF_INTERNAL_ROT", False, "Keep GASn-GASn orbital rotations if true")
+    options.add_bool("MCSCF_INTERNAL_ROT", False, "Keep GASn-GASn orbital rotations if true")
 
     # Zero mixing for orbital pairs
     # Format: [[irrep1, mo1, mo2], [irrep1, mo3, mo4], ...]
     # Irreps are 0-based, while MO indices are 1-based!
     # MO indices are relative indices within the irrep, e.g., 3A1 and 2A1: [[0, 3, 2]]
-    options.add_list("CASSCF_ZERO_ROT", "An array of MOs [[irrep1, mo1, mo2], [irrep2, mo3, mo4], ...]")
+    options.add_list("MCSCF_ZERO_ROT", "An array of MOs [[irrep1, mo1, mo2], [irrep2, mo3, mo4], ...]")
 
     options.add_str(
-        "CASSCF_FINAL_ORBITAL",
+        "MCSCF_FINAL_ORBITAL",
         "CANONICAL",
         ["CANONICAL", "NATURAL", "UNSPECIFIED"],
         "Constraints for redundant orbital pairs at the end of macro iteration",
     )
 
     options.add_int(
-        "CASSCF_CI_FREQ",
+        "MCSCF_CI_FREQ",
         1,
         "How often to solve CI?\n"
         "< 1: do CI in the first macro iteration ONLY\n"
         "= n: do CI every n macro iteration",
     )
 
-    options.add_bool("CASSCF_REFERENCE", True, "Run a CASSCF computation?")
+    options.add_bool("MCSCF_REFERENCE", True, "Run a CASSCF computation?")
 
-    options.add_bool("CASSCF_FREEZE_CORE", False, "Freeze the core orbitals in a CASSCF computation?")
+    options.add_bool("MCSCF_FREEZE_CORE", False, "Freeze the core orbitals in a CASSCF computation?")
 
     options.add_int(
-        "CASSCF_MULTIPLICITY",
+        "MCSCF_MULTIPLICITY",
         0,
         """Multiplicity for the CASSCF solution (if different from multiplicity)
     You should not use this if you are interested in having a CASSCF
     solution with the same multiplicitity as the DSRG-MRPT2""",
     )
 
-    options.add_bool("CASSCF_SOSCF", False, "Run a complete SOSCF (form full Hessian)?")
+    options.add_bool("MCSCF_SOSCF", False, "Run a complete SOSCF (form full Hessian)?")
     options.add_bool("OPTIMIZE_FROZEN_CORE", False, "Ignore frozen core option and optimize orbitals?")
 
     options.add_bool("RESTRICTED_DOCC_JK", True, "Use JK builder for restricted docc (EXPERT)?")
 
-    options.add_double("CASSCF_MAX_ROTATION", 0.2, "Max value in orbital update vector")
+    options.add_double("MCSCF_MAX_ROTATION", 0.2, "Max value in orbital update vector")
 
     options.add_str(
-        "CASSCF_ORB_ORTHO_TRANS",
+        "MCSCF_ORB_ORTHO_TRANS",
         "CAYLEY",
         ["CAYLEY", "POWER", "PADE"],
         "Ways to compute the orthogonal transformation U from orbital rotation R",
@@ -1066,26 +1066,26 @@ def register_casscf_options(options):
         "ORB_ROTATION_ALGORITHM", "DIAGONAL", ["DIAGONAL", "AUGMENTED_HESSIAN"], "Orbital rotation algorithm"
     )
 
-    options.add_bool("CASSCF_DO_DIIS", True, "Use DIIS in CASSCF orbital optimization")
-    options.add_int("CASSCF_DIIS_MIN_VEC", 3, "Minimum size of DIIS vectors for orbital rotations")
-    options.add_int("CASSCF_DIIS_MAX_VEC", 8, "Maximum size of DIIS vectors for orbital rotations")
-    options.add_int("CASSCF_DIIS_START", 15, "Iteration number to start adding error vectors (< 1 will not do DIIS)")
-    options.add_int("CASSCF_DIIS_FREQ", 1, "How often to do DIIS extrapolation")
-    options.add_double("CASSCF_DIIS_NORM", 1e-3, "Do DIIS when the orbital gradient norm is below this value")
+    options.add_bool("MCSCF_DO_DIIS", True, "Use DIIS in CASSCF orbital optimization")
+    options.add_int("MCSCF_DIIS_MIN_VEC", 3, "Minimum size of DIIS vectors for orbital rotations")
+    options.add_int("MCSCF_DIIS_MAX_VEC", 8, "Maximum size of DIIS vectors for orbital rotations")
+    options.add_int("MCSCF_DIIS_START", 15, "Iteration number to start adding error vectors (< 1 will not do DIIS)")
+    options.add_int("MCSCF_DIIS_FREQ", 1, "How often to do DIIS extrapolation")
+    options.add_double("MCSCF_DIIS_NORM", 1e-3, "Do DIIS when the orbital gradient norm is below this value")
 
-    options.add_bool("CASSCF_CI_STEP", False, "Do a CAS step for every CASSCF_CI_FREQ")
+    options.add_bool("MCSCF_CI_STEP", False, "Do a CAS step for every MCSCF_CI_FREQ")
 
-    options.add_int("CASSCF_CI_STEP_START", -1, "When to start skipping CI steps")
+    options.add_int("MCSCF_CI_STEP_START", -1, "When to start skipping CI steps")
 
     options.add_bool("MONITOR_SA_SOLUTION", False, "Monitor the CAS-CI solutions through iterations")
 
     options.add_int_list(
-        "CASSCF_ACTIVE_FROZEN_ORBITAL",
+        "MCSCF_ACTIVE_FROZEN_ORBITAL",
         "A list of active orbitals to be frozen in the MCSCF optimization (in Pitzer order,"
         " zero based). Useful when doing core-excited state computations.",
     )
 
-    options.add_bool("CASSCF_DIE_IF_NOT_CONVERGED", True, "Stop Forte if MCSCF is not converged")
+    options.add_bool("MCSCF_DIE_IF_NOT_CONVERGED", True, "Stop Forte if MCSCF is not converged")
 
 
 def register_old_options(options):

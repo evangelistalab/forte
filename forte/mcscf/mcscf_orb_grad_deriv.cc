@@ -35,15 +35,15 @@
 #include "helpers/lbfgs/lbfgs.h"
 
 #include "gradient_tpdm/backtransform_tpdm.h"
-#include "casscf/casscf_orb_grad.h"
-#include "casscf/cpscf.h"
+#include "mcscf/mcscf_orb_grad.h"
+#include "mcscf/cpscf.h"
 
 using namespace psi;
 using namespace ambit;
 
 namespace forte {
 
-void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
+void MCSCF_ORB_GRAD::compute_nuclear_gradient() {
     print_h2("MCSCF Gradient");
 
     // format A to SharedMatrix
@@ -95,7 +95,7 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
     transform->backtransform_density();
 }
 
-void CASSCF_ORB_GRAD::JK_build(std::shared_ptr<psi::Matrix> Cl, std::shared_ptr<psi::Matrix> Cr) {
+void MCSCF_ORB_GRAD::JK_build(std::shared_ptr<psi::Matrix> Cl, std::shared_ptr<psi::Matrix> Cr) {
     /* JK build for Fock-like term
      * J: sum_{rs} D_{rs} (rs|PQ) = sum_{rsRS} D_{rs} C_{Rr} C_{Ss} (RS|PQ)
      * K: sum_{rs} D_{rs} (rQ|Ps) = sum_{rsRS} D_{rs} C_{Rr} C_{Ss} (RQ|PS)
@@ -115,7 +115,7 @@ void CASSCF_ORB_GRAD::JK_build(std::shared_ptr<psi::Matrix> Cl, std::shared_ptr<
     JK_->compute();
 }
 
-std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::C_subset(const std::string& name,
+std::shared_ptr<psi::Matrix> MCSCF_ORB_GRAD::C_subset(const std::string& name,
                                                        std::shared_ptr<psi::Matrix> C,
                                                        psi::Dimension dim_start,
                                                        psi::Dimension dim_end) {
@@ -131,7 +131,7 @@ std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::C_subset(const std::string& name,
     return Csub;
 }
 
-void CASSCF_ORB_GRAD::fill_A_matrix_data(ambit::BlockedTensor A) {
+void MCSCF_ORB_GRAD::fill_A_matrix_data(ambit::BlockedTensor A) {
     A.citerate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>&, const double& value) {
             auto irrep_index_pair1 = mos_rel_[i[0]];
@@ -147,7 +147,7 @@ void CASSCF_ORB_GRAD::fill_A_matrix_data(ambit::BlockedTensor A) {
         });
 }
 
-void CASSCF_ORB_GRAD::setup_grad_frozen() {
+void MCSCF_ORB_GRAD::setup_grad_frozen() {
     // terminate for high spin because ROHF CP-SCF is not implemented
     if (ints_->wfn()->soccpi().sum())
         throw std::runtime_error("MCSCF gradient with frozen orbitals only works for singlet!");
@@ -199,7 +199,7 @@ void CASSCF_ORB_GRAD::setup_grad_frozen() {
     }
 }
 
-void CASSCF_ORB_GRAD::build_Am_frozen() {
+void MCSCF_ORB_GRAD::build_Am_frozen() {
     // fill in A_{ri}
     for (int h = 0; h < nirrep_; ++h) {
         for (int I = 0; I < nfrzcpi_[h]; ++I) {
@@ -225,7 +225,7 @@ void CASSCF_ORB_GRAD::build_Am_frozen() {
     fill_A_matrix_data(At);
 }
 
-void CASSCF_ORB_GRAD::solve_cpscf() {
+void MCSCF_ORB_GRAD::solve_cpscf() {
     // compute orbital gradient in Hartree-Fock basis
     auto G = Am_->clone();
     G->subtract(Am_->transpose());
@@ -315,7 +315,7 @@ void CASSCF_ORB_GRAD::solve_cpscf() {
         Z_->print();
 }
 
-SharedMatrix CASSCF_ORB_GRAD::contract_RB_Z(std::shared_ptr<psi::Matrix> Z,
+SharedMatrix MCSCF_ORB_GRAD::contract_RB_Z(std::shared_ptr<psi::Matrix> Z,
                                             std::shared_ptr<psi::Matrix> C_Zrow,
                                             std::shared_ptr<psi::Matrix> C_Zcol,
                                             std::shared_ptr<psi::Matrix> C_row,
@@ -340,7 +340,7 @@ SharedMatrix CASSCF_ORB_GRAD::contract_RB_Z(std::shared_ptr<psi::Matrix> Z,
     return psi::linalg::triplet(C_row, J, C_col, true, false, false);
 }
 
-void CASSCF_ORB_GRAD::compute_Lagrangian() {
+void MCSCF_ORB_GRAD::compute_Lagrangian() {
     psi::outfile->Printf("\n    Computing AO Lagrangian ...");
     auto W = std::make_shared<psi::Matrix>();
 
@@ -407,7 +407,7 @@ void CASSCF_ORB_GRAD::compute_Lagrangian() {
     psi::outfile->Printf(" Done.");
 }
 
-void CASSCF_ORB_GRAD::compute_opdm_ao() {
+void MCSCF_ORB_GRAD::compute_opdm_ao() {
     psi::outfile->Printf("\n    Computing AO OPDM .........");
     auto D1a = std::make_shared<psi::Matrix>("D1a", nmopi_, nmopi_);
 
@@ -447,7 +447,7 @@ void CASSCF_ORB_GRAD::compute_opdm_ao() {
     psi::outfile->Printf(" Done.");
 }
 
-void CASSCF_ORB_GRAD::dump_tpdm_iwl() {
+void MCSCF_ORB_GRAD::dump_tpdm_iwl() {
     psi::outfile->Printf("\n    Dumping MO TPDM to disk ...");
     auto psio = _default_psio_lib_;
     IWL d2(psio.get(), PSIF_FORTE_MO_TPDM, 1.0e-15, 0, 0);
@@ -524,7 +524,7 @@ void CASSCF_ORB_GRAD::dump_tpdm_iwl() {
     psi::outfile->Printf(" Done.");
 }
 
-void CASSCF_ORB_GRAD::dump_tpdm_iwl_hf() {
+void MCSCF_ORB_GRAD::dump_tpdm_iwl_hf() {
     auto psio = _default_psio_lib_;
     IWL d2(psio.get(), PSIF_FORTE_MO_TPDM2, 1.0e-15, 0, 0);
     std::string name = "outfile";

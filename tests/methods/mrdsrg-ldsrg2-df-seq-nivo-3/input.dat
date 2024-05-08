@@ -40,7 +40,7 @@ set forte{
   semi_canonical          false # test if mrdsrg can handle non-canonical orbitals
   dsrg_hbar_seq           true
   dsrg_nivo               true
-  casscf_reference        false
+  mcscf_reference        false
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

@@ -35,7 +35,7 @@ set forte{
    dsrg_s           0.5
    sigma            0.0
    multiplicity     1
-   casscf_reference false
+   mcscf_reference false
 }
 
 energy('forte')

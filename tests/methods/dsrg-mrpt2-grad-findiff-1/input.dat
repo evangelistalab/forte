@@ -33,7 +33,7 @@ set forte{
   nroot                    1
   dsrg_s                   0.5
   active_space_solver      fci
-  casscf_reference         false
+  mcscf_reference         false
 }
 
 grad = gradient('forte',dertype=0)

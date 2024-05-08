@@ -22,8 +22,8 @@ set forte{
   active                  [2,0,0,0]
   root_sym                0
   nroot                   1
-  casscf_e_convergence    12
-  casscf_g_convergence    8
+  mcscf_e_convergence    12
+  mcscf_g_convergence    8
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)

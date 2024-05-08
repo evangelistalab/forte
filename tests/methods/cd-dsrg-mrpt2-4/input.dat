@@ -33,7 +33,7 @@ set forte{
    semi_canonical         true
    int_type               cholesky
    cholesky_tolerance     1e-12
-   casscf_reference       false
+   mcscf_reference       false
 }
 
 energy('forte')

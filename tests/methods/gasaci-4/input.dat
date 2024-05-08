@@ -40,7 +40,7 @@ set forte {
   GAS2 [5,0,2,2]
   AVG_STATE [[0,1,1],[2,3,1]]
   GAS1MAX [2,1]
-  casscf_reference false
+  mcscf_reference false
 }
 
 

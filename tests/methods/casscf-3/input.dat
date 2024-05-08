@@ -23,7 +23,7 @@ set {
 }
 
 
-casscf_psi4 = energy('casscf')
+mcscf_psi4 = energy('casscf')
 
 set scf_type direct
 
@@ -41,6 +41,6 @@ set forte {
     CASSCF_FREEZE_CORE    true
 }
 
-casscf_forte = energy('forte')
+mcscf_forte = energy('forte')
 
-compare_values(ref_my_casscf, casscf_forte, 6, 'CASSCF Energy')  #TEST
+compare_values(ref_my_casscf, mcscf_forte, 6, 'CASSCF Energy')  #TEST

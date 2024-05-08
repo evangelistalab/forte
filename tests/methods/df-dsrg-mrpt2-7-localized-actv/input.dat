@@ -45,11 +45,11 @@ set forte{
   active               [4]
   avg_state            [[0,1,5]]
   rotate_mos           [1,17,20]
-  casscf_maxiter       250
-  casscf_g_convergence 1.0e-6
-  casscf_e_convergence 1.0e-12
+  mcscf_maxiter       250
+  mcscf_g_convergence 1.0e-6
+  mcscf_e_convergence 1.0e-12
   ci_spin_adapt        true
-  casscf_freeze_core   true
+  mcscf_freeze_core   true
 }
 
 Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)

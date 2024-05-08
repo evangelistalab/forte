@@ -50,7 +50,7 @@ set forte {
   active_ref_type gas_single
   active_space_solver aci
   sigma 0.5
-  casscf_reference false
+  mcscf_reference false
 }
 
 energy('forte')

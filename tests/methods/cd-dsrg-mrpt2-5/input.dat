@@ -35,8 +35,8 @@ set forte{
   dsrg_s                 0.5
   int_type               cholesky
   cholesky_tolerance     1e-11
-  casscf_e_convergence   12
-  casscf_g_convergence   8
+  mcscf_e_convergence   12
+  mcscf_g_convergence   8
   print_denom2           true
 }
 

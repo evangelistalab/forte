@@ -3388,7 +3388,7 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool s
 //    std::string cas_type;
 
 //    if (foptions_->get_str("CAS_TYPE") == "CASSCF") {
-//        cas_type = foptions_->get_str("CASSCF_CI_SOLVER");
+//        cas_type = foptions_->get_str("MCSCF_CI_SOLVER");
 //    } else {
 //        cas_type = foptions_->get_str("CAS_TYPE");
 //    }

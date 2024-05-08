@@ -22,8 +22,8 @@ set forte{
   active                  [2,0,0,0]
   dsrg_s                  1.0
   e_convergence           10
-  casscf_g_convergence   8
-  casscf_e_convergence   12  
+  mcscf_g_convergence   8
+  mcscf_e_convergence   12  
 }
 
 Ept2, wfn = energy('forte', return_wfn=True)

@@ -30,7 +30,7 @@ set forte{
   active                 [2,0,0,0]
   root_sym                0
   nroot                   1
-  casscf_e_convergence    12
+  mcscf_e_convergence    12
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)
@@ -51,7 +51,7 @@ set forte{
   e_convergence          8
   relax_ref              twice
   dsrg_nivo              true
-  casscf_reference       false
+  mcscf_reference       false
 }
 
 energy('forte', ref_wfn=wfn)

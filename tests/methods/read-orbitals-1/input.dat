@@ -29,7 +29,7 @@ set forte{
   restricted_docc         [1,0,1,1]
   active                  [2,0,0,0]
   read_orbitals           true  # generated @ 1.5
-  casscf_reference        false
+  mcscf_reference        false
 }
 Ecas = energy('forte')
 compare_values(psi4_casscf, Ecas, 8, "FORTE 2-step MCSCF energy")

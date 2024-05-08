@@ -47,7 +47,7 @@ set forte{
   avg_state           [[0,1,3], [3,1,1]]
   transition_dipoles  true
   sci_excited_algorithm average
-  casscf_reference    false
+  mcscf_reference    false
 }
 
 energy('forte')

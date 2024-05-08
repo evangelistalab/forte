@@ -41,8 +41,8 @@ set forte{
   root_sym               1
   e_convergence          12
   r_convergence          8
-  casscf_g_convergence   1e-8
-  casscf_e_convergence   1e-12
+  mcscf_g_convergence   1e-8
+  mcscf_e_convergence   1e-12
   ms                     1.0
 }
 Escf, wfn = energy('scf', return_wfn=True)

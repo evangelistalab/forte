@@ -176,18 +176,18 @@ def energy_forte(name, **kwargs):
     # Run an MCSCF computation
     # if data.options.get_str("INT_TYPE") == "FCIDUMP":
     #     psi4.core.print_out("\n\n  Skipping MCSCF computation. Using integrals from FCIDUMP input\n")
-    if data.options.get_bool("CASSCF_REFERENCE") is False:
+    if data.options.get_bool("MCSCF_REFERENCE") is False:
         psi4.core.print_out("\n\n  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn\n")
     else:
         active_space_solver_type = data.options.get_str("ACTIVE_SPACE_SOLVER")
-        casscf_freeze_core = data.options.get_bool("CASSCF_FREEZE_CORE")
+        mcscf_freeze_core = data.options.get_bool("MCSCF_FREEZE_CORE")
 
         # freeze core orbitals check
         frozen_docc_set = data.mo_space_info.size("FROZEN_DOCC") > 0
-        if not casscf_freeze_core and frozen_docc_set and data.options.get_str("CORRELATION_SOLVER") == "NONE":
-            msg = "\n  WARNING: By default, Forte will not freeze core orbitals in MCSCF,\n  unless the option CASSCF_FREEZE_CORE is set to True.\n"
-            msg += f"\n  Your input file specifies the FROZEN_DOCC array ({data.mo_space_info.size('FROZEN_DOCC')} MOs) in the\n  MO_SPACE_INFO block, but the option CASSCF_FREEZE_CORE is set to False.\n"
-            msg += "\n  If you want to freeze the core orbitals in MCSCF, set CASSCF_FREEZE_CORE to True,\n  otherwise change the FROZEN_DOCC array to zero(s) and update the RESTRICTED_DOCC array.\n"
+        if not mcscf_freeze_core and frozen_docc_set and data.options.get_str("CORRELATION_SOLVER") == "NONE":
+            msg = "\n  WARNING: By default, Forte will not freeze core orbitals in MCSCF,\n  unless the option MCSCF_FREEZE_CORE is set to True.\n"
+            msg += f"\n  Your input file specifies the FROZEN_DOCC array ({data.mo_space_info.size('FROZEN_DOCC')} MOs) in the\n  MO_SPACE_INFO block, but the option MCSCF_FREEZE_CORE is set to False.\n"
+            msg += "\n  If you want to freeze the core orbitals in MCSCF, set MCSCF_FREEZE_CORE to True,\n  otherwise change the FROZEN_DOCC array to zero(s) and update the RESTRICTED_DOCC array.\n"
             print(msg)
             psi4.core.print_out(msg)
 
@@ -198,14 +198,6 @@ def energy_forte(name, **kwargs):
     if job_type == "NONE":
         psi4.core.set_scalar_variable("CURRENT ENERGY", energy)
         return data.psi_wfn
-
-    # if job_type == "CASSCF":
-    #     raise Exception("Forte: CASSCF_REFERENCE is not supported")
-    #     if data.options.get_str("INT_TYPE") == "FCIDUMP":
-    #         raise Exception("Forte: the CASSCF code cannot use integrals read from a FCIDUMP file")
-
-    #     casscf = forte.make_casscf(data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints)
-    #     energy = casscf.compute_energy()
 
     if job_type == "TDCI":
         data = TDACI().run(data)
@@ -249,7 +241,7 @@ def gradient_forte(name, **kwargs):
     """
     This funtion is called when the user calls gradient('forte').
     It sets up the computation and calls the Forte driver.
-    This function is currently only implemented for CASSCF and MCSCF_TWO_STEP and DSRG-MRPT2.
+    This function is currently only implemented for MCSCF_TWO_STEP and DSRG-MRPT2.
 
     Parameters
     ----------
@@ -292,16 +284,8 @@ def gradient_forte(name, **kwargs):
     if orb_type != "CANONICAL":
         OrbitalTransformation(orb_type, job_type != "NONE").run(data)
 
-    # if job_type == "CASSCF":
-    #     casscf = forte.make_casscf(data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints)
-    #     energy = casscf.compute_energy()
-    #     casscf.compute_gradient()
-
-    # if job_type == "MCSCF_TWO_STEP":
-    # data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER")).run(data)
-    # energy = data.results.value("energy")
     active_space_solver_type = data.options.get_str("ACTIVE_SPACE_SOLVER")
-    casscf_freeze_core = data.options.get_bool("CASSCF_FREEZE_CORE")
+    mcscf_freeze_core = data.options.get_bool("MCSCF_FREEZE_CORE")
     data = MCSCF(active_space_solver_type).run(data)
     energy = data.results.value("energy")
 

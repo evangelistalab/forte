@@ -11,7 +11,7 @@ set forte {
   active_space_solver fci
   int_type            fcidump
   e_convergence       12
-  casscf_reference    false
+  mcscf_reference    false
 }
 
 energy('forte')

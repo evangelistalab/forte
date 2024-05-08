@@ -50,7 +50,7 @@ set forte {
   aci_screen_alg                    batch_hash
   aci_nbatch                        8
   active_guess_size                 100
-  casscf_reference                  false
+  mcscf_reference                  false
 }
 set_num_threads(4)
 

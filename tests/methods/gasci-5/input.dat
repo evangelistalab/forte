@@ -36,7 +36,7 @@ set forte {
   gas1min             [6]
   fci_test_rdms       true
   ci_spin_adapt       true
-  casscf_reference    false
+  mcscf_reference    false
 }
 
 energy('forte')

@@ -33,7 +33,7 @@ set forte {
   sigma 0.0
   charge 0
   diag_algorithm sparse
-  casscf_reference false
+  mcscf_reference false
 }
 
 energy('forte')

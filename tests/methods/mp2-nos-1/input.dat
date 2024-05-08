@@ -48,7 +48,7 @@ nat_orbs_print true
 pt2no_occ_threshold 0.98
 pt2no_vir_threshold 0.02
 frozen_docc [14,0]
-casscf_reference false
+mcscf_reference false
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

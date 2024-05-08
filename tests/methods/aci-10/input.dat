@@ -48,7 +48,7 @@ set forte {
   aci_add_aimed_degenerate false
   sci_project_out_spin_contaminants false
   diag_algorithm full
-  casscf_reference      false
+  mcscf_reference      false
 }
 
 energy('forte')

@@ -47,7 +47,7 @@
 
 namespace forte {
 
-class CASSCF_ORB_GRAD {
+class MCSCF_ORB_GRAD {
   public:
     /**
      * @brief Constructor of the AO-based CASSCF class
@@ -58,7 +58,7 @@ class CASSCF_ORB_GRAD {
      * Implementation notes:
      *   See J. Chem. Phys. 142, 224103 (2015) and Theor. Chem. Acc. 97, 88-95 (1997)
      */
-    CASSCF_ORB_GRAD(std::shared_ptr<ForteOptions> options,
+    MCSCF_ORB_GRAD(std::shared_ptr<ForteOptions> options,
                     std::shared_ptr<MOSpaceInfo> mo_space_info,
                     std::shared_ptr<ForteIntegrals> ints, bool freeze_core);
 

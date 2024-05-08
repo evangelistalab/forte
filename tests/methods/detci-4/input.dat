@@ -23,7 +23,7 @@ set forte{
   active_space_solver     detci
   active_ref_type         cas
   frozen_docc             [1,0,0,0]
-  casscf_reference        false
+  mcscf_reference        false
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

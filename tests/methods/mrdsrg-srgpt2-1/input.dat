@@ -71,7 +71,7 @@ set forte {
   dsrg_s             0.1
   maxiter            1000
   srg_odeint_abserr  1.0e-8 
-  casscf_reference   false
+  mcscf_reference   false
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

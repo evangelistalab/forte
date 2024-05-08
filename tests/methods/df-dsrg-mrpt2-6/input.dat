@@ -36,7 +36,7 @@ set forte {
    correlation_solver      three-dsrg-mrpt2
    active_space_solver     fci
    relax_ref               once
-   casscf_reference        false
+   mcscf_reference        false
 }
 
 energy('forte')

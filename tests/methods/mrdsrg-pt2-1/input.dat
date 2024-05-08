@@ -69,7 +69,7 @@ set forte {
   root               0
   dsrg_s             1.0
   maxiter            100
-  casscf_reference   false
+  mcscf_reference   false
 }
 
 energy('forte')

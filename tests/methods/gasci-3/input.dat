@@ -34,7 +34,7 @@ set forte {
   gas1min             [0,0]
   avg_state           [[0,1,1],[0,1,1]] # 1 x 1A1 + 1 x 1A1
   fci_test_rdms       true
-  casscf_reference    false
+  mcscf_reference    false
 }
 
 eaci = energy('forte')

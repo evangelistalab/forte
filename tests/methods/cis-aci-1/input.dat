@@ -28,7 +28,7 @@ set forte {
   aci_n_average 2
   active_ref_type CIS
   sci_excited_algorithm average
-  casscf_reference false
+  mcscf_reference false
 }
 
 energy('forte')

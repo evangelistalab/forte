@@ -59,8 +59,8 @@ set forte{
    nroot                1
    dsrg_s               1.0e10
    threepdc             zero
-   casscf_e_convergence    12
-   casscf_g_convergence    8
+   mcscf_e_convergence    12
+   mcscf_g_convergence    8
 }
 
 energy('forte')

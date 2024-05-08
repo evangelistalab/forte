@@ -36,7 +36,7 @@ set forte{
    int_type                cholesky
    cholesky_tolerance      1e-14
    print_denom2            true
-   casscf_reference        false
+   mcscf_reference        false
 }
 
 energy('forte')

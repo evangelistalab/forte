@@ -46,7 +46,7 @@ relax_ref              once
 maxiter                100
 e_convergence          8
 semi_canonical         false
-casscf_reference       false
+mcscf_reference       false
 }
 
 energy('forte', ref_wfn=wfn)

@@ -59,7 +59,7 @@ set forte{
   avg_state            [[0,1,2], [1,1,1], [6,1,2], [7,1,2], [0,3,2], [0,5,2]]
   avg_weight           [[1,2], [2], [0,1], [0,1], [0.25,0.25], [0.5,0.5]]
   print                2
-  casscf_reference     false
+  mcscf_reference     false
 }
 
 energy('forte', ref_wfn=wfn)

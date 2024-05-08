@@ -44,7 +44,7 @@ set forte{
    CASSCF_DO_DIIS          false
    sigma                   0.0
    gamma                   0.0
-   casscf_freeze_core      true
+   mcscf_freeze_core      true
 }
 
 casscf = energy('forte')
