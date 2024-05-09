@@ -39,12 +39,10 @@ set forte{
    multiplicity            1
    active_space_solver     aci
    int_type                conventional
-   CASSCF_MAXITER          25
-   print                   0
-   CASSCF_DO_DIIS          false
    sigma                   0.0
    gamma                   0.0
-   mcscf_freeze_core      true
+   mcscf_freeze_core       true
+   mcscf_do_diis           false
 }
 
 casscf = energy('forte')

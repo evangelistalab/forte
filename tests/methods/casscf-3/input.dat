@@ -1,7 +1,8 @@
-#! CASSCF/6-31G** energy point
+# CASSCF/6-31G** energy
+
 import forte
-refcasscf     = -75.641108837310796
-ref_my_casscf = -75.641108837310796 
+
+refcasscf = -75.641108837310796
 
 molecule {
 O
@@ -10,37 +11,28 @@ H 1 1.00 2 103.1
 }
 
 set {
-    scf_type        pk
-    df_basis_guess   false
-    basis           3-21g
-    reference       rhf
-    frozen_docc     [1, 0, 0, 0]
-    active          [3, 0, 1, 2]
-    e_convergence   1e-10
-    d_convergence   1e-10
-    mcscf_r_convergence 1e-8
-    mcscf_e_convergence 1e-10
+  scf_type        pk
+  basis           3-21g
+  reference       rhf
+  frozen_docc     [1, 0, 0, 0]
+  active          [3, 0, 1, 2]
+  e_convergence   1e-10
+  d_convergence   1e-10
+  mcscf_r_convergence 1e-8
+  mcscf_e_convergence 1e-10
 }
-
 
 mcscf_psi4 = energy('casscf')
 
-set scf_type direct
-
 set forte {
-    job_type              mcscf_two_step
-    active_space_solver   fci
-    frozen_docc           [1, 0, 0, 0]
-    active                [3, 0, 1, 2]
-    int_type              conventional
-    CASSCF_E_CONVERGENCE  1e-10
-    CASSCF_G_CONVERGENCE  1e-6
-    CASSCF_MAXITER        25
-    print                 0
-    CASSCF_DO_DIIS        true
-    CASSCF_FREEZE_CORE    true
+  active_space_solver   fci
+  frozen_docc           [1, 0, 0, 0]
+  active                [3, 0, 1, 2]
+  mcscf_e_convergence   1e-10
+  mcscf_g_convergence   1e-6
+  mcscf_freeze_core     true
 }
 
 mcscf_forte = energy('forte')
 
-compare_values(ref_my_casscf, mcscf_forte, 6, 'CASSCF Energy')  #TEST
+compare_values(refcasscf, mcscf_forte, 6, 'CASSCF Energy')  #TEST
