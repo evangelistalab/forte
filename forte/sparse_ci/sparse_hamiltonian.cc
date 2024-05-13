@@ -35,7 +35,7 @@ namespace forte {
 SparseHamiltonian::SparseHamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : as_ints_(as_ints) {}
 
-StateVector SparseHamiltonian::compute(const StateVector& state, double screen_thresh) {
+SparseState SparseHamiltonian::compute(const SparseState& state, double screen_thresh) {
     // store a list of determinants that we have never encountered before
     std::vector<Determinant> new_dets;
 
@@ -188,7 +188,7 @@ void SparseHamiltonian::compute_new_couplings(const std::vector<Determinant>& ne
     timings_["time"] += t.get();
 }
 
-StateVector SparseHamiltonian::compute_sigma(const StateVector& state, double screen_thresh) {
+SparseState SparseHamiltonian::compute_sigma(const SparseState& state, double screen_thresh) {
     local_timer t;
 
     std::vector<double> sigma_c(sigma_hash_.size(), 0.0);
@@ -211,8 +211,8 @@ StateVector SparseHamiltonian::compute_sigma(const StateVector& state, double sc
         }
     }
 
-    // copy data to a StateVector object
-    StateVector sigma;
+    // copy data to a SparseState object
+    SparseState sigma;
     for (size_t n = 0, maxn = sigma_hash_.size(); n < maxn; n++) {
         sigma[sigma_hash_.get_det(n)] = sigma_c[n];
     }
@@ -222,11 +222,11 @@ StateVector SparseHamiltonian::compute_sigma(const StateVector& state, double sc
     return sigma;
 }
 
-StateVector SparseHamiltonian::compute_on_the_fly(const StateVector& state, double screen_thresh) {
+SparseState SparseHamiltonian::compute_on_the_fly(const SparseState& state, double screen_thresh) {
     local_timer t;
 
     // initialize a state object
-    StateVector sigma;
+    SparseState sigma;
 
     size_t nmo = as_ints_->nmo();
 

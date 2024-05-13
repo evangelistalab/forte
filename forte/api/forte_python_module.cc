@@ -358,6 +358,7 @@ PYBIND11_MODULE(_forte, m) {
              "Set if reading amplitudes in the current directory or not")
         .def("clean_checkpoints", &MASTER_DSRG::clean_checkpoints,
              "Delete amplitudes checkpoint files")
+        .def("converged", &MASTER_DSRG::converged, "Return if amplitudes are converged or not")
         .def("set_ci_vectors", &MASTER_DSRG::set_ci_vectors,
              "Set the CI eigenvector for DSRG-MRPT2 analytic gradients")
         .def("set_active_space_solver", &MASTER_DSRG::set_active_space_solver,
@@ -378,6 +379,7 @@ PYBIND11_MODULE(_forte, m) {
              "Set the map from state to the weights of all computed roots")
         .def("set_read_cwd_amps", &SADSRG::set_read_amps_cwd,
              "Set if reading amplitudes in the current directory or not")
+        .def("converged", &SADSRG::converged, "Return if amplitudes are converged or not")
         .def("clean_checkpoints", &SADSRG::clean_checkpoints, "Delete amplitudes checkpoint files")
         .def("epsilon", &SADSRG::epsilon,
              "A vector of semicanonical orbital energies in Pitzer order");

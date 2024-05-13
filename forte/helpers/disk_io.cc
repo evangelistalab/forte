@@ -169,10 +169,11 @@ void dump_occupations(const std::string& filename,
     int nirrep = -1;
     std::vector<std::string> spaces;
     for (const auto& [space_name, dim] : occ_map) {
+        int n = static_cast<int>(dim.n());
         if (nirrep == -1) {
-            nirrep = dim.n();
+            nirrep = n;
         } else {
-            if (dim.n() != nirrep)
+            if (nirrep != n)
                 throw std::runtime_error("Inconsistent number of irreps!");
         }
         spaces.push_back(space_name);

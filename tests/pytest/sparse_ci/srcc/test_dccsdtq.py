@@ -21,7 +21,7 @@ def test_ccsdtq():
 
     scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis="DZ", reference="RHF")
     data = forte.modules.ObjectsUtilPsi4(ref_wnf=psi4_wfn, mo_spaces={}).run()
-    calc_data = scc.run_cc(data.as_ints, data.scf_info, data.mo_space_info, cc_type="dcc", max_exc=4, on_the_fly=True)
+    calc_data = scc.run_cc(data.as_ints, data.scf_info, data.mo_space_info, cc_type="dcc", max_exc=4)
 
     psi4.core.clean()
 

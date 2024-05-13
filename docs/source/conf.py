@@ -4,7 +4,7 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-#import sphinx_rtd_theme
+# import sphinx_rtd_theme
 
 # -- Path setup --------------------------------------------------------------
 
@@ -15,27 +15,27 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../../..'))
+sys.path.insert(0, os.path.abspath("../../.."))
 
 # -- Project information -----------------------------------------------------
 
-project = 'Forte'
-copyright = '2021, Forte Developers'
-author = 'Forte Developers'
+project = "Forte"
+copyright = "2024, Forte Developers"
+author = "Forte Developers"
 
 # The full version, including alpha/beta/rc tags
-release = '0.2.3'
+release = "0.3.0"
 
 # -- General configuration ---------------------------------------------------
-master_doc = 'index'
+master_doc = "index"
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['nbsphinx', 'sphinx.ext.mathjax', 'sphinx.ext.autodoc']
+extensions = ["nbsphinx", "sphinx.ext.mathjax", "sphinx.ext.autodoc"]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -47,7 +47,7 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_theme = "pydata_sphinx_theme"
-#html_theme = 'sphinx_rtd_theme'
+# html_theme = 'sphinx_rtd_theme'
 
 html_theme_options = {
     # 'analytics_id': 'UA-XXXXXXX-1',  # Provided by Google in your dashboard
@@ -57,16 +57,16 @@ html_theme_options = {
     # 'prev_next_buttons_location': 'bottom',
     # 'style_external_links': False,
     # 'vcs_pageview_mode': '',
-    'style_nav_header_background': 'white',
+    "style_nav_header_background": "white",
     # Toc options
     # 'navigation_depth': 4,
     # 'includehidden': True,
     # 'titles_only': False
 }
 
-html_logo = 'forte_logotype.pdf'
+html_logo = "forte_logotype.pdf"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]

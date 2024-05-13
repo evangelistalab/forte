@@ -775,7 +775,7 @@ def register_dsrg_options(options):
         "DSRG_MAX_QUADRUPOLE_LEVEL", 0, "The max body level of DSRG transformed quadrupole moment (skip if < 1)"
     )
 
-    options.add_int("DSRG_MAXITER", 50, "Max iterations for nonperturbative" " MR-DSRG amplitudes update")
+    options.add_int("DSRG_MAXITER", 50, "Max iterations for nonperturbative MR-DSRG amplitudes update")
 
     options.add_double("R_CONVERGENCE", 1.0e-6, "Residue convergence criteria for amplitudes")
 

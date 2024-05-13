@@ -45,6 +45,7 @@ void export_ActiveSpaceIntegrals(py::module& m) {
                                                                             "ActiveSpaceIntegrals")
         .def("slater_rules", &ActiveSpaceIntegrals::slater_rules,
              "Compute the matrix element of the Hamiltonian between two determinants")
+        .def("energy", &ActiveSpaceIntegrals::energy, "Return the energy of a determinant")
         .def("nuclear_repulsion_energy", &ActiveSpaceIntegrals::nuclear_repulsion_energy,
              "Get the nuclear repulsion energy")
         .def("frozen_core_energy", &ActiveSpaceIntegrals::frozen_core_energy,

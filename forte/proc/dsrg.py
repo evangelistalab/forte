@@ -381,6 +381,10 @@ class ProcedureDSRG:
         e_current = e_dsrg if len(self.energies) == 0 else e_relax
         psi4.core.set_scalar_variable("CURRENT ENERGY", e_current)
 
+        if self.solver_type in ["MRDSRG", "SA-MRDSRG", "SA_MRDSRG"]:
+            if not self.dsrg_solver.converged():
+                raise RuntimeError("DSRG amplitudes did not converge!");
+
         return e_current
 
     def compute_gradient(self, ci_vectors):
