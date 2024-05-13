@@ -24,7 +24,7 @@ copyright = "2024, Forte Developers"
 author = "Forte Developers"
 
 # The full version, including alpha/beta/rc tags
-release = "0.3.0"
+release = "0.4.0"
 
 # -- General configuration ---------------------------------------------------
 master_doc = "index"
