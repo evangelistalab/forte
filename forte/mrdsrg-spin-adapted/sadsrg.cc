@@ -389,6 +389,19 @@ void SADSRG::fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa) {
     });
 }
 
+std::vector<double> SADSRG::epsilon(char block) {
+    // by default, we return all orbitals
+    if (block != 'c' and block != 'a' and block != 'v') {
+        return Fdiag_;
+    }
+    std::vector<double> out;
+    out.reserve(label_to_spacemo_[block].size());
+    for (auto p: label_to_spacemo_[block]) {
+        out.push_back(Fdiag_[p]);
+    }
+    return out;
+}
+
 double SADSRG::compute_reference_energy_from_ints() {
     BlockedTensor H = BTF_->build(tensor_type_, "OEI", {"cc", "aa"}, true);
     H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {

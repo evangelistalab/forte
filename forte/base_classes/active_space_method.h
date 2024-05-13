@@ -222,32 +222,6 @@ class ActiveSpaceMethod {
         throw std::runtime_error(
             "ActiveSpaceMethod::eigenvectors(): Not Implemented for this class!");
     }
-    /// Compute permanent dipole moments
-    std::vector<std::vector<double>>
-    compute_permanent_dipole(const std::vector<std::pair<size_t, size_t>>& root_list,
-                             const ambit::Tensor& Ua, const ambit::Tensor& Ub);
-
-    /// Compute permanent dipole moments (electronic + nuclear)
-    std::vector<std::shared_ptr<psi::Vector>>
-    compute_permanent_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
-                             std::vector<std::pair<size_t, size_t>>& root_list);
-
-    /// Compute permanent quadrupole moments (electronic + nuclear)
-    std::vector<std::shared_ptr<psi::Vector>>
-    compute_permanent_quadrupole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
-                                 const std::vector<std::pair<size_t, size_t>>& root_list);
-
-    /// Compute transition dipole moments assuming same orbitals
-    std::vector<std::shared_ptr<psi::Vector>>
-    compute_transition_dipole_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
-                                        const std::vector<std::pair<size_t, size_t>>& root_list,
-                                        std::shared_ptr<ActiveSpaceMethod> method2);
-
-    /// Compute oscillator strength assuming same orbitals
-    std::vector<double>
-    compute_oscillator_strength_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
-                                          const std::vector<std::pair<size_t, size_t>>& root_list,
-                                          std::shared_ptr<ActiveSpaceMethod> method2);
 
     /// Dump the wave function to file
     /// @param file name
@@ -311,6 +285,10 @@ class ActiveSpaceMethod {
     /// Set the maximum number of iterations
     /// @param value the maximum number of iterations
     void set_maxiter(size_t value);
+
+    /// Set if throw an error when Davidson-Liu not converged
+    /// @param value stop if not coverged
+    void set_die_if_not_converged(bool value);
 
     /// Set if we dump the wave function to disk
     void set_read_wfn_guess(bool read);
@@ -379,6 +357,9 @@ class ActiveSpaceMethod {
     /// The maximum number of iterations
     size_t maxiter_ = 100;
 
+    /// Stop if Davidson-Liu not converged
+    bool die_if_not_converged_ = true;
+
     /// The root used to compute properties (zero based, default = 0)
     int root_ = 0;
 
@@ -398,6 +379,8 @@ class ActiveSpaceMethod {
     bool read_wfn_guess_ = false;
     /// Dump transition density matrix to disk?
     bool dump_trdm_ = false;
+    // /// Dump natural transition orbitals to disk?
+    // bool dump_nto_ = false;
     /// Dump wave function to disk?
     bool dump_wfn_ = false;
     /// The file name for storing wave function (determinants, CI coefficients)
@@ -418,10 +401,5 @@ std::shared_ptr<ActiveSpaceMethod> make_active_space_method(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options);
-
-// std::vector<std::shared_ptr<RDMs>> transition_rdms(std::shared_ptr<ActiveSpaceMethod> m1,
-//                                                    std::shared_ptr<ActiveSpaceMethod> m2,
-//                                                    std::vector<std::pair<size_t, size_t>>,
-//                                                    int max_rdm_level);
 
 } // namespace forte
