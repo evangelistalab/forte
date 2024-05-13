@@ -33,8 +33,8 @@ set {
 
 set forte {
   REF_TYPE              casscf
-  CASSCF_G_CONVERGENCE  1e-10
-  CASSCF_E_CONVERGENCE  1e-10
+  MCSCF_G_CONVERGENCE  1e-10
+  MCSCF_E_CONVERGENCE  1e-10
   active                [4]
   active_space_solver   detci
   correlation_solver    dsrg-mrpt2
