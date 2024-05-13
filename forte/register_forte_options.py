@@ -745,11 +745,11 @@ def register_dsrg_options(options):
 
     options.add_double("DSRG_FNO_CUTOFF", 1.0e-5, "The cutoff used to discard FNOs")
 
-    options.add_double("DSRG_FNO_PV", 100.0,
+    options.add_double("DSRG_FNO_PV", 0.0,
                        "Percentage of virtual orbitals kept unfrozen."
                        " If not 100.0, it takes priority over direct cutoff.")
 
-    options.add_double("DSRG_FNO_PO", 100.0,
+    options.add_double("DSRG_FNO_PO", 0.0,
                        "Percentage of cumulative virtual occupancy kept unfrozen."
                        " If not 100.0, it takes priority over all other selection schemes.")
 
