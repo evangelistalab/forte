@@ -33,10 +33,10 @@ set forte {
   gas1min             [0]
   gas1max             [1]
   job_type            mcscf_two_step
-  casscf_maxiter     100
-  casscf_e_convergence 1e-10
-  casscf_active_frozen_orbital [0]
-  casscf_diis_start 15
+  mcscf_maxiter     100
+  mcscf_e_convergence 1e-10
+  mcscf_active_frozen_orbital [0]
+  mcscf_diis_start 15
 }
 
 escf, wfn = energy('scf', return_wfn=True)

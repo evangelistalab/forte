@@ -22,10 +22,9 @@ def run_cc(
     r_convergence=1.0e-5,
     compute_threshold=1.0e-14,
     selection_threshold=1.0e-14,
-    on_the_fly=False,
     linked=True,
     maxk=19,
-    diis_start=3
+    diis_start=3,
 ):
     """This function implements various CC methods
 
@@ -53,9 +52,6 @@ def run_cc(
         The compute cutoff (default = 1.0e-14)
     selection_threshold : float
         The selection cutoff (default = 1.0e-14)
-    on_the_fly : bool
-        Use the on-the-fly algorithms? By default this code uses a caching algorithm
-        that can be faster when using very small compute threshold values (default = False)
     Returns
     -------
     list(tuple(int,float))
@@ -65,7 +61,7 @@ def run_cc(
     nirrep = mo_space_info.nirrep()
 
     if cc_type == None:
-        raise ValueError('No type of CC computation was selected. Specify a valid value for the cc_type option.')
+        raise ValueError("No type of CC computation was selected. Specify a valid value for the cc_type option.")
 
     nmo = mo_space_info.size("CORRELATED")
     nmopi = mo_space_info.dimension("CORRELATED").to_tuple()
@@ -84,11 +80,11 @@ def run_cc(
     if max_exc is None:
         max_exc = min(naelpi + nbelpi, nmo - naelpi + nbelpi)
 
-    antihermitian = (cc_type != 'cc') and (cc_type != 'dcc')
+    antihermitian = (cc_type != "cc") and (cc_type != "dcc")
 
     # create the operator pool
-    op, denominators = make_cluster_operator(antihermitian, max_exc, naelpi, mo_space_info, scf_info)
-    selected_op = forte.SparseOperator(antihermitian)
+    op, denominators = make_cluster_operator(max_exc, naelpi, mo_space_info, scf_info)
+    selected_op = forte.SparseOperator()
 
     # the list of operators selected from the full list
     if select_type is None:
@@ -96,7 +92,7 @@ def run_cc(
         t = [0.0] * op.size()
         print(f"\n The excitation operator pool contains {op.size()} elements")
     else:
-        raise RuntimeError('Selected CC methods are not implemented yet')
+        raise RuntimeError("Selected CC methods are not implemented yet")
         print(f"\n Selecting operators using the {selec_type} scheme")
         t = []
         op_pool = []
@@ -110,7 +106,7 @@ def run_cc(
     print(f"Reference determinant: {hfref.str(nmo)}")
     print(f"Energy of the reference determinant: {eref}")
 
-    ref = forte.StateVector({hfref: 1.0})
+    ref = forte.SparseState({hfref: 1.0})
 
     nops_old = 0
 
@@ -126,9 +122,21 @@ def run_cc(
     for macro_iter in range(max_macro_iter):
 
         # solve the cc equations and update the amplitudes
-        t, e, e_proj, micro_iter, timing = solve_cc_equations(
-            cc_type, t, op, op, op_pool, denominators, ref, as_ints, compute_threshold, e_convergence, r_convergence,
-            on_the_fly, linked, maxk, diis_start
+        t, e, e_proj, micro_iter = solve_cc_equations(
+            cc_type,
+            t,
+            op,
+            op,
+            op_pool,
+            denominators,
+            ref,
+            as_ints,
+            compute_threshold,
+            e_convergence,
+            r_convergence,
+            linked,
+            maxk,
+            diis_start,
         )
 
         print(
@@ -153,7 +161,6 @@ def run_cc(
     print(f"\n{cc_type.upper()} proj. energy:     {e_proj:20.12f}")
     print(f"{cc_type.upper()} proj. corr energy:{e_proj - eref:20.12f}")
     print(f"omega: {omega}")
-    print(f"{timing}")
 
     return calc_data
 
@@ -189,7 +196,7 @@ def make_hfref(naelpi, nbelpi, nmopi):
     return hfref
 
 
-def make_cluster_operator(antihermitian, max_exc, naelpi, mo_space_info, psi4_wfn):
+def make_cluster_operator(max_exc, naelpi, mo_space_info, psi4_wfn):
     """Make the full cluster operator truncated to a given maximum excitation level (closed-shell case)
 
     Parameters
@@ -229,7 +236,7 @@ def make_cluster_operator(antihermitian, max_exc, naelpi, mo_space_info, psi4_wf
     # get the symmetry of each active orbital
     symmetry = mo_space_info.symmetry("CORRELATED")
 
-    sop = forte.SparseOperator(antihermitian=antihermitian)
+    sop = forte.SparseOperatorList()
 
     active_to_all = mo_space_info.absolute_mo("CORRELATED")
 
@@ -251,21 +258,17 @@ def make_cluster_operator(antihermitian, max_exc, naelpi, mo_space_info, psi4_wf
                             bvir_sym = functools.reduce(lambda x, y: x ^ symmetry[y], bv, 0)
                             # make sure the operators are total symmetric
                             if (aocc_sym ^ avir_sym) ^ (bocc_sym ^ bvir_sym) == 0:
-                                # Create a list of tuples (creation, alpha, orb) where
-                                #   creation : bool (true = creation, false = annihilation)
-                                #   alpha    : bool (true = alpha, false = beta)
-                                #   orb      : int  (the index of the mo)
                                 op = []
-                                for i in ao:
-                                    op.append((False, True, i))
-                                for i in bo:
-                                    op.append((False, False, i))
-                                for a in reversed(bv):
-                                    op.append((True, False, a))
-                                for a in reversed(av):
-                                    op.append((True, True, a))
+                                for a in av:
+                                    op.append(f"{a}a+")
+                                for a in bv:
+                                    op.append(f"{a}b+")
+                                for i in reversed(bo):
+                                    op.append(f"{i}b-")
+                                for i in reversed(ao):
+                                    op.append(f"{i}a-")
 
-                                sop.add_term(op, 0.0)
+                                sop.add(f"[{' '.join(op)}]", 0.0)
 
                                 e_aocc = functools.reduce(lambda x, y: x + ea[y], ao, 0.0)
                                 e_avir = functools.reduce(lambda x, y: x + ea[y], av, 0.0)
@@ -290,7 +293,6 @@ def solve_cc_equations(
     compute_threshold,
     e_convergence=1.0e-10,
     r_convergence=1.0e-5,
-    on_the_fly=False,
     linked=True,
     maxk=19,
     diis_start=3,
@@ -320,9 +322,6 @@ def solve_cc_equations(
         The energy convergence criterion (default = 1.0e-10)
     r_convergence : float
         The residual convergence criterion (default = 1.0e-5)
-    on_the_fly : bool
-        Use the on-the-fly algorithms? By default this code uses a caching algorithm
-        that can be faster when using very small compute threshold values (default = False)
     maxiter : int
         The maximum number of iterations
     Returns
@@ -334,23 +333,21 @@ def solve_cc_equations(
     diis = DIIS(t, diis_start)
     ham = forte.SparseHamiltonian(as_ints)
     if cc_type == "cc" or cc_type == "ucc":
-        exp = forte.SparseExp()
+        exp = forte.SparseExp(maxk=maxk, screen_thresh=compute_threshold)
     if cc_type == "dcc" or cc_type == "ducc":
-        exp = forte.SparseFactExp()
+        exp = forte.SparseFactExp(screen_thresh=compute_threshold)
 
     old_e_micro = 0.0
 
     for micro_iter in range(maxiter):
         micro_start = time.time()
         t_old = copy.deepcopy(t)
-        residual, e, e_proj = residual_equations(
-            cc_type, t, op, selected_op, ref, ham, exp, compute_threshold, on_the_fly, linked, maxk
-        )
+        residual, e, e_proj = residual_equations(cc_type, t, op, selected_op, ref, ham, exp, compute_threshold, linked)
 
         residual_norm = 0.0
         for l in range(selected_op.size()):
             t[l] -= residual[op_pool[l]] / denominators[op_pool[l]]
-            residual_norm += residual[op_pool[l]]**2
+            residual_norm += residual[op_pool[l]] ** 2
 
         residual_norm = math.sqrt(residual_norm)
 
@@ -363,15 +360,15 @@ def solve_cc_equations(
             flush=True,
         )
 
-        if (micro_iter > 2 and (abs(delta_e_micro) < e_convergence) and (residual_norm < r_convergence)):
+        if micro_iter > 2 and (abs(delta_e_micro) < e_convergence) and (residual_norm < r_convergence):
             break
 
         old_e_micro = e
 
-    return (t, e, e_proj, micro_iter + 1, exp.timings())
+    return (t, e, e_proj, micro_iter + 1)
 
 
-def residual_equations(cc_type, t, op, sop, ref, ham, exp, compute_threshold, on_the_fly=False, linked=True, maxk=19):
+def residual_equations(cc_type, t, op, sop, ref, ham, exp, compute_threshold, linked=True):
     """Evaluate the residual equations
 
     Parameters
@@ -384,9 +381,6 @@ def residual_equations(cc_type, t, op, sop, ref, ham, exp, compute_threshold, on
         The number of alpha electrons per irrep
     psi4_wfn : psi4 Wavefunction
         A psi4 Wavefunction object (to read the number of alpha/beta electrons)
-    on_the_fly : bool
-        Use the on-the-fly algorithms? By default this code uses a caching algorithm
-        that can be faster when using very small compute threshold values (default = False)
     linked : bool
         Use a linked formulation of the CC equations (a commutator series)?
     Returns
@@ -399,30 +393,24 @@ def residual_equations(cc_type, t, op, sop, ref, ham, exp, compute_threshold, on
     sop.set_coefficients(t)
 
     c0 = 0.0
-    if on_the_fly:
-        if cc_type == "cc" or cc_type == "ucc":
-            wfn = exp.compute(sop, ref, algorithm='onthefly', screen_thresh=compute_threshold, maxk=maxk)
-            Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
-            R = exp.compute(
-                sop, Hwfn, scaling_factor=-1.0, algorithm='onthefly', screen_thresh=compute_threshold, maxk=maxk
-            )
-        elif cc_type == "dcc" or cc_type == "ducc":
-            wfn = exp.compute(sop, ref, algorithm='onthefly', screen_thresh=compute_threshold)
-            Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
-            R = exp.compute(sop, Hwfn, inverse=True, algorithm='onthefly', screen_thresh=compute_threshold)
-        else:
-            raise ValueError("Incorrect value for cc_type")
+    if cc_type == "cc":
+        wfn = exp.apply_op(sop, ref)
+        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+        R = exp.apply_op(sop, Hwfn, scaling_factor=-1.0)
+    elif cc_type == "ucc":
+        wfn = exp.apply_antiherm(sop, ref)
+        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+        R = exp.apply_antiherm(sop, Hwfn, scaling_factor=-1.0)
+    elif cc_type == "dcc":
+        wfn = exp.apply_op(sop, ref)
+        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+        R = exp.apply_op(sop, Hwfn, inverse=True)
+    elif cc_type == "ducc":
+        wfn = exp.apply_antiherm(sop, ref)
+        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+        R = exp.apply_antiherm(sop, Hwfn, inverse=True)
     else:
-        if cc_type == "cc" or cc_type == "ucc":
-            wfn = exp.compute(sop, ref, screen_thresh=compute_threshold, maxk=maxk)
-            Hwfn = ham.compute(wfn, compute_threshold)
-            R = exp.compute(sop, Hwfn, scaling_factor=-1.0, screen_thresh=compute_threshold, maxk=maxk)
-        elif cc_type == "dcc" or cc_type == "ducc":
-            wfn = exp.compute(sop, ref, screen_thresh=compute_threshold)
-            Hwfn = ham.compute(wfn, compute_threshold)
-            R = exp.compute(sop, Hwfn, inverse=True, screen_thresh=compute_threshold)
-        else:
-            raise ValueError("Incorrect value for cc_type")
+        raise ValueError("Incorrect value for cc_type")
 
     # compute <ref|Psi>
     for d, c in ref.items():
@@ -457,13 +445,14 @@ def residual_equations(cc_type, t, op, sop, ref, ham, exp, compute_threshold, on
 
 
 class DIIS:
-    """A class that implements DIIS for CC theory 
+    """A class that implements DIIS for CC theory
 
         Parameters
     ----------
     diis_start : int
         Start the iterations when the DIIS dimension is greather than this parameter (default = 3)
     """
+
     def __init__(self, t, diis_start=3):
         self.t_diis = [t]
         self.e_diis = []
@@ -477,7 +466,7 @@ class DIIS:
         t : list
             The updated amplitudes
         t_old : list
-            The previous set of amplitudes            
+            The previous set of amplitudes
         Returns
         -------
         list

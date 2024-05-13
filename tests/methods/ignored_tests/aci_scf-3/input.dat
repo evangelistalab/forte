@@ -48,14 +48,14 @@ set forte {
   nroot                  1
   sigma                  0.001
   sci_enforce_spin_complete   true
-  casscf_reference       true
+  mcscf_reference       true
   active_space_solver    aci
   job_type               mcscf_two_step
   print_no               true
-  casscf_maxiter         50
+  mcscf_maxiter         50
   CASSCF_DIIS_NORM        1e-3
   CASSCF_DIIS_START       5
-  casscf_debug_printing   false
+  mcscf_debug_printing   false
 }
 
 

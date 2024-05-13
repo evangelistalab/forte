@@ -10,6 +10,8 @@ def test_ccsd_3():
     import forte
     import psi4
 
+    psi4.core.clean()
+
     ref_energy = -2.225059801642  # from psi4
 
     geom = """
@@ -21,9 +23,7 @@ def test_ccsd_3():
 
     scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis="DZ", reference="RHF")
     data = forte.modules.ObjectsUtilPsi4(ref_wnf=psi4_wfn).run()
-    calc_data = scc.run_cc(data.as_ints, data.scf_info, data.mo_space_info, cc_type="cc", max_exc=2, on_the_fly=True)
-
-    psi4.core.clean()
+    calc_data = scc.run_cc(data.as_ints, data.scf_info, data.mo_space_info, cc_type="cc", max_exc=2)
 
     energy = calc_data[-1][1]
 

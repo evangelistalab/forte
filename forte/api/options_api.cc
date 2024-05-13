@@ -5,7 +5,7 @@
  * t    hat implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see LICENSE, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -63,6 +63,7 @@ void export_ForteOptions(py::module& m) {
         .def("add_int_list", &ForteOptions::add_int_array, "Add a list of integers option")
         .def("add_double_list", &ForteOptions::add_double_array, "Add a list of doubles option")
         .def("add_list", &ForteOptions::add_array, "Add an array option for general elements")
+        .def("add_deprecated", &ForteOptions::add_deprecated, "Add a deprecated option")
         .def("get_bool", &ForteOptions::get_bool, "Get a boolean option")
         .def("get_int", &ForteOptions::get_int, "Get an integer option")
         .def("get_double", &ForteOptions::get_double, "Get a double option")

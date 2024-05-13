@@ -36,8 +36,8 @@ set forte {
   e_convergence        1e-10
   int_type             conventional
   avg_state            [[5, 3, 1], [0, 1, 1]]
-  casscf_reference     true
-  casscf_e_convergence 1e-10
+  mcscf_reference     true
+  mcscf_e_convergence 1e-10
 }
 
 triplet = energy('forte')

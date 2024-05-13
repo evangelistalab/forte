@@ -28,9 +28,9 @@ set forte{
   active_space_solver     detci
   restricted_docc         [2,0,1,1]
   active                  [2,0,0,0]
-  casscf_e_convergence    12
-  casscf_g_convergence    8
-  casscf_final_orbital    natural
+  mcscf_e_convergence    12
+  mcscf_g_convergence    8
+  mcscf_final_orbital    natural
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)
@@ -52,6 +52,7 @@ set forte{
   nroot                   1
   sci_direct_rdms         true
   aci_screen_alg          batch_hash
+  mcscf_reference        false
 }
 
 energy('forte', ref_wfn = wfn)

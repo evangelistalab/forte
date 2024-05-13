@@ -5,7 +5,7 @@ endif ()
 cmake_policy(SET CMP0048 NEW)  # project_VERSION* variables populated from project(... VERSION x.x.x) string
 
 project(forte
-        VERSION 0.1
+        VERSION 0.4.0
         LANGUAGES CXX C)
 set(forte_AUTHORS      "Francesco A. Evangelista and Group")
 set(forte_DESCRIPTION  "Quantum Chemistry Methods for Strongly Correlated Electrons plugin to Psi4")
@@ -24,6 +24,8 @@ option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
 option_with_print(MAX_DET_ORB "Set the maximum number of orbitals in a determinant" OFF)
 option_with_print(ENABLE_CODECOV "Enable compilation with code coverage flags" OFF)
 option_with_print(ENABLE_UNTESTED_CODE "Enable code not covered by code coverage" OFF)
+option_with_default(FORTE_INSTALL_PYMODDIR "Location within CMAKE_INSTALL_PREFIX to which the Python module is installed. Empty string queries Python interpreter. Don't start with '/'" prefix)
+# for trial builds, it's worth using `set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF)` or passing it as a `-D`. Saves 75% of build time to not run LTO (added by pybind11) at the link stage.
 
 include(autocmake_omp)  # no longer useful, probably need to copy psi4/external/common/lapack to cmake
 include(autocmake_mpi)  # MPI option A
@@ -93,12 +95,10 @@ base_classes/orbitals.cc
 base_classes/rdms.cc
 base_classes/scf_info.cc
 base_classes/state_info.cc
-casscf/casscf.cc
-casscf/casscf_gradient.cc
-casscf/casscf_orb_grad.cc
-casscf/casscf_orb_grad_deriv.cc
-casscf/cpscf.cc
-casscf/mcscf_2step.cc
+mcscf/mcscf_orb_grad.cc
+mcscf/mcscf_orb_grad_deriv.cc
+mcscf/cpscf.cc
+mcscf/mcscf_2step.cc
 ci_ex_states/excited_state_solver.cc
 ci_rdm/ci_rdms.cc
 ci_rdm/ci_rdms_dynamic.cc
@@ -253,12 +253,18 @@ sparse_ci/sparse_operator.cc
 sparse_ci/sparse_exp.cc
 sparse_ci/sparse_fact_exp.cc
 sparse_ci/sparse_hamiltonian.cc
-sparse_ci/sq_operator.cc
-sparse_ci/sparse_state_vector.cc
+sparse_ci/sq_operator_string.cc
+sparse_ci/sq_operator_string_ops.cc
+sparse_ci/sparse_state.cc
 v2rdm/v2rdm.cc
 )
 
-target_include_directories(_forte PRIVATE .)
+target_include_directories(
+  _forte
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+  )
 
 target_link_libraries(_forte PRIVATE tgt::MathOpenMP)
 target_link_libraries(_forte PRIVATE psi4::core)
@@ -278,3 +284,81 @@ endif()
 if(ENABLE_GA)
     target_link_libraries(_forte PRIVATE GlobalArrays::ga)
 endif()
+
+
+if (FORTE_INSTALL_PYMODDIR STREQUAL "prefix")
+
+    # Note that this block is *Linux-style* install to `CMAKE_INSTALL_PREFIX` not *Python-style* install to `Python_EXECUTABLE`'s site-packages.
+    execute_process(
+      COMMAND ${Python_EXECUTABLE} -c
+        "import os, sys, sysconfig as s; spdir = s.get_path('platlib'); print(spdir.replace(os.path.commonpath([sys.prefix, spdir]), '').lstrip(os.path.sep));"
+      OUTPUT_VARIABLE FORTE_INSTALL_PYMODDIR
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+endif()
+message(STATUS "Showing option CMAKE_INSTALL_PREFIX/FORTE_INSTALL_PYMODDIR: ${CMAKE_INSTALL_PREFIX}/${FORTE_INSTALL_PYMODDIR}")
+
+install(
+  FILES
+    $<TARGET_FILE:_forte>
+    ../pytest.ini
+  COMPONENT Forte_Python
+  DESTINATION ${FORTE_INSTALL_PYMODDIR}/forte
+  )
+
+install(
+  DIRECTORY
+    "${CMAKE_CURRENT_SOURCE_DIR}/"
+  COMPONENT Forte_Python
+  DESTINATION ${FORTE_INSTALL_PYMODDIR}/forte
+  FILES_MATCHING
+    PATTERN "*.py"
+    PATTERN "__pycache__" EXCLUDE
+    PATTERN "*pyc" EXCLUDE
+    # installs harmless empty dirs for c++ unless excluded below
+    PATTERN "api" EXCLUDE
+    PATTERN "attic" EXCLUDE
+    PATTERN "base_classes" EXCLUDE
+    PATTERN "casscf" EXCLUDE
+    PATTERN "ci_ex_states" EXCLUDE
+    PATTERN "ci_rdm" EXCLUDE
+    PATTERN "cmake" EXCLUDE
+    PATTERN "dmrg" EXCLUDE
+    PATTERN "external" EXCLUDE
+    PATTERN "fci" EXCLUDE
+    PATTERN "genci" EXCLUDE
+    PATTERN "gradient_tpdm" EXCLUDE
+    PATTERN "helpers" EXCLUDE
+    PATTERN "integrals" EXCLUDE
+    PATTERN "lib" EXCLUDE
+    PATTERN "mrdsrg-helper" EXCLUDE
+    PATTERN "mrdsrg-so" EXCLUDE
+    PATTERN "mrdsrg-spin-adapted" EXCLUDE
+    PATTERN "mrdsrg-spin-integrated" EXCLUDE
+    PATTERN "orbital-helpers" EXCLUDE
+    PATTERN "pci" EXCLUDE
+    PATTERN "post_process" EXCLUDE
+    PATTERN "sci" EXCLUDE
+    PATTERN "sparse_ci" EXCLUDE
+    PATTERN "v2rdm" EXCLUDE
+  )
+
+install(
+  FILES
+    ../conftest.py
+  COMPONENT Forte_Python
+  DESTINATION ${FORTE_INSTALL_PYMODDIR}/forte/tests
+  )
+
+install(
+  DIRECTORY
+    "${CMAKE_CURRENT_SOURCE_DIR}/../tests/pytest/"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../tests/pytest-methods/"
+  DESTINATION ${FORTE_INSTALL_PYMODDIR}/forte/tests
+  FILES_MATCHING
+    PATTERN "*.py"
+    PATTERN "*.xyz"
+    PATTERN "INTDUMP*"
+    PATTERN "__pycache__" EXCLUDE
+    PATTERN "*pyc" EXCLUDE
+  )

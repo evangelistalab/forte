@@ -28,10 +28,9 @@ set {
   df_basis_scf   def2-universal-jkfit
   df_basis_mp2   def2-universal-jkfit
   e_convergence  10
-  d_convergence  12
   maxiter        100
-  cubeprop_orbitals [14,15,16,17]
 }
+
 Escf, wfn = energy('scf', return_wfn=True)
 compare_values(r_scf, Escf, 8, "SCF energy")
 
@@ -46,11 +45,13 @@ set forte{
   active               [4]
   avg_state            [[0,1,5]]
   rotate_mos           [1,17,20]
-  casscf_maxiter       250
-  casscf_g_convergence 1.0e-6
-  casscf_e_convergence 1.0e-12
+  mcscf_maxiter       250
+  mcscf_g_convergence 1.0e-6
+  mcscf_e_convergence 1.0e-12
   ci_spin_adapt        true
+  mcscf_freeze_core   true
 }
+
 Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(r_avg_cas, Ecas, 8, "SA-CASSCF energy from FORTE CASSCF")
 
@@ -71,5 +72,6 @@ set forte{
   orbital_type        local
   localize_space      [13,16]
 }
+
 energy('forte', ref_wfn=wfn)
 compare_values(r_0ag, variable("ENERGY ROOT 0 1A"), 8, "abs. energy of singlet 0Ag")

@@ -1,5 +1,3 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
 #refmcscf     =  -99.972055826365903 # cc-pVTZ
@@ -18,7 +16,7 @@ molecule HF{
 
 set globals{
    basis                   cc-pvdz
-   reference               ROHF
+   reference               rhf
    d_convergence           10
    e_convergence           10
    frozen_docc             [1, 0, 0, 0]
@@ -32,7 +30,6 @@ energy('scf')
 set scf_type direct
 
 set forte{
-   job_type                mcscf_two_step
    frozen_docc             [1,0,0,0]
    restricted_docc         [1,0,1,1]
    active                  [2,0,0,0]
@@ -42,11 +39,10 @@ set forte{
    multiplicity            1
    active_space_solver     aci
    int_type                conventional
-   CASSCF_MAXITER          25
-   print                   0
-   CASSCF_DO_DIIS          false
    sigma                   0.0
    gamma                   0.0
+   mcscf_freeze_core       true
+   mcscf_do_diis           false
 }
 
 casscf = energy('forte')

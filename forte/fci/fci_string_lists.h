@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -60,8 +60,8 @@ class FCIStringLists {
     /// @param na number of alpha electrons
     /// @param nb number of beta electrons
     /// @param print print level
-    FCIStringLists(psi::Dimension cmopi, std::vector<size_t> core_mo, std::vector<size_t> cmo_to_mo,
-                   size_t na, size_t nb, PrintLevel print);
+    FCIStringLists(psi::Dimension cmopi, std::vector<size_t> cmo_to_mo, size_t na, size_t nb,
+                   PrintLevel print);
 
     ~FCIStringLists() {}
 
@@ -81,9 +81,6 @@ class FCIStringLists {
 
     /// @return the mapping from correlated MOs to MOs
     std::vector<size_t> cmo_to_mo() const { return cmo_to_mo_; }
-
-    /// @return the mapping from frozen MOs to correlated MOs
-    std::vector<size_t> fomo_to_mo() const { return fomo_to_mo_; }
 
     /// @return the number of correlated MOs per irrep
     psi::Dimension cmopi() const { return cmopi_; }
@@ -165,8 +162,6 @@ class FCIStringLists {
     std::vector<size_t> cmopi_offset_;
     /// The mapping between correlated molecular orbitals and all orbitals
     std::vector<size_t> cmo_to_mo_;
-    /// The mapping between frozen occupied molecular orbitals and all orbitals
-    std::vector<size_t> fomo_to_mo_;
     /// The number of alpha electrons
     size_t na_;
     /// The number of beta electrons

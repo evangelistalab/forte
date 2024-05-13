@@ -1,0 +1,36 @@
+# tests/manual/mcscf-3/input.dat
+
+import forte
+
+molecule CO{
+0 1
+C
+O  1 1.128
+}
+
+set {
+  basis                cc-pcvdz
+  reference            rhf
+  e_convergence        10
+  d_convergence        8
+  docc                 [5,0,1,1]
+  opt_coordinates      cartesian
+}
+
+set forte {
+  active_space_solver  fci
+  restricted_docc      [4,0,0,0]
+  active               [2,0,2,2]
+  e_convergence        8  # energy convergence of the FCI iterations
+  r_convergence        8  # residual convergence of the FCI iterations
+  mcscf_e_convergence  8  # energy convergence of the MCSCF iterations
+  mcscf_g_convergence  6  # gradient convergence of the MCSCF iterations
+  mcscf_micro_maxiter  4  # do at most 4 micro iterations per macro iteration
+}
+
+set findif{
+  points 5  
+}
+
+G, wfn = gradient('forte', dertype=0, return_wfn=True)
+wfn.gradient().print_out()

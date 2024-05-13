@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -103,9 +103,9 @@ void OrbitalOptimizer::startup() {
     inactive_docc_abs_ = mo_space_info_->corr_absolute_mo("INACTIVE_DOCC");
     nmo_abs_ = mo_space_info_->corr_absolute_mo("CORRELATED");
     if (frozen_docc_abs_.size() && !(options_->get_bool("OPTIMIZE_FROZEN_CORE"))) {
-        casscf_freeze_core_ = true;
+        mcscf_freeze_core_ = true;
     } else {
-        casscf_freeze_core_ = false;
+        mcscf_freeze_core_ = false;
     }
     if (options_->get_bool("OPTIMIZE_FROZEN_CORE")) {
         throw psi::PSIEXCEPTION("CASSCF can not handle optimization of frozen core, yet.");
@@ -118,18 +118,8 @@ void OrbitalOptimizer::startup() {
     nfrozen_ = frozen_docc_abs_.size();
     na_ = active_abs_.size();
     nvir_ = restricted_uocc_abs_.size();
-    casscf_debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
+    mcscf_debug_print_ = options_->get_bool("MCSCF_DEBUG_PRINTING");
     nirrep_ = mo_space_info_->nirrep();
-
-    auto ci_solver = options_->get_str("CASSCF_CI_SOLVER");
-    std::vector<std::string> ci_types{"FCI", "DETCI", "ACI", "DMRG", "GENCI"};
-    if (std::find(ci_types.begin(), ci_types.end(), ci_solver) == ci_types.end()) {
-        outfile->Printf(
-            "\n\n Please set your CASSCF_CI_SOLVER to either FCI, DETCI, ACI, GENCI, or DMRG");
-        outfile->Printf("\n\n You set your CASSCF_CI_SOLVER to %s.",
-                        options_->get_str("CASSCF_CI_SOLVER").c_str());
-        throw psi::PSIEXCEPTION("You did not specify your CASSCF_CI_SOLVER correctly.");
-    }
 
     cas_ = true;
     gas_ = false;
@@ -158,7 +148,7 @@ void OrbitalOptimizer::orbital_gradient() {
     });
     Y_ = Y_m;
     Y_->set_name("F * gamma");
-    if (casscf_debug_print_) {
+    if (mcscf_debug_print_) {
         Y_->print();
     }
 
@@ -176,7 +166,7 @@ void OrbitalOptimizer::orbital_gradient() {
 
     //(pu | x y) -> <px | uy> * gamma2_{"t, u, x, y"
     Z("p, t") = integral_("p,u,x,y") * gamma2_("t, u, x, y");
-    if (casscf_debug_print_) {
+    if (mcscf_debug_print_) {
         outfile->Printf("\n\n integral_: %8.8f  gamma2_: %8.8f", integral_.norm(2),
                         gamma2_.norm(2));
     }
@@ -186,7 +176,7 @@ void OrbitalOptimizer::orbital_gradient() {
 
     Z_ = Zm;
     Z_->set_name("g * rdm2");
-    if (casscf_debug_print_) {
+    if (mcscf_debug_print_) {
         Z_->print();
     }
     // g_ia = 4F_core + 2F_act
@@ -211,7 +201,7 @@ void OrbitalOptimizer::orbital_gradient() {
     psi::Dimension general_part_dim = mo_space_info_->dimension("GENERALIZED PARTICLE");
     auto generalized_hole_rel = mo_space_info_->relative_mo("GENERALIZED HOLE");
     auto generalized_part_rel = mo_space_info_->relative_mo("GENERALIZED PARTICLE");
-    if (casscf_debug_print_) {
+    if (mcscf_debug_print_) {
         outfile->Printf("Generalized_hole_abs\n");
         for (auto gha : generalized_hole_abs) {
             outfile->Printf(" %d", gha);
@@ -267,7 +257,7 @@ void OrbitalOptimizer::orbital_gradient() {
             frozen_docc_dim_[sym_irrep];
     }
 
-    if (casscf_debug_print_) {
+    if (mcscf_debug_print_) {
         for (auto hole : nhole_map_) {
             outfile->Printf("\n nhole_map[%d] = %d", hole.first, hole.second);
         }
@@ -301,7 +291,7 @@ void OrbitalOptimizer::orbital_gradient() {
             Fock->set(a_o, q_o, 0.0);
         }
     }
-    if (casscf_debug_print_) {
+    if (mcscf_debug_print_) {
         Fock->print();
     }
     auto Orb_grad_Fock = std::make_shared<psi::Matrix>("G_pq", nhole, npart);
@@ -358,7 +348,7 @@ void OrbitalOptimizer::orbital_gradient() {
             // Zero-out diagonal and one-block of the off-diagonal matrix
             relative_gas_mo_.push_back(relative_mo);
         }
-        auto active_frozen = options_->get_int_list("CASSCF_ACTIVE_FROZEN_ORBITAL");
+        auto active_frozen = options_->get_int_list("MCSCF_ACTIVE_FROZEN_ORBITAL");
 
         std::vector<int> active(na_);
         std::iota(active.begin(), active.end(), 0);
@@ -399,12 +389,12 @@ void OrbitalOptimizer::orbital_gradient() {
         }
     }
 
-    if (casscf_debug_print_) {
+    if (mcscf_debug_print_) {
         Orb_grad_Fock->print();
     }
 
     g_ = Orb_grad_Fock;
-    g_->set_name("CASSCF_GRADIENT");
+    g_->set_name("MCSCF_GRADIENT");
 }
 
 void OrbitalOptimizer::diagonal_hessian() {
@@ -473,7 +463,7 @@ void OrbitalOptimizer::diagonal_hessian() {
             I_act->set(i[0] * na_ + i[1], i[2] * na_ + i[3], value);
         });
 
-        if (casscf_debug_print_) {
+        if (mcscf_debug_print_) {
             I_act->print();
         }
         // Loop over spaces, last space will have no rotations
@@ -527,7 +517,7 @@ void OrbitalOptimizer::diagonal_hessian() {
     } // End Gas_
 
     d_ = D;
-    if (casscf_debug_print_) {
+    if (mcscf_debug_print_) {
         d_->print();
     }
 } // namespace forte
@@ -579,7 +569,7 @@ std::shared_ptr<psi::Matrix> OrbitalOptimizer::approx_solve() {
         }
     }
 
-    if (casscf_debug_print_) {
+    if (mcscf_debug_print_) {
         G_grad->print();
         D_grad->print();
         S_tmp->set_name("g / d");
@@ -629,7 +619,7 @@ std::shared_ptr<psi::Matrix> OrbitalOptimizer::AugmentedHessianSolve() {
     AugmentedHessian->diagonalize(HessianEvec, HessianEval);
     HessianEvec->print();
     // auto S_AH = std::make_shared<psi::Matrix>("AugmentedHessianLowestEigenvalue", nhole, npart);
-    // if(casscf_debug_print_)
+    // if(mcscf_debug_print_)
     //{
     //    AugmentedHessian->print();
     //    HessianEval->print();
@@ -672,7 +662,7 @@ std::shared_ptr<psi::Matrix> OrbitalOptimizer::rotate_orbitals(std::shared_ptr<p
     C_rot = psi::linalg::doublet(C, S_exp);
     C_rot->set_name("ROTATED_ORBITAL");
     S_exp->set_name("Orbital Rotation exp(K)");
-    if (casscf_debug_print_) {
+    if (mcscf_debug_print_) {
         S_sym->print();
         S_exp->print();
         C_rot->print();
@@ -692,7 +682,7 @@ void OrbitalOptimizer::fill_shared_density_matrices() {
         gamma2_matrix->set(i[0] * na_ + i[1], i[2] * na_ + i[3], value);
     });
     gamma2M_ = gamma2_matrix;
-    if (casscf_debug_print_) {
+    if (mcscf_debug_print_) {
         gamma1M_->set_name("Spin-free 1 RDM");
         gamma1M_->print();
         gamma2M_->set_name("Spin-free 2 RDM");
@@ -788,7 +778,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
         throw psi::PSIEXCEPTION("Please set H before you call orbital rotation casscf");
     }
     H_->transform(Ca_sym_);
-    if (casscf_debug_print_) {
+    if (mcscf_debug_print_) {
         H_->set_name("CORR_HAMIL");
         H_->print();
     }
@@ -824,7 +814,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
     }
     /// Back transform 1-RDM to AO basis
     C_active_ao = psi::linalg::triplet(C_active, gamma1_sym, C_active, false, false, true);
-    if (casscf_debug_print_)
+    if (mcscf_debug_print_)
         C_active_ao->print();
     // std::shared_ptr<JK> JK_fock = JK::build_JK(wfn_->basisset(),options_ );
     // JK_fock->set_memory(psi::Process::environment.get_memory() * 0.8);
@@ -851,7 +841,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
             }
         }
 
-        if (casscf_debug_print_) {
+        if (mcscf_debug_print_) {
             C_core->print();
         }
 
@@ -878,7 +868,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
 
     /// If there are frozen orbitals, need to add
     /// FrozenCore Fock matrix to inactive block
-    if (casscf_freeze_core_) {
+    if (mcscf_freeze_core_) {
         F_core->add(F_froze_);
     }
 
@@ -915,12 +905,12 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
         }
         offset_froze += nmopi_[h];
     }
-    if (casscf_debug_print_) {
+    if (mcscf_debug_print_) {
         F_active_c1->print();
     }
     F_act_ = F_active_c1;
     F_core_ = F_core_c1;
-    if (casscf_debug_print_) {
+    if (mcscf_debug_print_) {
         F_core_->set_name("INACTIVE_FOCK");
         F_core_->print();
         F_act_->set_name("ACTIVE_FOCK");
@@ -941,7 +931,7 @@ void PostCASSCFOrbitalOptimizer::form_fock_intermediates() {
     ambit::Tensor F_core = ambit::Tensor::build(ambit::CoreTensor, "F_core", {nmo_, nmo_});
     ambit::Tensor F_active = ambit::Tensor::build(ambit::CoreTensor, "F_active", {nmo_, nmo_});
     H_->transform(Ca_sym_);
-    if (casscf_debug_print_) {
+    if (mcscf_debug_print_) {
         H_->set_name("CORR_HAMIL");
         H_->print();
     }

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -726,10 +726,10 @@ double MRDSRG::compute_energy_ldsrg2() {
 
     // iteration variables
     double Ecorr = 0.0;
-    int maxiter = foptions_->get_int("MAXITER");
+    int maxiter = foptions_->get_int("DSRG_MAXITER");
     double e_conv = foptions_->get_double("E_CONVERGENCE");
     double r_conv = foptions_->get_double("R_CONVERGENCE");
-    bool converged = false;
+    converged_ = false;
     Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"gg"}));
     O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"gg"}));
     C1_ = BTF_->build(tensor_type_, "C1", spin_cases({"gg"}));
@@ -789,7 +789,7 @@ double MRDSRG::compute_energy_ldsrg2() {
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
         if (std::fabs(Edelta) < e_conv && rms < r_conv) {
-            converged = true;
+            converged_ = true;
             break;
         }
 
@@ -825,11 +825,6 @@ double MRDSRG::compute_energy_ldsrg2() {
     // dump amplitudes to file
     dump_amps_to_disk();
 
-    // fail to converge
-    if (!converged) {
-        clean_checkpoints(); // clean amplitudes in scratch directory
-        throw psi::PSIEXCEPTION("The MR-LDSRG(2) computation does not converge.");
-    }
     final.stop();
 
     Hbar0_ = Ecorr;
@@ -1003,10 +998,10 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
 
     // iteration variables
     double Ecorr = 0.0;
-    int maxiter = foptions_->get_int("MAXITER");
+    int maxiter = foptions_->get_int("DSRG_MAXITER");
     double e_conv = foptions_->get_double("E_CONVERGENCE");
     double r_conv = foptions_->get_double("R_CONVERGENCE");
-    bool converged = false;
+    converged_ = false;
     Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"hp"}));
     Hbar2_ = BTF_->build(tensor_type_, "Hbar2", spin_cases({"hhpp"}));
     O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"aa"}));
@@ -1071,7 +1066,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
         if (std::fabs(Edelta) < e_conv && rms < r_conv) {
-            converged = true;
+            converged_ = true;
             break;
         }
 
@@ -1105,12 +1100,6 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
 
     // dump amplitudes to file
     dump_amps_to_disk();
-
-    // fail to converge
-    if (!converged) {
-        clean_checkpoints(); // clean amplitudes in scratch directory
-        throw psi::PSIEXCEPTION("The MR-LDSRG(2)-QC computation does not converge.");
-    }
 
     Hbar0_ = Ecorr;
     return Ecorr;
