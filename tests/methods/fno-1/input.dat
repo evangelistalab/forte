@@ -58,6 +58,7 @@ dl_maxiter          500
 threepdc            zero
 dsrg_fno            true
 dsrg_fno_cutoff     1.0e-4
+dsrg_fno_dsrg_s     0.5
 }
 energy('forte', ref_wfn=wfn)
 compare_values(ref_efno_c, variable("FNO ENERGY CORRECTION"), 7, "FNO energy correction")
