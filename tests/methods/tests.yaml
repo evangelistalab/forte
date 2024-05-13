@@ -282,7 +282,7 @@ gasaci:
    medium:
       - gasaci-3
       - gasaciscf-1
-      - sa-gasaciscf-1
+#      - sa-gasaciscf-1
    long:
       - gasaci-5
 

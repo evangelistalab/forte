@@ -1,4 +1,3 @@
-# Generated using commit GITCOMMIT
 # A test of CASSCF gradient on BeH2 with c2v symmetry
 
 import forte
@@ -20,36 +19,15 @@ molecule {
 
 set globals {
   scf_type             pk
-  MCSCF_E_CONVERGENCE  8
-  MCSCF_R_CONVERGENCE  6
   basis                3-21g
-  restricted_docc      [2,0,0,0]
-  active               [1,0,0,1]
-  maxiter              100
-  reference            RHF
-  mcscf_type           conv
-  mcscf_maxiter        100
-  mcscf_diis_start     20
 }
-
-set scf_type direct
 
 set forte{
-  job_type             mcscf_two_step
   active_space_solver  fci
-  CASSCF_REFERENCE     true
-  CASSCF_MAXITER       100
-  CASSCF_G_CONVERGENCE 1e-6
-  CASSCF_E_CONVERGENCE 1e-8
   restricted_docc      [2,0,0,0]
   active               [1,0,0,1]
-  int_type             conventional
-  CASSCF_DO_DIIS       true
+  mcscf_e_convergence  1e-10
   dertype              first
-}
-
-set findif{
-  points 5
 }
 
 grad = gradient('forte')

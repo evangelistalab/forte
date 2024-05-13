@@ -24,7 +24,7 @@ set global {
 set forte {
   active_space_solver aci
   ms                  0.0
-  sigma               0.001  
+  sigma               0.001
   sci_enforce_spin_complete true
   e_convergence       12
   r_convergence       8
@@ -34,14 +34,13 @@ set forte {
   gas1min             [0,0]
   gas1max             [2,1]
   avg_state           [[0,1,1],[2,3,1]]  
-  job_type            casscf #mcscf_two_step
-  casscf_ci_solver    aci
-  casscf_e_convergence 1e-10
-  casscf_g_convergence 1e-8     
-  casscf_active_frozen_orbital [0]
-  casscf_diis_start   15 
+  mcscf_e_convergence 1e-10
+  mcscf_g_convergence 1e-8     
+  mcscf_active_frozen_orbital [0]
+  mcscf_micro_maxiter 1
+  mcscf_diis_start    15 
 }
 
 escf ,wfn = energy('scf',return_wfn = True)
-egasscf = energy('forte')
+egasscf = energy('forte') #,ref_wfn=wfn)
 compare_values(refgasscf, egasscf ,9, "GASSCF energy") #TEST

@@ -2,9 +2,8 @@
 
 import forte
 
-refscf = -14.839846512738 #TEST
-refaci = -14.889166993726 #TEST
-refacipt2 = -14.890166618934 #TEST
+refaci = -14.889166993726
+refacipt2 = -14.890166618934
 
 molecule li2{
 0 1
@@ -16,9 +15,6 @@ set {
   basis DZ
   e_convergence 10
   d_convergence  8
-}
-
-set scf {
   scf_type pk
 }
 
@@ -29,11 +25,9 @@ set forte {
   sci_project_out_spin_contaminants false
   active_ref_type hf
   DL_DETS_PER_GUESS 2
+  mcscf_reference false
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
-
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST

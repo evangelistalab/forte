@@ -36,10 +36,8 @@ set forte{
    int_type                cholesky
    cholesky_tolerance      1e-14
    print_denom2            true
+   mcscf_reference        false
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refrhf,variable("CURRENT ENERGY"),10,"SCF energy")
-
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

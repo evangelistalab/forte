@@ -23,6 +23,7 @@ set {
 }
 
 set forte{
+  active_space_solver   fci
   frozen_docc      [0, 0, 0, 0, 0, 0, 0, 0]
   restricted_docc  [0, 0, 0, 0, 0, 0, 0, 0]
   active           [1, 0, 0, 0, 0, 0, 0, 0]
@@ -30,7 +31,7 @@ set forte{
   root_sym          0
   nroot             1
   int_type          conventional
-  active_space_solver          fci
+  mcscf_reference  false
 }
 
 energy('scf')
