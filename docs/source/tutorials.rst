@@ -6,6 +6,7 @@ Tutorials
 
    nb_01_getting_forte
    nb_02_getting_started
+   nb_changelog   
    nb_03_wavefunction
    symmetry
    nb_04_multistate

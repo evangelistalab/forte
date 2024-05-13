@@ -991,7 +991,7 @@ def register_localize_options(options):
 
 
 def register_mcscf_options(options):
-    options.set_group("CASSCF")
+    options.set_group("MCSCF")
 
     options.add_int("MCSCF_MAXITER", 100, "The maximum number of CASSCF macro iterations")
 
@@ -1008,7 +1008,6 @@ def register_mcscf_options(options):
     options.add_double(
         "MCSCF_G_CONVERGENCE", 1e-7, "The orbital gradient convergence criterion (RMS of gradient vector)"
     )
-
     options.add_bool("MCSCF_DEBUG_PRINTING", False, "Enable debug printing if True")
 
     options.add_bool("MCSCF_NO_ORBOPT", False, "No orbital optimization if true")
@@ -1086,6 +1085,37 @@ def register_mcscf_options(options):
     )
 
     options.add_bool("MCSCF_DIE_IF_NOT_CONVERGED", True, "Stop Forte if MCSCF is not converged")
+
+    options.add_deprecated(
+        "CASSCF_CI_SOLVER",
+        "Since version 0.4.0, the CI solver for MCSCF is selected with the ACTIVE_SPACE_SOLVER option. If you want to use another solver, you might have to modify your input to contain two forte calls.",
+    )
+    options.add_deprecated("CASSCF_MAXITER", "Use MCSCF_MAXITER instead")
+    options.add_deprecated("CASSCF_MICRO_MAXITER", "Use MCSCF_MICRO_MAXITER instead")
+    options.add_deprecated("CASSCF_MICRO_MINITER", "Use MCSCF_MICRO_MINITER instead")
+    options.add_deprecated("CASSCF_G_CONVERGENCE", "Use MCSCF_G_CONVERGENCE instead")
+    options.add_deprecated("CASSCF_E_CONVERGENCE", "Use MCSCF_E_CONVERGENCE instead")
+    options.add_deprecated("CASSCF_DEBUG_PRINTING", "Use MCSCF_DEBUG_PRINTING instead")
+    options.add_deprecated("CASSCF_NO_ORBOPT", "Use MCSCF_NO_ORBOPT instead")
+    options.add_deprecated("CASSCF_INTERNAL_ROT", "Use MCSCF_INTERNAL_ROT instead")
+    options.add_deprecated("CASSCF_ZERO_ROT", "Use MCSCF_ZERO_ROT instead")
+    options.add_deprecated("CASSCF_FINAL_ORBITAL", "Use MCSCF_FINAL_ORBITAL instead")
+    options.add_deprecated("CASSCF_CI_FREQ", "Use MCSCF_CI_FREQ instead")
+    options.add_deprecated("CASSCF_REFERENCE", "Use MCSCF_REFERENCE instead")
+    options.add_deprecated("CASSCF_MULTIPLICITY", "Use MCSCF_MULTIPLICITY instead")
+    options.add_deprecated("CASSCF_SOSCF", "Use MCSCF_SOSCF instead")
+    options.add_deprecated("CASSCF_MAX_ROTATION", "Use MCSCF_MAX_ROTATION instead")
+    options.add_deprecated("CASSCF_ORB_ORTHO_TRANS", "Use MCSCF_ORB_ORTHO_TRANS instead")
+    options.add_deprecated("CASSCF_DO_DIIS", "Use MCSCF_DO_DIIS instead")
+    options.add_deprecated("CASSCF_DIIS_MIN_VEC", "Use MCSCF_DIIS_MIN_VEC instead")
+    options.add_deprecated("CASSCF_DIIS_MAX_VEC", "Use MCSCF_DIIS_MAX_VEC instead")
+    options.add_deprecated("CASSCF_DIIS_START", "Use MCSCF_DIIS_START instead")
+    options.add_deprecated("CASSCF_DIIS_FREQ", "Use MCSCF_DIIS_FREQ instead")
+    options.add_deprecated("CASSCF_DIIS_NORM", "Use MCSCF_DIIS_NORM instead")
+    options.add_deprecated("CASSCF_CI_STEP", "Use MCSCF_CI_STEP instead")
+    options.add_deprecated("CASSCF_CI_STEP_START", "Use MCSCF_CI_STEP_START instead")
+    options.add_deprecated("CASSCF_ACTIVE_FROZEN_ORBITAL", "Use MCSCF_ACTIVE_FROZEN_ORBITAL instead")
+    options.add_deprecated("CASSCF_DIE_IF_NOT_CONVERGED", "Use MCSCF_DIE_IF_NOT_CONVERGED instead")
 
 
 def register_old_options(options):

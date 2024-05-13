@@ -24,43 +24,23 @@ The main steps in the standard workflow are shown below:
 
    Forte’s standard workflow scheme
 
-an active space solver computation followed by orbital optimization
-(MCSCF) and an MR-DSRG computation. The user can optionally transform
-the initial guess orbitals prior to the MCSCF computation or enable an
-embedded computation in the MR-DSRG step. :raw-latex:`\forte `also
-supports external active space solvers, either through direct
-integration on the C++ side or via the general
-:raw-latex:`\code{ExternalActiveSpaceMethod}` class. This feature has
-enabled new types of computations, like the ones reported in
-Ref.~:raw-latex:`\citenum{Huang.2023.10.1103/prxquantum.4.020313}`,
-where the active space solver was a hardware quantum computation based
-on the Variational Quantum
-Eigensolver.:raw-latex:`\cite{Peruzzo.2014.10.1038/ncomms5213}`
+The steps in the standard workflow based on a Psi4 input file are as
+follow: 1. The computation starts from an input file in the Psithon
+format. 1. Options for performing a computation are read from the file
+and passed to Forte 1. Orbitals and integrals are generated in Psi4
+(after running a SCF computation) or read from a file. 1. Optionally,
+the orbitals are localized or AVAS orbitals are formed 1. An active
+space solver computation is performed on the system (e.g. CASCI) 1. An
+MCSCF computation is performed using the active space solver used in
+step e) 1. Optionally, the orbitals are transformed to enable an
+embedding computation 1. A dynamical correlation solver computation is
+performed (e.g., MR-DSRG)
 
 This standard workflow encompasses a variety of user case scenarios,
 allowing any combination of integrals, active space solvers, and
-dynamical correlation solvers. This is possible due to
-:raw-latex:`\forte`’s extensive use of abstract interfaces and
-polymorphism, which enables using a single workflow code that is easy to
-maintain. Within this workflow, a computational procedure is expressed
-in terms of base classes, and the various possible combinations of
-methods are obtained by instantiating such base classes with derived
-classes, as specified in the input.
-
-The input for a :raw-latex:`\forte `computation using this standard
-workflow relies on Psithon, a Python syntax customized for
-:raw-latex:`\psifour `that simplifies certain aspects of specifying the
-input to a computation. In :raw-latex:`\cref{lst:dsrg-mrpt2}`, we show
-the input file for a basic state-specific DSRG-MRPT2 computation on the
-hydrogen fluoride molecule using a CASSCF reference state. The main
-options specified in this input consist of the type of active space (FCI
-= :raw-latex:`\code{fci}`) and the type of correlation solver
-(spin-adapted MR-DSRG = :raw-latex:`\code{sa-mrdsrg}`, truncated to
-second-order = :raw-latex:`\code{pt2}`). The spin-adapted implementation
-of the DSRG-MRPT2 is the most computationally efficient and generally
-recommended for standard computations. In this example, the
-:math:`1 a_1` orbital of HF is optimized in the MCSCF procedure, but it
-is dropped from the correlated MR-DSRG computation.
+dynamical correlation solvers. This is possible due to Forte’s extensive
+use of abstract interfaces and polymorphism, which enables using a
+single workflow code that is easy to maintain.
 
 Running a FCI computation using the plugin interface
 ----------------------------------------------------

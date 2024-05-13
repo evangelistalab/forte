@@ -766,14 +766,6 @@ Type: int
 
 Default value: 1
 
-**MCSCF_CI_SOLVER**
-
-The active space solver to use in CASSCF
-
-Type: str
-
-Default value: FCI
-
 **MCSCF_CI_STEP**
 
 Do a CAS step for every MCSCF_CI_FREQ

@@ -176,6 +176,10 @@ void ForteOptions::add_double_array(const std::string& label, const std::string&
     add(label, "float_list", py::list(), description);
 }
 
+void ForteOptions::add_deprecated(const std::string& label, const std::string& msg) {
+    add(label, "deprecated", py::none(), msg);
+}
+
 void ForteOptions::set_from_dict(const pybind11::dict& dict) {
     for (const auto& item : dict) {
         auto label = py::cast<std::string>(item.first);
@@ -467,6 +471,10 @@ void ForteOptions::push_options_to_psi4(psi::Options& options) const {
         if ((type == "int_list") or (type == "float_list") or (type == "gen_list")) {
             options.add(label, new psi::ArrayType());
         }
+        if (type == "deprecated") {
+            // if an option is deprecated, we push it to psi4 anyway with a default value of None
+            options.add(label, new psi::ArrayType());
+        }
     }
 }
 
@@ -542,6 +550,10 @@ void ForteOptions::get_options_from_psi4(psi::Options& options) {
                     py_list.append(result);
                 }
                 item.second["value"] = py_list;
+            }
+            if (type == "deprecated") {
+                throw std::runtime_error("Deprecated option " + label + " was set.\n " +
+                                         py::cast<std::string>(item.second["description"]) + "\n");
             }
         }
     }
