@@ -24,7 +24,7 @@ set forte {
   r_convergence        8  # residual convergence of the FCI iterations
   mcscf_e_convergence  8  # energy convergence of the MCSCF iterations
   mcscf_g_convergence  6  # gradient convergence of the MCSCF iterations
-  mcscf_micro_maxiter  4  # do at least 4 micro iterations per macro iteration
+  mcscf_micro_maxiter  4  # do at most 4 micro iterations per macro iteration
 }
 
 energy('forte')
