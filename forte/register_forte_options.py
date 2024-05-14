@@ -856,11 +856,57 @@ def register_dsrg_options(options):
             "BATCH_CORE_MPI",
             "BATCH_CORE_REP",
             "BATCH_VIRTUAL_REP",
+            "LT-DSRG"
         ],
         "Algorithm to compute the CCVV term in DSRG-MRPT2 (only in three-dsrg-mrpt2 code)",
     )
 
     options.add_bool("AO_DSRG_MRPT2", False, "Do AO-DSRG-MRPT2 if true (not available)")
+    
+    options.add_double("THETA_NB", 0, "theta_NB")
+ 
+    options.add_double("THETA_NB_IAP", 0, "theta_NB_IAP")
+
+    options.add_double("THETA_IJ", 0, "theta_ij")
+   
+    options.add_double("THETA_SCHWARZ", 0, "theta_schwarz")
+    
+    options.add_double("OMEGA", 0, "Omega for erfc attenuated coulomb operator")
+    
+    options.add_double("LAPLACE_THRESHOLD", 1e-10, "laplace threshold")
+    
+    options.add_double("VIR_TOL", 0, "vir_tol")
+  
+# CAVV thresholds
+    options.add_double("THETA_NB_CAVV", 0, "theta_NB")
+  
+    options.add_double("THETA_XNB_CAVV", 0, "theta_XNB")
+
+    options.add_double("THETA_NB_IAP_CAVV", 0, "theta_NB_IAP")
+
+    options.add_double("THETA_NB_XAP_CAVV", 0, "theta_NB_XAP")
+
+    options.add_double("THETA_IJ_CAVV", 0, "theta_ij")
+
+    options.add_double("THETA_SCHWARZ_CAVV", 0, "theta_schwarz")
+# CCAV thresholds
+    options.add_double("THETA_NB_CCAV", 0, "theta_NB")
+
+    options.add_double("THETA_NB_IAP_CCAV", 0, "theta_NB_IAP")
+
+    options.add_double("THETA_IJ_CCAV", 0, "theta_ij")
+
+    options.add_double("THETA_SCHWARZ_CCAV", 0, "theta_schwarz")
+     
+    options.add_bool("LAPLACE_CORE", True, "Use core or disk algorithm")
+    
+#    options.add_bool("LAPLACE_ONE_ACTIVE", False, "Use Laplace for one active section")
+    
+    options.add_bool("LAPLACE_CAVV", False, "Use Laplace for CAVV?")
+    
+    options.add_bool("LAPLACE_CCAV", False, "Use Laplace for CCAV? Should only be applied to really large active spaces")
+
+ #   options.add_double("THETA_NB_CAVV", 0, "theta_NB_cavv")
 
     options.add_int("CCVV_BATCH_NUMBER", -1, "Batches for CCVV_ALGORITHM")
 

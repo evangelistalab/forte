@@ -54,15 +54,22 @@
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
+#include "psi4/libmints/integral.h"
+#include "psi4/psifiles.h"
+#include "psi4/libfock/jk.h"
 
 #include "orbital-helpers/ao_helper.h"
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
+#include "helpers/helpers.h"
 #include "fci/fci_solver.h"
 #include "fci/fci_vector.h"
 #include "sci/aci.h"
 #include "three_dsrg_mrpt2.h"
+
+#include "orbital-helpers/Laplace.h"
+#include "Laplace_dsrg.h"
 
 using namespace ambit;
 
@@ -86,6 +93,7 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(std::shared_ptr<RDMs> rdms, std::shared_ptr<S
     : MASTER_DSRG(rdms, scf_info, options, ints, mo_space_info) {
 
     num_threads_ = omp_get_max_threads();
+    // num_threads_ = 1;
     /// Get processor number
     int nproc = 1;
     int my_proc = 0;
@@ -1248,6 +1256,9 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
     if (ccvv_algorithm == "CORE") {
         if (my_proc == 0)
             Eccvv = E_VT2_2_core();
+    } else if (ccvv_algorithm == "LT-DSRG") {
+        if (my_proc == 0)
+            Eccvv = E_ccvv_lt_ao();
     } else if (ccvv_algorithm == "FLY_LOOP") {
         if (my_proc == 0)
             Eccvv = E_VT2_2_fly_openmp();
@@ -1291,15 +1302,17 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
                                 "other algorihm");
     }
 
-    if (foptions_->get_bool("AO_DSRG_MRPT2")) {
-        double Eccvv_ao = E_VT2_2_AO_Slow();
-        Eccvv = Eccvv_ao;
-        outfile->Printf("\n  Eccvv_ao: %8.10f", Eccvv_ao);
-    }
+    // if (foptions_->get_bool("AO_DSRG_MRPT2")) {
+    //     double Eccvv_ao = E_ccvv_lt_ao();
+    //     Eccvv = Eccvv_ao;
+    //     outfile->Printf("\n  Eccvv_ao: %8.10f", Eccvv_ao);
+    // }
 
     if (my_proc == 0) {
         outfile->Printf("... Done. Timing %15.6f s", ccvv_timer.get());
-        outfile->Printf("\n  Eccvv: %8.10f", Eccvv);
+        if (ccvv_algorithm != "LT-DSRG") {
+            outfile->Printf("\n  Eccvv: %8.10f", Eccvv);
+        }
     }
 
     //     double all_e = 0.0;
@@ -1813,7 +1826,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit() {
             BefJKVec.push_back(ambit::Tensor::build(tensor_type_, "BefJK", {nvirtual_, nvirtual_}));
             RDVec.push_back(ambit::Tensor::build(tensor_type_, "RDVec", {nvirtual_, nvirtual_}));
         }
-        bool ao_dsrg_check = foptions_->get_bool("AO_DSRG_MRPT2");
+        bool ao_dsrg_check = false;
 
 #pragma omp parallel for num_threads(num_threads_) reduction(+ : Ealpha, Ebeta, Emixed)
         for (size_t m = 0; m < ncore_; ++m) {
@@ -1925,6 +1938,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit() {
             RDVec.push_back(ambit::Tensor::build(tensor_type_, "RD", {nvirtual_, nvirtual_}));
         }
         bool ao_dsrg_check = foptions_->get_bool("AO_DSRG_MRPT2");
+        // bool ao_dsrg_check = true;
+
 #pragma omp parallel for num_threads(num_threads_) schedule(dynamic)                               \
     reduction(+ : Ealpha, Ebeta, Emixed) shared(Ba, Bb)
 
@@ -2243,6 +2258,290 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core() {
     return (Ealpha + Ebeta + Emixed);
 }
 
+double THREE_DSRG_MRPT2::E_ccvv_lt_ao() {
+    bool laplace_cavv = foptions_->get_bool("LAPLACE_CAVV");
+    bool laplace_ccav = foptions_->get_bool("LAPLACE_CCAV");
+
+    double E_cavv = 0.0;
+    double E_ccav = 0.0;
+    double E_ccvv = 0.0;
+
+    if (mo_space_info_->nirrep() != 1) {
+        throw psi::PSIEXCEPTION("LT-DSRG-MRPT2 does not work with symmetry.");
+    }
+    if (integral_type_ != DiskDF) {
+        throw psi::PSIEXCEPTION("LT-DSRG-MRPT2 requires DiskDF.");
+    }
+
+    ncore_ = core_mos_.size();
+    nactive_ = actv_mos_.size();
+    nvirtual_ = virt_mos_.size();
+    nthree_ = ints_->nthree();
+    int nfrozen = mo_space_info_->dimension("FROZEN").sum();
+
+    psi::SharedVector epsilon_rdocc(new psi::Vector("EPS_RDOCC", ncore_));
+    psi::SharedVector epsilon_virtual(new psi::Vector("EPS_VIRTUAL", nvirtual_));
+    psi::SharedVector epsilon_active(new psi::Vector("EPS_ACTIVE", nactive_));
+
+    int core_count = 0;
+    for (auto m : core_mos_) {
+        epsilon_rdocc->set(core_count, Fa_[m]);
+        core_count++;
+    }
+
+    int virtual_count = 0;
+    for (auto e : virt_mos_) {
+        epsilon_virtual->set(virtual_count, Fa_[e]);
+        virtual_count++;
+    }
+
+    int actv_count = 0;
+    for (auto u : actv_mos_) {
+        epsilon_active->set(actv_count, Fa_[u]);
+        actv_count++;
+    }
+
+    epsilon_active->print();
+
+    ambit::Tensor Gamma1a = Gamma1_.block("aa").clone();
+    Gamma1a("pq") = rdms_->SF_L1()("pq");
+
+    ambit::Tensor Eta1a = Eta1_.block("aa").clone();
+    Eta1a.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 2.0 : 0.0; });
+    Eta1a("pq") -= Gamma1a("pq");
+
+    psi::SharedMatrix Gamma1_mat = ambit_to_matrix(Gamma1a);
+    psi::SharedMatrix Eta1_mat = tensor_to_matrix(Eta1a);
+
+    auto LaplaceDSRG =
+        std::make_shared<forte::LaplaceDSRG>(foptions_, ints_, mo_space_info_, epsilon_rdocc,
+                                             epsilon_virtual, epsilon_active, Gamma1_mat, Eta1_mat);
+
+    size_t vir_start = 0;
+    size_t vir_start_ccav = 0;
+    size_t vir_start_cavv = 0;
+
+    local_timer timer1;
+    E_ccvv = LaplaceDSRG->compute_ccvv();
+    outfile->Printf("\n\n  LAPLACE: ccvv takes %8.8f", timer1.get());
+    outfile->Printf("\n  LAPLACE: E_ccvv %8.10f", E_ccvv);
+
+    vir_start = LaplaceDSRG->vir_start();
+
+    if (laplace_cavv) {
+        local_timer timer2;
+        E_cavv = LaplaceDSRG->compute_cavv();
+        outfile->Printf("\n\n  LAPLACE: cavv takes %8.8f", timer2.get());
+        outfile->Printf("\n  LAPLACE: E_cavv %8.10f", E_cavv);
+        vir_start_cavv = LaplaceDSRG->vir_start();
+    }
+
+    if (laplace_ccav) {
+        local_timer timer3;
+        E_ccav = LaplaceDSRG->compute_ccav();
+        outfile->Printf("\n\n  LAPLACE: ccav takes %8.8f", timer3.get());
+        outfile->Printf("\n  LAPLACE: E_ccav %8.10f", E_ccav);
+        vir_start_ccav = LaplaceDSRG->vir_start();
+    }
+
+    LaplaceDSRG.reset();
+
+    if (vir_start != 0) {
+        size_t vir_laplace = nvirtual_ - vir_start;
+
+        std::vector<size_t> virt_mos(virt_mos_.begin(), virt_mos_.begin() + vir_start);
+        std::vector<size_t> virt_mos_laplace(virt_mos_.begin() + vir_start, virt_mos_.end());
+
+        local_timer ccvvTimer;
+
+        ambit::Tensor B_QME = ints_->three_integral_block(aux_mos_, core_mos_, virt_mos_laplace);
+        ambit::Tensor B_QMe = ints_->three_integral_block(aux_mos_, core_mos_, virt_mos);
+
+        ambit::Tensor V_MeNf =
+            ambit::Tensor::build(tensor_type_, "V", {ncore_, vir_start, ncore_, vir_start});
+        V_MeNf("m,e,n,f") = B_QMe("Q, m, e") * B_QMe("Q, n, f");
+
+        ambit::Tensor V_MeNF =
+            ambit::Tensor::build(tensor_type_, "V", {ncore_, vir_start, ncore_, vir_laplace});
+        V_MeNF("m,e,n,f") = B_QMe("Q, m, e") * B_QME("Q, n, f");
+
+        ambit::Tensor T_MeNf =
+            ambit::Tensor::build(tensor_type_, "T2", {ncore_, vir_start, ncore_, vir_start});
+        T_MeNf.data() = V_MeNf.data();
+
+        ambit::Tensor T_MeNF =
+            ambit::Tensor::build(tensor_type_, "T2", {ncore_, vir_start, ncore_, vir_laplace});
+        T_MeNF.data() = V_MeNF.data();
+
+        V_MeNf.iterate([&](const std::vector<size_t>& i, double& value) {
+            double Exp = Fa_[virt_mos[i[3]]] + Fa_[virt_mos[i[1]]] - Fa_[core_mos_[i[2]]] -
+                         Fa_[core_mos_[i[0]]];
+            double D = -1.0 * (Exp);
+            value = value + value * dsrg_source_->compute_renormalized(Exp);
+            T_MeNf.data()[i[0] * vir_start * ncore_ * vir_start + i[1] * ncore_ * vir_start +
+                          i[2] * vir_start + i[3]] *=
+                dsrg_source_->compute_renormalized_denominator(D);
+        });
+
+        V_MeNF.iterate([&](const std::vector<size_t>& i, double& value) {
+            double Exp = Fa_[virt_mos_laplace[i[3]]] + Fa_[virt_mos[i[1]]] - Fa_[core_mos_[i[2]]] -
+                         Fa_[core_mos_[i[0]]];
+            double D = -1.0 * (Exp);
+            value = value + value * dsrg_source_->compute_renormalized(Exp);
+            T_MeNF.data()[i[0] * vir_start * ncore_ * vir_laplace + i[1] * ncore_ * vir_laplace +
+                          i[2] * vir_laplace + i[3]] *=
+                dsrg_source_->compute_renormalized_denominator(D);
+        });
+
+        E_ccvv += 2 * V_MeNf("m,e,n,f") * T_MeNf("m,e,n,f") - V_MeNf("m,e,n,f") * T_MeNf("m,f,n,e");
+        E_ccvv +=
+            4 * V_MeNF("m,e,n,f") * T_MeNF("m,e,n,f") - 2 * V_MeNF("m,e,n,f") * T_MeNF("n,e,m,f");
+
+        if (print_ > 0) {
+            outfile->Printf("\n\n  Leftover CCVV computation takes %8.8f", ccvvTimer.get());
+            outfile->Printf("\n  Corrected LAPLACE: E_ccvv %8.10f", E_ccvv);
+        }
+    }
+
+    if (vir_start_cavv != 0) {
+        size_t vir_laplace_cavv = nvirtual_ - vir_start_cavv;
+
+        std::vector<size_t> virt_mos_cavv(virt_mos_.begin(), virt_mos_.begin() + vir_start_cavv);
+        std::vector<size_t> virt_mos_laplace_cavv(virt_mos_.begin() + vir_start_cavv,
+                                                  virt_mos_.end());
+
+        local_timer cavvTimer;
+
+        ambit::Tensor temp_aa = ambit::Tensor::build(tensor_type_, "TEMPaa", {nactive_, nactive_});
+
+        ambit::Tensor B_QUF =
+            ints_->three_integral_block(aux_mos_, actv_mos_, virt_mos_laplace_cavv);
+        ambit::Tensor B_QUf = ints_->three_integral_block(aux_mos_, actv_mos_, virt_mos_cavv);
+        ambit::Tensor B_QME =
+            ints_->three_integral_block(aux_mos_, core_mos_, virt_mos_laplace_cavv);
+        ambit::Tensor B_QMe = ints_->three_integral_block(aux_mos_, core_mos_, virt_mos_cavv);
+
+        ambit::Tensor V_MeUf = ambit::Tensor::build(
+            tensor_type_, "V", {ncore_, vir_start_cavv, nactive_, vir_start_cavv});
+        V_MeUf("m,e,u,f") += B_QMe("Q, m, e") * B_QUf("Q, u, f");
+
+        ambit::Tensor V_MeUF_laplace = ambit::Tensor::build(
+            tensor_type_, "V", {ncore_, vir_start_cavv, nactive_, vir_laplace_cavv});
+        ambit::Tensor temp = ambit::Tensor::build(
+            tensor_type_, "temp", {ncore_, vir_start_cavv, nactive_, vir_laplace_cavv});
+        V_MeUF_laplace("m,e,u,f") += B_QMe("Q, m, e") * B_QUF("Q, u, f");
+
+        ambit::Tensor V_MEUf_laplace = ambit::Tensor::build(
+            tensor_type_, "V", {ncore_, vir_laplace_cavv, nactive_, vir_start_cavv});
+        ambit::Tensor temp2 = ambit::Tensor::build(
+            tensor_type_, "temp2", {ncore_, vir_laplace_cavv, nactive_, vir_start_cavv});
+        V_MEUf_laplace("m,e,u,f") += B_QME("Q, m, e") * B_QUf("Q, u, f");
+
+        ambit::Tensor T_MeUf = ambit::Tensor::build(
+            tensor_type_, "T2", {ncore_, vir_start_cavv, nactive_, vir_start_cavv});
+        T_MeUf.data() = V_MeUf.data();
+
+        ambit::Tensor T_MeUF_laplace = ambit::Tensor::build(
+            tensor_type_, "T2", {ncore_, vir_start_cavv, nactive_, vir_laplace_cavv});
+        T_MeUF_laplace.data() = V_MeUF_laplace.data();
+
+        ambit::Tensor T_MEUf_laplace = ambit::Tensor::build(
+            tensor_type_, "T2", {ncore_, vir_laplace_cavv, nactive_, vir_start_cavv});
+        T_MEUf_laplace.data() = V_MEUf_laplace.data();
+
+        V_MeUf.iterate([&](const std::vector<size_t>& i, double& value) {
+            double Exp = Fa_[virt_mos_cavv[i[3]]] + Fa_[virt_mos_cavv[i[1]]] -
+                         Fa_[actv_mos_[i[2]]] - Fa_[core_mos_[i[0]]];
+            double D = -1.0 * (Exp);
+            value = value + value * dsrg_source_->compute_renormalized(Exp);
+            T_MeUf.data()[i[0] * vir_start_cavv * nactive_ * vir_start_cavv +
+                          i[1] * nactive_ * vir_start_cavv + i[2] * vir_start_cavv + i[3]] *=
+                dsrg_source_->compute_renormalized_denominator(D);
+        });
+
+        V_MeUF_laplace.iterate([&](const std::vector<size_t>& i, double& value) {
+            double Exp = Fa_[virt_mos_laplace_cavv[i[3]]] + Fa_[virt_mos_cavv[i[1]]] -
+                         Fa_[actv_mos_[i[2]]] - Fa_[core_mos_[i[0]]];
+            double D = -1.0 * (Exp);
+            value = value + value * dsrg_source_->compute_renormalized(Exp);
+            T_MeUF_laplace
+                .data()[i[0] * vir_start_cavv * nactive_ * vir_laplace_cavv +
+                        i[1] * nactive_ * vir_laplace_cavv + i[2] * vir_laplace_cavv + i[3]] *=
+                dsrg_source_->compute_renormalized_denominator(D);
+        });
+
+        V_MEUf_laplace.iterate([&](const std::vector<size_t>& i, double& value) {
+            double Exp = Fa_[virt_mos_cavv[i[3]]] + Fa_[virt_mos_laplace_cavv[i[1]]] -
+                         Fa_[actv_mos_[i[2]]] - Fa_[core_mos_[i[0]]];
+            double D = -1.0 * (Exp);
+            value = value + value * dsrg_source_->compute_renormalized(Exp);
+            T_MEUf_laplace
+                .data()[i[0] * vir_laplace_cavv * nactive_ * vir_start_cavv +
+                        i[1] * nactive_ * vir_start_cavv + i[2] * vir_start_cavv + i[3]] *=
+                dsrg_source_->compute_renormalized_denominator(D);
+        });
+
+        temp_aa("u,v") += 2 * V_MeUf("m,e,u,f") * T_MeUf("m,e,v,f");
+        temp_aa("u,v") -= V_MeUf("m,e,u,f") * T_MeUf("m,f,v,e");
+
+        temp("m,e,u,f") = 2 * V_MeUF_laplace("m,e,u,f") - V_MEUf_laplace("m,f,u,e");
+
+        temp2("m,e,u,f") = 2 * V_MEUf_laplace("m,e,u,f") - V_MeUF_laplace("m,f,u,e");
+
+        temp_aa("u,v") += temp("m,e,u,f") * T_MeUF_laplace("m,e,v,f");
+        temp_aa("u,v") += temp2("m,e,u,f") * T_MEUf_laplace("m,e,v,f");
+
+        E_cavv += temp_aa("u,v") * Gamma1a("u,v");
+
+        if (print_ > 0) {
+            outfile->Printf("\n\n  Leftover CAVV computation takes %8.8f", cavvTimer.get());
+            outfile->Printf("\n  Corrected LAPLACE: E_cavv %8.10f", E_cavv);
+        }
+    }
+
+    if (vir_start_ccav != 0) {
+        std::vector<size_t> virt_mos_ccav(virt_mos_.begin(), virt_mos_.begin() + vir_start_ccav);
+
+        local_timer ccavTimer;
+
+        ambit::Tensor temp_aa = ambit::Tensor::build(tensor_type_, "TEMPaa", {nactive_, nactive_});
+
+        ambit::Tensor B_QMU = ints_->three_integral_block(aux_mos_, core_mos_, actv_mos_);
+        ambit::Tensor B_QMe = ints_->three_integral_block(aux_mos_, core_mos_, virt_mos_ccav);
+
+        ambit::Tensor V_MUMe =
+            ambit::Tensor::build(tensor_type_, "V", {ncore_, nactive_, ncore_, vir_start_ccav});
+        V_MUMe("m,u,n,f") += B_QMU("Q, m, u") * B_QMe("Q, n, f");
+
+        ambit::Tensor T_MUMe =
+            ambit::Tensor::build(tensor_type_, "T2", {ncore_, nactive_, ncore_, vir_start_ccav});
+        T_MUMe.data() = V_MUMe.data();
+        V_MUMe.iterate([&](const std::vector<size_t>& i, double& value) {
+            double Exp = Fa_[virt_mos_ccav[i[3]]] + Fa_[actv_mos_[i[1]]] - Fa_[core_mos_[i[2]]] -
+                         Fa_[core_mos_[i[0]]];
+            double D = -1.0 * (Exp);
+            value = value + value * dsrg_source_->compute_renormalized(Exp);
+            T_MUMe.data()[i[0] * nactive_ * ncore_ * vir_start_ccav +
+                          i[1] * ncore_ * vir_start_ccav + i[2] * vir_start_ccav + i[3]] *=
+                dsrg_source_->compute_renormalized_denominator(D);
+        });
+
+        temp_aa("u,v") += 2 * V_MUMe("m,u,n,f") * T_MUMe("m,v,n,f");
+        temp_aa("u,v") -= V_MUMe("m,u,n,f") * T_MUMe("n,v,m,f");
+
+        E_ccav += temp_aa("u,v") * Eta1a("u,v");
+
+        if (print_ > 0) {
+            outfile->Printf("\n\n  Leftover CCAV computation takes %8.8f", ccavTimer.get());
+            outfile->Printf("\n  Corrected LAPLACE: E_ccav %8.10f", E_ccav);
+        }
+    }
+
+    return (E_ccvv + E_cavv + E_ccav);
+}
+
+/*
 double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     /// E_{DSRG} -> Conventional basis
 
@@ -2360,6 +2659,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
 
     return (0.25 * Ealpha + 0.25 * Ebeta + Emixed);
 }
+*/
+
 double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual() {
     bool debug_print = foptions_->get_bool("DSRG_MRPT2_DEBUG");
     double Ealpha = 0.0;
@@ -2666,293 +2967,600 @@ double THREE_DSRG_MRPT2::E_VT2_2_core() {
 double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
     double Eccva = 0;
     double Eacvv = 0;
+    bool laplace_cavv = foptions_->get_bool("LAPLACE_CAVV");
+    bool laplace_ccav = foptions_->get_bool("LAPLACE_CCAV");
+    if (laplace_cavv && laplace_ccav) {
+        outfile->Printf(
+            "\n    CAVV and CCAV have not been calculated. Laplace algorithm will be used.");
+        return (Eacvv + Eccva);
+    }
+
     int nthread = 1;
 #ifdef _OPENMP
     nthread = omp_get_max_threads();
 //    thread = omp_get_thread_num();
 #endif
 
-    /// This block of code assumes that ThreeIntegral are not stored as a member variable.
-    /// Requires the reading from aptei_block which makes code
-    ambit::Tensor Gamma1_aa = Gamma1_.block("aa");
-    ambit::Tensor Gamma1_AA = Gamma1_.block("AA");
+    // /// This block of code assumes that ThreeIntegral are not stored as a member variable.
+    // /// Requires the reading from aptei_block which makes code
+    // ambit::Tensor Gamma1_aa = Gamma1_.block("aa");
+    // ambit::Tensor Gamma1_AA = Gamma1_.block("AA");
 
-    std::vector<ambit::Tensor> Bm_Qe;
-    std::vector<ambit::Tensor> Bm_Qf;
+    // std::vector<ambit::Tensor> Bm_Qe;
+    // std::vector<ambit::Tensor> Bm_Qf;
 
-    std::vector<ambit::Tensor> Vefu;
-    std::vector<ambit::Tensor> Tefv;
-    std::vector<ambit::Tensor> tempTaa;
-    std::vector<ambit::Tensor> tempTAA;
+    // std::vector<ambit::Tensor> Vefu;
+    // std::vector<ambit::Tensor> Tefv;
+    // std::vector<ambit::Tensor> tempTaa;
+    // std::vector<ambit::Tensor> tempTAA;
 
-    local_timer ccvaTimer;
-    for (int thread = 0; thread < nthread; thread++) {
-        Bm_Qe.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, nvirtual_}));
-        Bm_Qf.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nvirtual_}));
+    if (laplace_cavv) {
+        outfile->Printf("\n    CAVV has not been calculated. Laplace algorithm will be used.");
+    } else {
+        /// This block of code assumes that ThreeIntegral are not stored as a member variable.
+        /// Requires the reading from aptei_block which makes code
+        ambit::Tensor Gamma1_aa = Gamma1_.block("aa");
+        ambit::Tensor Gamma1_AA = Gamma1_.block("AA");
 
-        Vefu.push_back(
-            ambit::Tensor::build(tensor_type_, "muJK", {nvirtual_, nvirtual_, nactive_}));
-        Tefv.push_back(ambit::Tensor::build(tensor_type_, "T2", {nvirtual_, nvirtual_, nactive_}));
+        std::vector<ambit::Tensor> Bm_Qe;
+        std::vector<ambit::Tensor> Bm_Qf;
 
-        tempTaa.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {nactive_, nactive_}));
-        tempTAA.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA", {nactive_, nactive_}));
-    }
-    // ambit::Tensor BemQ = ints_->three_integral_block(naux,  acore_mos_,
-    // avirt_mos_);
-    // ambit::Tensor BeuQ = ints_->three_integral_block(naux,  aactv_mos_,
-    // avirt_mos_);
+        std::vector<ambit::Tensor> Vefu;
+        std::vector<ambit::Tensor> Tefv;
+        std::vector<ambit::Tensor> tempTaa;
+        std::vector<ambit::Tensor> tempTAA;
+        local_timer cavvTimer;
+        for (int thread = 0; thread < nthread; thread++) {
+            Bm_Qe.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, nvirtual_}));
+            Bm_Qf.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nvirtual_}));
 
-    // Loop over e and f to compute V
+            Vefu.push_back(
+                ambit::Tensor::build(tensor_type_, "muJK", {nvirtual_, nvirtual_, nactive_}));
+            Tefv.push_back(
+                ambit::Tensor::build(tensor_type_, "T2", {nvirtual_, nvirtual_, nactive_}));
 
-    ambit::Tensor BeuQ = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_);
+            tempTaa.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {nactive_, nactive_}));
+            tempTAA.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA", {nactive_, nactive_}));
+        }
+        // ambit::Tensor BemQ = ints_->three_integral_block(naux,  acore_mos_,
+        // avirt_mos_);
+        // ambit::Tensor BeuQ = ints_->three_integral_block(naux,  aactv_mos_,
+        // avirt_mos_);
 
-// std::vector<double>& BemQ_data = BemQ.data();
+        // Loop over e and f to compute V
 
-// I think this loop is typically too small to allow efficient use of
-// OpenMP.  Should probably test this assumption.
+        ambit::Tensor BeuQ = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_);
+
+        // std::vector<double>& BemQ_data = BemQ.data();
+
+        // I think this loop is typically too small to allow efficient use of
+        // OpenMP.  Should probably test this assumption.
 #pragma omp parallel for num_threads(num_threads_)
-    for (size_t m = 0; m < ncore_; m++) {
-        int thread = 0;
+        for (size_t m = 0; m < ncore_; m++) {
+            int thread = 0;
 #ifdef _OPENMP
-        thread = omp_get_thread_num();
+            thread = omp_get_thread_num();
 #endif
-        size_t ma = core_mos_[m];
+            size_t ma = core_mos_[m];
 
-// V[efu]_m = B_{em}^Q * B_{fu}^Q - B_{eu}^Q B_{fm}^Q
-// V[efu]_m = V[efmu] + V[efmu] * exp[efmu]
-// T2["mvef"] = V["mvef"] * D["mvef"]
-// temp["uv"] = V * T2
+            // V[efu]_m = B_{em}^Q * B_{fu}^Q - B_{eu}^Q B_{fm}^Q
+            // V[efu]_m = V[efmu] + V[efmu] * exp[efmu]
+            // T2["mvef"] = V["mvef"] * D["mvef"]
+            // temp["uv"] = V * T2
 #pragma omp critical
-        { Bm_Qe[thread] = ints_->three_integral_block_two_index(aux_mos_, ma, virt_mos_); }
+            { Bm_Qe[thread] = ints_->three_integral_block_two_index(aux_mos_, ma, virt_mos_); }
 
-        Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
-        Vefu[thread]("e, f, u") -= BeuQ("Q, e, u") * Bm_Qe[thread]("Q, f");
+            Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
+            Vefu[thread]("e, f, u") -= BeuQ("Q, e, u") * Bm_Qe[thread]("Q, f");
 
-        // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
-        // Denom^{mv}_{ef}
-        Tefv[thread].data() = Vefu[thread].data();
-
-        std::vector<double>& T_mv_data = Tefv[thread].data();
-        Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-            double Exp =
-                Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] - Fa_[ma];
-            double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] -
-                               Fa_[ma]);
-            value = value + value * dsrg_source_->compute_renormalized(Exp);
-            T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
-                dsrg_source_->compute_renormalized_denominator(D);
-        });
-
-        //        T_mv[thread].iterate([&](const std::vector<size_t>& i,double&
-        //        value){
-        //            double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] -
-        //            Fa_[ea] - Fa_[fa];
-        //            value = value *
-        //            dsrg_source_->compute_renormalized_denominator(D);});
-
-        tempTaa[thread]("u,v") += 0.5 * Vefu[thread]("e, f, u") * Tefv[thread]("e, f, v");
-        Vefu[thread].zero();
-        Tefv[thread].zero();
-
-        Vefu[thread].zero();
-        Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
-
-        // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
-        // Denom^{mv}_{ef}
-        Tefv[thread].data() = Vefu[thread].data();
-        T_mv_data = Tefv[thread].data();
-        T_mv_data = Tefv[thread].data();
-        Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-            double Exp =
-                Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] - Fb_[ma];
-            double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] -
-                               Fb_[ma]);
-            value = value + value * dsrg_source_->compute_renormalized(Exp);
-            T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
-                dsrg_source_->compute_renormalized_denominator(D);
-        });
-
-        //        T_mv[thread].iterate([&](const std::vector<size_t>& i,double&
-        //        value){
-        //            double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] -
-        //            Fa_[ea] - Fa_[fa];
-        //            value = value *
-        //            dsrg_source_->compute_renormalized_denominator(D);});
-
-        tempTAA[thread]("vu") += Vefu[thread]("e, f, u") * Tefv[thread]("e,f, v");
-        tempTaa[thread]("vu") += Vefu[thread]("e,f, u") * Tefv[thread]("e,f, v");
-        Vefu[thread].zero();
-        Tefv[thread].zero();
-
-        Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
-        Vefu[thread]("e, f, u") -= BeuQ("Q, e, u") * Bm_Qe[thread]("Q, f");
-
-        // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
-        // Denom^{mv}_{ef}
-
-        Tefv[thread].data() = Vefu[thread].data();
-        T_mv_data = Tefv[thread].data();
-
-        T_mv_data = Tefv[thread].data();
-        Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-            double Exp =
-                Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fb_[actv_mos_[i[2]]] - Fb_[ma];
-            double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fb_[actv_mos_[i[2]]] -
-                               Fb_[ma]);
-            value = value + value * dsrg_source_->compute_renormalized(Exp);
-            T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
-                dsrg_source_->compute_renormalized_denominator(D);
-        });
-
-        tempTaa[thread]("u,v") += 0.5 * Vefu[thread]("e, f, u") * Tefv[thread]("e, f, v");
-    }
-
-    ambit::Tensor tempTAA_all =
-        ambit::Tensor::build(tensor_type_, "tempTAA_all", {nactive_, nactive_});
-    ambit::Tensor tempTaa_all =
-        ambit::Tensor::build(tensor_type_, "tempTaa_all", {nactive_, nactive_});
-    for (int thread = 0; thread < nthread; thread++) {
-        tempTAA_all("v, u") += tempTAA[thread]("v, u");
-        tempTaa_all("v, u") += tempTaa[thread]("v, u");
-    }
-
-    Eacvv += tempTAA_all("v,u") * Gamma1_AA("v,u");
-    Eacvv += tempTaa_all("v,u") * Gamma1_aa("v,u");
-
-    if (print_ > 1) {
-        outfile->Printf("\n\n  CAVV computation takes %8.8f", ccvaTimer.get());
-    }
-
-    std::vector<ambit::Tensor> Bm_vQ;
-    std::vector<ambit::Tensor> Bn_eQ;
-    std::vector<ambit::Tensor> Bm_eQ;
-    std::vector<ambit::Tensor> Bn_vQ;
-
-    std::vector<ambit::Tensor> V_eu;
-    std::vector<ambit::Tensor> T_ev;
-    std::vector<ambit::Tensor> tempTaa_e;
-    std::vector<ambit::Tensor> tempTAA_e;
-
-    ambit::Tensor BmvQ = ints_->three_integral_block(aux_mos_, core_mos_, actv_mos_);
-    ambit::Tensor BmvQ_swapped =
-        ambit::Tensor::build(tensor_type_, "Bm_vQ", {ncore_, nthree_, nactive_});
-    BmvQ_swapped("m, Q, u") = BmvQ("Q, m, u");
-    local_timer cavvTimer;
-    for (int thread = 0; thread < nthread; thread++) {
-        Bm_vQ.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, nactive_}));
-        Bn_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bf_uQ", {nthree_, nvirtual_}));
-        Bm_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nvirtual_}));
-        Bn_vQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nactive_}));
-
-        V_eu.push_back(ambit::Tensor::build(tensor_type_, "muJK", {nvirtual_, nactive_}));
-        T_ev.push_back(ambit::Tensor::build(tensor_type_, "T2", {nvirtual_, nactive_}));
-
-        tempTaa_e.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {nactive_, nactive_}));
-        tempTAA_e.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA", {nactive_, nactive_}));
-    }
-    ambit::Tensor Eta1_aa = Eta1_.block("aa");
-    ambit::Tensor Eta1_AA = Eta1_.block("AA");
-
-#pragma omp parallel for num_threads(num_threads_)
-    for (size_t m = 0; m < ncore_; ++m) {
-        size_t ma = core_mos_[m];
-        size_t mb = core_mos_[m];
-        int thread = 0;
-#ifdef _OPENMP
-        thread = omp_get_thread_num();
-#endif
-
-#pragma omp critical
-        { Bm_eQ[thread] = ints_->three_integral_block_two_index(aux_mos_, ma, virt_mos_); }
-        std::copy(&BmvQ_swapped.data()[m * nthree_ * nactive_],
-                  &BmvQ_swapped.data()[m * nthree_ * nactive_ + nthree_ * nactive_],
-                  Bm_vQ[thread].data().begin());
-
-        for (size_t n = 0; n < ncore_; ++n) {
-            // alpha-aplha
-            size_t na = core_mos_[n];
-            size_t nb = core_mos_[n];
-
-            std::copy(&BmvQ_swapped.data()[n * nthree_ * nactive_],
-                      &BmvQ_swapped.data()[n * nthree_ * nactive_ + nthree_ * nactive_],
-                      Bn_vQ[thread].data().begin());
-//    Bn_vQ[thread].iterate([&](const std::vector<size_t>& i,double& value){
-//        value = BmvQ_data[i[0] * core_ * active_ + n * active_ + i[1] ];
-//    });
-#pragma omp critical
-            { Bn_eQ[thread] = ints_->three_integral_block_two_index(aux_mos_, na, virt_mos_); }
-
-            // B_{mv}^{Q} * B_{ne}^{Q} - B_{me}^Q * B_{nv}
-            V_eu[thread]("e, u") = Bm_vQ[thread]("Q, u") * Bn_eQ[thread]("Q, e");
-            V_eu[thread]("e, u") -= Bm_eQ[thread]("Q, e") * Bn_vQ[thread]("Q, u");
             // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
             // Denom^{mv}_{ef}
-            T_ev[thread].data() = V_eu[thread].data();
+            Tefv[thread].data() = Vefu[thread].data();
 
-            V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                double Exp = Fa_[actv_mos_[i[1]]] + Fa_[virt_mos_[i[0]]] - Fa_[ma] - Fa_[na];
+            std::vector<double>& T_mv_data = Tefv[thread].data();
+            Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                double Exp =
+                    Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] - Fa_[ma];
+                double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] -
+                                   Fa_[actv_mos_[i[2]]] - Fa_[ma]);
                 value = value + value * dsrg_source_->compute_renormalized(Exp);
-                double D = Fa_[ma] + Fa_[na] - Fa_[actv_mos_[i[1]]] - Fa_[virt_mos_[i[0]]];
-                T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+                T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
                     dsrg_source_->compute_renormalized_denominator(D);
-                ;
             });
 
-            tempTaa_e[thread]("u,v") += 0.5 * V_eu[thread]("e,u") * T_ev[thread]("e,v");
-            V_eu[thread].zero();
-            T_ev[thread].zero();
+            //        T_mv[thread].iterate([&](const std::vector<size_t>& i,double&
+            //        value){
+            //            double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] -
+            //            Fa_[ea] - Fa_[fa];
+            //            value = value *
+            //            dsrg_source_->compute_renormalized_denominator(D);});
 
-            // alpha-beta
-            // temp["vu"] += V_["vEmN"] * T2_["mNuE"];
-            //
-            V_eu[thread]("E,u") = Bm_vQ[thread]("Q, u") * Bn_eQ[thread]("Q, E");
-            T_ev[thread].data() = V_eu[thread].data();
-            V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                double Exp = Fa_[actv_mos_[i[1]]] + Fb_[virt_mos_[i[0]]] - Fa_[ma] - Fb_[nb];
+            tempTaa[thread]("u,v") += 0.5 * Vefu[thread]("e, f, u") * Tefv[thread]("e, f, v");
+            Vefu[thread].zero();
+            Tefv[thread].zero();
+
+            Vefu[thread].zero();
+            Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
+
+            // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
+            // Denom^{mv}_{ef}
+            Tefv[thread].data() = Vefu[thread].data();
+            T_mv_data = Tefv[thread].data();
+            T_mv_data = Tefv[thread].data();
+            Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                double Exp =
+                    Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] - Fb_[ma];
+                double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] -
+                                   Fa_[actv_mos_[i[2]]] - Fb_[ma]);
                 value = value + value * dsrg_source_->compute_renormalized(Exp);
-                double D = Fa_[ma] + Fb_[nb] - Fa_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
-                T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+                T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
                     dsrg_source_->compute_renormalized_denominator(D);
-                ;
             });
 
-            tempTAA_e[thread]("vu") += V_eu[thread]("M,v") * T_ev[thread]("M,u");
-            tempTaa_e[thread]("vu") += V_eu[thread]("M,v") * T_ev[thread]("M, u");
+            //        T_mv[thread].iterate([&](const std::vector<size_t>& i,double&
+            //        value){
+            //            double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] -
+            //            Fa_[ea] - Fa_[fa];
+            //            value = value *
+            //            dsrg_source_->compute_renormalized_denominator(D);});
 
-            // beta-beta
-            V_eu[thread].zero();
-            T_ev[thread].zero();
-            V_eu[thread]("E,U") = Bm_vQ[thread]("Q, U") * Bn_eQ[thread]("Q,E");
-            V_eu[thread]("E,U") -= Bm_eQ[thread]("Q, E") * Bn_vQ[thread]("Q, U");
-            T_ev[thread].data() = V_eu[thread].data();
+            tempTAA[thread]("vu") += Vefu[thread]("e, f, u") * Tefv[thread]("e,f, v");
+            tempTaa[thread]("vu") += Vefu[thread]("e,f, u") * Tefv[thread]("e,f, v");
+            Vefu[thread].zero();
+            Tefv[thread].zero();
 
-            V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                double Exp = Fb_[mb] + Fb_[nb] - Fb_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
+            Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
+            Vefu[thread]("e, f, u") -= BeuQ("Q, e, u") * Bm_Qe[thread]("Q, f");
+
+            // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
+            // Denom^{mv}_{ef}
+
+            Tefv[thread].data() = Vefu[thread].data();
+            T_mv_data = Tefv[thread].data();
+
+            T_mv_data = Tefv[thread].data();
+            Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                double Exp =
+                    Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fb_[actv_mos_[i[2]]] - Fb_[ma];
+                double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] -
+                                   Fb_[actv_mos_[i[2]]] - Fb_[ma]);
                 value = value + value * dsrg_source_->compute_renormalized(Exp);
-                double D = Fb_[mb] + Fb_[nb] - Fb_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
-                T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+                T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
                     dsrg_source_->compute_renormalized_denominator(D);
-                ;
             });
 
-            tempTAA_e[thread]("v,u") += 0.5 * V_eu[thread]("M,v") * T_ev[thread]("M,u");
-            V_eu[thread].zero();
-            T_ev[thread].zero();
+            tempTaa[thread]("u,v") += 0.5 * Vefu[thread]("e, f, u") * Tefv[thread]("e, f, v");
+        }
+
+        ambit::Tensor tempTAA_all =
+            ambit::Tensor::build(tensor_type_, "tempTAA_all", {nactive_, nactive_});
+        ambit::Tensor tempTaa_all =
+            ambit::Tensor::build(tensor_type_, "tempTaa_all", {nactive_, nactive_});
+        for (int thread = 0; thread < nthread; thread++) {
+            tempTAA_all("v, u") += tempTAA[thread]("v, u");
+            tempTaa_all("v, u") += tempTaa[thread]("v, u");
+        }
+
+        Eacvv += tempTAA_all("v,u") * Gamma1_AA("v,u");
+        Eacvv += tempTaa_all("v,u") * Gamma1_aa("v,u");
+
+        if (print_ > 0) {
+            outfile->Printf("\n\n  CAVV computation takes %8.8f", cavvTimer.get());
+        }
+    }
+    //     local_timer cavvTimer;
+    //     for (int thread = 0; thread < nthread; thread++) {
+    //         Bm_Qe.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, nvirtual_}));
+    //         Bm_Qf.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nvirtual_}));
+
+    //         Vefu.push_back(
+    //             ambit::Tensor::build(tensor_type_, "muJK", {nvirtual_, nvirtual_, nactive_}));
+    //         Tefv.push_back(ambit::Tensor::build(tensor_type_, "T2", {nvirtual_, nvirtual_,
+    //         nactive_}));
+
+    //         tempTaa.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {nactive_,
+    //         nactive_})); tempTAA.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA",
+    //         {nactive_, nactive_}));
+    //     }
+    //     // ambit::Tensor BemQ = ints_->three_integral_block(naux,  acore_mos_,
+    //     // avirt_mos_);
+    //     // ambit::Tensor BeuQ = ints_->three_integral_block(naux,  aactv_mos_,
+    //     // avirt_mos_);
+
+    //     // Loop over e and f to compute V
+
+    //     ambit::Tensor BeuQ = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_);
+
+    // // std::vector<double>& BemQ_data = BemQ.data();
+
+    // // I think this loop is typically too small to allow efficient use of
+    // // OpenMP.  Should probably test this assumption.
+    // #pragma omp parallel for num_threads(num_threads_)
+    //     for (size_t m = 0; m < ncore_; m++) {
+    //         int thread = 0;
+    // #ifdef _OPENMP
+    //         thread = omp_get_thread_num();
+    // #endif
+    //         size_t ma = core_mos_[m];
+
+    // // V[efu]_m = B_{em}^Q * B_{fu}^Q - B_{eu}^Q B_{fm}^Q
+    // // V[efu]_m = V[efmu] + V[efmu] * exp[efmu]
+    // // T2["mvef"] = V["mvef"] * D["mvef"]
+    // // temp["uv"] = V * T2
+    // #pragma omp critical
+    //         { Bm_Qe[thread] = ints_->three_integral_block_two_index(aux_mos_, ma, virt_mos_); }
+
+    //         Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
+    //         Vefu[thread]("e, f, u") -= BeuQ("Q, e, u") * Bm_Qe[thread]("Q, f");
+
+    //         // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
+    //         // Denom^{mv}_{ef}
+    //         Tefv[thread].data() = Vefu[thread].data();
+
+    //         std::vector<double>& T_mv_data = Tefv[thread].data();
+    //         Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+    //             double Exp =
+    //                 Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] - Fa_[ma];
+    //             double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] -
+    //             Fa_[actv_mos_[i[2]]] -
+    //                                Fa_[ma]);
+    //             value = value + value * dsrg_source_->compute_renormalized(Exp);
+    //             T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
+    //                 dsrg_source_->compute_renormalized_denominator(D);
+    //         });
+
+    //         //        T_mv[thread].iterate([&](const std::vector<size_t>& i,double&
+    //         //        value){
+    //         //            double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] -
+    //         //            Fa_[ea] - Fa_[fa];
+    //         //            value = value *
+    //         //            dsrg_source_->compute_renormalized_denominator(D);});
+
+    //         tempTaa[thread]("u,v") += 0.5 * Vefu[thread]("e, f, u") * Tefv[thread]("e, f, v");
+    //         Vefu[thread].zero();
+    //         Tefv[thread].zero();
+
+    //         Vefu[thread].zero();
+    //         Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
+
+    //         // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
+    //         // Denom^{mv}_{ef}
+    //         Tefv[thread].data() = Vefu[thread].data();
+    //         T_mv_data = Tefv[thread].data();
+    //         T_mv_data = Tefv[thread].data();
+    //         Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+    //             double Exp =
+    //                 Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fa_[actv_mos_[i[2]]] - Fb_[ma];
+    //             double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] -
+    //             Fa_[actv_mos_[i[2]]] -
+    //                                Fb_[ma]);
+    //             value = value + value * dsrg_source_->compute_renormalized(Exp);
+    //             T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
+    //                 dsrg_source_->compute_renormalized_denominator(D);
+    //         });
+
+    //         //        T_mv[thread].iterate([&](const std::vector<size_t>& i,double&
+    //         //        value){
+    //         //            double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] -
+    //         //            Fa_[ea] - Fa_[fa];
+    //         //            value = value *
+    //         //            dsrg_source_->compute_renormalized_denominator(D);});
+
+    //         tempTAA[thread]("vu") += Vefu[thread]("e, f, u") * Tefv[thread]("e,f, v");
+    //         tempTaa[thread]("vu") += Vefu[thread]("e,f, u") * Tefv[thread]("e,f, v");
+    //         Vefu[thread].zero();
+    //         Tefv[thread].zero();
+
+    //         Vefu[thread]("e, f, u") = Bm_Qe[thread]("Q, e") * BeuQ("Q, f, u");
+    //         Vefu[thread]("e, f, u") -= BeuQ("Q, e, u") * Bm_Qe[thread]("Q, f");
+
+    //         // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
+    //         // Denom^{mv}_{ef}
+
+    //         Tefv[thread].data() = Vefu[thread].data();
+    //         T_mv_data = Tefv[thread].data();
+
+    //         T_mv_data = Tefv[thread].data();
+    //         Vefu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+    //             double Exp =
+    //                 Fa_[virt_mos_[i[0]]] + Fb_[virt_mos_[i[1]]] - Fb_[actv_mos_[i[2]]] - Fb_[ma];
+    //             double D = -1.0 * (Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] -
+    //             Fb_[actv_mos_[i[2]]] -
+    //                                Fb_[ma]);
+    //             value = value + value * dsrg_source_->compute_renormalized(Exp);
+    //             T_mv_data[i[0] * nvirtual_ * nactive_ + i[1] * nactive_ + i[2]] *=
+    //                 dsrg_source_->compute_renormalized_denominator(D);
+    //         });
+
+    //         tempTaa[thread]("u,v") += 0.5 * Vefu[thread]("e, f, u") * Tefv[thread]("e, f, v");
+    //     }
+
+    //     ambit::Tensor tempTAA_all =
+    //         ambit::Tensor::build(tensor_type_, "tempTAA_all", {nactive_, nactive_});
+    //     ambit::Tensor tempTaa_all =
+    //         ambit::Tensor::build(tensor_type_, "tempTaa_all", {nactive_, nactive_});
+    //     for (int thread = 0; thread < nthread; thread++) {
+    //         tempTAA_all("v, u") += tempTAA[thread]("v, u");
+    //         tempTaa_all("v, u") += tempTaa[thread]("v, u");
+    //     }
+
+    //     Eacvv += tempTAA_all("v,u") * Gamma1_AA("v,u");
+    //     Eacvv += tempTaa_all("v,u") * Gamma1_aa("v,u");
+
+    //     if (print_ > 0) {
+    //         outfile->Printf("\n\n  CAVV computation takes %8.8f", cavvTimer.get());
+    //     }
+
+    if (laplace_ccav) {
+        outfile->Printf("\n    CCAV has not been calculated. Laplace algorithm will be used.");
+    } else {
+        std::vector<ambit::Tensor> Bm_vQ;
+        std::vector<ambit::Tensor> Bn_eQ;
+        std::vector<ambit::Tensor> Bm_eQ;
+        std::vector<ambit::Tensor> Bn_vQ;
+
+        std::vector<ambit::Tensor> V_eu;
+        std::vector<ambit::Tensor> T_ev;
+        std::vector<ambit::Tensor> tempTaa_e;
+        std::vector<ambit::Tensor> tempTAA_e;
+
+        ambit::Tensor BmvQ = ints_->three_integral_block(aux_mos_, core_mos_, actv_mos_);
+        ambit::Tensor BmvQ_swapped =
+            ambit::Tensor::build(tensor_type_, "Bm_vQ", {ncore_, nthree_, nactive_});
+        BmvQ_swapped("m, Q, u") = BmvQ("Q, m, u");
+        local_timer ccvaTimer;
+        for (int thread = 0; thread < nthread; thread++) {
+            Bm_vQ.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, nactive_}));
+            Bn_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bf_uQ", {nthree_, nvirtual_}));
+            Bm_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nvirtual_}));
+            Bn_vQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nactive_}));
+
+            V_eu.push_back(ambit::Tensor::build(tensor_type_, "muJK", {nvirtual_, nactive_}));
+            T_ev.push_back(ambit::Tensor::build(tensor_type_, "T2", {nvirtual_, nactive_}));
+
+            tempTaa_e.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {nactive_, nactive_}));
+            tempTAA_e.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA", {nactive_, nactive_}));
+        }
+        ambit::Tensor Eta1_aa = Eta1_.block("aa");
+        ambit::Tensor Eta1_AA = Eta1_.block("AA");
+
+#pragma omp parallel for num_threads(num_threads_)
+        for (size_t m = 0; m < ncore_; ++m) {
+            size_t ma = core_mos_[m];
+            size_t mb = core_mos_[m];
+            int thread = 0;
+#ifdef _OPENMP
+            thread = omp_get_thread_num();
+#endif
+
+#pragma omp critical
+            { Bm_eQ[thread] = ints_->three_integral_block_two_index(aux_mos_, ma, virt_mos_); }
+            std::copy(&BmvQ_swapped.data()[m * nthree_ * nactive_],
+                      &BmvQ_swapped.data()[m * nthree_ * nactive_ + nthree_ * nactive_],
+                      Bm_vQ[thread].data().begin());
+
+            for (size_t n = 0; n < ncore_; ++n) {
+                // alpha-aplha
+                size_t na = core_mos_[n];
+                size_t nb = core_mos_[n];
+
+                std::copy(&BmvQ_swapped.data()[n * nthree_ * nactive_],
+                          &BmvQ_swapped.data()[n * nthree_ * nactive_ + nthree_ * nactive_],
+                          Bn_vQ[thread].data().begin());
+                //    Bn_vQ[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                //        value = BmvQ_data[i[0] * core_ * active_ + n * active_ + i[1] ];
+                //    });
+#pragma omp critical
+                { Bn_eQ[thread] = ints_->three_integral_block_two_index(aux_mos_, na, virt_mos_); }
+
+                // B_{mv}^{Q} * B_{ne}^{Q} - B_{me}^Q * B_{nv}
+                V_eu[thread]("e, u") = Bm_vQ[thread]("Q, u") * Bn_eQ[thread]("Q, e");
+                V_eu[thread]("e, u") -= Bm_eQ[thread]("Q, e") * Bn_vQ[thread]("Q, u");
+                // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
+                // Denom^{mv}_{ef}
+                T_ev[thread].data() = V_eu[thread].data();
+
+                V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    double Exp = Fa_[actv_mos_[i[1]]] + Fa_[virt_mos_[i[0]]] - Fa_[ma] - Fa_[na];
+                    value = value + value * dsrg_source_->compute_renormalized(Exp);
+                    double D = Fa_[ma] + Fa_[na] - Fa_[actv_mos_[i[1]]] - Fa_[virt_mos_[i[0]]];
+                    T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+                        dsrg_source_->compute_renormalized_denominator(D);
+                    ;
+                });
+
+                tempTaa_e[thread]("u,v") += 0.5 * V_eu[thread]("e,u") * T_ev[thread]("e,v");
+                V_eu[thread].zero();
+                T_ev[thread].zero();
+
+                // alpha-beta
+                // temp["vu"] += V_["vEmN"] * T2_["mNuE"];
+                //
+                V_eu[thread]("E,u") = Bm_vQ[thread]("Q, u") * Bn_eQ[thread]("Q, E");
+                T_ev[thread].data() = V_eu[thread].data();
+                V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    double Exp = Fa_[actv_mos_[i[1]]] + Fb_[virt_mos_[i[0]]] - Fa_[ma] - Fb_[nb];
+                    value = value + value * dsrg_source_->compute_renormalized(Exp);
+                    double D = Fa_[ma] + Fb_[nb] - Fa_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
+                    T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+                        dsrg_source_->compute_renormalized_denominator(D);
+                    ;
+                });
+
+                tempTAA_e[thread]("vu") += V_eu[thread]("M,v") * T_ev[thread]("M,u");
+                tempTaa_e[thread]("vu") += V_eu[thread]("M,v") * T_ev[thread]("M, u");
+
+                // beta-beta
+                V_eu[thread].zero();
+                T_ev[thread].zero();
+                V_eu[thread]("E,U") = Bm_vQ[thread]("Q, U") * Bn_eQ[thread]("Q,E");
+                V_eu[thread]("E,U") -= Bm_eQ[thread]("Q, E") * Bn_vQ[thread]("Q, U");
+                T_ev[thread].data() = V_eu[thread].data();
+
+                V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    double Exp = Fb_[mb] + Fb_[nb] - Fb_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
+                    value = value + value * dsrg_source_->compute_renormalized(Exp);
+                    double D = Fb_[mb] + Fb_[nb] - Fb_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
+                    T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+                        dsrg_source_->compute_renormalized_denominator(D);
+                    ;
+                });
+
+                tempTAA_e[thread]("v,u") += 0.5 * V_eu[thread]("M,v") * T_ev[thread]("M,u");
+                V_eu[thread].zero();
+                T_ev[thread].zero();
+            }
+        }
+
+        ambit::Tensor tempTAA_all =
+            ambit::Tensor::build(tensor_type_, "tempTAA_all", {nactive_, nactive_});
+        ambit::Tensor tempTaa_all =
+            ambit::Tensor::build(tensor_type_, "tempTaa_all", {nactive_, nactive_});
+        for (int thread = 0; thread < nthread; thread++) {
+            tempTAA_all("u, v") += tempTAA_e[thread]("u,v");
+            tempTaa_all("u, v") += tempTaa_e[thread]("u,v");
+        }
+        Eccva += tempTaa_all("vu") * Eta1_aa("uv");
+        Eccva += tempTAA_all("VU") * Eta1_AA("UV");
+        if (print_ > 0) {
+            outfile->Printf("\n\n  CCVA takes %8.8f", ccvaTimer.get());
         }
     }
 
-    tempTAA_all = ambit::Tensor::build(tensor_type_, "tempTAA_all", {nactive_, nactive_});
-    tempTaa_all = ambit::Tensor::build(tensor_type_, "tempTaa_all", {nactive_, nactive_});
-    for (int thread = 0; thread < nthread; thread++) {
-        tempTAA_all("u, v") += tempTAA_e[thread]("u,v");
-        tempTaa_all("u, v") += tempTaa_e[thread]("u,v");
-    }
-    Eccva += tempTaa_all("vu") * Eta1_aa("uv");
-    Eccva += tempTAA_all("VU") * Eta1_AA("UV");
-    if (print_ > 1) {
-        outfile->Printf("\n\n  CCVA takes %8.8f", cavvTimer.get());
-    }
+    //     std::vector<ambit::Tensor> Bm_vQ;
+    //     std::vector<ambit::Tensor> Bn_eQ;
+    //     std::vector<ambit::Tensor> Bm_eQ;
+    //     std::vector<ambit::Tensor> Bn_vQ;
 
+    //     std::vector<ambit::Tensor> V_eu;
+    //     std::vector<ambit::Tensor> T_ev;
+    //     std::vector<ambit::Tensor> tempTaa_e;
+    //     std::vector<ambit::Tensor> tempTAA_e;
+
+    //     ambit::Tensor BmvQ = ints_->three_integral_block(aux_mos_, core_mos_, actv_mos_);
+    //     ambit::Tensor BmvQ_swapped =
+    //         ambit::Tensor::build(tensor_type_, "Bm_vQ", {ncore_, nthree_, nactive_});
+    //     BmvQ_swapped("m, Q, u") = BmvQ("Q, m, u");
+    //     local_timer ccvaTimer;
+    //     for (int thread = 0; thread < nthread; thread++) {
+    //         Bm_vQ.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, nactive_}));
+    //         Bn_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bf_uQ", {nthree_, nvirtual_}));
+    //         Bm_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nvirtual_}));
+    //         Bn_vQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nactive_}));
+
+    //         V_eu.push_back(ambit::Tensor::build(tensor_type_, "muJK", {nvirtual_, nactive_}));
+    //         T_ev.push_back(ambit::Tensor::build(tensor_type_, "T2", {nvirtual_, nactive_}));
+
+    //         tempTaa_e.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {nactive_,
+    //         nactive_})); tempTAA_e.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA",
+    //         {nactive_, nactive_}));
+    //     }
+    //     ambit::Tensor Eta1_aa = Eta1_.block("aa");
+    //     ambit::Tensor Eta1_AA = Eta1_.block("AA");
+
+    // #pragma omp parallel for num_threads(num_threads_)
+    //     for (size_t m = 0; m < ncore_; ++m) {
+    //         size_t ma = core_mos_[m];
+    //         size_t mb = core_mos_[m];
+    //         int thread = 0;
+    // #ifdef _OPENMP
+    //         thread = omp_get_thread_num();
+    // #endif
+
+    // #pragma omp critical
+    //         { Bm_eQ[thread] = ints_->three_integral_block_two_index(aux_mos_, ma, virt_mos_); }
+    //         std::copy(&BmvQ_swapped.data()[m * nthree_ * nactive_],
+    //                   &BmvQ_swapped.data()[m * nthree_ * nactive_ + nthree_ * nactive_],
+    //                   Bm_vQ[thread].data().begin());
+
+    //         for (size_t n = 0; n < ncore_; ++n) {
+    //             // alpha-aplha
+    //             size_t na = core_mos_[n];
+    //             size_t nb = core_mos_[n];
+
+    //             std::copy(&BmvQ_swapped.data()[n * nthree_ * nactive_],
+    //                       &BmvQ_swapped.data()[n * nthree_ * nactive_ + nthree_ * nactive_],
+    //                       Bn_vQ[thread].data().begin());
+    // //    Bn_vQ[thread].iterate([&](const std::vector<size_t>& i,double& value){
+    // //        value = BmvQ_data[i[0] * core_ * active_ + n * active_ + i[1] ];
+    // //    });
+    // #pragma omp critical
+    //             { Bn_eQ[thread] = ints_->three_integral_block_two_index(aux_mos_, na, virt_mos_);
+    //             }
+
+    //             // B_{mv}^{Q} * B_{ne}^{Q} - B_{me}^Q * B_{nv}
+    //             V_eu[thread]("e, u") = Bm_vQ[thread]("Q, u") * Bn_eQ[thread]("Q, e");
+    //             V_eu[thread]("e, u") -= Bm_eQ[thread]("Q, e") * Bn_vQ[thread]("Q, u");
+    //             // E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} *
+    //             // Denom^{mv}_{ef}
+    //             T_ev[thread].data() = V_eu[thread].data();
+
+    //             V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+    //                 double Exp = Fa_[actv_mos_[i[1]]] + Fa_[virt_mos_[i[0]]] - Fa_[ma] - Fa_[na];
+    //                 value = value + value * dsrg_source_->compute_renormalized(Exp);
+    //                 double D = Fa_[ma] + Fa_[na] - Fa_[actv_mos_[i[1]]] - Fa_[virt_mos_[i[0]]];
+    //                 T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+    //                     dsrg_source_->compute_renormalized_denominator(D);
+    //                 ;
+    //             });
+
+    //             tempTaa_e[thread]("u,v") += 0.5 * V_eu[thread]("e,u") * T_ev[thread]("e,v");
+    //             V_eu[thread].zero();
+    //             T_ev[thread].zero();
+
+    //             // alpha-beta
+    //             // temp["vu"] += V_["vEmN"] * T2_["mNuE"];
+    //             //
+    //             V_eu[thread]("E,u") = Bm_vQ[thread]("Q, u") * Bn_eQ[thread]("Q, E");
+    //             T_ev[thread].data() = V_eu[thread].data();
+    //             V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+    //                 double Exp = Fa_[actv_mos_[i[1]]] + Fb_[virt_mos_[i[0]]] - Fa_[ma] - Fb_[nb];
+    //                 value = value + value * dsrg_source_->compute_renormalized(Exp);
+    //                 double D = Fa_[ma] + Fb_[nb] - Fa_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
+    //                 T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+    //                     dsrg_source_->compute_renormalized_denominator(D);
+    //                 ;
+    //             });
+
+    //             tempTAA_e[thread]("vu") += V_eu[thread]("M,v") * T_ev[thread]("M,u");
+    //             tempTaa_e[thread]("vu") += V_eu[thread]("M,v") * T_ev[thread]("M, u");
+
+    //             // beta-beta
+    //             V_eu[thread].zero();
+    //             T_ev[thread].zero();
+    //             V_eu[thread]("E,U") = Bm_vQ[thread]("Q, U") * Bn_eQ[thread]("Q,E");
+    //             V_eu[thread]("E,U") -= Bm_eQ[thread]("Q, E") * Bn_vQ[thread]("Q, U");
+    //             T_ev[thread].data() = V_eu[thread].data();
+
+    //             V_eu[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+    //                 double Exp = Fb_[mb] + Fb_[nb] - Fb_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
+    //                 value = value + value * dsrg_source_->compute_renormalized(Exp);
+    //                 double D = Fb_[mb] + Fb_[nb] - Fb_[actv_mos_[i[1]]] - Fb_[virt_mos_[i[0]]];
+    //                 T_ev[thread].data()[i[0] * nactive_ + i[1]] *=
+    //                     dsrg_source_->compute_renormalized_denominator(D);
+    //                 ;
+    //             });
+
+    //             tempTAA_e[thread]("v,u") += 0.5 * V_eu[thread]("M,v") * T_ev[thread]("M,u");
+    //             V_eu[thread].zero();
+    //             T_ev[thread].zero();
+    //         }
+    //     }
+
+    //     tempTAA_all = ambit::Tensor::build(tensor_type_, "tempTAA_all", {nactive_, nactive_});
+    //     tempTaa_all = ambit::Tensor::build(tensor_type_, "tempTaa_all", {nactive_, nactive_});
+    //     for (int thread = 0; thread < nthread; thread++) {
+    //         tempTAA_all("u, v") += tempTAA_e[thread]("u,v");
+    //         tempTaa_all("u, v") += tempTaa_e[thread]("u,v");
+    //     }
+    //     Eccva += tempTaa_all("vu") * Eta1_aa("uv");
+    //     Eccva += tempTAA_all("VU") * Eta1_AA("UV");
+    //     if (print_ > 0) {
+    //         outfile->Printf("\n\n  CCVA takes %8.8f", ccvaTimer.get());
+    //     }
+
+    outfile->Printf("\n E_cavv: %8.6f", Eacvv);
+    outfile->Printf("\n E_ccav: %8.6f", Eccva);
     return (Eacvv + Eccva);
 }
 

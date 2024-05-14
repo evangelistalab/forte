@@ -35,47 +35,82 @@ namespace forte {
 
 class AtomicOrbitalHelper {
   protected:
-    std::shared_ptr<psi::Matrix> AO_Screen_;
-    std::shared_ptr<psi::Matrix> TransAO_Screen_;
+    psi::SharedMatrix CMO_;
+    psi::SharedVector eps_rdocc_;
+    psi::SharedVector eps_virtual_;
+    psi::SharedVector eps_active_;
 
-    std::shared_ptr<psi::Matrix> CMO_;
-    std::shared_ptr<psi::Vector> eps_rdocc_;
-    std::shared_ptr<psi::Vector> eps_virtual_;
+    std::vector<psi::SharedMatrix> LOcc_list_;
+    std::vector<psi::SharedMatrix> LVir_list_;
+    std::vector<psi::SharedMatrix> LAct_list_;
+    
+    std::vector<psi::SharedMatrix> POcc_list_;
+    std::vector<psi::SharedMatrix> PVir_list_;
 
-    std::shared_ptr<psi::Matrix> POcc_;
-    std::shared_ptr<psi::Matrix> PVir_;
-    void Compute_Psuedo_Density();
+    std::vector<int> n_pseudo_occ_list_;
+    std::vector<int> n_pseudo_vir_list_;
+    std::vector<int> n_pseudo_act_list_;
+
+    psi::SharedMatrix L_Occ_real_;
+    //psi::SharedMatrix L_Vir_real_;
+    psi::SharedMatrix POcc_real_;
+    // psi::SharedMatrix PVir_real_;
+
 
     // LaplaceDenominator Laplace_;
-    std::shared_ptr<psi::Matrix> Occupied_Laplace_;
-    std::shared_ptr<psi::Matrix> Virtual_Laplace_;
+    psi::SharedMatrix Occupied_Laplace_;
+    psi::SharedMatrix Virtual_Laplace_;
+    psi::SharedMatrix Active_Laplace_;
+
     double laplace_tolerance_ = 1e-10;
 
     int weights_;
     int nbf_;
     int nrdocc_;
     int nvir_;
+    int nact_;
     /// How many orbitals does it take to go from occupied to virtual (ie should
     /// be active)
     int shift_;
+    int vir_start_;
+    int nfrozen_;
 
   public:
-    std::shared_ptr<psi::Matrix> AO_Screen() { return AO_Screen_; }
-    std::shared_ptr<psi::Matrix> TransAO_Screen() { return TransAO_Screen_; }
-    std::shared_ptr<psi::Matrix> Occupied_Laplace() { return Occupied_Laplace_; }
-    std::shared_ptr<psi::Matrix> Virtual_Laplace() { return Virtual_Laplace_; }
-    std::shared_ptr<psi::Matrix> POcc() { return POcc_; }
-    std::shared_ptr<psi::Matrix> PVir() { return PVir_; }
+    psi::SharedMatrix Occupied_Laplace() { return Occupied_Laplace_; }
+    psi::SharedMatrix Virtual_Laplace() { return Virtual_Laplace_; }
+
+    std::vector<psi::SharedMatrix> POcc_list() { return POcc_list_; }
+    std::vector<psi::SharedMatrix> PVir_list() { return PVir_list_; }
+
+    std::vector<psi::SharedMatrix> LOcc_list() { return LOcc_list_; }
+    std::vector<psi::SharedMatrix> LVir_list() { return LVir_list_; }
+    std::vector<psi::SharedMatrix> LAct_list() { return LAct_list_; }
+
+    std::vector<int> n_pseudo_occ_list() { return n_pseudo_occ_list_; }
+    std::vector<int> n_pseudo_vir_list() { return n_pseudo_vir_list_; }
+    std::vector<int> n_pseudo_act_list() { return n_pseudo_act_list_; }
+    
+    psi::SharedMatrix L_Occ_real() { return L_Occ_real_; }
+
+    psi::SharedMatrix POcc_real() { return POcc_real_; }
+    
     int Weights() { return weights_; }
 
-    AtomicOrbitalHelper(std::shared_ptr<psi::Matrix> CMO, std::shared_ptr<psi::Vector> eps_occ,
-                        std::shared_ptr<psi::Vector> eps_vir, double laplace_tolerance);
-    AtomicOrbitalHelper(std::shared_ptr<psi::Matrix> CMO, std::shared_ptr<psi::Vector> eps_occ,
-                        std::shared_ptr<psi::Vector> eps_vir, double laplace_tolerance, int shift);
-    /// Compute (mu nu | mu nu)^{(1/2)}
-    void Compute_AO_Screen(std::shared_ptr<psi::BasisSet>& primary);
-    void Estimate_TransAO_Screen(std::shared_ptr<psi::BasisSet>& primary,
-                                 std::shared_ptr<psi::BasisSet>& auxiliary);
+    int vir_start() { return vir_start_; }
+
+    
+    AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_vir,
+                        double laplace_tolerance, int shift, int nfrozen, double vir_tol);
+
+    AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_act,
+                                         psi::SharedVector eps_vir, double laplace_tolerance,
+                                         int shift, int nfrozen, bool cavv, double vir_tol);
+
+    void Compute_Cholesky_Density();
+    void Compute_Cholesky_Pseudo_Density();
+    void Compute_Cholesky_Active_Density(psi::SharedMatrix RDM);
+    //void Householder_QR();
+    //void Compute_L_Directly();
 
     ~AtomicOrbitalHelper();
 };
