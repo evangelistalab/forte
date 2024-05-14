@@ -220,13 +220,6 @@ class ProcedureDSRG:
         self.dsrg_setup()
         e_dsrg = self.dsrg_solver.compute_energy()
 
-        ################
-        if self.options.get_bool('FULL_HBAR'):
-            Heff = self.dsrg_solver.compute_Heff_full()
-            Heff_dict = forte.Heff_dict(Heff)
-            print(Heff_dict)
-        ################
-
         psi4.core.set_scalar_variable("UNRELAXED ENERGY", e_dsrg)
 
         self.energies_environment[0] = {
@@ -365,6 +358,13 @@ class ProcedureDSRG:
             # don't read from cwd if checkpoint available
             self.dsrg_solver.set_read_cwd_amps(not self.restart_amps)
             e_dsrg = self.dsrg_solver.compute_energy()
+
+        ################
+        if self.options.get_bool('FULL_HBAR'):
+            Heff = self.dsrg_solver.compute_Heff_full()
+            Heff_dict = forte.Heff_dict(Heff)
+            np.savez('save_Hbar', **Heff_dict)
+        ################
 
         self.dsrg_cleanup()
 
