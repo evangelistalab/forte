@@ -48,6 +48,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute DSRG transformed Hamiltonian
     virtual std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
 
+    /// compute DSRG full transformed Hamiltonian
+    std::vector<ambit::BlockedTensor> compute_Heff_full();
+
     /// De-normal-order DSRG transformed dipole moment
     std::vector<DressedQuantity> deGNO_DMbar_actv();
 

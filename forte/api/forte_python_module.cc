@@ -262,6 +262,19 @@ PYBIND11_MODULE(_forte, m) {
         },
         "Return the cumulants of the RDMs in a spinorbital basis. Spinorbitals follow the ordering "
         "abab...");
+    m.def(
+        "Heff_dict",
+        [](std::vector<ambit::BlockedTensor> Heff) {
+            py::dict pyints;
+            for (const auto& int_ : Heff) {
+                auto labels = int_.block_labels();
+                for (const auto& label : labels) {
+                    pyints[py::str(label)] = ambit_to_np(int_.block(label));
+                }
+            }
+            return pyints;
+        },
+        "Return the full Heff in a dictionary");
 
     //     py::class_<AdaptiveCI, std::shared_ptr<AdaptiveCI>>(m, "ACI");
 
@@ -349,6 +362,8 @@ PYBIND11_MODULE(_forte, m) {
         .def("compute_gradient", &MASTER_DSRG::compute_gradient, "Compute the DSRG gradient")
         .def("compute_Heff_actv", &MASTER_DSRG::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals")
+        .def("compute_Heff_full", &MASTER_DSRG::compute_Heff_full,
+             "Return full transformed Hamiltonian")
         .def("deGNO_DMbar_actv", &MASTER_DSRG::deGNO_DMbar_actv,
              "Return the DSRG dressed dipole integrals")
         .def("nuclear_dipole", &MASTER_DSRG::nuclear_dipole,

@@ -688,6 +688,8 @@ def register_dsrg_options(options):
     options.add_bool("DO_WICKED", True, "Wick&d contraction") 
 
     options.add_bool("DO_EOM", False, "EOM-LDSRG(2).")
+    
+    options.add_bool("FULL_HBAR", False, "get full Hbar.")
 
     options.add_int("TAYLOR_THRESHOLD", 3, "DSRG Taylor expansion threshold for small denominator")
 

@@ -2282,4 +2282,9 @@ std::vector<std::string> MASTER_DSRG::re_two_labels() {
 
     return labels;
 }
+
+std::vector<ambit::BlockedTensor> MASTER_DSRG::compute_Heff_full() {
+    std::vector<ambit::BlockedTensor> Heff = {Hbar1_, Hbar2_};
+    return Heff;
+}
 } // namespace forte
