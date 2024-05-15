@@ -15,7 +15,7 @@ molecule {
   no_reorient
 }
 
-set globals {
+set {
    scf_type             out_of_core
    mcscf_e_convergence  8
    mcscf_r_convergence  6
@@ -32,15 +32,12 @@ refscf = energy('casscf')
 set scf_type direct
 
 set forte{
-   job_type             mcscf_two_step
    active_space_solver  fci
-   mcscf_g_convergence 1e-6
-   mcscf_e_convergence 1e-8
+   mcscf_g_convergence  1e-6
+   mcscf_e_convergence  1e-8
    restricted_docc      [2,0,0,0]
    active               [1,0,0,1]
-   int_type             conventional
 }
 e_casscf = energy('forte')
 
 compare_values(refcasscf, e_casscf, 6, "CASSCF ENERGY")
-
