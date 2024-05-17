@@ -58,8 +58,8 @@ class CINO : public OrbitalTransform {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    CINO(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-         std::shared_ptr<MOSpaceInfo> mo_space_info);
+    CINO(std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+         std::shared_ptr<Orbitals> orbitals, std::shared_ptr<ForteIntegrals> ints);
 
     /// Destructor
     ~CINO();

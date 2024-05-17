@@ -42,9 +42,9 @@ namespace forte {
 class MRPT2_NOS : public OrbitalTransform {
   public:
     // => Constructor <= //
-    MRPT2_NOS(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
-              std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-              std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MRPT2_NOS(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+              std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
+              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<RDMs> rdms);
 
     void compute_transformation();
 

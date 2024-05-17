@@ -28,21 +28,20 @@
 
 #pragma once
 
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/libmints/local.h"
-
-#include "base_classes/mo_space_info.h"
-#include "integrals/integrals.h"
-#include "base_classes/rdms.h"
-#include "iao_builder.h"
-
+namespace psi {
+class Matrix;
+} // namespace psi
 namespace forte {
+
+class MOSpaceInfo;
+class ForteOptions;
+class Orbitals;
 
 class UPDensity {
   public:
-    UPDensity(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-              std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Matrix> Ua,
-              std::shared_ptr<psi::Matrix> Ub);
+    UPDensity(std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+              std::shared_ptr<Orbitals> orbitals, std::shared_ptr<ForteIntegrals> ints,
+              std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub);
 
     ~UPDensity();
 
@@ -50,8 +49,9 @@ class UPDensity {
 
   private:
     std::shared_ptr<ForteOptions> options_;
-    std::shared_ptr<ForteIntegrals> ints_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+    std::shared_ptr<Orbitals> orbitals_;
+    std::shared_ptr<ForteIntegrals> ints_;
     std::shared_ptr<psi::Matrix> Uas_;
     std::shared_ptr<psi::Matrix> Ubs_;
 };

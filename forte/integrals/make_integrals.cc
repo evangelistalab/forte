@@ -46,7 +46,8 @@ namespace forte {
 std::shared_ptr<ForteIntegrals>
 make_forte_integrals_from_psi4(std::shared_ptr<psi::Wavefunction> ref_wfn,
                                std::shared_ptr<ForteOptions> options,
-                               std::shared_ptr<MOSpaceInfo> mo_space_info, std::string int_type) {
+                               std::shared_ptr<MOSpaceInfo> mo_space_info,
+                               std::shared_ptr<Orbitals> orbitals, std::string int_type) {
     timer int_timer("Integrals");
     std::shared_ptr<ForteIntegrals> ints;
     // passing int_type overrides the value of the option INT_TYPE
@@ -56,16 +57,16 @@ make_forte_integrals_from_psi4(std::shared_ptr<psi::Wavefunction> ref_wfn,
         int_type = options->get_str("INT_TYPE");
     }
     if (int_type == "CHOLESKY") {
-        ints = std::make_shared<CholeskyIntegrals>(options, ref_wfn, mo_space_info,
+        ints = std::make_shared<CholeskyIntegrals>(options, ref_wfn, mo_space_info, orbitals,
                                                    IntegralSpinRestriction::Restricted);
     } else if (int_type == "DF") {
-        ints = std::make_shared<DFIntegrals>(options, ref_wfn, mo_space_info,
+        ints = std::make_shared<DFIntegrals>(options, ref_wfn, mo_space_info, orbitals,
                                              IntegralSpinRestriction::Restricted);
     } else if (int_type == "DISKDF") {
-        ints = std::make_shared<DISKDFIntegrals>(options, ref_wfn, mo_space_info,
+        ints = std::make_shared<DISKDFIntegrals>(options, ref_wfn, mo_space_info, orbitals,
                                                  IntegralSpinRestriction::Restricted);
     } else if (int_type == "CONVENTIONAL") {
-        ints = std::make_shared<ConventionalIntegrals>(options, ref_wfn, mo_space_info,
+        ints = std::make_shared<ConventionalIntegrals>(options, ref_wfn, mo_space_info, orbitals,
                                                        IntegralSpinRestriction::Restricted);
     } else if (int_type == "DISTDF") {
 #ifdef HAVE_GA
@@ -86,13 +87,12 @@ make_forte_integrals_from_psi4(std::shared_ptr<psi::Wavefunction> ref_wfn,
     return ints;
 }
 
-std::shared_ptr<ForteIntegrals>
-make_custom_forte_integrals(std::shared_ptr<ForteOptions> options,
-                            std::shared_ptr<MOSpaceInfo> mo_space_info, double scalar,
-                            const std::vector<double>& oei_a, const std::vector<double>& oei_b,
-                            const std::vector<double>& tei_aa, const std::vector<double>& tei_ab,
-                            const std::vector<double>& tei_bb) {
-    return std::make_shared<CustomIntegrals>(options, mo_space_info,
+std::shared_ptr<ForteIntegrals> make_custom_forte_integrals(
+    std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+    std::shared_ptr<Orbitals> orbitals, double scalar, const std::vector<double>& oei_a,
+    const std::vector<double>& oei_b, const std::vector<double>& tei_aa,
+    const std::vector<double>& tei_ab, const std::vector<double>& tei_bb) {
+    return std::make_shared<CustomIntegrals>(options, mo_space_info, orbitals,
                                              IntegralSpinRestriction::Restricted, scalar, oei_a,
                                              oei_b, tei_aa, tei_ab, tei_bb);
 }

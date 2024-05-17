@@ -49,10 +49,11 @@ class CustomIntegrals : public ForteIntegrals {
     /// @param tei_ab the alpha-beta two-electron integrals in MO basis
     /// @param tei_bb the beta-beta two-electron integrals in MO basis
     CustomIntegrals(std::shared_ptr<ForteOptions> options,
-                    std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted,
-                    double scalar, const std::vector<double>& oei_a,
-                    const std::vector<double>& oei_b, const std::vector<double>& tei_aa,
-                    const std::vector<double>& tei_ab, const std::vector<double>& tei_bb);
+                    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
+                    IntegralSpinRestriction restricted, double scalar,
+                    const std::vector<double>& oei_a, const std::vector<double>& oei_b,
+                    const std::vector<double>& tei_aa, const std::vector<double>& tei_ab,
+                    const std::vector<double>& tei_bb);
 
     void initialize() override;
 
@@ -130,8 +131,7 @@ class CustomIntegrals : public ForteIntegrals {
                aptei_idx_ * r + s;
     }
 
-    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb,
-                         bool re_transform = true) override;
+    void update_orbitals(std::shared_ptr<Orbitals> orbitals, bool re_transform = true) override;
 
     // ==> Class private virtual functions <==
     void gather_integrals() override;

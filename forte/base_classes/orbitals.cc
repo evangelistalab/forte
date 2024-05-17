@@ -27,19 +27,51 @@
  */
 
 #include "psi4/libmints/wavefunction.h"
+#include "helpers/helpers.h"
 
 #include "orbitals.h"
 
 namespace forte {
-Orbitals::Orbitals(const std::shared_ptr<const psi::Wavefunction>& wfn, bool restricted) {
-    // Grab the MO coefficients from psi and enforce spin restriction if necessary
-    Ca_ = wfn->Ca()->clone();
-    Cb_ = restricted ? wfn->Ca()->clone() : wfn->Cb()->clone();
+
+Orbitals::Orbitals(const std::shared_ptr<psi::Matrix>& Ca, const std::shared_ptr<psi::Matrix>& Cb) {
+    Ca_ = Ca->clone();
+    Cb_ = Cb->clone();
 }
 
-std::unique_ptr<Orbitals> make_orbitals(const std::shared_ptr<const psi::Wavefunction>& wfn,
-                                        bool restricted) {
-    return std::make_unique<Orbitals>(wfn, restricted);
+const std::shared_ptr<psi::Matrix> Orbitals::Ca() const { return Ca_; }
+
+const std::shared_ptr<psi::Matrix> Orbitals::Cb() const { return Cb_; }
+
+void Orbitals::set(const std::shared_ptr<psi::Matrix>& Ca, const std::shared_ptr<psi::Matrix>& Cb) {
+    if (not(elementwise_compatible_matrices(Ca_, Ca) and
+            elementwise_compatible_matrices(Cb_, Cb))) {
+        throw std::runtime_error(
+            "Orbital::set: orbital coefficient matrices have different dimensions!");
+    }
+    Ca_ = Ca->clone();
+    Cb_ = Cb->clone();
+}
+
+void Orbitals::rotate(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub) {
+    // 1. Rotate the orbital coefficients and store them in the ForteIntegral object
+    auto Ca_rotated = psi::linalg::doublet(Ca_, Ua);
+    auto Cb_rotated = psi::linalg::doublet(Cb_, Ub);
+    Ca_->copy(Ca_rotated);
+    Cb_->copy(Cb_rotated);
+}
+
+void Orbitals::copy(const Orbitals& other) {
+    Ca_->copy(*other.Ca_);
+    Cb_->copy(*other.Cb_);
+}
+
+bool Orbitals::are_spin_restricted(double threshold) const {
+    return matrix_distance(Ca_, Cb_) < threshold;
+}
+
+std::unique_ptr<Orbitals>
+make_orbitals_from_psi(const std::shared_ptr<const psi::Wavefunction>& wfn, bool restricted) {
+    return std::make_unique<Orbitals>(wfn->Ca(), restricted ? wfn->Ca() : wfn->Cb());
 }
 
 } // namespace forte

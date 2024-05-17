@@ -46,10 +46,10 @@ using namespace psi;
 
 namespace forte {
 
-MRPT2_NOS::MRPT2_NOS(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
-                     std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(ints, mo_space_info), options_(options) {
+MRPT2_NOS::MRPT2_NOS(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+                     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
+                     std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<RDMs> rdms)
+    : OrbitalTransform(mo_space_info, orbitals, ints), options_(options) {
     mrpt2_ = std::make_shared<SA_MRPT2>(rdms, scf_info, options, ints, mo_space_info);
 }
 

@@ -57,10 +57,11 @@ MCSCF_2STEP::MCSCF_2STEP(std::shared_ptr<ActiveSpaceSolver> as_solver,
                          const std::map<StateInfo, std::vector<double>>& state_weights_map,
                          std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<MOSpaceInfo> mo_space_info,
+                         std::shared_ptr<Orbitals> orbitals,
                          std::shared_ptr<forte::SCFInfo> scf_info,
                          std::shared_ptr<ForteIntegrals> ints)
     : as_solver_(as_solver), state_weights_map_(state_weights_map), options_(options),
-      mo_space_info_(mo_space_info), scf_info_(scf_info), ints_(ints) {
+      mo_space_info_(mo_space_info), orbitals_(orbitals), scf_info_(scf_info), ints_(ints) {
     startup();
 }
 
@@ -81,7 +82,7 @@ void MCSCF_2STEP::read_options() {
     int_type_ = options_->get_str("INT_TYPE");
 
     der_type_ = options_->get_str("DERTYPE");
-    if (der_type_ == "FIRST" and ints_->integral_type() == Custom)
+    if (der_type_ == "FIRST" and ints_->integral_type() == IntegralType::Custom)
         throw std::runtime_error("MCSCF energy gradient not available for CUSTOM integrals!");
 
     maxiter_ = options_->get_int("MCSCF_MAXITER");
@@ -169,7 +170,7 @@ double MCSCF_2STEP::compute_energy() {
 
     // prepare for orbital gradients
     const bool freeze_core = options_->get_bool("MCSCF_FREEZE_CORE");
-    MCSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_, freeze_core);
+    MCSCF_ORB_GRAD cas_grad(options_, mo_space_info_, orbitals_, ints_, freeze_core);
     auto nrot = cas_grad.nrot();
     auto dG = std::make_shared<psi::Vector>("dG", nrot);
 
@@ -412,7 +413,7 @@ double MCSCF_2STEP::compute_energy() {
         diagonalize_hamiltonian(as_solver_, cas_grad.active_space_ints(),
                                 {print_, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
 
-    if (ints_->integral_type() != Custom) {
+    if (ints_->integral_type() != IntegralType::Custom) {
         auto final_orbs = options_->get_str("MCSCF_FINAL_ORBITAL");
 
         if (final_orbs != "UNSPECIFIED" or der_type_ == "FIRST") {
@@ -594,10 +595,10 @@ std::unique_ptr<MCSCF_2STEP>
 make_mcscf_two_step(std::shared_ptr<ActiveSpaceSolver> as_solver,
                     const std::map<StateInfo, std::vector<double>>& state_weight_map,
                     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-                    std::shared_ptr<MOSpaceInfo> mo_space_info,
+                    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
                     std::shared_ptr<ForteIntegrals> ints) {
     return std::make_unique<MCSCF_2STEP>(as_solver, state_weight_map, options, mo_space_info,
-                                         scf_info, ints);
+                                         orbitals, scf_info, ints);
 }
 
 } // namespace forte

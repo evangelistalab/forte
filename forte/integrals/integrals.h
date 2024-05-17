@@ -50,6 +50,7 @@ namespace forte {
 
 class ForteOptions;
 class MOSpaceInfo;
+class Orbitals;
 
 /**
  * @brief The IntegralSpinRestriction enum
@@ -63,7 +64,7 @@ enum class IntegralSpinRestriction { Restricted, Unrestricted };
  *
  * This decides the type of integral used in a Forte computation
  */
-enum IntegralType { Conventional, DF, Cholesky, DiskDF, DistDF, Custom };
+enum class IntegralType { Conventional, DF, Cholesky, DiskDF, DistDF, Custom };
 
 /**
  * @brief The order of three-index integrals when calling
@@ -71,7 +72,14 @@ enum IntegralType { Conventional, DF, Cholesky, DiskDF, DistDF, Custom };
  * In Forte, the auxiliary index is by default the first index (i.e., Qpq).
  * However, pqQ order is more convenient for implementing DF-MRPT2.
  */
-enum ThreeIntsBlockOrder { Qpq, pqQ };
+enum class ThreeIntsBlockOrder { Qpq, pqQ };
+
+/**
+ * @brief The type of density fitting basis
+ *
+ * This is used to distinguish between JK and RI density fitting basis sets
+ */
+enum class DFType { None, JK, RI };
 
 /**
  * @brief The ForteIntegrals class is a base class for transforming and storing MO integrals
@@ -115,8 +123,9 @@ class ForteIntegrals {
      */
     ForteIntegrals(std::shared_ptr<ForteOptions> options,
                    std::shared_ptr<psi::Wavefunction> ref_wfn,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
-                   IntegralSpinRestriction restricted);
+                   std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
+                   IntegralType integral_type, IntegralSpinRestriction restricted,
+                   DFType df_type = DFType::JK);
 
     /**
      * @brief Class constructor
@@ -125,8 +134,9 @@ class ForteIntegrals {
      * @param mo_space_info The MOSpaceInfo object
      */
     ForteIntegrals(std::shared_ptr<ForteOptions> options,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
-                   IntegralSpinRestriction restricted);
+                   std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
+                   IntegralType integral_type, IntegralSpinRestriction restricted,
+                   DFType df_type = DFType::JK);
 
     /// Virtual destructor to enable deletion of a Derived* through a Base*
     virtual ~ForteIntegrals() = default;
@@ -149,9 +159,7 @@ class ForteIntegrals {
     /// Use the function update_ints_if_needed to re-transform the integrals only if they changed.
     ///
     /// @return the coefficient matrix for the alpha orbitals used to transform the integrals
-    std::shared_ptr<const psi::Matrix> Ca() const;
-    /// Return Cb
-    std::shared_ptr<const psi::Matrix> Cb() const;
+    std::shared_ptr<Orbitals> orbitals() const;
 
     /// Return nuclear repulsion energy
     double nuclear_repulsion_energy() const;
@@ -263,10 +271,10 @@ class ForteIntegrals {
                                          const std::vector<size_t>& s) = 0;
 
     // Three-index integral functions (DF, Cholesky)
-    virtual ambit::Tensor three_integral_block(const std::vector<size_t>&,
-                                               const std::vector<size_t>&,
-                                               const std::vector<size_t>&,
-                                               ThreeIntsBlockOrder order = Qpq);
+    virtual ambit::Tensor
+    three_integral_block(const std::vector<size_t>&, const std::vector<size_t>&,
+                         const std::vector<size_t>&,
+                         ThreeIntsBlockOrder order = ThreeIntsBlockOrder::Qpq);
 
     /// This function is only used by DiskDF and it is used to go from a Apq->Aq tensor
     virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
@@ -349,17 +357,15 @@ class ForteIntegrals {
     /// Rotate the MO coefficients, update psi::Wavefunction, and re-transform integrals
     /// @param Ua the alpha unitary transformation matrix
     /// @param Ub the beta unitary transformation matrix
-    /// @param re_transform re-transform integrals if true
+    /// @param re_transform if true, re-transform integrals, otherwise just update MOs
     void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub,
                          bool re_transform = true);
 
-    /// Copy these MO coeffs to class variables, update psi::Wavefunction, and re-transform
+    /// Copy the orbital object to class variables, update psi::Wavefunction, and re-transform
     /// integrals
-    /// @param Ca the alpha MO coefficients
-    /// @param Cb the beta MO coefficients
+    /// @param orbitals the new orbitals
     /// @param re_transform re-transform integrals if true
-    virtual void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb,
-                                 bool re_transform = true);
+    virtual void update_orbitals(std::shared_ptr<Orbitals> orbitals, bool re_transform = true);
 
     /// Update the integrals if the MO coefficients have changed but the integrals were not
     /// re-transformed
@@ -418,6 +424,9 @@ class ForteIntegrals {
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
+    /// The orbitals object
+    std::shared_ptr<Orbitals> orbitals_;
+
     /// The Wavefunction object
     std::shared_ptr<psi::Wavefunction> wfn_;
 
@@ -427,11 +436,8 @@ class ForteIntegrals {
     /// Are we doing a spin-restricted computation?
     IntegralSpinRestriction spin_restriction_;
 
-    // Ca matrix from psi
-    std::shared_ptr<psi::Matrix> Ca_;
-
-    // Cb matrix from psi
-    std::shared_ptr<psi::Matrix> Cb_;
+    /// The type of density fitting basis
+    DFType df_type_;
 
     // AO overlap matrix from psi
     std::shared_ptr<psi::Matrix> S_;
@@ -586,8 +592,8 @@ class ForteIntegrals {
 class Psi4Integrals : public ForteIntegrals {
   public:
     Psi4Integrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
-                  std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
-                  IntegralSpinRestriction restricted);
+                  std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
+                  IntegralType integral_type, IntegralSpinRestriction restricted);
 
     /// Make the generalized Fock matrix using Psi4 JK object
     void make_fock_matrix(ambit::Tensor Da, ambit::Tensor Db) override;
@@ -623,8 +629,7 @@ class Psi4Integrals : public ForteIntegrals {
     void setup_psi4_ints();
     void transform_one_electron_integrals();
     void compute_frozen_one_body_operator() override;
-    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb,
-                         bool re_transform = true) override;
+    void update_orbitals(std::shared_ptr<Orbitals> orbitals, bool re_transform = true) override;
     void rotate_mos() override;
 
     /// Build AO dipole and quadrupole integrals

@@ -122,6 +122,93 @@ std::vector<double> Vector_to_vector_double(const psi::Vector& v) {
     return v_double;
 }
 
+ambit::Tensor matrix_to_tensor(const std::shared_ptr<psi::Matrix>& m, const std::string& label) {
+    auto nirrep = m->nirrep();
+    auto rowspi = m->rowspi();
+    auto colspi = m->colspi();
+    auto nrows = static_cast<size_t>(rowspi.sum());
+    auto ncols = static_cast<size_t>(colspi.sum());
+    auto T = ambit::Tensor::build(ambit::CoreTensor, label, {nrows, ncols});
+    auto& T_data = T.data();
+
+    size_t row_offset = 0;
+    size_t col_offset = 0;
+
+    for (int h = 0; h < nirrep; ++h) {
+        for (int p = 0; p < rowspi[h]; ++p) {
+            for (int q = 0; q < colspi[h]; ++q) {
+                size_t p_full = p + row_offset;
+                size_t q_full = q + col_offset;
+                T_data[p_full * ncols + q_full] = m->get(h, p, q);
+            }
+        }
+        row_offset += rowspi[h];
+        col_offset += rowspi[h];
+    }
+    return T;
+}
+
+ambit::Tensor matrix_to_tensor(const std::shared_ptr<const psi::Matrix>& m,
+                               const std::string& label) {
+    auto nirrep = m->nirrep();
+    auto rowspi = m->rowspi();
+    auto colspi = m->colspi();
+    auto nrows = static_cast<size_t>(rowspi.sum());
+    auto ncols = static_cast<size_t>(colspi.sum());
+    auto T = ambit::Tensor::build(ambit::CoreTensor, label, {nrows, ncols});
+    auto& T_data = T.data();
+
+    size_t row_offset = 0;
+    size_t col_offset = 0;
+
+    for (int h = 0; h < nirrep; ++h) {
+        for (int p = 0; p < rowspi[h]; ++p) {
+            for (int q = 0; q < colspi[h]; ++q) {
+                size_t p_full = p + row_offset;
+                size_t q_full = q + col_offset;
+                T_data[p_full * ncols + q_full] = m->get(h, p, q);
+            }
+        }
+        row_offset += rowspi[h];
+        col_offset += rowspi[h];
+    }
+    return T;
+}
+
+bool elementwise_compatible_matrices(const std::shared_ptr<psi::Matrix>& A,
+                                     const std::shared_ptr<psi::Matrix>& B) {
+    if (A->nirrep() != B->nirrep()) {
+        return false;
+    }
+    for (int h = 0; h < A->nirrep(); ++h) {
+        if (A->rowspi()[h] != B->rowspi()[h] or A->colspi()[h] != B->colspi()[h]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+double matrix_distance(const std::shared_ptr<psi::Matrix>& A, const std::shared_ptr<psi::Matrix>& B,
+                       int p) {
+    if (not elementwise_compatible_matrices(A, B)) {
+        throw std::runtime_error("Matrix distance: Matrices have different dimensions!");
+    }
+
+    auto A_minus_B = A->clone();
+    A_minus_B->subtract(B);
+    double result{0.0};
+    // If p is -1, we calculate the infinity norm
+    if (p == -1) {
+        result = A_minus_B->absmax();
+    } else if (p == 2) {
+        result = A_minus_B->rms();
+    } else {
+        std::runtime_error(
+            "Matrix distance: Invalid norm! Only 2-norm and infinity norm are supported.");
+    }
+    return result;
+}
+
 std::pair<double, std::string> to_xb(size_t nele, size_t type_size) {
     if (nele == 0)
         return {0.0, "B"};
@@ -258,7 +345,8 @@ std::vector<std::tuple<int, size_t, size_t>> find_integer_groups(const std::vect
     return groups;
 }
 
-// void view_modified_orbitals(psi::SharedWavefunction wfn, const std::shared_ptr<psi::Matrix>& Ca,
+// void view_modified_orbitals(psi::SharedWavefunction wfn, const std::shared_ptr<psi::Matrix>&
+// Ca,
 //                             const std::shared_ptr<Vector>& diag_F,
 //                             const std::shared_ptr<Vector>& occupation) {
 //     std::shared_ptr<MoldenWriter> molden(new MoldenWriter(wfn));

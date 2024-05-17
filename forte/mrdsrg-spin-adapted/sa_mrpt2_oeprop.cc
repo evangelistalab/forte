@@ -268,9 +268,11 @@ void SA_MRPT2::compute_1rdm_cc_CCVV_DF(ambit::BlockedTensor& D1) {
         auto c_nvir = c_batch_vir_mos.size();
         ambit::Tensor Bc; // ckQ
         if (Bcv_file_exist)
-            Bc = read_Bcanonical("vc", {c_shift, c_shift + c_nvir}, {0, nc}, pqQ);
+            Bc = read_Bcanonical("vc", {c_shift, c_shift + c_nvir}, {0, nc},
+                                 ThreeIntsBlockOrder::pqQ);
         else
-            Bc = ints_->three_integral_block(aux_mos_, c_batch_vir_mos, core_mos_, pqQ);
+            Bc = ints_->three_integral_block(aux_mos_, c_batch_vir_mos, core_mos_,
+                                             ThreeIntsBlockOrder::pqQ);
         auto& Bc_data = Bc.data();
 
         for (size_t d_batch = c_batch, d_shift = c_shift; d_batch < nbatches; ++d_batch) {
@@ -282,9 +284,11 @@ void SA_MRPT2::compute_1rdm_cc_CCVV_DF(ambit::BlockedTensor& D1) {
             } else {
                 ambit::Tensor Bd; // dlQ
                 if (Bcv_file_exist)
-                    Bd = read_Bcanonical("vc", {d_shift, d_shift + d_nvir}, {0, nc}, pqQ);
+                    Bd = read_Bcanonical("vc", {d_shift, d_shift + d_nvir}, {0, nc},
+                                         ThreeIntsBlockOrder::pqQ);
                 else
-                    Bd = ints_->three_integral_block(aux_mos_, d_batch_vir_mos, core_mos_, pqQ);
+                    Bd = ints_->three_integral_block(aux_mos_, d_batch_vir_mos, core_mos_,
+                                                     ThreeIntsBlockOrder::pqQ);
             }
             auto& Bd_data = Bd.data();
 
@@ -433,9 +437,11 @@ void SA_MRPT2::compute_1rdm_vv_CCVV_DF(ambit::BlockedTensor& D1) {
         auto i_nocc = i_batch_occ_mos.size();
         ambit::Tensor Bi; // iaQ
         if (Bcv_file_exist)
-            Bi = read_Bcanonical("cv", {i_shift, i_shift + i_nocc}, {0, nv}, pqQ);
+            Bi = read_Bcanonical("cv", {i_shift, i_shift + i_nocc}, {0, nv},
+                                 ThreeIntsBlockOrder::pqQ);
         else
-            Bi = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, virt_mos_, pqQ);
+            Bi = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, virt_mos_,
+                                             ThreeIntsBlockOrder::pqQ);
         auto& Bi_data = Bi.data();
 
         for (size_t j_batch = i_batch, j_shift = i_shift; j_batch < nbatches; ++j_batch) {
@@ -446,9 +452,11 @@ void SA_MRPT2::compute_1rdm_vv_CCVV_DF(ambit::BlockedTensor& D1) {
                 Bj = Bi;
             } else {
                 if (Bcv_file_exist)
-                    Bj = read_Bcanonical("cv", {j_shift, j_shift + j_nocc}, {0, nv}, pqQ);
+                    Bj = read_Bcanonical("cv", {j_shift, j_shift + j_nocc}, {0, nv},
+                                         ThreeIntsBlockOrder::pqQ);
                 else
-                    Bj = ints_->three_integral_block(aux_mos_, j_batch_occ_mos, virt_mos_, pqQ);
+                    Bj = ints_->three_integral_block(aux_mos_, j_batch_occ_mos, virt_mos_,
+                                                     ThreeIntsBlockOrder::pqQ);
             }
             auto& Bj_data = Bj.data();
 
@@ -640,9 +648,9 @@ void SA_MRPT2::compute_1rdm_cc_CCAV_DF(ambit::BlockedTensor& D1,
     // 3-index integrals (P|mv)
     ambit::Tensor Bmv; // vmQ
     if (!semi_c or !semi_a)
-        Bmv = read_Bcanonical("ac", {0, na}, {0, nc}, pqQ);
+        Bmv = read_Bcanonical("ac", {0, na}, {0, nc}, ThreeIntsBlockOrder::pqQ);
     else
-        Bmv = ints_->three_integral_block(aux_mos_, actv_mos_, core_mos_, pqQ);
+        Bmv = ints_->three_integral_block(aux_mos_, actv_mos_, core_mos_, ThreeIntsBlockOrder::pqQ);
     auto& Bu_data = Bmv.data();
 
     for (size_t c_batch = 0, c_shift = 0; c_batch < nbatches; ++c_batch) {
@@ -650,9 +658,11 @@ void SA_MRPT2::compute_1rdm_cc_CCAV_DF(ambit::BlockedTensor& D1,
         auto c_nvir = c_batch_vir_mos.size();
         ambit::Tensor Bc; // aiQ
         if (!semi_c or !semi_v)
-            Bc = read_Bcanonical("vc", {c_shift, c_shift + c_nvir}, {0, nc}, pqQ);
+            Bc = read_Bcanonical("vc", {c_shift, c_shift + c_nvir}, {0, nc},
+                                 ThreeIntsBlockOrder::pqQ);
         else
-            Bc = ints_->three_integral_block(aux_mos_, c_batch_vir_mos, core_mos_, pqQ);
+            Bc = ints_->three_integral_block(aux_mos_, c_batch_vir_mos, core_mos_,
+                                             ThreeIntsBlockOrder::pqQ);
         auto& Bc_data = Bc.data();
 
 #pragma omp parallel for num_threads(nthreads)
@@ -851,9 +861,9 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
     // 3-index integrals (P|mv)
     ambit::Tensor Bmv; // mvQ
     if (!semi_c or !semi_a)
-        Bmv = read_Bcanonical("ca", {0, nc}, {0, na}, pqQ);
+        Bmv = read_Bcanonical("ca", {0, nc}, {0, na}, ThreeIntsBlockOrder::pqQ);
     else
-        Bmv = ints_->three_integral_block(aux_mos_, core_mos_, actv_mos_, pqQ);
+        Bmv = ints_->three_integral_block(aux_mos_, core_mos_, actv_mos_, ThreeIntsBlockOrder::pqQ);
     auto& Bu_data = Bmv.data();
 
     for (size_t i_batch = 0, i_shift = 0; i_batch < nbatches; ++i_batch) {
@@ -861,9 +871,11 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
         auto i_nocc = i_batch_occ_mos.size();
         ambit::Tensor Bi; // iaQ
         if (!semi_c or !semi_v)
-            Bi = read_Bcanonical("cv", {i_shift, i_shift + i_nocc}, {0, nv}, pqQ);
+            Bi = read_Bcanonical("cv", {i_shift, i_shift + i_nocc}, {0, nv},
+                                 ThreeIntsBlockOrder::pqQ);
         else
-            Bi = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, virt_mos_, pqQ);
+            Bi = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, virt_mos_,
+                                             ThreeIntsBlockOrder::pqQ);
         auto& Bi_data = Bi.data();
 
         for (size_t j_batch = i_batch, j_shift = i_shift; j_batch < nbatches; ++j_batch) {
@@ -874,9 +886,11 @@ void SA_MRPT2::compute_1rdm_aa_vv_CCAV_DF(ambit::BlockedTensor& D1,
                 Bj = Bi;
             } else {
                 if (!semi_c or !semi_v)
-                    Bj = read_Bcanonical("cv", {j_shift, j_shift + j_nocc}, {0, nv}, pqQ);
+                    Bj = read_Bcanonical("cv", {j_shift, j_shift + j_nocc}, {0, nv},
+                                         ThreeIntsBlockOrder::pqQ);
                 else
-                    Bj = ints_->three_integral_block(aux_mos_, j_batch_occ_mos, virt_mos_, pqQ);
+                    Bj = ints_->three_integral_block(aux_mos_, j_batch_occ_mos, virt_mos_,
+                                                     ThreeIntsBlockOrder::pqQ);
             }
             auto& Bj_data = Bj.data();
 
@@ -1130,9 +1144,9 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
     // 3-index integrals (P|mv)
     ambit::Tensor Beu; // euQ
     if (!semi_a or !semi_v)
-        Beu = read_Bcanonical("va", {0, nv}, {0, na}, pqQ);
+        Beu = read_Bcanonical("va", {0, nv}, {0, na}, ThreeIntsBlockOrder::pqQ);
     else
-        Beu = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_, pqQ);
+        Beu = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_, ThreeIntsBlockOrder::pqQ);
     auto& Bu_data = Beu.data();
 
     for (size_t c_batch = 0, c_shift = 0; c_batch < nbatches; ++c_batch) {
@@ -1140,9 +1154,11 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
         auto c_nvir = c_batch_vir_mos.size();
         ambit::Tensor Bc; // ckQ
         if (!semi_c or !semi_v)
-            Bc = read_Bcanonical("vc", {c_shift, c_shift + c_nvir}, {0, nc}, pqQ);
+            Bc = read_Bcanonical("vc", {c_shift, c_shift + c_nvir}, {0, nc},
+                                 ThreeIntsBlockOrder::pqQ);
         else
-            Bc = ints_->three_integral_block(aux_mos_, c_batch_vir_mos, core_mos_, pqQ);
+            Bc = ints_->three_integral_block(aux_mos_, c_batch_vir_mos, core_mos_,
+                                             ThreeIntsBlockOrder::pqQ);
         auto& Bc_data = Bc.data();
 
         for (size_t d_batch = c_batch, d_shift = c_shift; d_batch < nbatches; ++d_batch) {
@@ -1153,9 +1169,11 @@ void SA_MRPT2::compute_1rdm_cc_aa_CAVV_DF(ambit::BlockedTensor& D1,
                 Bd = Bc;
             } else {
                 if (!semi_c or !semi_v)
-                    Bd = read_Bcanonical("vc", {d_shift, d_shift + d_nvir}, {0, nc}, pqQ);
+                    Bd = read_Bcanonical("vc", {d_shift, d_shift + d_nvir}, {0, nc},
+                                         ThreeIntsBlockOrder::pqQ);
                 else
-                    Bd = ints_->three_integral_block(aux_mos_, d_batch_vir_mos, core_mos_, pqQ);
+                    Bd = ints_->three_integral_block(aux_mos_, d_batch_vir_mos, core_mos_,
+                                                     ThreeIntsBlockOrder::pqQ);
             }
             auto& Bd_data = Bd.data();
 
@@ -1394,9 +1412,9 @@ void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
     // 3-index integrals (P|eu)
     ambit::Tensor Beu; // euQ
     if (!semi_a or !semi_v)
-        Beu = read_Bcanonical("va", {0, nv}, {0, na}, pqQ);
+        Beu = read_Bcanonical("va", {0, nv}, {0, na}, ThreeIntsBlockOrder::pqQ);
     else
-        Beu = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_, pqQ);
+        Beu = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_, ThreeIntsBlockOrder::pqQ);
     auto& Bu_data = Beu.data();
 
     for (size_t i_batch = 0, i_shift = 0; i_batch < nbatches; ++i_batch) {
@@ -1404,9 +1422,11 @@ void SA_MRPT2::compute_1rdm_vv_CAVV_DF(ambit::BlockedTensor& D1,
         auto i_nocc = i_batch_occ_mos.size();
         ambit::Tensor Bi; // iaQ
         if (!semi_c or !semi_v)
-            Bi = read_Bcanonical("cv", {i_shift, i_shift + i_nocc}, {0, nv}, pqQ);
+            Bi = read_Bcanonical("cv", {i_shift, i_shift + i_nocc}, {0, nv},
+                                 ThreeIntsBlockOrder::pqQ);
         else
-            Bi = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, virt_mos_, pqQ);
+            Bi = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, virt_mos_,
+                                             ThreeIntsBlockOrder::pqQ);
         auto& Bi_data = Bi.data();
 
         // index pairs of i and c

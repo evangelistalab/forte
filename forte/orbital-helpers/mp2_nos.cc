@@ -61,8 +61,9 @@ using namespace psi;
 namespace forte {
 
 MP2_NOS::MP2_NOS(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-                 std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(ints, mo_space_info), scf_info_(scf_info), options_(options) {}
+                 std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
+                 std::shared_ptr<ForteIntegrals> ints)
+    : OrbitalTransform(mo_space_info, orbitals, ints), scf_info_(scf_info), options_(options) {}
 
 void MP2_NOS::compute_transformation() {
     print_method_banner(

@@ -42,7 +42,8 @@ class MRCINO : public OrbitalTransform {
     // ==> Class Constructor and Destructor <==
 
     MRCINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-           std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+           std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
+           std::shared_ptr<ForteIntegrals> ints);
 
     /// Destructor
     ~MRCINO();

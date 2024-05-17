@@ -70,7 +70,7 @@ class SADSRG : public DynamicCorrelationSolver {
     void set_Uactv(ambit::Tensor& U);
 
     /// If the amplitudes are converged or not
-    bool converged() {return converged_; }
+    bool converged() { return converged_; }
 
   protected:
     /// Startup function called in constructor
@@ -308,7 +308,7 @@ class SADSRG : public DynamicCorrelationSolver {
     ambit::Tensor read_Bcanonical(const std::string& block,
                                   const std::pair<size_t, size_t>& mos1_range,
                                   const std::pair<size_t, size_t>& mos2_range,
-                                  ThreeIntsBlockOrder order = Qpq);
+                                  ThreeIntsBlockOrder order = ThreeIntsBlockOrder::Qpq);
     /// File names for canonicalized 3-index integrals
     std::unordered_map<std::string, std::string> Bcan_files_;
 

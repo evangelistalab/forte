@@ -57,7 +57,7 @@ void SA_DSRGPT::print_options() {
         {"Taylor expansion threshold", std::pow(10.0, -double(taylor_threshold_))},
         {"Intruder amplitudes threshold", intruder_tamp_}};
 
-    if (ints_->integral_type() == Cholesky) {
+    if (ints_->integral_type() == IntegralType::Cholesky) {
         auto cholesky_threshold = foptions_->get_double("CHOLESKY_TOLERANCE");
         calculation_info_double.push_back({"Cholesky tolerance", cholesky_threshold});
     }

@@ -3,14 +3,15 @@ from dataclasses import dataclass, field
 from psi4.core import Wavefunction, Molecule
 
 from ._forte import (
-    ForteOptions,
-    SCFInfo,
-    MOSpaceInfo,
-    ForteIntegrals,
     ActiveSpaceIntegrals,
-    StateInfo,
     ActiveSpaceSolver,
+    ForteOptions,
+    ForteIntegrals,
+    MOSpaceInfo,
+    Orbitals,
     RDMs,
+    SCFInfo,
+    StateInfo,
     Symmetry,
 )
 from forte import Model, Results
@@ -34,6 +35,8 @@ class ForteData:
         The model object.
     scf_info: SCFInfo
         The SCF information.
+    orbitals: Orbitals
+        The molecular orbitals.
     mo_space_info: MOSpaceInfo
         The molecular orbital space information.
     ints: ForteIntegrals
@@ -54,6 +57,7 @@ class ForteData:
     molecule: Molecule = None
     model: Model = None
     scf_info: SCFInfo = None
+    orbitals: Orbitals = None
     mo_space_info: MOSpaceInfo = None
     ints: ForteIntegrals = None
     as_ints: ActiveSpaceIntegrals = None

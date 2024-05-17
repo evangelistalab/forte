@@ -69,7 +69,8 @@ make_hamiltonian_matrix(const std::vector<Determinant>& dets,
     auto H = std::make_shared<psi::Matrix>("H", n, n);
 
     // If we are running DiskDF then we need to revert to a single thread loop
-    auto threads = (as_ints->get_integral_type() == DiskDF) ? 1 : omp_get_max_threads();
+    auto threads =
+        (as_ints->get_integral_type() == IntegralType::DiskDF) ? 1 : omp_get_max_threads();
 
 #pragma omp parallel for schedule(dynamic) num_threads(threads)
     for (size_t I = 0; I < n; I++) {

@@ -58,8 +58,9 @@ namespace forte {
 DISKDFIntegrals::DISKDFIntegrals(std::shared_ptr<ForteOptions> options,
                                  std::shared_ptr<psi::Wavefunction> ref_wfn,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                 std::shared_ptr<Orbitals> orbitals,
                                  IntegralSpinRestriction restricted)
-    : Psi4Integrals(options, ref_wfn, mo_space_info, DiskDF, restricted) {
+    : Psi4Integrals(options, ref_wfn, mo_space_info, orbitals, IntegralType::DiskDF, restricted) {
     initialize();
 }
 
@@ -301,7 +302,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
     auto Qqsize = Qsize * qsize;
 
     ambit::Tensor out;
-    if (order == pqQ) {
+    if (order == ThreeIntsBlockOrder::pqQ) {
         out = ambit::Tensor::build(tensor_type_, "Return", {psize, qsize, Qsize});
     } else {
         out = ambit::Tensor::build(tensor_type_, "Return", {Qsize, psize, qsize});
@@ -363,12 +364,12 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
         std::vector<size_t> q_range{cmotomo[q_vec[0]], cmotomo[q_vec[0]] + qsize};
 
         df_->fill_tensor("B", out_data.data(), Q_range, p_range, q_range);
-        if (order == pqQ)
+        if (order == ThreeIntsBlockOrder::pqQ)
             matrix_transpose_in_place(out_data, Qsize, pqsize);
     } else if ((not p_contiguous) and q_contiguous) {
         std::vector<size_t> q_range{cmotomo[q_vec[0]], cmotomo[q_vec[0]] + qsize};
 
-        if (order == pqQ) {
+        if (order == ThreeIntsBlockOrder::pqQ) {
             for (size_t p = 0; p < psize; ++p) {
                 auto np = cmotomo[p_vec[p]];
                 auto Aq = std::make_shared<psi::Matrix>("Aq", Qsize, qsize);
@@ -396,7 +397,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
     } else if (p_contiguous and (not q_contiguous)) {
         std::vector<size_t> p_range{cmotomo[p_vec[0]], cmotomo[p_vec[0]] + psize};
 
-        if (order == pqQ) {
+        if (order == ThreeIntsBlockOrder::pqQ) {
             for (size_t q = 0; q < qsize; ++q) {
                 auto nq = cmotomo[q_vec[q]];
                 auto Ap = std::make_shared<psi::Matrix>("Ap", Qsize, psize);
@@ -441,7 +442,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
             }
 
             if (psize < qsize) {
-                if (order == pqQ) {
+                if (order == ThreeIntsBlockOrder::pqQ) {
                     for (size_t i = 0; i < batches[n]; ++i) {
                         for (size_t a = 0; a < Qsize; ++a) {
                             for (size_t q = 0; q < qsize; ++q) {
@@ -461,7 +462,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
                     }
                 }
             } else {
-                if (order == pqQ) {
+                if (order == ThreeIntsBlockOrder::pqQ) {
                     for (size_t i = 0; i < batches[n]; ++i) {
                         for (size_t a = 0; a < Qsize; ++a) {
                             for (size_t p = 0; p < psize; ++p) {

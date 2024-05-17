@@ -42,13 +42,26 @@ namespace forte {
 class Orbitals {
   public:
     // ==> Class Constructor <==
-    Orbitals(const std::shared_ptr<const psi::Wavefunction>& wfn, bool restricted);
+    Orbitals(const std::shared_ptr<psi::Matrix>& Ca, const std::shared_ptr<psi::Matrix>& Cb);
 
     // ==> Class Methods <==
     /// @return The alpha orbital coefficient matrix
-    const std::shared_ptr<const psi::Matrix> Ca() const { return Ca_; }
+    const std::shared_ptr<psi::Matrix> Ca() const;
     /// @return The beta orbital coefficient matrix
-    const std::shared_ptr<const psi::Matrix> Cb() const { return Cb_; }
+    const std::shared_ptr<psi::Matrix> Cb() const;
+
+    void set(const std::shared_ptr<psi::Matrix>& Ca, const std::shared_ptr<psi::Matrix>& Cb);
+
+    /// @brief Rotate the orbitals using the given transformation matrices
+    /// The orbital coefficients are rotated according to the following formula:
+    /// C(new) = C(old) U
+    /// @param Ua Alpha orbital transformation matrix
+    /// @param Ub Beta orbital transformation matrix
+    void rotate(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub);
+
+    void copy(const Orbitals& other);
+
+    bool are_spin_restricted(double threshold = 1.0e-8) const;
 
   private:
     // ==> Class Data <==
@@ -58,7 +71,7 @@ class Orbitals {
     std::shared_ptr<psi::Matrix> Cb_;
 };
 
-std::unique_ptr<Orbitals> make_orbitals(const std::shared_ptr<const psi::Wavefunction>& wfn,
-                                        bool restricted);
+std::unique_ptr<Orbitals>
+make_orbitals_from_psi(const std::shared_ptr<const psi::Wavefunction>& wfn, bool restricted);
 
 } // namespace forte

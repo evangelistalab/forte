@@ -50,6 +50,7 @@
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
 #include "base_classes/rdms.h"
+#include "base_classes/orbitals.h"
 
 #include "mcscf/mcscf_orb_grad.h"
 
@@ -59,9 +60,11 @@ using namespace ambit;
 namespace forte {
 
 MCSCF_ORB_GRAD::MCSCF_ORB_GRAD(std::shared_ptr<ForteOptions> options,
-                                 std::shared_ptr<MOSpaceInfo> mo_space_info,
-                                 std::shared_ptr<ForteIntegrals> ints, bool freeze_core)
-    : options_(options), mo_space_info_(mo_space_info), ints_(ints), freeze_core_(freeze_core) {
+                               std::shared_ptr<MOSpaceInfo> mo_space_info,
+                               std::shared_ptr<Orbitals> orbitals,
+                               std::shared_ptr<ForteIntegrals> ints, bool freeze_core)
+    : options_(options), mo_space_info_(mo_space_info), orbitals_(orbitals), ints_(ints),
+      freeze_core_(freeze_core) {
     startup();
 }
 
@@ -406,9 +409,9 @@ void MCSCF_ORB_GRAD::nonredundant_pairs() {
 
 void MCSCF_ORB_GRAD::init_tensors() {
     // save a copy of initial MO
-    C0_ = ints_->Ca()->clone();
+    C0_ = orbitals_->Ca()->clone();
     C0_->set_name("MCSCF Initial Orbital Coefficients");
-    C_ = ints_->Ca()->clone();
+    C_ = orbitals_->Ca()->clone();
     C_->set_name("MCSCF Orbital Coefficients");
 
     // Fock matrices
@@ -453,7 +456,7 @@ void MCSCF_ORB_GRAD::build_mo_integrals() {
     // form closed-shell Fock matrix
     build_fock_inactive();
     // form the MO 2e-integrals
-    if (ints_->integral_type() == Custom) {
+    if (ints_->integral_type() == IntegralType::Custom) {
         fill_tei_custom(V_);
     } else {
         build_tei_from_ao();
@@ -693,7 +696,7 @@ std::shared_ptr<psi::Matrix> MCSCF_ORB_GRAD::fock(std::shared_ptr<RDMs> rdms) {
 }
 
 double MCSCF_ORB_GRAD::evaluate(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> g,
-                                 bool do_g) {
+                                bool do_g) {
     // if need to update orbitals and integrals
     if (update_orbitals(x)) {
         build_mo_integrals();
@@ -748,15 +751,20 @@ bool MCSCF_ORB_GRAD::update_orbitals(std::shared_ptr<psi::Vector> x) {
     U_ = psi::linalg::doublet(U_, dU, false, false);
     U_->set_name("Orthogonal Transformation");
 
-    // update orbitals
+    // update local orbitals
     C_->gemm(false, false, 1.0, C0_, U_, 0.0);
-    if (ints_->integral_type() == Custom) {
-        ints_->update_orbitals(C_, C_);
-    } else {
-        // here we push the new orbitals to the integrals object but do not update the integrals
-        // for efficiency
-        ints_->update_orbitals(C_, C_, false);
-    }
+
+    // update orbital object
+    orbitals_->set(C_, C_);
+    // update integrals object. Except for custom integrals, we update the integrals
+    // object with the new orbitals but do not update the integrals for efficiency
+    ints_->update_orbitals(orbitals_, ints_->integral_type() != IntegralType::Custom);
+    // if (ints_->integral_type() != Custom) {
+    //     ints_->update_orbitals(orbitals_);
+    // } else {
+    //     // here we push the new orbitals to the integrals object but do not update the integrals
+    //     // for efficiency
+    // }
 
     // printing
     if (debug_print_) {
@@ -812,7 +820,7 @@ std::shared_ptr<psi::Matrix> MCSCF_ORB_GRAD::cayley_trans(const std::shared_ptr<
 
 std::vector<std::tuple<int, int, int>>
 MCSCF_ORB_GRAD::test_orbital_rotations(const std::shared_ptr<psi::Matrix>& U,
-                                        const std::string& warning_msg) {
+                                       const std::string& warning_msg) {
     // the overlap between new and old orbitals is simply U
     // O = Cold^T S Cnew = Cold^T S Cold U = U
     // MOM projection index: Pj = sum_{i}^{actv} O_ij
@@ -900,7 +908,7 @@ void MCSCF_ORB_GRAD::compute_orbital_grad() {
 }
 
 void MCSCF_ORB_GRAD::hess_diag(std::shared_ptr<psi::Vector>,
-                                const std::shared_ptr<psi::Vector>& h0) {
+                               const std::shared_ptr<psi::Vector>& h0) {
     compute_orbital_hess_diag();
     h0->copy(*hess_diag_);
 }
@@ -1006,7 +1014,7 @@ void MCSCF_ORB_GRAD::compute_orbital_hess_diag() {
 }
 
 void MCSCF_ORB_GRAD::reshape_rot_ambit(ambit::BlockedTensor bt,
-                                        const std::shared_ptr<psi::Vector>& sv) {
+                                       const std::shared_ptr<psi::Vector>& sv) {
     size_t vec_size = sv->dimpi().sum();
     if (vec_size != nrot_) {
         throw std::runtime_error(
@@ -1084,11 +1092,11 @@ void MCSCF_ORB_GRAD::canonicalize_final(const std::shared_ptr<psi::Matrix>& U) {
 
     C_->gemm(false, false, 1.0, C0_, U_, 0.0);
 
-    if (ints_->integral_type() == Custom) {
-        ints_->update_orbitals(C_, C_);
-    } else {
-        ints_->update_orbitals(C_, C_, false);
-    }
+    // update orbital object
+    orbitals_->set(C_, C_);
+    // update integrals object. Except for custom integrals, we update the integrals
+    // object with the new orbitals but do not update the integrals for efficiency
+    ints_->update_orbitals(orbitals_, ints_->integral_type() != IntegralType::Custom);
     build_mo_integrals();
 }
 } // namespace forte

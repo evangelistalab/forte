@@ -31,6 +31,7 @@
 
 #include "helpers/helpers.h"
 #include "integrals/integrals.h"
+#include "base_classes/orbitals.h"
 
 namespace py = pybind11;
 
@@ -40,8 +41,7 @@ namespace forte {
 void export_ForteIntegrals(py::module& m) {
     py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
         .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals, "Rotate MOs during contructor")
-        .def("Ca", &ForteIntegrals::Ca, "Return the alpha MO coefficients")
-        .def("Cb", &ForteIntegrals::Cb, "Return the beta MO coefficients")
+        // .def("orbitals", &ForteIntegrals::orbitals, "Return the orbitals object")
         .def("nmo", &ForteIntegrals::nmo, "Return the total number of moleuclar orbitals")
         .def("ncmo", &ForteIntegrals::ncmo, "Return the number of correlated orbitals")
         .def("frozen_core_energy", &ForteIntegrals::frozen_core_energy,

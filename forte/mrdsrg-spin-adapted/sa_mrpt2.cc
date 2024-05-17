@@ -98,7 +98,7 @@ void SA_MRPT2::build_ints() {
     if (eri_df_) {
         std::vector<std::string> blocks{"vvaa", "aacc", "avca", "avac", "vaaa", "aaca", "aaaa"};
         V_ = BTF_->build(tensor_type_, "V", blocks);
-        if (ints_->integral_type() != DiskDF) {
+        if (ints_->integral_type() != IntegralType::DiskDF) {
             auto B = BTF_->build(tensor_type_, "B 3-idx", {"Lph"});
             fill_three_index_ints(B);
             V_["abij"] = B["gai"] * B["gbj"];
@@ -228,7 +228,7 @@ void SA_MRPT2::check_memory() {
         auto mem_blocks = dsrg_mem_.compute_memory(blocks);
         dsrg_mem_.add_entry("2-electron (4-index) integrals", mem_blocks);
         dsrg_mem_.add_entry("T2 cluster amplitudes", 2 * mem_blocks);
-        if (ints_->integral_type() != DiskDF) {
+        if (ints_->integral_type() != IntegralType::DiskDF) {
             dsrg_mem_.add_entry("3-index auxiliary integrals", {"Lph"});
         }
     } else {
@@ -242,7 +242,7 @@ void SA_MRPT2::check_memory() {
     }
 
     // local memory for computing minimal V
-    if (ints_->integral_type() == DiskDF) {
+    if (ints_->integral_type() == IntegralType::DiskDF) {
         dsrg_mem_.add_entry("Local 3-index integrals", {"Lca", "Laa", "Lav"}, 1, false);
     }
 
@@ -487,9 +487,11 @@ double SA_MRPT2::E_V_T2_CCVV() {
         auto i_nocc = i_batch_occ_mos.size();
         ambit::Tensor Bi; // iaQ
         if (Bcv_file_exist)
-            Bi = read_Bcanonical("cv", {i_shift, i_shift + i_nocc}, {0, nv}, pqQ);
+            Bi = read_Bcanonical("cv", {i_shift, i_shift + i_nocc}, {0, nv},
+                                 ThreeIntsBlockOrder::pqQ);
         else
-            Bi = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, virt_mos_, pqQ);
+            Bi = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, virt_mos_,
+                                             ThreeIntsBlockOrder::pqQ);
         auto& Bi_data = Bi.data();
 
         for (size_t j_batch = i_batch, j_shift = i_shift; j_batch < nbatches; ++j_batch) {
@@ -500,9 +502,11 @@ double SA_MRPT2::E_V_T2_CCVV() {
                 Bj = Bi;
             } else {
                 if (Bcv_file_exist)
-                    Bj = read_Bcanonical("cv", {j_shift, j_shift + j_nocc}, {0, nv}, pqQ);
+                    Bj = read_Bcanonical("cv", {j_shift, j_shift + j_nocc}, {0, nv},
+                                         ThreeIntsBlockOrder::pqQ);
                 else
-                    Bj = ints_->three_integral_block(aux_mos_, j_batch_occ_mos, virt_mos_, pqQ);
+                    Bj = ints_->three_integral_block(aux_mos_, j_batch_occ_mos, virt_mos_,
+                                                     ThreeIntsBlockOrder::pqQ);
             }
             auto& Bj_data = Bj.data();
 
@@ -660,9 +664,9 @@ void SA_MRPT2::compute_Hbar1V_DF(ambit::Tensor& Hbar1, bool Vr) {
     // 3-index integrals (P|eu)
     ambit::Tensor Bu; // euQ
     if (!semi_v or !semi_a)
-        Bu = read_Bcanonical("va", {0, nv}, {0, na}, pqQ);
+        Bu = read_Bcanonical("va", {0, nv}, {0, na}, ThreeIntsBlockOrder::pqQ);
     else
-        Bu = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_, pqQ);
+        Bu = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_, ThreeIntsBlockOrder::pqQ);
     auto& Bu_data = Bu.data();
 
     for (size_t i_batch = 0, i_shift = 0; i_batch < nbatches; ++i_batch) {
@@ -670,9 +674,11 @@ void SA_MRPT2::compute_Hbar1V_DF(ambit::Tensor& Hbar1, bool Vr) {
         auto i_nocc = i_batch_occ_mos.size();
         ambit::Tensor Bi; // iaQ
         if (!semi_c or !semi_v)
-            Bi = read_Bcanonical("cv", {i_shift, i_shift + i_nocc}, {0, nv}, pqQ);
+            Bi = read_Bcanonical("cv", {i_shift, i_shift + i_nocc}, {0, nv},
+                                 ThreeIntsBlockOrder::pqQ);
         else
-            Bi = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, virt_mos_, pqQ);
+            Bi = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, virt_mos_,
+                                             ThreeIntsBlockOrder::pqQ);
         auto& Bi_data = Bi.data();
 
         // index pairs of i and c
@@ -836,9 +842,9 @@ void SA_MRPT2::compute_Hbar1C_DF(ambit::Tensor& Hbar1, bool Vr) {
     // 3-index integrals (P|mv)
     ambit::Tensor Bu; // umQ
     if (!semi_c or !semi_a)
-        Bu = read_Bcanonical("ac", {0, na}, {0, nc}, pqQ);
+        Bu = read_Bcanonical("ac", {0, na}, {0, nc}, ThreeIntsBlockOrder::pqQ);
     else
-        Bu = ints_->three_integral_block(aux_mos_, actv_mos_, core_mos_, pqQ);
+        Bu = ints_->three_integral_block(aux_mos_, actv_mos_, core_mos_, ThreeIntsBlockOrder::pqQ);
     auto& Bu_vec = Bu.data();
 
     for (size_t c_batch = 0, c_shift = 0; c_batch < nbatches; ++c_batch) {
@@ -846,9 +852,11 @@ void SA_MRPT2::compute_Hbar1C_DF(ambit::Tensor& Hbar1, bool Vr) {
         auto c_nvir = c_batch_vir_mos.size();
         ambit::Tensor Bc; // aiQ
         if (!semi_c or !semi_v)
-            Bc = read_Bcanonical("vc", {c_shift, c_shift + c_nvir}, {0, nc}, pqQ);
+            Bc = read_Bcanonical("vc", {c_shift, c_shift + c_nvir}, {0, nc},
+                                 ThreeIntsBlockOrder::pqQ);
         else
-            Bc = ints_->three_integral_block(aux_mos_, c_batch_vir_mos, core_mos_, pqQ);
+            Bc = ints_->three_integral_block(aux_mos_, c_batch_vir_mos, core_mos_,
+                                             ThreeIntsBlockOrder::pqQ);
         auto& Bc_vec = Bc.data();
 
 #pragma omp parallel for num_threads(nthreads)

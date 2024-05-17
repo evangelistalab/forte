@@ -6,14 +6,18 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/psifiles.h"
-#include "../dsrg_mrpt2.h"
-#include "helpers/timer.h"
-#include "gradient_tpdm/backtransform_tpdm.h"
 #include "psi4/lib3index/3index.h"
 #include "psi4/libmints/mintshelper.h"
-#include "base_classes/mo_space_info.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/vector.h"
+
+#include "helpers/timer.h"
+
+#include "base_classes/mo_space_info.h"
+#include "base_classes/orbitals.h"
+
+#include "../dsrg_mrpt2.h"
+#include "gradient_tpdm/backtransform_tpdm.h"
 
 using namespace ambit;
 using namespace psi;
@@ -52,7 +56,7 @@ void DSRG_MRPT2::write_lagrangian() {
         });
     }
 
-    L->back_transform(ints_->Ca()->clone());
+    L->back_transform(ints_->orbitals()->Ca()->clone());
     ints_->wfn()->set_lagrangian(
         std::make_shared<psi::Matrix>("Lagrangian", nirrep, irrep_vec, irrep_vec));
     ints_->wfn()->lagrangian()->copy(L);
@@ -103,7 +107,7 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
             }
         });
     }
-    D1->back_transform(ints_->Ca()->clone());
+    D1->back_transform(ints_->orbitals()->Ca()->clone());
     ints_->wfn()->Da()->copy(D1);
     ints_->wfn()->Db()->copy(D1);
     outfile->Printf("Done");
@@ -697,7 +701,7 @@ void DSRG_MRPT2::write_df_rdm() {
         offset_col += nmopi;
     }
 
-    auto Ca = ints_->Ca();
+    auto Ca = ints_->orbitals()->Ca();
     // Copy Ca to a matrix without symmetry blocking
     auto Cat = std::make_shared<psi::Matrix>("Ca temp matrix", nso, nmo);
 

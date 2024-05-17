@@ -34,6 +34,7 @@
 #include "base_classes/orbital_transform.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
+#include "base_classes/orbitals.h"
 #include "integrals/integrals.h"
 
 #include "orbital-helpers/localize.h"
@@ -56,8 +57,8 @@ void export_OrbitalTransform(py::module& m) {
 /// Export the ForteOptions class
 void export_Localize(py::module& m) {
     py::class_<Localize>(m, "Localize")
-        .def(py::init<std::shared_ptr<ForteOptions>, std::shared_ptr<ForteIntegrals>,
-                      std::shared_ptr<MOSpaceInfo>>())
+        .def(py::init<std::shared_ptr<ForteOptions>, std::shared_ptr<MOSpaceInfo>,
+                      std::shared_ptr<Orbitals>, std::shared_ptr<ForteIntegrals>>())
         .def("compute_transformation", &Localize::compute_transformation,
              "Compute the transformation")
         .def("set_orbital_space",

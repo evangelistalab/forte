@@ -48,7 +48,7 @@ class SpinCorr {
 
   public:
     SpinCorr(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
-             std::shared_ptr<MOSpaceInfo> mo_space_info,
+             std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
              std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     std::pair<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>> compute_nos();
@@ -61,6 +61,8 @@ class SpinCorr {
     std::shared_ptr<ForteOptions> options_;
 
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    std::shared_ptr<Orbitals> orbitals_;
 
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
 

@@ -32,8 +32,11 @@
 #include "psi4/libpsi4util/process.h"
 
 #include "base_classes/forte_options.h"
+#include "base_classes/orbitals.h"
+
 #include "helpers/printing.h"
 #include "helpers/helpers.h"
+
 #include "post_process/spin_corr.h"
 
 using namespace psi;
@@ -41,9 +44,10 @@ using namespace psi;
 namespace forte {
 
 SpinCorr::SpinCorr(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info,
+                   std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
                    std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : rdms_(rdms), options_(options), mo_space_info_(mo_space_info), as_ints_(as_ints) {
+    : rdms_(rdms), options_(options), mo_space_info_(mo_space_info), orbitals_(orbitals),
+      as_ints_(as_ints) {
 
     nactpi_ = mo_space_info_->dimension("ACTIVE");
     nirrep_ = nactpi_.n();
@@ -191,18 +195,21 @@ void SpinCorr::spin_analysis() {
             }
         }
 
-        auto CA = as_ints_->ints()->Ca()->clone();
-        auto CB = as_ints_->ints()->Cb()->clone();
+        auto CA = orbitals_->Ca()->clone();
+        auto CB = orbitals_->Cb()->clone();
 
         auto Ca_new = psi::linalg::doublet(CA, Ua_full, false, false);
         auto Cb_new = psi::linalg::doublet(CB, Ub_full, false, false);
 
-        as_ints_->ints()->update_orbitals(Ca_new, Cb_new, false);
+        orbitals_->set(Ca_new, Cb_new);
+
+        as_ints_->ints()->update_orbitals(orbitals_, false);
 
     } else if (options_->get_str("SPIN_BASIS") == "LOCAL") {
         outfile->Printf("\n  Computing spin correlation in local basis \n");
 
-        auto loc = std::make_shared<Localize>(options_, as_ints_->ints(), mo_space_info_);
+        auto loc =
+            std::make_shared<Localize>(options_, mo_space_info_, orbitals_, as_ints_->ints());
 
         std::vector<size_t> actmo = mo_space_info_->absolute_mo("ACTIVE");
         std::vector<int> loc_mo(2);
@@ -363,8 +370,9 @@ void SpinCorr::spin_analysis() {
 
 void perform_spin_analysis(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
                            std::shared_ptr<MOSpaceInfo> mo_space_info,
+                           std::shared_ptr<Orbitals> orbitals,
                            std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
-    SpinCorr spin(rdms, options, mo_space_info, as_ints);
+    SpinCorr spin(rdms, options, mo_space_info, orbitals, as_ints);
     spin.spin_analysis();
 }
 

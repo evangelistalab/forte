@@ -44,7 +44,8 @@ class DISKDFIntegrals : public Psi4Integrals {
     /// Contructor of DISKDFIntegrals
     DISKDFIntegrals(std::shared_ptr<ForteOptions> options,
                     std::shared_ptr<psi::Wavefunction> ref_wfn,
-                    std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
+                    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
+                    IntegralSpinRestriction restricted);
 
     void initialize() override;
     /// aptei_xy functions are slow.  try to use three_integral_block
@@ -70,9 +71,10 @@ class DISKDFIntegrals : public Psi4Integrals {
 
     double** three_integral_pointer() override;
     /// Read a block of the DFIntegrals and return an Ambit tensor of size A by p by q
-    ambit::Tensor three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p,
-                                       const std::vector<size_t>& q,
-                                       ThreeIntsBlockOrder order = Qpq) override;
+    ambit::Tensor
+    three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p,
+                         const std::vector<size_t>& q,
+                         ThreeIntsBlockOrder order = ThreeIntsBlockOrder::Qpq) override;
     /// return ambit tensor of size A by q
     ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
                                                  const std::vector<size_t>& q) override;

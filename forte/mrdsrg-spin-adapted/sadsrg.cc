@@ -279,7 +279,8 @@ void SADSRG::set_ambit_MOSpace() {
 void SADSRG::check_init_memory() {
     mem_sys_ = psi::Process::environment.get_memory();
     int64_t mem_left = mem_sys_ * 0.9;
-    if (ints_->integral_type() != DiskDF and ints_->integral_type() != Cholesky) {
+    if (ints_->integral_type() != IntegralType::DiskDF and
+        ints_->integral_type() != IntegralType::Cholesky) {
         mem_left -= ints_->jk()->memory_estimate() * sizeof(double);
     }
 
@@ -287,7 +288,7 @@ void SADSRG::check_init_memory() {
     size_t n_ele = 0;
     auto ng = mo_space_info_->size("CORRELATED");
     if (eri_df_) {
-        if (ints_->integral_type() != DiskDF) {
+        if (ints_->integral_type() != IntegralType::DiskDF) {
             auto nQ = aux_mos_.size();
             n_ele = nQ * ng * ng;
         }
@@ -1021,9 +1022,9 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
      * depending on the contiguity of the fastest indices. Otherwise, this function tries to
      * load the transpose block {block[1], block[0]} before it throws an error.
      *
-     * If the auxiliary index is desired to be the last (i.e., pqQ), we will still load data
-     * in the order of Qpq. Then, an in-place matrix transpose is performed to give the correct
-     * ordering of data storage in memory.
+     * If the auxiliary index is desired to be the last (i.e., ThreeIntsBlockOrder:pqQ), we will
+     * still load data in the order of Qpq. Then, an in-place matrix transpose is performed to give
+     * the correct ordering of data storage in memory.
      */
     if (!eri_df_)
         throw std::runtime_error("For DF/CD integrals ONLY!");
@@ -1044,7 +1045,7 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
         throw std::runtime_error("Incorrect MO indices! Check mos1_range and mos2_range!");
 
     ambit::Tensor T;
-    if (order == pqQ)
+    if (order == ThreeIntsBlockOrder::pqQ)
         T = ambit::Tensor::build(tensor_type_, "Bcan_" + block, {s1, s2, nQ});
     else
         T = ambit::Tensor::build(tensor_type_, "Bcan_" + block, {nQ, s1, s2});
@@ -1200,7 +1201,7 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
     }
 
     // in-place matrix transpose
-    if (order == pqQ) {
+    if (order == ThreeIntsBlockOrder::pqQ) {
         matrix_transpose_in_place(Tdata, nQ, S);
     }
 

@@ -64,7 +64,7 @@ void SemiCanonical::read_options(const std::shared_ptr<ForteOptions>& options) {
     // compute thresholds from options
     double econv = options->get_double("E_CONVERGENCE");
     threshold_tight_ = (econv < 1.0e-12) ? 1.0e-12 : econv;
-    if (ints_->integral_type() == Cholesky) {
+    if (ints_->integral_type() == IntegralType::Cholesky) {
         double cd_tlr = options->get_double("CHOLESKY_TOLERANCE");
         threshold_tight_ = (threshold_tight_ < 0.5 * cd_tlr) ? 0.5 * cd_tlr : threshold_tight_;
     }

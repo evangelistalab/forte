@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 namespace psi {
 class Matrix;
@@ -7,16 +7,17 @@ class Matrix;
 namespace forte {
 
 class ForteIntegrals;
+class ForteOptions;
 class MOSpaceInfo;
 class SCFInfo;
-class ForteOptions;
+class Orbitals;
 
 class OrbitalTransform {
 
   public:
     /// Constructor
-    OrbitalTransform(std::shared_ptr<ForteIntegrals> ints,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info);
+    OrbitalTransform(std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
+                     std::shared_ptr<ForteIntegrals> ints = nullptr);
 
     /// Default constructor
     OrbitalTransform() = default;
@@ -31,10 +32,12 @@ class OrbitalTransform {
     std::shared_ptr<psi::Matrix> get_Ub() { return Ub_; };
 
   protected:
-    // The integrals
-    std::shared_ptr<ForteIntegrals> ints_;
     /// The MOSpace info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+    /// The orbitals
+    std::shared_ptr<Orbitals> orbitals_;
+    // The integrals
+    std::shared_ptr<ForteIntegrals> ints_;
 
     /// @brief Unitary matrix for alpha orbital rotations
     std::shared_ptr<psi::Matrix> Ua_;

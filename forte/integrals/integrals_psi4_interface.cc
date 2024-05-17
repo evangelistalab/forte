@@ -30,9 +30,7 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/vector.h"
-
 #include "psi4/libfock/jk.h"
-
 #include "psi4/libmints/basisset.h"
 #include "psi4/libmints/integral.h"
 #include "psi4/libmints/matrix.h"
@@ -41,9 +39,12 @@
 #include "psi4/libpsi4util/process.h"
 
 #include "base_classes/mo_space_info.h"
+#include "base_classes/orbitals.h"
+
+#include "integrals/integrals.h"
+
 #include "helpers/printing.h"
 #include "helpers/timer.h"
-#include "integrals/integrals.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
@@ -63,9 +64,10 @@ namespace forte {
 
 Psi4Integrals::Psi4Integrals(std::shared_ptr<ForteOptions> options,
                              std::shared_ptr<psi::Wavefunction> ref_wfn,
-                             std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
+                             std::shared_ptr<MOSpaceInfo> mo_space_info,
+                             std::shared_ptr<Orbitals> orbitals, IntegralType integral_type,
                              IntegralSpinRestriction restricted)
-    : ForteIntegrals(options, ref_wfn, mo_space_info, integral_type, restricted) {
+    : ForteIntegrals(options, ref_wfn, mo_space_info, orbitals, integral_type, restricted) {
     base_initialize_psi4();
 }
 
@@ -87,10 +89,12 @@ void Psi4Integrals::setup_psi4_ints() {
         exit(1);
     }
 
+    // ADDORBITALS
     // Grab the MO coefficients from psi and enforce spin restriction if necessary
-    Ca_ = wfn_->Ca()->clone();
-    Cb_ = (spin_restriction_ == IntegralSpinRestriction::Restricted ? wfn_->Ca()->clone()
-                                                                    : wfn_->Cb()->clone());
+    // Ca_ = wfn_->Ca()->clone();
+    // Cb_ = (spin_restriction_ == IntegralSpinRestriction::Restricted ? wfn_->Ca()->clone()
+    //                                                                 : wfn_->Cb()->clone());
+
     S_ = wfn_->S()->clone();
 
     nso_ = wfn_->nso();
@@ -113,8 +117,8 @@ void Psi4Integrals::transform_one_electron_integrals() {
     auto Ha = wfn_->H()->clone();
     auto Hb = wfn_->H()->clone();
 
-    Ha->transform(Ca_);
-    Hb->transform(Cb_);
+    Ha->transform(*orbitals_->Ca());
+    Hb->transform(*orbitals_->Cb());
 
     OneBody_symm_ = Ha;
 
@@ -152,10 +156,10 @@ void Psi4Integrals::make_psi4_JK() {
     outfile->Printf("\n\n  ==> Primary Basis Set Summary <==\n\n");
     basis->print();
 
-    if (integral_type_ == Conventional) {
+    if (integral_type_ == IntegralType::Conventional) {
         outfile->Printf("\n  JK created using conventional PK integrals\n");
         JK_ = JK::build_JK(basis, psi::BasisSet::zero_ao_basis_set(), psi4_options, "PK");
-    } else if (integral_type_ == Cholesky) {
+    } else if (integral_type_ == IntegralType::Cholesky) {
         if (spin_restriction_ == IntegralSpinRestriction::Unrestricted) {
             throw psi::PSIEXCEPTION("Unrestricted orbitals not supported for CD integrals");
         }
@@ -173,7 +177,8 @@ void Psi4Integrals::make_psi4_JK() {
         }
 
         JK_ = JK::build_JK(basis, psi::BasisSet::zero_ao_basis_set(), psi4_options, "CD");
-    } else if ((integral_type_ == DF) or (integral_type_ == DiskDF) or (integral_type_ == DistDF)) {
+    } else if ((integral_type_ == IntegralType::DF) or (integral_type_ == IntegralType::DiskDF) or
+               (integral_type_ == IntegralType::DistDF)) {
         if (spin_restriction_ == IntegralSpinRestriction::Unrestricted) {
             throw psi::PSIEXCEPTION("Unrestricted orbitals not supported for DF integrals");
         }
@@ -190,7 +195,7 @@ void Psi4Integrals::make_psi4_JK() {
         if (job_type == "CASSCF" or job_type == "MCSCF_TWO_STEP")
             basis_aux = wfn_->get_basisset("DF_BASIS_SCF");
 
-        if (integral_type_ == DiskDF) {
+        if (integral_type_ == IntegralType::DiskDF) {
             outfile->Printf("\n  JK created using DiskDF integrals\n");
             JK_ = JK::build_JK(basis, basis_aux, psi4_options, "DISK_DF");
         } else {
@@ -263,21 +268,20 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
     }
 }
 
-void Psi4Integrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
-                                    std::shared_ptr<psi::Matrix> Cb, bool re_transform) {
+void Psi4Integrals::update_orbitals(std::shared_ptr<Orbitals> orbitals, bool re_transform) {
     // 1. Copy orbitals and set the invalid flag
-    Ca_->copy(Ca);
-    Cb_->copy(Cb);
+    orbitals_->copy(*orbitals);
     ints_consistent_ = false;
 
     // if necessary, test they meet the spin restriction condition
     if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
-        if (not test_orbital_spin_restriction(Ca, Cb)) {
-            Ca->print();
-            Cb->print();
-            auto overlap = psi::linalg::triplet(Ca, S_, Cb, true, false, false);
-            overlap->set_name("Overlap <psi_alpha_i|psi_beta_j>");
-            overlap->print();
+        if (not orbitals->are_spin_restricted()) {
+            orbitals_->Ca()->print();
+            orbitals_->Cb()->print();
+            auto overlap =
+                psi::linalg::triplet(*orbitals->Ca(), *S_, *orbitals->Cb(), true, false, false);
+            overlap.set_name("Overlap <psi_alpha_i|psi_beta_j>");
+            overlap.print();
             auto msg = "Psi4Integrals::update_orbitals was passed two different sets of orbitals"
                        "\n  but the integral object assumes restricted orbitals";
             throw std::runtime_error(msg);
@@ -285,8 +289,8 @@ void Psi4Integrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
     }
 
     // 2. Send a copy to psi::Wavefunction
-    wfn_->Ca()->copy(Ca_);
-    wfn_->Cb()->copy(Cb_);
+    wfn_->Ca()->copy(*orbitals_->Ca());
+    wfn_->Cb()->copy(*orbitals_->Cb());
 
     // 3. Re-transform the integrals
     if (re_transform) {
@@ -349,7 +353,7 @@ void Psi4Integrals::rotate_mos() {
                         rotate_mo_group[2]);
     }
 
-    auto C_old = Ca_;
+    auto C_old = orbitals_->Ca()->clone();
     auto C_new(C_old->clone());
 
     const auto& eps_a_old = *wfn_->epsilon_a();
@@ -366,8 +370,7 @@ void Psi4Integrals::rotate_mos() {
         eps_a_new.set(mo_group[0], mo_group[1], epsilon_mo2);
     }
     // Update local copy of the orbitals
-    Ca_->copy(C_new);
-    Cb_->copy(C_new);
+    orbitals_->set(C_new, C_new);
 
     // Copy to psi::Wavefunction
     wfn_->Ca()->copy(C_new);
@@ -390,8 +393,9 @@ std::shared_ptr<psi::Matrix> Psi4Integrals::Ca_AO() const {
 
         for (int i = 0, nmo_this = nmopi_[h]; i < nmo_this; ++i) {
             // notes: LDA value is nso (not nao, see libqt/blas_intfc23.cc)
-            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Ca_->pointer(h)[0][i],
-                    nmo_this, 0.0, &Ca_ao->pointer()[0][index++], nmo_);
+            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso,
+                    &orbitals_->Ca()->pointer(h)[0][i], nmo_this, 0.0,
+                    &Ca_ao->pointer()[0][index++], nmo_);
         }
     }
     return Ca_ao;
@@ -492,7 +496,7 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
 
         for (int h = 0; h < nirrep_; ++h) {
             for (int p = 0, offset = dim_start[h]; p < dim[h]; ++p) {
-                Csub->set_column(h, p, Ca_->get_column(h, p + offset));
+                Csub->set_column(h, p, orbitals_->Ca()->get_column(h, p + offset));
             }
         }
 
@@ -513,7 +517,8 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
         J->add(wfn_->H());
 
         // transform to MO
-        auto F_closed = psi::linalg::triplet(Ca_, J, Ca_, true, false, false);
+        auto F_closed =
+            psi::linalg::triplet(orbitals_->Ca(), J, orbitals_->Ca(), true, false, false);
         F_closed->set_name("Fock_closed");
 
         // compute closed-shell energy
@@ -534,8 +539,8 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
 
         for (int h = 0; h < nirrep_; ++h) {
             for (int p = 0, offset = dim_start[h]; p < dim[h]; ++p) {
-                Ca_sub->set_column(h, p, Ca_->get_column(h, p + offset));
-                Cb_sub->set_column(h, p, Cb_->get_column(h, p + offset));
+                Ca_sub->set_column(h, p, orbitals_->Ca()->get_column(h, p + offset));
+                Cb_sub->set_column(h, p, orbitals_->Cb()->get_column(h, p + offset));
             }
         }
 
@@ -570,9 +575,11 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
         K->copy(Fb_closed);
 
         // transform to MO basis
-        Fa_closed = psi::linalg::triplet(Ca_, Fa_closed, Ca_, true, false, false);
+        Fa_closed =
+            psi::linalg::triplet(orbitals_->Ca(), Fa_closed, orbitals_->Ca(), true, false, false);
         Fa_closed->set_name("Fock_closed alpha");
-        Fb_closed = psi::linalg::triplet(Cb_, Fb_closed, Cb_, true, false, false);
+        Fb_closed =
+            psi::linalg::triplet(orbitals_->Cb(), Fb_closed, orbitals_->Cb(), true, false, false);
         Fb_closed->set_name("Fock_closed beta");
 
         // compute closed-shell energy using unrestricted equation
@@ -678,7 +685,7 @@ Psi4Integrals::make_fock_active_restricted(std::shared_ptr<psi::Matrix> g1) {
 
     for (int h = 0; h < nirrep_; ++h) {
         for (int p = 0, offset = ndoccpi[h]; p < nactvpi[h]; ++p) {
-            Cactv->set_column(h, p, Ca_->get_column(h, p + offset));
+            Cactv->set_column(h, p, orbitals_->Ca()->get_column(h, p + offset));
         }
     }
 
@@ -702,7 +709,7 @@ Psi4Integrals::make_fock_active_restricted(std::shared_ptr<psi::Matrix> g1) {
     K->add(JK_->J()[0]);
 
     // transform to MO
-    auto F_active = psi::linalg::triplet(Ca_, K, Ca_, true, false, false);
+    auto F_active = psi::linalg::triplet(orbitals_->Ca(), K, orbitals_->Ca(), true, false, false);
     F_active->set_name("Fock_active");
 
     // pass AO fock to psi4 Wavefunction
@@ -731,8 +738,8 @@ Psi4Integrals::make_fock_active_unrestricted(std::shared_ptr<psi::Matrix> g1a,
 
     for (int h = 0; h < nirrep_; ++h) {
         for (int p = 0, offset = ndoccpi[h]; p < nactvpi[h]; ++p) {
-            Ca_actv->set_column(h, p, Ca_->get_column(h, p + offset));
-            Cb_actv->set_column(h, p, Cb_->get_column(h, p + offset));
+            Ca_actv->set_column(h, p, orbitals_->Ca()->get_column(h, p + offset));
+            Cb_actv->set_column(h, p, orbitals_->Ca()->get_column(h, p + offset));
         }
     }
 
@@ -766,9 +773,9 @@ Psi4Integrals::make_fock_active_unrestricted(std::shared_ptr<psi::Matrix> g1a,
     Kb->add(JK_->J()[1]);
 
     // transform to MO
-    auto Fa_active = psi::linalg::triplet(Ca_, Ka, Ca_, true, false, false);
+    auto Fa_active = psi::linalg::triplet(orbitals_->Ca(), Ka, orbitals_->Ca(), true, false, false);
     Fa_active->set_name("Fock_active alpha");
-    auto Fb_active = psi::linalg::triplet(Cb_, Kb, Cb_, true, false, false);
+    auto Fb_active = psi::linalg::triplet(orbitals_->Cb(), Kb, orbitals_->Cb(), true, false, false);
     Fb_active->set_name("Fock_active beta");
 
     // pass AO fock to psi4 Wavefunction

@@ -49,7 +49,7 @@ class ConventionalIntegrals : public Psi4Integrals {
     ConventionalIntegrals(std::shared_ptr<ForteOptions> options,
                           std::shared_ptr<psi::Wavefunction> ref_wfn,
                           std::shared_ptr<MOSpaceInfo> mo_space_info,
-                          IntegralSpinRestriction restricted);
+                          std::shared_ptr<Orbitals> orbitals, IntegralSpinRestriction restricted);
 
     void initialize() override;
 

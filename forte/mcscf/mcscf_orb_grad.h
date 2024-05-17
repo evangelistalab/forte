@@ -59,8 +59,8 @@ class MCSCF_ORB_GRAD {
      *   See J. Chem. Phys. 142, 224103 (2015) and Theor. Chem. Acc. 97, 88-95 (1997)
      */
     MCSCF_ORB_GRAD(std::shared_ptr<ForteOptions> options,
-                    std::shared_ptr<MOSpaceInfo> mo_space_info,
-                    std::shared_ptr<ForteIntegrals> ints, bool freeze_core);
+                   std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
+                   std::shared_ptr<ForteIntegrals> ints, bool freeze_core);
 
     /// Evaluate the energy and orbital gradient
     double evaluate(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> g,
@@ -102,6 +102,9 @@ class MCSCF_ORB_GRAD {
 
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    /// The orbitals object
+    std::shared_ptr<Orbitals> orbitals_;
 
     /// The Forte integral
     std::shared_ptr<ForteIntegrals> ints_;

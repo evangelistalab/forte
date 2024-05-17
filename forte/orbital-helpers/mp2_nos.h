@@ -45,7 +45,8 @@ class MP2_NOS : public OrbitalTransform {
   public:
     // => Constructor <= //
     MP2_NOS(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-            std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+            std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
+            std::shared_ptr<ForteIntegrals> ints);
 
     void compute_transformation() override;
 

@@ -35,6 +35,7 @@
 
 #include "helpers/printing.h"
 #include "base_classes/rdms.h"
+#include "base_classes/orbitals.h"
 
 #include "localize.h"
 
@@ -42,9 +43,10 @@ using namespace psi;
 
 namespace forte {
 
-Localize::Localize(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(ints, mo_space_info) {
+Localize::Localize(std::shared_ptr<ForteOptions> options,
+                   std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
+                   std::shared_ptr<ForteIntegrals> ints)
+    : OrbitalTransform(mo_space_info, orbitals, ints) {
 
     if (ints_->nirrep() > 1) {
         throw psi::PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");
@@ -81,7 +83,7 @@ void Localize::compute_transformation() {
         exit(1);
     }
 
-    auto Ca = ints_->Ca()->clone();
+    auto Ca = orbitals_->Ca()->clone();
 
     Ua_ = std::make_shared<psi::Matrix>("U", Ca->coldim(), Ca->coldim());
     Ub_ = std::make_shared<psi::Matrix>("U", Ca->coldim(), Ca->coldim());

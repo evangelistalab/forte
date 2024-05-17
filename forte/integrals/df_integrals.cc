@@ -61,8 +61,8 @@ namespace forte {
 DFIntegrals::DFIntegrals(std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<psi::Wavefunction> ref_wfn,
                          std::shared_ptr<MOSpaceInfo> mo_space_info,
-                         IntegralSpinRestriction restricted)
-    : Psi4Integrals(options, ref_wfn, mo_space_info, DF, restricted) {
+                         std::shared_ptr<Orbitals> orbitals, IntegralSpinRestriction restricted)
+    : Psi4Integrals(options, ref_wfn, mo_space_info, orbitals, IntegralType::DF, restricted) {
     initialize();
 }
 
@@ -160,7 +160,7 @@ ambit::Tensor DFIntegrals::three_integral_block(const std::vector<size_t>& A,
                                                 const std::vector<size_t>& q,
                                                 ThreeIntsBlockOrder order) {
     ambit::Tensor ReturnTensor;
-    if (order == pqQ) {
+    if (order == ThreeIntsBlockOrder::pqQ) {
         ReturnTensor = ambit::Tensor::build(tensor_type_, "Return", {p.size(), q.size(), A.size()});
         ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
             value = three_integral(A[i[2]], p[i[0]], q[i[1]]);

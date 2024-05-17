@@ -5,6 +5,7 @@ Canonical order of base classes
     - StateInfo 
     - SCFInfo 
     - MOSpaceInfo 
+    - Orbitals
     - Integrals/ActiveSpaceIntegrals 
     - ForteOptions
 

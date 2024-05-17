@@ -44,6 +44,7 @@
 #include "base_classes/dynamic_correlation_solver.h"
 #include "base_classes/state_info.h"
 #include "base_classes/scf_info.h"
+#include "base_classes/orbitals.h"
 
 #include "integrals/make_integrals.h"
 
@@ -191,7 +192,8 @@ PYBIND11_MODULE(_forte, m) {
     m.def("make_custom_ints", &make_custom_forte_integrals,
           "Make a custom Forte integral object from arrays");
     m.def("make_ints_from_psi4", &make_forte_integrals_from_psi4, "ref_wfn"_a, "options"_a,
-          "mo_space_info"_a, "int_type"_a = "", "Make a Forte integral object from psi4");
+          "mo_space_info"_a, "orbitals"_a, "int_type"_a = "",
+          "Make a Forte integral object from psi4");
     m.def("make_active_space_method", &make_active_space_method, "Make an active space method");
     m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver",
           "method"_a, "state_nroots_map"_a, "scf_info"_a, "mo_space_info"_a, "options"_a,

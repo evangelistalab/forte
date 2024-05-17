@@ -37,6 +37,7 @@
 #include "helpers/blockedtensorfactory.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
+#include "base_classes/orbitals.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "integrals.h"
@@ -60,25 +61,30 @@ namespace forte {
 #endif
 
 std::map<IntegralType, std::string> int_type_label{
-    {Conventional, "Conventional"},          {DF, "Density fitting"},
-    {Cholesky, "Cholesky decomposition"},    {DiskDF, "Disk-based density fitting"},
-    {DistDF, "Distributed density fitting"}, {Custom, "Custom"}};
+    {IntegralType::Conventional, "Conventional"},
+    {IntegralType::DF, "Density fitting"},
+    {IntegralType::Cholesky, "Cholesky decomposition"},
+    {IntegralType::DiskDF, "Disk-based density fitting"},
+    {IntegralType::DistDF, "Distributed density fitting"},
+    {IntegralType::Custom, "Custom"}};
 
 ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
                                std::shared_ptr<psi::Wavefunction> ref_wfn,
                                std::shared_ptr<MOSpaceInfo> mo_space_info,
-                               IntegralType integral_type, IntegralSpinRestriction restricted)
-    : options_(options), mo_space_info_(mo_space_info), wfn_(ref_wfn),
-      integral_type_(integral_type), spin_restriction_(restricted), frozen_core_energy_(0.0),
-      scalar_energy_(0.0) {
+                               std::shared_ptr<Orbitals> orbitals, IntegralType integral_type,
+                               IntegralSpinRestriction restricted, DFType df_type)
+    : options_(options), mo_space_info_(mo_space_info), orbitals_(orbitals), wfn_(ref_wfn),
+      integral_type_(integral_type), spin_restriction_(restricted), df_type_(df_type),
+      frozen_core_energy_(0.0), scalar_energy_(0.0) {
     common_initialize();
 }
 
 ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
                                std::shared_ptr<MOSpaceInfo> mo_space_info,
-                               IntegralType integral_type, IntegralSpinRestriction restricted)
-    : options_(options), mo_space_info_(mo_space_info), integral_type_(integral_type),
-      spin_restriction_(restricted) {
+                               std::shared_ptr<Orbitals> orbitals, IntegralType integral_type,
+                               IntegralSpinRestriction restricted, DFType df_type)
+    : options_(options), mo_space_info_(mo_space_info), orbitals_(orbitals),
+      integral_type_(integral_type), spin_restriction_(restricted), df_type_(df_type) {
     common_initialize();
 }
 
@@ -122,7 +128,7 @@ void ForteIntegrals::read_information() {
 
     // skip integral allocation and transformation if doing CASSCF
     auto job_type = options_->get_str("JOB_TYPE");
-    skip_build_ = (job_type == "MCSCF_TWO_STEP") and (integral_type_ != Custom);
+    skip_build_ = (job_type == "MCSCF_TWO_STEP") and (integral_type_ != IntegralType::Custom);
 }
 
 void ForteIntegrals::allocate() {
@@ -134,7 +140,8 @@ void ForteIntegrals::allocate() {
     one_electron_integrals_a_.assign(ncmo_ * ncmo_, 0.0);
     one_electron_integrals_b_.assign(ncmo_ * ncmo_, 0.0);
 
-    if ((integral_type_ == Conventional) or (integral_type_ == Custom)) {
+    if ((integral_type_ == IntegralType::Conventional) or
+        (integral_type_ == IntegralType::Custom)) {
         // Allocate the memory required to store the two-electron integrals
         aphys_tei_aa_.assign(num_aptei_, 0.0);
         aphys_tei_ab_.assign(num_aptei_, 0.0);
@@ -144,15 +151,13 @@ void ForteIntegrals::allocate() {
     }
 }
 
-std::shared_ptr<const psi::Matrix> ForteIntegrals::Ca() const { return Ca_; }
-
-std::shared_ptr<const psi::Matrix> ForteIntegrals::Cb() const { return Cb_; }
+std::shared_ptr<Orbitals> ForteIntegrals::orbitals() const { return orbitals_; }
 
 bool ForteIntegrals::update_ints_if_needed() {
     if (ints_consistent_) {
         return false;
     }
-    update_orbitals(Ca_, Cb_, true);
+    update_orbitals(orbitals_, true);
     return true;
 }
 
@@ -168,7 +173,7 @@ void ForteIntegrals::jk_finalize() {
     if (JK_status_ == JKStatus::initialized) {
         JK_->finalize();
         // nothing done in finalize() for PKJK and MemDFJK
-        if (integral_type_ == DiskDF or integral_type_ == Cholesky)
+        if (integral_type_ == IntegralType::DiskDF or integral_type_ == IntegralType::Cholesky)
             JK_status_ = JKStatus::finalized;
     }
 }
@@ -322,7 +327,7 @@ void ForteIntegrals::set_oei(size_t p, size_t q, double value, bool alpha) {
 }
 
 bool ForteIntegrals::fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool is_alpha, bool debug) {
-    if (integral_type_ == Custom) {
+    if (integral_type_ == IntegralType::Custom) {
         outfile->Printf("\n  Warning: Cannot fix orbital phases (%s) for CustomIntegrals.",
                         is_alpha ? "Ca" : "Cb");
         return false;
@@ -390,13 +395,6 @@ bool ForteIntegrals::fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool is_
         }
         return false;
     }
-}
-
-bool ForteIntegrals::test_orbital_spin_restriction(std::shared_ptr<psi::Matrix> A,
-                                                   std::shared_ptr<psi::Matrix> B) const {
-    auto A_minus_B = A->clone();
-    A_minus_B->subtract(B);
-    return A_minus_B->absmax() < 1.0e-7;
 }
 
 void ForteIntegrals::freeze_core_orbitals() {
@@ -491,16 +489,13 @@ void ForteIntegrals::print_ints() {
 void ForteIntegrals::rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
                                      std::shared_ptr<psi::Matrix> Ub, bool re_transform) {
     // 1. Rotate the orbital coefficients and store them in the ForteIntegral object
-    auto Ca_rotated = psi::linalg::doublet(Ca_, Ua);
-    auto Cb_rotated = psi::linalg::doublet(Cb_, Ub);
-
-    update_orbitals(Ca_rotated, Cb_rotated, re_transform);
+    orbitals_->rotate(Ua, Ub);
+    update_orbitals(orbitals_, re_transform);
 }
 
 // The following functions throw an error by default
 
-void ForteIntegrals::update_orbitals(std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>,
-                                     bool) {
+void ForteIntegrals::update_orbitals(std::shared_ptr<Orbitals>, bool) {
     _undefined_function("update_orbitals");
 }
 
@@ -547,10 +542,10 @@ std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::mo_quadrupole_ints() c
 }
 
 void ForteIntegrals::_undefined_function(const std::string& method) const {
-    outfile->Printf("\n  ForteIntegrals::" + method + "not supported for integral type " +
-                    std::to_string(integral_type()));
-    throw std::runtime_error("ForteIntegrals::" + method + " not supported for integral type " +
-                             std::to_string(integral_type()));
+    std::string msg = "ForteIntegrals::" + method + " not supported for integral type " +
+                      int_type_label[integral_type()];
+    outfile->Printf("\n  %s\n", msg.c_str());
+    throw std::runtime_error(msg);
 }
 
 } // namespace forte

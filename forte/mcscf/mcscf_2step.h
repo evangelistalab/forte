@@ -57,7 +57,8 @@ class MCSCF_2STEP {
     MCSCF_2STEP(std::shared_ptr<ActiveSpaceSolver> as_solver,
                 const std::map<StateInfo, std::vector<double>>& state_weights_map,
                 std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
-                std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteIntegrals> ints);
+                std::shared_ptr<Orbitals> orbitals, std::shared_ptr<forte::SCFInfo> scf_info,
+                std::shared_ptr<ForteIntegrals> ints);
 
     /// Compute the MCSCF energy
     double compute_energy();
@@ -74,6 +75,9 @@ class MCSCF_2STEP {
 
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    /// The orbitals object
+    std::shared_ptr<Orbitals> orbitals_;
 
     /// SCF information
     std::shared_ptr<SCFInfo> scf_info_;
@@ -177,7 +181,7 @@ std::unique_ptr<MCSCF_2STEP>
 make_mcscf_two_step(std::shared_ptr<ActiveSpaceSolver> as_solver,
                     const std::map<StateInfo, std::vector<double>>& state_weight_map,
                     std::shared_ptr<SCFInfo> ref_wfn, std::shared_ptr<ForteOptions> options,
-                    std::shared_ptr<MOSpaceInfo> mo_space_info,
+                    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
                     std::shared_ptr<ForteIntegrals> ints);
 
 } // namespace forte

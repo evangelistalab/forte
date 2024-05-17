@@ -93,6 +93,28 @@ std::shared_ptr<psi::Matrix> tensor_to_matrix(ambit::Tensor t, psi::Dimension di
 
 std::vector<double> Vector_to_vector_double(const psi::Vector& v);
 
+/// @brief Convert a psi::Matrix to an ambit::Tensor
+/// @param m The input matrix
+/// @param label The label of the tensor (optional)
+ambit::Tensor matrix_to_tensor(const std::shared_ptr<psi::Matrix>& m,
+                               const std::string& label = "");
+ambit::Tensor matrix_to_tensor(const std::shared_ptr<const psi::Matrix>& m,
+                               const std::string& label = "");
+
+/// @brief Check if two matrices are compatible for elementwise operations
+/// @param A The first matrix
+/// @param B The second matrix
+/// @return True if the matrices are compatible
+bool elementwise_compatible_matrices(const std::shared_ptr<psi::Matrix>& A,
+                                     const std::shared_ptr<psi::Matrix>& B);
+
+/// @brief Compute the rank-p norm of the difference between two matrices A and B
+/// @param A The first matrix
+/// @param B The second matrix
+/// @param rank The rank of the norm (default is 2)
+double matrix_distance(const std::shared_ptr<psi::Matrix>& A, const std::shared_ptr<psi::Matrix>& B,
+                       int p = 2);
+
 // /**
 //  * @brief view_modified_orbitals Write orbitals using molden
 //  * @param Ca  The Ca matrix to be viewed with MOLDEN

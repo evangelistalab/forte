@@ -26,6 +26,14 @@
  * @END LICENSE
  */
 
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/local.h"
+
+#include "base_classes/mo_space_info.h"
+#include "integrals/integrals.h"
+#include "base_classes/rdms.h"
+#include "iao_builder.h"
+
 #include "psi4/libmints/molecule.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
@@ -38,6 +46,8 @@
 #include "psi4/libmints/vector.h"
 
 #include "base_classes/forte_options.h"
+#include "base_classes/orbitals.h"
+
 #include "unpaired_density.h"
 #include "localize.h"
 
@@ -45,11 +55,12 @@ using namespace psi;
 
 namespace forte {
 
-UPDensity::UPDensity(std::shared_ptr<ForteIntegrals> ints,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info,
-                     std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Matrix> Ua,
+UPDensity::UPDensity(std::shared_ptr<ForteOptions> options,
+                     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
+                     std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<psi::Matrix> Ua,
                      std::shared_ptr<psi::Matrix> Ub)
-    : options_(options), ints_(ints), mo_space_info_(mo_space_info), Uas_(Ua), Ubs_(Ub) {}
+    : options_(options), mo_space_info_(mo_space_info), orbitals_(orbitals), ints_(ints), Uas_(Ua),
+      Ubs_(Ub) {}
 
 void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
                                          std::vector<double>& oprdm_b) {
@@ -171,7 +182,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     psi::Dimension nactpi = mo_space_info_->dimension("ACTIVE");
     psi::Dimension nmopi = mo_space_info_->dimension("ALL");
     psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
-    size_t nirrep = ints_->nirrep();
+    size_t nirrep = mo_space_info_->nirrep();
     psi::Dimension rdocc = mo_space_info_->dimension("RESTRICTED_DOCC");
     psi::Dimension fdocc = mo_space_info_->dimension("FROZEN_DOCC");
 
@@ -234,7 +245,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     // relocalize to atoms
 
     // Grab matrix that takes the transforms from the NO basis to our local basis
-    auto loc = std::make_shared<Localize>(options_, ints_, mo_space_info_);
+    auto loc = std::make_shared<Localize>(options_, mo_space_info_, orbitals_, ints_);
 
     std::vector<size_t> actmo = mo_space_info_->absolute_mo("ACTIVE");
     std::vector<int> loc_mo(2);
@@ -270,8 +281,8 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
 
     // Build the density using scaled columns of C
 
-    auto Ca = ints_->Ca();
-    auto Cb = ints_->Cb();
+    auto Ca = orbitals_->Ca();
+    auto Cb = orbitals_->Cb();
 
     auto Ca_new = psi::linalg::doublet(Ca->clone(), Ua, false, false);
     auto Cb_new = psi::linalg::doublet(Cb->clone(), Ub, false, false);

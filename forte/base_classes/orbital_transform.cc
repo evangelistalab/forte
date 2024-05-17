@@ -42,26 +42,26 @@
 
 namespace forte {
 
-OrbitalTransform::OrbitalTransform(std::shared_ptr<ForteIntegrals> ints,
-                                   std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ints_(ints), mo_space_info_(mo_space_info) {}
+OrbitalTransform::OrbitalTransform(std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                   std::shared_ptr<Orbitals> orbitals,
+                                   std::shared_ptr<ForteIntegrals> ints)
+    : mo_space_info_(mo_space_info), orbitals_(orbitals), ints_(ints) {}
 
-std::unique_ptr<OrbitalTransform>
-make_orbital_transformation(const std::string& type, std::shared_ptr<SCFInfo> scf_info,
-                            std::shared_ptr<ForteOptions> options,
-                            std::shared_ptr<ForteIntegrals> ints,
-                            std::shared_ptr<MOSpaceInfo> mo_space_info) {
+std::unique_ptr<OrbitalTransform> make_orbital_transformation(
+    const std::string& type, std::shared_ptr<SCFInfo> scf_info,
+    std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals) {
 
     std::unique_ptr<OrbitalTransform> orb_t;
 
     if (type == "LOCAL") {
-        orb_t = std::make_unique<Localize>(options, ints, mo_space_info);
+        orb_t = std::make_unique<Localize>(options, mo_space_info, orbitals, ints);
     } else if (type == "MP2NO") {
-        orb_t = std::make_unique<MP2_NOS>(scf_info, options, ints, mo_space_info);
+        orb_t = std::make_unique<MP2_NOS>(scf_info, options, mo_space_info, orbitals, ints);
     } else if (type == "CINO") {
-        orb_t = std::make_unique<CINO>(options, ints, mo_space_info);
+        orb_t = std::make_unique<CINO>(options, mo_space_info, orbitals, ints);
     } else if (type == "MRCINO") {
-        orb_t = std::make_unique<MRCINO>(scf_info, options, ints, mo_space_info);
+        orb_t = std::make_unique<MRCINO>(scf_info, options, mo_space_info, orbitals, ints);
     } else if (type == "MRPT2NO") {
         // perform reference CI calculation
         auto as_type = options->get_str("ACTIVE_SPACE_SOLVER");
@@ -78,7 +78,7 @@ make_orbital_transformation(const std::string& type, std::shared_ptr<SCFInfo> sc
             as_solver->compute_average_rdms(state_weights_map, rdm_level, RDMsType::spin_free);
 
         // initialize
-        orb_t = std::make_unique<MRPT2_NOS>(rdms, scf_info, options, ints, mo_space_info);
+        orb_t = std::make_unique<MRPT2_NOS>(scf_info, options, mo_space_info, orbitals, ints, rdms);
     } else {
         throw std::runtime_error("Orbital type " + type + " is not supported!");
     }

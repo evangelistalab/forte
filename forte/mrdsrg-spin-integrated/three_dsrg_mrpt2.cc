@@ -55,13 +55,17 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
-#include "orbital-helpers/ao_helper.h"
+#include "base_classes/orbitals.h"
+
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
+#include "orbital-helpers/ao_helper.h"
+
 #include "fci/fci_solver.h"
 #include "fci/fci_vector.h"
 #include "sci/aci.h"
+
 #include "three_dsrg_mrpt2.h"
 
 using namespace ambit;
@@ -254,7 +258,7 @@ void THREE_DSRG_MRPT2::startup() {
         T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", spin_cases({"hp"}));
 
         // allocate memory for T2 and V
-        if (integral_type_ != DiskDF) {
+        if (integral_type_ != IntegralType::DiskDF) {
             std::vector<std::string> list_of_pphh_V = BTF_->generate_indices("vac", "pphh");
             V_ = BTF_->build(tensor_type_, "V_", BTF_->spin_cases_avoid(list_of_pphh_V, 1));
             T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", BTF_->spin_cases_avoid(no_hhpp_, 1));
@@ -361,7 +365,7 @@ double THREE_DSRG_MRPT2::compute_energy() {
         outfile->Printf("\n  Reference Energy = %.15f", Eref_);
 
         // compute T2 and renormalize V
-        if (integral_type_ != DiskDF) {
+        if (integral_type_ != IntegralType::DiskDF) {
             compute_t2();
             renormalize_V();
         } else {
@@ -1161,7 +1165,7 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
     if (my_proc == 0) {
         outfile->Printf("\n    %-40s ...", "Computing <[V, T2]> (C_2)^4 (no ccvv)");
         // TODO: Implement these without storing V and/or T2 by using blocking
-        if (integral_type_ != DiskDF) {
+        if (integral_type_ != IntegralType::DiskDF) {
             temp.zero();
             temp["vu"] += 0.5 * V_["efmu"] * T2_["mvef"];
             temp["vu"] += V_["fEuM"] * T2_["vMfE"];
@@ -1795,7 +1799,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit() {
     /// variable.  Requires the reading from aptei_block which makes code
     /// general for all, but makes it slow for DiskDF.
 
-    if (integral_type_ == DiskDF) {
+    if (integral_type_ == IntegralType::DiskDF) {
         std::vector<ambit::Tensor> BefVec;
         std::vector<ambit::Tensor> BefJKVec;
         std::vector<ambit::Tensor> RDVec;
@@ -2282,7 +2286,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     double Ealpha = 0.0;
     double Emixed = 0.0;
     double Ebeta = 0.0;
-    auto Cwfn = ints_->Ca()->clone();
+    auto Cwfn = ints_->orbitals()->Ca()->clone();
     if (mo_space_info_->nirrep() != 1)
         throw psi::PSIEXCEPTION("AO-DSRGMPT2 does not work with symmetry");
 
@@ -3007,7 +3011,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
     outfile->Printf("Done. Timing: %10.3f s.", timer2.get());
 
     // Again, the below block assume V[ijab] = V[iJaB] - V[iJbA]
-    if (integral_type_ == DiskDF) {
+    if (integral_type_ == IntegralType::DiskDF) {
         C1.zero();
 
         local_timer timer3;
@@ -3409,7 +3413,7 @@ void THREE_DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a,
 
     // reset APTEI because it is renormalized
     std::vector<std::string> list_of_pphh_V = BTF_->generate_indices("vac", "pphh");
-    if (integral_type_ != DiskDF) {
+    if (integral_type_ != IntegralType::DiskDF) {
         V_["abij"] = ThreeIntegral_["gai"] * ThreeIntegral_["gbj"];
         V_["abij"] -= ThreeIntegral_["gaj"] * ThreeIntegral_["gbi"];
 
@@ -3501,7 +3505,7 @@ void THREE_DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a,
     H1["VU"] -= 0.5 * V_["AVMN"] * T2_["MNAU"];
     H1["VU"] -= V_["aVmN"] * T2_["mNaU"];
 
-    if (integral_type_ == DiskDF) {
+    if (integral_type_ == IntegralType::DiskDF) {
         compute_Hbar1C_diskDF(H1, false);
         compute_Hbar1V_diskDF(H1, false);
     }

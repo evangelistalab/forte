@@ -37,10 +37,12 @@
 #include "psi4/psifiles.h"
 
 #include "base_classes/mo_space_info.h"
+#include "base_classes/orbitals.h"
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/string_algorithms.h"
 #include "helpers/timer.h"
 #include "helpers/printing.h"
+#include "helpers/helpers.h"
 
 #include "custom_integrals.h"
 
@@ -54,23 +56,24 @@ namespace forte {
 
 CustomIntegrals::CustomIntegrals(std::shared_ptr<ForteOptions> options,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                 std::shared_ptr<Orbitals> orbitals,
                                  IntegralSpinRestriction restricted, double scalar,
                                  const std::vector<double>& oei_a, const std::vector<double>& oei_b,
                                  const std::vector<double>& tei_aa,
                                  const std::vector<double>& tei_ab,
                                  const std::vector<double>& tei_bb)
-    : ForteIntegrals(options, mo_space_info, Custom, restricted), full_aphys_tei_aa_(tei_aa),
-      full_aphys_tei_ab_(tei_ab), full_aphys_tei_bb_(tei_bb) {
+    : ForteIntegrals(options, mo_space_info, orbitals, IntegralType::Custom, restricted),
+      full_aphys_tei_aa_(tei_aa), full_aphys_tei_ab_(tei_ab), full_aphys_tei_bb_(tei_bb) {
     set_nuclear_repulsion(scalar);
     set_oei_all(oei_a, oei_b);
     initialize();
 }
 
 void CustomIntegrals::initialize() {
-    Ca_ = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
-    Cb_ = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
-    Ca_->identity();
-    Cb_->identity();
+    // Ca_ = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
+    // Cb_ = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
+    // Ca_->identity();
+    // Cb_->identity();
     nsopi_ = nmopi_;
     nso_ = nmo_;
 
@@ -471,8 +474,8 @@ void CustomIntegrals::transform_one_electron_integrals() {
     }
 
     // transform the one-electron integrals
-    Ha->transform(Ca_);
-    Hb->transform(Cb_);
+    Ha->transform(*orbitals_->Ca());
+    Hb->transform(*orbitals_->Cb());
 
     OneBody_symm_ = Ha;
 
@@ -506,24 +509,27 @@ void CustomIntegrals::transform_two_electron_integrals() {
         save_original_tei_ = true;
     }
 
-    auto Ca = ambit::Tensor::build(tensor_type_, "Ca", {nmo_, nmo_});
-    auto Cb = ambit::Tensor::build(tensor_type_, "Cb", {nmo_, nmo_});
+    auto Ca = matrix_to_tensor(orbitals_->Ca(), "Ca");
+    auto Cb = matrix_to_tensor(orbitals_->Cb(), "Cb");
 
-    auto& Ca_data = Ca.data();
-    auto& Cb_data = Cb.data();
+    // auto Ca = ambit::Tensor::build(tensor_type_, "Ca", {nmo_, nmo_});
+    // auto Cb = ambit::Tensor::build(tensor_type_, "Cb", {nmo_, nmo_});
 
-    int offset = 0;
-    for (int h = 0; h < nirrep_; ++h) {
-        for (int p = 0; p < nmopi_[h]; ++p) {
-            for (int q = 0; q < nmopi_[h]; ++q) {
-                int p_full = p + offset;
-                int q_full = q + offset;
-                Ca_data[p_full * nmo_ + q_full] = Ca_->get(h, p, q);
-                Cb_data[p_full * nmo_ + q_full] = Cb_->get(h, p, q);
-            }
-        }
-        offset += nmopi_[h];
-    }
+    // auto& Ca_data = Ca.data();
+    // auto& Cb_data = Cb.data();
+
+    // int offset = 0;
+    // for (int h = 0; h < nirrep_; ++h) {
+    //     for (int p = 0; p < nmopi_[h]; ++p) {
+    //         for (int q = 0; q < nmopi_[h]; ++q) {
+    //             int p_full = p + offset;
+    //             int q_full = q + offset;
+    //             Ca_data[p_full * nmo_ + q_full] = Ca_->get(h, p, q);
+    //             Cb_data[p_full * nmo_ + q_full] = Cb_->get(h, p, q);
+    //         }
+    //     }
+    //     offset += nmopi_[h];
+    // }
 
     auto T = ambit::Tensor::build(tensor_type_, "temp", {nmo_, nmo_, nmo_, nmo_});
 
@@ -537,17 +543,15 @@ void CustomIntegrals::transform_two_electron_integrals() {
     full_aphys_tei_bb_ = T.data();
 }
 
-void CustomIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
-                                      std::shared_ptr<psi::Matrix> Cb, bool re_transform) {
+void CustomIntegrals::update_orbitals(std::shared_ptr<Orbitals> orbitals, bool re_transform) {
     // 1. Copy orbitals and, if necessary, test they meet the spin restriction condition
-    Ca_->copy(Ca);
-    Cb_->copy(Cb);
+    orbitals_->copy(*orbitals);
     ints_consistent_ = false;
 
     if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
-        if (not test_orbital_spin_restriction(Ca, Cb)) {
-            Ca->print();
-            Cb->print();
+        if (not orbitals_->are_spin_restricted()) {
+            orbitals_->Ca()->print();
+            orbitals_->Cb()->print();
             auto msg = "CustomIntegrals::update_orbitals was passed two different sets of orbitals"
                        "\n  but the integral object assumes restricted orbitals";
             throw std::runtime_error(msg);

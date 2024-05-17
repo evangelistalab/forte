@@ -112,7 +112,7 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
     }
 
     // initialize multipole integrals
-    if (as_ints_->ints()->integral_type() != Custom) {
+    if (as_ints_->ints()->integral_type() != IntegralType::Custom) {
         if (not as_mp_ints_) {
             auto mp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_);
             as_mp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(mp_ints);
@@ -160,7 +160,7 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
     }
     print_energies();
 
-    if (as_ints_->ints()->integral_type() != Custom and
+    if (as_ints_->ints()->integral_type() != IntegralType::Custom and
         options_->get_str("ACTIVE_SPACE_SOLVER") != "EXTERNAL") {
         compute_dipole_moment(as_mp_ints_);
         compute_quadrupole_moment(as_mp_ints_);

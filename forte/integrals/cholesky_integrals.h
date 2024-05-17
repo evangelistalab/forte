@@ -45,7 +45,7 @@ class CholeskyIntegrals : public Psi4Integrals {
     CholeskyIntegrals(std::shared_ptr<ForteOptions> options,
                       std::shared_ptr<psi::Wavefunction> ref_wfn,
                       std::shared_ptr<MOSpaceInfo> mo_space_info,
-                      IntegralSpinRestriction restricted);
+                      std::shared_ptr<Orbitals> orbitals, IntegralSpinRestriction restricted);
 
     void initialize() override;
 
@@ -71,9 +71,10 @@ class CholeskyIntegrals : public Psi4Integrals {
     double three_integral(size_t A, size_t p, size_t q) const;
 
     double** three_integral_pointer() override;
-    ambit::Tensor three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p,
-                                       const std::vector<size_t>& q,
-                                       ThreeIntsBlockOrder order = Qpq) override;
+    ambit::Tensor
+    three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p,
+                         const std::vector<size_t>& q,
+                         ThreeIntsBlockOrder order = ThreeIntsBlockOrder::Qpq) override;
     ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t,
                                                  const std::vector<size_t>&) override;
     /// Do not use this if you are using CD/DF integrals
