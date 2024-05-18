@@ -113,6 +113,9 @@ void Psi4Integrals::setup_psi4_ints() {
 }
 
 void Psi4Integrals::transform_one_electron_integrals() {
+    std::cout << " From  transform_one_electron_integrals skip_build_: "
+              << (skip_build_ ? "True" : "False") << std::endl;
+
     // Grab the one-electron integrals from psi4's wave function object
     auto Ha = wfn_->H()->clone();
     auto Hb = wfn_->H()->clone();

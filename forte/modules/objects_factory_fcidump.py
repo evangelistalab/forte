@@ -29,6 +29,7 @@ def _make_ints_from_fcidump(fcidump, data: ForteData):
     ints = forte.make_custom_ints(
         data.options,
         data.mo_space_info,
+        data.orbitals,
         fcidump["enuc"],
         fcidump["hcore"].flatten(),
         fcidump["hcore"].flatten(),
@@ -141,6 +142,14 @@ def _prepare_forte_objects_from_fcidump(data, filename: str = None):
             epsilon_b.set(i, val)
 
     data.scf_info = forte.SCFInfo(nmopi, doccpi, soccpi, 0.0, epsilon_a, epsilon_b)
+
+    # Create the Orbitals object
+    # create two sets of orbitals, one for alpha and one for beta of dimnsion
+    Ca = psi4.core.Matrix("Ca", nmopi, nmopi)
+    Cb = psi4.core.Matrix("Cb", nmopi, nmopi)
+    Ca.identity()
+    Cb.identity()
+    data.orbitals = forte.Orbitals(Ca, Cb)
 
     state_info = _make_state_info_from_fcidump(fcidump, options)
     data.state_weights_map = {state_info: [1.0]}

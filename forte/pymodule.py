@@ -101,7 +101,7 @@ def forte_driver(data: ForteData):
 
     if options.get_bool("SPIN_ANALYSIS"):
         data = ActiveSpaceRDMs(max_rdm_level=2, rdms_type=forte.RDMsType.spin_dependent).run(data)
-        forte.perform_spin_analysis(data.rdms, options, mo_space_info, as_ints)
+        forte.perform_spin_analysis(data.rdms, options, mo_space_info, data.orbitals, as_ints)
 
     # solver for dynamical correlation from DSRG
     correlation_solver_type = options.get_str("CORRELATION_SOLVER")
@@ -275,7 +275,7 @@ def gradient_forte(name, **kwargs):
     # Make an integral object
     time_pre_ints = time.time()
 
-    data.ints = forte.make_ints_from_psi4(data.psi_wfn, data.options, data.mo_space_info)
+    data.ints = forte.make_ints_from_psi4(data.psi_wfn, data.options, data.mo_space_info, data.orbitals)
 
     start = time.time()
 

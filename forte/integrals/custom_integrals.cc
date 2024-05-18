@@ -70,10 +70,6 @@ CustomIntegrals::CustomIntegrals(std::shared_ptr<ForteOptions> options,
 }
 
 void CustomIntegrals::initialize() {
-    // Ca_ = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
-    // Cb_ = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
-    // Ca_->identity();
-    // Cb_->identity();
     nsopi_ = nmopi_;
     nso_ = nmo_;
 

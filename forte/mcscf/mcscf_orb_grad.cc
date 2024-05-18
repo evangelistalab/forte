@@ -758,7 +758,7 @@ bool MCSCF_ORB_GRAD::update_orbitals(std::shared_ptr<psi::Vector> x) {
     orbitals_->set(C_, C_);
     // update integrals object. Except for custom integrals, we update the integrals
     // object with the new orbitals but do not update the integrals for efficiency
-    ints_->update_orbitals(orbitals_, ints_->integral_type() != IntegralType::Custom);
+    ints_->update_orbitals(orbitals_, ints_->integral_type() == IntegralType::Custom);
     // if (ints_->integral_type() != Custom) {
     //     ints_->update_orbitals(orbitals_);
     // } else {
@@ -1096,7 +1096,7 @@ void MCSCF_ORB_GRAD::canonicalize_final(const std::shared_ptr<psi::Matrix>& U) {
     orbitals_->set(C_, C_);
     // update integrals object. Except for custom integrals, we update the integrals
     // object with the new orbitals but do not update the integrals for efficiency
-    ints_->update_orbitals(orbitals_, ints_->integral_type() != IntegralType::Custom);
+    ints_->update_orbitals(orbitals_, ints_->integral_type() == IntegralType::Custom);
     build_mo_integrals();
 }
 } // namespace forte
