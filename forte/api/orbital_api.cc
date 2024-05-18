@@ -46,6 +46,19 @@ using namespace pybind11::literals;
 
 namespace forte {
 
+void export_Orbitals(py::module& m) {
+    py::class_<Orbitals, std::shared_ptr<Orbitals>>(m, "Orbitals")
+        .def(py::init<const std::shared_ptr<psi::Matrix>&, const std::shared_ptr<psi::Matrix>&>())
+        .def("Ca", &Orbitals::Ca, "Return the alpha orbital coefficient matrix")
+        .def("Cb", &Orbitals::Cb, "Return the beta orbital coefficient matrix")
+        .def("set", &Orbitals::set, "Set the alpha and beta orbital coefficient matrices")
+        .def("rotate", &Orbitals::rotate,
+             "Rotate the orbitals using the given transformation matrices")
+        .def("copy", &Orbitals::copy, "Copy the orbitals")
+        .def("are_spin_restricted", &Orbitals::are_spin_restricted,
+             "Check if the orbitals are spin restricted");
+}
+
 /// Export the OrbitalTransform class
 void export_OrbitalTransform(py::module& m) {
     py::class_<OrbitalTransform>(m, "OrbitalTransform")

@@ -38,9 +38,9 @@ Orbitals::Orbitals(const std::shared_ptr<psi::Matrix>& Ca, const std::shared_ptr
     Cb_ = Cb->clone();
 }
 
-const std::shared_ptr<psi::Matrix> Orbitals::Ca() const { return Ca_; }
+std::shared_ptr<psi::Matrix> Orbitals::Ca() { return Ca_; }
 
-const std::shared_ptr<psi::Matrix> Orbitals::Cb() const { return Cb_; }
+std::shared_ptr<psi::Matrix> Orbitals::Cb() { return Cb_; }
 
 void Orbitals::set(const std::shared_ptr<psi::Matrix>& Ca, const std::shared_ptr<psi::Matrix>& Cb) {
     if (not(elementwise_compatible_matrices(Ca_, Ca) and
@@ -69,9 +69,9 @@ bool Orbitals::are_spin_restricted(double threshold) const {
     return matrix_distance(Ca_, Cb_) < threshold;
 }
 
-std::unique_ptr<Orbitals>
-make_orbitals_from_psi(const std::shared_ptr<const psi::Wavefunction>& wfn, bool restricted) {
-    return std::make_unique<Orbitals>(wfn->Ca(), restricted ? wfn->Ca() : wfn->Cb());
+std::shared_ptr<Orbitals> make_orbitals_from_psi(const std::shared_ptr<psi::Wavefunction>& wfn,
+                                                 bool restricted) {
+    return std::make_shared<Orbitals>(wfn->Ca(), restricted ? wfn->Ca() : wfn->Cb());
 }
 
 } // namespace forte

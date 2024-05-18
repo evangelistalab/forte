@@ -117,8 +117,8 @@ void Psi4Integrals::transform_one_electron_integrals() {
     auto Ha = wfn_->H()->clone();
     auto Hb = wfn_->H()->clone();
 
-    Ha->transform(*orbitals_->Ca());
-    Hb->transform(*orbitals_->Cb());
+    Ha->transform(orbitals_->Ca());
+    Hb->transform(orbitals_->Cb());
 
     OneBody_symm_ = Ha;
 
@@ -279,9 +279,9 @@ void Psi4Integrals::update_orbitals(std::shared_ptr<Orbitals> orbitals, bool re_
             orbitals_->Ca()->print();
             orbitals_->Cb()->print();
             auto overlap =
-                psi::linalg::triplet(*orbitals->Ca(), *S_, *orbitals->Cb(), true, false, false);
-            overlap.set_name("Overlap <psi_alpha_i|psi_beta_j>");
-            overlap.print();
+                psi::linalg::triplet(orbitals->Ca(), S_, orbitals->Cb(), true, false, false);
+            overlap->set_name("Overlap <psi_alpha_i|psi_beta_j>");
+            overlap->print();
             auto msg = "Psi4Integrals::update_orbitals was passed two different sets of orbitals"
                        "\n  but the integral object assumes restricted orbitals";
             throw std::runtime_error(msg);

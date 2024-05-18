@@ -15,6 +15,7 @@ from forte._forte import (
     make_mo_space_info_from_map,
     make_state_weights_map,
     SCFInfo,
+    make_orbitals_from_psi,
     make_ints_from_psi4,
 )
 
@@ -209,7 +210,10 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn, mo_space_info):
     # Build a map from Forte StateInfo to the weights
     state_weights_map = make_state_weights_map(options, mo_space_info)
 
-    return (state_weights_map, mo_space_info, scf_info)
+    # Build the Orbitals object
+    orbitals = make_orbitals_from_psi(wfn, True)  # True for restricted orbitals
+
+    return (state_weights_map, mo_space_info, scf_info, orbitals)
 
 
 def prepare_forte_objects(data, name, **kwargs):
@@ -226,13 +230,14 @@ def prepare_forte_objects(data, name, **kwargs):
     psi4.core.print_out("\n\n  Preparing forte objects from a Psi4 Wavefunction object")
     ref_wfn, mo_space_info = prepare_psi4_ref_wfn(options, **kwargs)
     forte_objects = prepare_forte_objects_from_psi4_wfn(options, ref_wfn, mo_space_info)
-    state_weights_map, mo_space_info, scf_info = forte_objects
+    state_weights_map, mo_space_info, scf_info, orbitals = forte_objects
     fcidump = None
 
     data.mo_space_info = mo_space_info
     data.scf_info = scf_info
     data.state_weights_map = state_weights_map
     data.psi_wfn = ref_wfn
+    data.orbitals = orbitals
 
     return data, fcidump
 
@@ -276,6 +281,6 @@ class ObjectsFromPsi4(Module):
         else:
             psi4.core.print_out("\n  Forte will use psi4 integrals")
             # Make an integral object from the psi4 wavefunction object
-            data.ints = make_ints_from_psi4(data.psi_wfn, data.options, data.mo_space_info)
+            data.ints = make_ints_from_psi4(data.psi_wfn, data.options, data.mo_space_info, data.orbitals)
 
         return data

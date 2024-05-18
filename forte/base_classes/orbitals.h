@@ -46,9 +46,9 @@ class Orbitals {
 
     // ==> Class Methods <==
     /// @return The alpha orbital coefficient matrix
-    const std::shared_ptr<psi::Matrix> Ca() const;
+    std::shared_ptr<psi::Matrix> Ca();
     /// @return The beta orbital coefficient matrix
-    const std::shared_ptr<psi::Matrix> Cb() const;
+    std::shared_ptr<psi::Matrix> Cb();
 
     void set(const std::shared_ptr<psi::Matrix>& Ca, const std::shared_ptr<psi::Matrix>& Cb);
 
@@ -71,7 +71,7 @@ class Orbitals {
     std::shared_ptr<psi::Matrix> Cb_;
 };
 
-std::unique_ptr<Orbitals>
-make_orbitals_from_psi(const std::shared_ptr<const psi::Wavefunction>& wfn, bool restricted);
+std::shared_ptr<Orbitals> make_orbitals_from_psi(const std::shared_ptr<psi::Wavefunction>& wfn,
+                                                 bool restricted);
 
 } // namespace forte

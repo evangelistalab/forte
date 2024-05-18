@@ -85,6 +85,7 @@ void export_StateInfo(py::module& m);
 void export_SigmaVector(py::module& m);
 void export_SparseCISolver(py::module& m);
 void export_ForteCubeFile(py::module& m);
+void export_Orbitals(py::module& m);
 void export_OrbitalTransform(py::module& m);
 void export_Localize(py::module& m);
 void export_SemiCanonical(py::module& m);
@@ -292,6 +293,8 @@ PYBIND11_MODULE(_forte, m) {
     export_ForteIntegrals(m);
 
     export_Symmetry(m);
+    export_Orbitals(m);
+    m.def("make_orbitals_from_psi", &make_orbitals_from_psi);
     export_OrbitalTransform(m);
     export_Localize(m);
     export_SemiCanonical(m);

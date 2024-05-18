@@ -45,10 +45,9 @@ class OrbitalTransform {
     std::shared_ptr<psi::Matrix> Ub_;
 };
 
-std::unique_ptr<OrbitalTransform>
-make_orbital_transformation(const std::string& type, std::shared_ptr<SCFInfo> scf_info,
-                            std::shared_ptr<ForteOptions> options,
-                            std::shared_ptr<ForteIntegrals> ints,
-                            std::shared_ptr<MOSpaceInfo> mo_space_info);
+std::unique_ptr<OrbitalTransform> make_orbital_transformation(
+    const std::string& type, std::shared_ptr<SCFInfo> scf_info,
+    std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals);
 
 } // namespace forte

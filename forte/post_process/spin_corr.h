@@ -75,6 +75,7 @@ class SpinCorr {
 
 void perform_spin_analysis(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
                            std::shared_ptr<MOSpaceInfo> mo_space_info,
+                           std::shared_ptr<Orbitals> orbitals,
                            std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
 } // namespace forte
