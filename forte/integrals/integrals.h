@@ -124,8 +124,7 @@ class ForteIntegrals {
     ForteIntegrals(std::shared_ptr<ForteOptions> options,
                    std::shared_ptr<psi::Wavefunction> ref_wfn,
                    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
-                   IntegralType integral_type, IntegralSpinRestriction restricted,
-                   DFType df_type = DFType::JK);
+                   IntegralType integral_type, IntegralSpinRestriction restricted);
 
     /**
      * @brief Class constructor
@@ -135,8 +134,7 @@ class ForteIntegrals {
      */
     ForteIntegrals(std::shared_ptr<ForteOptions> options,
                    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
-                   IntegralType integral_type, IntegralSpinRestriction restricted,
-                   DFType df_type = DFType::JK);
+                   IntegralType integral_type, IntegralSpinRestriction restricted);
 
     /// Virtual destructor to enable deletion of a Derived* through a Base*
     virtual ~ForteIntegrals() = default;
@@ -436,9 +434,6 @@ class ForteIntegrals {
     /// Are we doing a spin-restricted computation?
     IntegralSpinRestriction spin_restriction_;
 
-    /// The type of density fitting basis
-    DFType df_type_;
-
     // AO overlap matrix from psi
     std::shared_ptr<psi::Matrix> S_;
 
@@ -651,6 +646,32 @@ class Psi4Integrals : public ForteIntegrals {
     double df_fitting_cutoff_;
     // threshold for Schwarz cutoff (Psi4)
     double schwarz_cutoff_;
+};
+
+/// ForteJK class
+class ForteJK {
+  public:
+    ForteJK(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> wfn,
+            std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals);
+
+    /// Initialize JK object
+    void initialize();
+
+    /// Finalize JK object
+    void finalize();
+
+    /// Compute JK
+    void compute_JK();
+
+    /// Return the JK object
+    std::shared_ptr<psi::JK> jk();
+
+  private:
+    std::shared_ptr<psi::JK> JK_;
+    std::shared_ptr<ForteOptions> options_;
+    std::shared_ptr<psi::Wavefunction> wfn_;
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+    std::shared_ptr<Orbitals> orbitals_;
 };
 
 } // namespace forte

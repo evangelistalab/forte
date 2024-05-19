@@ -8,6 +8,7 @@ from forte._forte import (
     make_mcscf_two_step,
     MOSpaceInfo,
     make_mo_space_info_from_map,
+    make_psi4jk,
 )
 
 
@@ -32,6 +33,12 @@ class MCSCF(Module):
         data.active_space_solver = make_active_space_solver(
             self.solver_type, state_map, data.scf_info, data.mo_space_info, data.options
         )
+
+        if data.psi_wfn:
+            data.jk = make_psi4jk(data.options, data.psi_wfn)
+        else:
+            raise ValueError("Only psi4 JK is supported for now.")
+
         mcscf = make_mcscf_two_step(
             data.active_space_solver,
             data.state_weights_map,
@@ -40,6 +47,7 @@ class MCSCF(Module):
             data.mo_space_info,
             data.orbitals,
             data.ints,
+            data.jk,
         )
         energy = mcscf.compute_energy()
         data.results.add("energy", energy, "MCSCF energy", "hartree")

@@ -59,9 +59,10 @@ MCSCF_2STEP::MCSCF_2STEP(std::shared_ptr<ActiveSpaceSolver> as_solver,
                          std::shared_ptr<MOSpaceInfo> mo_space_info,
                          std::shared_ptr<Orbitals> orbitals,
                          std::shared_ptr<forte::SCFInfo> scf_info,
-                         std::shared_ptr<ForteIntegrals> ints)
+                         std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<ForteJK> jk)
     : as_solver_(as_solver), state_weights_map_(state_weights_map), options_(options),
-      mo_space_info_(mo_space_info), orbitals_(orbitals), scf_info_(scf_info), ints_(ints) {
+      mo_space_info_(mo_space_info), orbitals_(orbitals), scf_info_(scf_info), ints_(ints),
+      jk_(jk) {
     startup();
 }
 
@@ -596,9 +597,9 @@ make_mcscf_two_step(std::shared_ptr<ActiveSpaceSolver> as_solver,
                     const std::map<StateInfo, std::vector<double>>& state_weight_map,
                     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<Orbitals> orbitals,
-                    std::shared_ptr<ForteIntegrals> ints) {
+                    std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<ForteJK> jk) {
     return std::make_unique<MCSCF_2STEP>(as_solver, state_weight_map, options, mo_space_info,
-                                         orbitals, scf_info, ints);
+                                         orbitals, scf_info, ints, jk);
 }
 
 } // namespace forte

@@ -47,6 +47,7 @@
 #include "base_classes/orbitals.h"
 
 #include "integrals/make_integrals.h"
+#include "integrals/jk_builder.h"
 
 #include "orbital-helpers/aosubspace.h"
 #include "orbital-helpers/mp2_nos.h"
@@ -190,6 +191,7 @@ PYBIND11_MODULE(_forte, m) {
     m.def("make_fragment_projector", &make_fragment_projector,
           "Make a fragment(embedding) projector");
     m.def("make_embedding", &make_embedding, "Apply fragment projector to embed");
+    m.def("make_psi4jk", &make_psi4jk, "Make a Forte JK object based on psi4");
     m.def("make_custom_ints", &make_custom_forte_integrals,
           "Make a custom Forte integral object from arrays");
     m.def("make_ints_from_psi4", &make_forte_integrals_from_psi4, "ref_wfn"_a, "options"_a,

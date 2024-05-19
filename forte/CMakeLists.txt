@@ -169,6 +169,9 @@ integrals/make_integrals.cc
 integrals/one_body_integrals.cc
 integrals/parallel_ccvv_algorithms.cc
 integrals/paralleldfmo.cc
+integrals/jk_builder.cc
+integrals/customjk_builder.cc
+integrals/psi4jk_builder.cc
 mrdsrg-helper/dsrg_mem.cc
 mrdsrg-helper/dsrg_source.cc
 mrdsrg-helper/dsrg_time.cc

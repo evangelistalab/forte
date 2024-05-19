@@ -39,6 +39,8 @@ def read_wavefunction(data):
         C_mat = psi4.core.Matrix.from_array([np.asarray(C_list)])
     data.psi_wfn.Ca().copy(C_mat)
     data.psi_wfn.Cb().copy(C_mat)
+    # set the orbitals in the data object
+    data.orbitals = forte.Orbitals(C_mat, C_mat)
 
 
 def write_external_active_space_file(as_ints, state_map, mo_space_info, json_file="forte_ints.json"):

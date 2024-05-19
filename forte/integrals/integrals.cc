@@ -72,25 +72,23 @@ ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
                                std::shared_ptr<psi::Wavefunction> ref_wfn,
                                std::shared_ptr<MOSpaceInfo> mo_space_info,
                                std::shared_ptr<Orbitals> orbitals, IntegralType integral_type,
-                               IntegralSpinRestriction restricted, DFType df_type)
+                               IntegralSpinRestriction restricted)
     : options_(options), mo_space_info_(mo_space_info), orbitals_(orbitals), wfn_(ref_wfn),
-      integral_type_(integral_type), spin_restriction_(restricted), df_type_(df_type),
-      frozen_core_energy_(0.0), scalar_energy_(0.0) {
+      integral_type_(integral_type), spin_restriction_(restricted) {
     common_initialize();
 }
 
 ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
                                std::shared_ptr<MOSpaceInfo> mo_space_info,
                                std::shared_ptr<Orbitals> orbitals, IntegralType integral_type,
-                               IntegralSpinRestriction restricted, DFType df_type)
+                               IntegralSpinRestriction restricted)
     : options_(options), mo_space_info_(mo_space_info), orbitals_(orbitals),
-      integral_type_(integral_type), spin_restriction_(restricted), df_type_(df_type) {
+      integral_type_(integral_type), spin_restriction_(restricted) {
     common_initialize();
 }
 
 void ForteIntegrals::common_initialize() {
     read_information();
-
     if (not skip_build_) {
         allocate();
     }
