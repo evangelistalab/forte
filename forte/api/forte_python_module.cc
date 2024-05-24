@@ -283,6 +283,7 @@ PYBIND11_MODULE(_forte, m) {
             for (const auto& label : labels) {
                 pyrdm[py::str(label)] = ambit_to_np(rdm.block(label));
             }
+            return pyrdm;
         },
         "Return the RDM in a dictionary");
 
