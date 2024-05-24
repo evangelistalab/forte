@@ -364,6 +364,18 @@ class ProcedureDSRG:
             Heff = self.dsrg_solver.compute_Heff_full()
             Heff_dict = forte.Heff_dict(Heff)
             np.savez('save_Hbar', **Heff_dict)
+            gamma1 = self.dsrg_solver.get_gamma1()
+            eta1 = self.dsrg_solver.get_eta1()
+            lambda2 = self.dsrg_solver.get_lambda2()
+            lambda3 = self.dsrg_solver.get_lambda3()
+            gamma1_dict = forte.rdm_dict(gamma1)
+            eta_1_dict = forte.rdm_dict(eta1)
+            lambda2_dict = forte.rdm_dict(lambda2)
+            lambda3_dict = forte.rdm_dict(lambda3)
+            np.savez('save_gamma1', **gamma1_dict)
+            np.savez('save_eta1', **eta_1_dict)
+            np.savez('save_lambda2', **lambda2_dict)
+            np.savez('save_lambda3', **lambda3_dict)
         ################
 
         self.dsrg_cleanup()

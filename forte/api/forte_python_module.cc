@@ -275,6 +275,16 @@ PYBIND11_MODULE(_forte, m) {
             return pyints;
         },
         "Return the full Heff in a dictionary");
+    m.def(
+        "rdm_dict",
+        [](ambit::BlockedTensor rdm) {
+            py::dict pyrdm;
+            auto labels = rdm.block_labels();
+            for (const auto& label : labels) {
+                pyrdm[py::str(label)] = ambit_to_np(rdm.block(label));
+            }
+        },
+        "Return the RDM in a dictionary");
 
     //     py::class_<AdaptiveCI, std::shared_ptr<AdaptiveCI>>(m, "ACI");
 
@@ -406,7 +416,11 @@ PYBIND11_MODULE(_forte, m) {
         .def("compute_Heff_actv", &MRDSRG_SO::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals")
         .def("compute_Heff_full", &MRDSRG_SO::compute_Heff_full,
-             "Return full transformed Hamiltonian");
+             "Return full transformed Hamiltonian")
+        .def("get_gamma1", &MRDSRG_SO::get_gamma1, "Return the gamma1 tensor")
+        .def("get_eta1", &MRDSRG_SO::get_eta1, "Return the eta1 tensor")
+        .def("get_lambda2", &MRDSRG_SO::get_lambda2, "Return the lambda2 tensor")
+        .def("get_lambda3", &MRDSRG_SO::get_lambda3, "Return the lambda3 tensor");
 
     // export SOMRDSRG
     py::class_<SOMRDSRG>(m, "SOMRDSRG")
