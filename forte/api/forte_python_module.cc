@@ -404,7 +404,9 @@ PYBIND11_MODULE(_forte, m) {
     py::class_<MRDSRG_SO>(m, "MRDSRG_SO")
         .def("compute_energy", &MRDSRG_SO::compute_energy, "Compute DSRG energy")
         .def("compute_Heff_actv", &MRDSRG_SO::compute_Heff_actv,
-             "Return the DSRG dressed ActiveSpaceIntegrals");
+             "Return the DSRG dressed ActiveSpaceIntegrals")
+        .def("compute_Heff_full", &MRDSRG_SO::compute_Heff_full,
+             "Return full transformed Hamiltonian");
 
     // export SOMRDSRG
     py::class_<SOMRDSRG>(m, "SOMRDSRG")

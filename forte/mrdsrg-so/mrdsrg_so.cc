@@ -1481,4 +1481,8 @@ void MRDSRG_SO::H3_T2_C2(BlockedTensor& H3, BlockedTensor& T2, const double& alp
     temp["mx"] += 0.5 * T2["myuv"] * Lambda2["uvxy"];
     C2["toqr"] -= alpha * temp["mx"] * H3["xtomqr"];
 }
+std::vector<ambit::BlockedTensor> MRDSRG_SO::compute_Heff_full() {
+    std::vector<ambit::BlockedTensor> Heff = {Hbar1, Hbar2};
+    return Heff;
+}
 } // namespace forte

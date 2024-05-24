@@ -302,6 +302,8 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
 
     double compute_eom();
 
+    std::vector<ambit::BlockedTensor> compute_Heff_full();
+
     /// DSRG transformed Hamiltonian (not implemented)
     std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
 
