@@ -286,6 +286,17 @@ PYBIND11_MODULE(_forte, m) {
             return pyrdm;
         },
         "Return the RDM in a dictionary");
+    m.def(
+        "L3_dict",
+        [](std::vector<ambit::Tensor> rdm) {
+            py::dict pyrdm;
+            pyrdm[py::str("aaaaaa")] = ambit_to_np(rdm[0]);
+            pyrdm[py::str("aaAaaA")] = ambit_to_np(rdm[1]);
+            pyrdm[py::str("aAAaAA")] = ambit_to_np(rdm[2]);
+            pyrdm[py::str("AAAAAA")] = ambit_to_np(rdm[3]);
+            return pyrdm;
+        },
+        "Return the L3 in a dictionary");
 
     //     py::class_<AdaptiveCI, std::shared_ptr<AdaptiveCI>>(m, "ACI");
 
@@ -375,6 +386,10 @@ PYBIND11_MODULE(_forte, m) {
              "Return the DSRG dressed ActiveSpaceIntegrals")
         .def("compute_Heff_full", &MASTER_DSRG::compute_Heff_full,
              "Return full transformed Hamiltonian")
+        .def("get_gamma1", &MASTER_DSRG::get_gamma1, "Return the gamma1 tensor")
+        .def("get_eta1", &MASTER_DSRG::get_eta1, "Return the eta1 tensor")
+        .def("get_lambda2", &MASTER_DSRG::get_lambda2, "Return the lambda2 tensor")
+        .def("get_lambda3", &MASTER_DSRG::get_lambda3, "Return the lambda3 tensor")
         .def("deGNO_DMbar_actv", &MASTER_DSRG::deGNO_DMbar_actv,
              "Return the DSRG dressed dipole integrals")
         .def("nuclear_dipole", &MASTER_DSRG::nuclear_dipole,

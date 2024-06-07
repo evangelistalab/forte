@@ -371,7 +371,11 @@ class ProcedureDSRG:
             gamma1_dict = forte.rdm_dict(gamma1)
             eta_1_dict = forte.rdm_dict(eta1)
             lambda2_dict = forte.rdm_dict(lambda2)
-            lambda3_dict = forte.rdm_dict(lambda3)
+            if self.solver_type in ["MRDSRG_SO", "MRDSRG-SO"]:
+                lambda3_dict = forte.rdm_dict(lambda3)
+            else:
+                lambda3_dict = forte.L3_dict(lambda3)
+
             np.savez('save_gamma1', **gamma1_dict)
             np.savez('save_eta1', **eta_1_dict)
             np.savez('save_lambda2', **lambda2_dict)

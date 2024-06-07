@@ -51,6 +51,11 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// compute DSRG full transformed Hamiltonian
     std::vector<ambit::BlockedTensor> compute_Heff_full();
 
+    ambit::BlockedTensor get_gamma1() { return Gamma1_; }
+    ambit::BlockedTensor get_eta1() { return Eta1_; }
+    ambit::BlockedTensor get_lambda2() { return Lambda2_; }
+    std::vector<ambit::Tensor> get_lambda3() { return {L3aaa_, L3aab_, L3abb_, L3bbb_}; }
+
     /// De-normal-order DSRG transformed dipole moment
     std::vector<DressedQuantity> deGNO_DMbar_actv();
 
