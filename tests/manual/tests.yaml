@@ -4,6 +4,10 @@
 # different types of tests (short, long, unused). This is done so that the
 # test script can run certain subsets of all tests.
 #
-fci:
+mcscf:
    short:
-      - fci-1
+      - mcscf-1
+      - mcscf-2
+      - mcscf-3
+      - mcscf-4
+      - mcscf-5

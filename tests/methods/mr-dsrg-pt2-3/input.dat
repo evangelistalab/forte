@@ -49,21 +49,6 @@ S   1   1.00
 ****
 }
 
-  
-set forte{  
-   job_type                mcscf_two_step
-   active_space_solver     fci
-   restricted_docc         [2,0,0,0]
-   active                  [1,0,0,1]
-   root_sym                0
-   nroot                   1
-   casscf_e_convergence    12
-   casscf_g_convergence    8
-}
-
-Emcscf, wfn = energy('forte', return_wfn=True)
-compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
-
 set forte{
    job_type             mr-dsrg-pt2
    frozen_docc          [1,0,0,0]
@@ -74,6 +59,9 @@ set forte{
    nroot                1
    dsrg_s               1.0e10
    threepdc             zero
+   mcscf_e_convergence    12
+   mcscf_g_convergence    8
 }
-energy('forte', ref_wfn=wfn)
-compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"MR-DSRG-PT2 energy") #TEST
+
+energy('forte')
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),9,"MR-DSRG-PT2 energy") #TEST

@@ -22,7 +22,7 @@ set {
     d_convergence   1e-10
 }
 
-#casscf_energy = energy('casscf')
+#mcscf_energy = energy('casscf')
 energy('scf')
 set forte {
     int_type               df

@@ -19,6 +19,29 @@ def test_det_constructors():
     assert d1 == d3
 
 
+def test_det_fill():
+    if forte.Determinant.norb() >= 64:
+        n = 128
+        print("Testing determinant fill function")
+        for i in range(n + 1):
+            d = forte.Determinant()
+            d.fill_up_to(i)
+            for j in range(i):
+                assert d.get_bit(j) == 1
+            for j in range(i, n):
+                assert d.get_bit(j) == 0
+    if forte.Determinant.norb() >= 128:
+        n = 256
+        print("Testing determinant fill function")
+        for i in range(n + 1):
+            d = forte.Determinant()
+            d.fill_up_to(i)
+            for j in range(i):
+                assert d.get_bit(j) == 1
+            for j in range(i, n):
+                assert d.get_bit(j) == 0
+
+
 def test_det_getset():
     """Test get/set operations"""
     print("Testing determinant interface")
@@ -196,23 +219,74 @@ def test_det_symmetry():
     """Test class constructors"""
     if forte.Determinant.norb() >= 128:
         print("Testing determinant symmetry function")
-        symm = [0,1,2,3,4,5,6,7] * 32
-        d = det("0000000000000000000000000000000000000000000000000000000000000000"
-                "0000000000000000000000000000000000000000000000000000000000000000")
+        symm = [0, 1, 2, 3, 4, 5, 6, 7] * 32
+        d = det(
+            "0000000000000000000000000000000000000000000000000000000000000000"
+            "0000000000000000000000000000000000000000000000000000000000000000"
+        )
         assert d.symmetry(symm) == 0
-        d = det("000000000000000000000000000000000000000000000000000000000000000+"
-                "-000000000000000000000000000000000000000000000000000000000000000")
+        d = det(
+            "000000000000000000000000000000000000000000000000000000000000000+"
+            "-000000000000000000000000000000000000000000000000000000000000000"
+        )
         assert d.symmetry(symm) == 7
-        d = det("000000000000000000000000000000000000000000000000000000000000000-"
-                "-000000000000000000000000000000000000000000000000000000000000000")
+        d = det(
+            "000000000000000000000000000000000000000000000000000000000000000-"
+            "-000000000000000000000000000000000000000000000000000000000000000"
+        )
         assert d.symmetry(symm) == 7
-        d = det("000000000000000000000000000000000000000000000000000000000000000-"
-                "-00000000000000000000000000000000000000000000000000000000000000+")
+        d = det(
+            "000000000000000000000000000000000000000000000000000000000000000-"
+            "-00000000000000000000000000000000000000000000000000000000000000+"
+        )
         assert d.symmetry(symm) == 0
-        d = det("000-00000000000000000000000000000000000000000000000000000000000-"
-                "-00000000000000000000000000000000000000000000000000000000000000+")
+        d = det(
+            "000-00000000000000000000000000000000000000000000000000000000000-"
+            "-00000000000000000000000000000000000000000000000000000000000000+"
+        )
         assert d.symmetry(symm) == 3
+
+
+def test_det_slater_sign():
+    """Test Slater sign functions"""
+
+    #        012345
+    # parity 011001
+    d = det("+0+0++")
+    assert d.slater_sign(0) == 1
+    assert d.slater_sign(1) == -1
+    assert d.slater_sign(2) == -1
+    assert d.slater_sign(3) == 1
+    assert d.slater_sign(4) == 1
+    assert d.slater_sign(5) == -1
+    assert d.slater_sign(6) == 1
+    assert d.slater_sign(7) == 1
+    assert d.slater_sign_reverse(0) == -1
+    assert d.slater_sign_reverse(1) == -1
+    assert d.slater_sign_reverse(2) == 1
+    assert d.slater_sign_reverse(3) == 1
+    assert d.slater_sign_reverse(4) == -1
+    assert d.slater_sign_reverse(5) == 1
+    assert d.slater_sign_reverse(6) == 1
+
+    if forte.Determinant.norb() >= 64:
+        print("Testing determinant Slater sign functions")
+        d = det("2222222222222222222222222222222222222222222222222222222222222222")
+        for i in range(128):
+            assert d.slater_sign(i) == (-1) ** (i)
+        for i in range(128):
+            assert d.slater_sign_reverse(i) == (-1) ** (i + 1)
+
 
 if __name__ == "__main__":
     test_det_constructors()
+    test_det_fill()
+    test_det_getset()
+    test_det_exciting()
+    test_det_get_occ_vir()
+    test_det_creann()
+    test_det_equality()
+    test_det_hash()
+    test_det_sorting()
     test_det_symmetry()
+    test_det_slater_sign()

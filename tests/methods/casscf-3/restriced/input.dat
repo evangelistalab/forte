@@ -18,12 +18,12 @@ set {
     mcscf_type      conv
 }
 
-casscf_energy = energy('casscf')
-print casscf_energy
+mcscf_energy = energy('casscf')
+print mcscf_energy
 
 set scf_type direct
 set forte {
-    casscf_reference true
+    mcscf_reference true
     restricted_docc     [1, 0, 0, 0]
     active              [3, 0, 1, 2]
     int_type        conventional

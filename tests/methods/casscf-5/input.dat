@@ -1,49 +1,28 @@
 import forte
 
-
-memory 500 mb
-
-refmcscf   =  -226.575016947333239
-refdsrgpt2 =  -226.575016871111
+refmcscf   =  -226.57507656 # lower energy solution used since v0.4.0
 
 molecule mbenzyne{
-  0 1
-   C   0.0000000000  -2.5451795941   0.0000000000
-   C   0.0000000000   2.5451795941   0.0000000000
-   C  -2.2828001669  -1.3508352528   0.0000000000
-   C   2.2828001669  -1.3508352528   0.0000000000
-   C   2.2828001669   1.3508352528   0.0000000000
-   C  -2.2828001669   1.3508352528   0.0000000000
-   H  -4.0782187459  -2.3208602146   0.0000000000
-   H   4.0782187459  -2.3208602146   0.0000000000
-   H   4.0782187459   2.3208602146   0.0000000000
-   H  -4.0782187459   2.3208602146   0.0000000000
-
-  units bohr
+0 1
+C   0.0000000000  -2.5451795941   0.0000000000
+C   0.0000000000   2.5451795941   0.0000000000
+C  -2.2828001669  -1.3508352528   0.0000000000
+C   2.2828001669  -1.3508352528   0.0000000000
+C   2.2828001669   1.3508352528   0.0000000000
+C  -2.2828001669   1.3508352528   0.0000000000
+H  -4.0782187459  -2.3208602146   0.0000000000
+H   4.0782187459  -2.3208602146   0.0000000000
+H   4.0782187459   2.3208602146   0.0000000000
+H  -4.0782187459   2.3208602146   0.0000000000
+units bohr
 }
 
 set globals{
    basis                   sto-3g
-   df_basis_mp2            cc-pvdz-ri
-   df_basis_scf            cc-pvdz-jkfit
    scf_type                pk
-   d_convergence           10
-   e_convergence           12
-   frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
-   restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
-   active                 [1, 0, 0, 0, 0, 0, 1, 0]
-   maxiter                 500
-   reference               ROHF
-   S                       0.0
-   guess                   core
 }
-#scf = energy('casscf')
-#compare_values(refmcscf, scf,10,"SCF Energy")
 
-set scf_type  direct
 set forte {
-   job_type                mcscf_two_step
-   CASSCF_DEBUG_PRINTING   false
    active_space_solver     fci
    frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
    restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
@@ -51,11 +30,8 @@ set forte {
    root_sym                0
    nroot                   1
    multiplicity            1
-   int_type                conventional
-   CASSCF_MAXITER       50
-   print                    0
+   mcscf_freeze_core       true
 }
 
-
-my_casscf = energy('forte')
-compare_values(my_casscf, variable("CURRENT ENERGY"),6,"CASSCF energy")
+energy('forte')
+compare_values(refmcscf, variable("CURRENT ENERGY"),6,"CASSCF energy")

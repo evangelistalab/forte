@@ -1,17 +1,15 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
 refmcscf   = -15.56976136088
 refdsrgpt2 = -15.62904156665
 
 molecule {
-  0 1
-  BE        0.000000000000     0.000000000000     0.000000000000
-  H         0.000000000000     1.390000000000     2.500000000000
-  H         0.000000000000    -1.390000000000     2.500000000000
-  units bohr
-  no_reorient
+0 1
+Be        0.000000000000     0.000000000000     0.000000000000
+H         0.000000000000     1.390000000000     2.500000000000
+H         0.000000000000    -1.390000000000     2.500000000000
+units bohr
+no_reorient
 }
 
 basis {
@@ -48,34 +46,19 @@ S   1   1.00
 }
 
 set forte{
-   job_type             mcscf_two_step
-   casscf_e_convergence 12
-   casscf_g_convergence 8
-   active_space_solver  fci
-   restricted_docc      [2,0,0,0]
-   active               [1,0,0,1]
-   root_sym             0
-   nroot                1
-   multiplicity         1
-}
-
-#mcscf_energy, wfn = energy('forte', return_wfn=True)
-#compare_values(refmcscf,mcscf_energy,10,"MCSCF energy")
-
-set forte{
-   job_type             newdriver
-   casscf_reference      true
    active_space_solver  fci
    correlation_solver   dsrg-mrpt2
+   mcscf_reference     true
+   mcscf_e_convergence 12
+   mcscf_g_convergence 8
    restricted_docc      [2,0,0,0]
    active               [1,0,0,1]
    root_sym             0
    nroot                1
    dsrg_s               1.0e10
-   dsrgpt               true
    multiplicity         1
    threepdc             zero
 }
 
-energy('forte') #,ref_wfn=wfn)
+energy('forte')
 compare_values(refdsrgpt2,variable("CURRENT ENERGY"),9,"DSRG-MRPT2 energy")

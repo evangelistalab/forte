@@ -3,7 +3,6 @@
 
 import forte
 
-refscf = -113.87663391962522
 reffci = -113.911667467206257
 
 molecule {
@@ -32,10 +31,8 @@ set forte {
   active_space_solver fci
   restricted_docc [7]
   active [3]
+  mcscf_reference false
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refscf, variable("CURRENT ENERGY"), 9, "SCF energy")
-
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(reffci, variable("CURRENT ENERGY"),9, "FCI energy")

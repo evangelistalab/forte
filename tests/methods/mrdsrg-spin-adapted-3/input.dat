@@ -20,14 +20,13 @@ set globals{
 }
 
 set forte{
-   job_type                mcscf_two_step
    active_space_solver     fci
    restricted_docc         [2,0,1,1]
    active                  [2,0,0,0]
    root_sym                0
    nroot                   1
-   casscf_e_convergence    12
-   casscf_g_convergence    8
+   mcscf_e_convergence    12
+   mcscf_g_convergence    8
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)
@@ -51,6 +50,7 @@ set forte{
   relax_ref              twice
   dsrg_read_amps         true
   dsrg_rsc_ncomm         4
+  mcscf_reference       false
 }
 
 energy('forte', ref_wfn=wfn)

@@ -26,6 +26,8 @@ set global {
 
 set forte {
   active_space_solver genci
+  correlation_solver dsrg-mrpt2
+  dsrg_s              1.0
   ms                  0.0
   multiplicity        1
   root_sym            0
@@ -36,31 +38,23 @@ set forte {
   gas2                [3,0,1,2]
   gas1min             [0]
   gas1max             [1]
-  job_type            mcscf_two_step
-  casscf_maxiter      100
-  casscf_e_convergence 1e-10
-  casscf_active_frozen_orbital [0]
-  casscf_diis_start 15
-  casscf_e_convergence 10
-  casscf_g_convergence 8
-  casscf_micro_maxiter 4
+  mcscf_maxiter      100
+  mcscf_e_convergence 1e-10
+  mcscf_active_frozen_orbital [0]
+  mcscf_diis_start 15
+  mcscf_e_convergence 10
+  mcscf_g_convergence 8
+  mcscf_micro_maxiter 4
 }
-
-escf, wfn = energy('scf', return_wfn=True)
-egasscf, wfn_gasscf = energy('forte', ref_wfn=wfn, return_wfn=True)
-compare_values(refgasscf, egasscf, 9, "GASSCF energy")
 
 # In spin-integrated implementation, the zeroth-order Hamiltonian is the
 # diagonal elements of the Fock matrix. Internal excitations are ignored
 # by default. As such, the off-digonal blocks between GAS spaces in Fock
 # matrix are ignored.
-set forte {
-  job_type newdriver
-  correlation_solver dsrg-mrpt2
-  dsrg_s 1.0
-}
-edsrg = energy('forte', ref_wfn=wfn_gasscf)
+edsrg, wfn_gasscf = energy('forte', return_wfn=True)
+compare_values(refgasscf, variable("DSRG REFERENCE ENERGY"), 9, "GASSCF energy")
 compare_values(refdsrg, edsrg, 9, "GASSCF-DSRG-MRPT2 (SI) energy")
+
 
 # In spin-adapted implementation, the zeroth-order Hamiltonian is the
 # core, active, virtual blocks of the Fock matrix. Internal excitations
@@ -69,6 +63,7 @@ compare_values(refdsrg, edsrg, 9, "GASSCF-DSRG-MRPT2 (SI) energy")
 set forte {
   correlation_solver sa-mrdsrg
   corr_level pt2
+  mcscf_reference false # skip MCSCF computation
 }
 edsrg_sa = energy('forte', ref_wfn=wfn_gasscf)
 compare_values(refdsrg_sa, edsrg_sa, 9, "GASSCF-DSRG-MRPT2 (SA) energy")

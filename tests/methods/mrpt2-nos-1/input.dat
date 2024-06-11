@@ -23,8 +23,8 @@ set forte{
   active_space_solver    fci
   restricted_docc        [2,0,1,1]
   active                 [2,0,0,0]
-  casscf_g_convergence   8
-  casscf_e_convergence   12
+  mcscf_g_convergence   8
+  mcscf_e_convergence   12
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)

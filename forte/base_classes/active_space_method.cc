@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -41,7 +41,6 @@
 #include "integrals/one_body_integrals.h"
 #include "fci/fci_solver.h"
 #include "genci/genci_solver.h"
-#include "casscf/casscf.h"
 #include "sci/aci.h"
 #include "sci/asci.h"
 #include "sci/detci.h"
@@ -59,7 +58,6 @@ ActiveSpaceMethod::ActiveSpaceMethod(StateInfo state, size_t nroot,
                                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : state_(state), nroot_(nroot), mo_space_info_(mo_space_info), as_ints_(as_ints) {
     active_mo_ = as_ints_->active_mo();
-    core_mo_ = as_ints_->restricted_docc_mo();
 }
 
 void ActiveSpaceMethod::set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
