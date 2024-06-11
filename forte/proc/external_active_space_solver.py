@@ -145,7 +145,7 @@ def make_hamiltonian(as_ints, state_map):
         print(f"\n{H}")
 
 
-def write_external_rdm_file(rdm):
+def write_external_rdm_file(rdm, active_space_solver):
     g1a = rdm.g1a()
     g1b = rdm.g1b()
 
@@ -188,7 +188,7 @@ def write_external_rdm_file(rdm):
         "description": "two-body density matrix as a list of tuples (i,j,k,l,<i^ j^ l k>)",
     }
 
-    if max_rdm_level == 3:
+    if rdm.max_rdm_level() == 3:
         g3aaa = rdm.g3aaa()
         g3aab = rdm.g3aab()
         g3abb = rdm.g3abb()

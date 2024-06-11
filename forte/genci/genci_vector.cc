@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -158,8 +158,9 @@ void GenCIVector::print(double threshold) const {
     });
 }
 
-std::shared_ptr<StateVector> GenCIVector::as_state_vector() const {
-    det_hash<double> state_vector;
+SparseState GenCIVector::as_state_vector() const {
+    // det_hash<double> state_vector;
+    SparseState state_vector;
     const_for_each_element([&](const size_t& /*n*/, const int& class_Ia, const int& class_Ib,
                                const size_t& Ia, const size_t& Ib, const double& c) {
         if (std::fabs(c) > 1.0e-12) {
@@ -167,7 +168,7 @@ std::shared_ptr<StateVector> GenCIVector::as_state_vector() const {
             state_vector[I] = c;
         }
     });
-    return std::make_shared<StateVector>(state_vector);
+    return state_vector;
 }
 
 void GenCIVector::copy(GenCIVector& wfn) {
@@ -222,8 +223,8 @@ void GenCIVector::zero() {
 void GenCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info,
                                          std::shared_ptr<RDMs> rdms) {
     print_h2("Natural Orbitals Occupation Numbers");
-    psi::Dimension active_dim = mo_space_info->dimension("ACTIVE");
-    auto nfdocc = mo_space_info->size("FROZEN_DOCC");
+    const auto active_dim = mo_space_info->dimension("ACTIVE");
+    const auto idocc_pi = mo_space_info->dimension("INACTIVE_DOCC");
 
     auto G1 = rdms->SF_G1();
     auto& G1_data = G1.data();
@@ -248,7 +249,8 @@ void GenCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_i
     std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
     for (int h = 0; h < nirrep_; h++) {
         for (int u = 0; u < active_dim[h]; u++) {
-            auto irrep_occ = std::make_pair(OCC->get(h, u), std::make_pair(h, u + 1));
+            auto index = u + idocc_pi[h] + 1;
+            auto irrep_occ = std::make_pair(OCC->get(h, u), std::make_pair(h, index));
             vec_irrep_occupation.push_back(irrep_occ);
         }
     }
@@ -258,8 +260,8 @@ void GenCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_i
     size_t count = 0;
     psi::outfile->Printf("\n    ");
     for (auto vec : vec_irrep_occupation) {
-        psi::outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second + nfdocc,
-                             mo_space_info->irrep_label(vec.second.first).c_str(), vec.first);
+        psi::outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second,
+                        mo_space_info->irrep_label(vec.second.first).c_str(), vec.first);
         if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
             psi::outfile->Printf("\n    ");
     }

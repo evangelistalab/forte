@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -308,7 +308,7 @@ void DavidsonLiuSolver::setup_guesses() {
         }
         basis_size_ += added;
     } else if (basis_size_ >= nroot_) {
-        psi::outfile->Printf("\n\n  Davidson-Liu solver: restarting from previous calculation.");
+        // psi::outfile->Printf("\n\n  Davidson-Liu solver: restarting from previous calculation.");
         basis_size_ = nroot_; // first nroot_ vectors from the previous calculation
         sigma_size_ = 0;      // trigger computation of all sigma vectors
     } else {

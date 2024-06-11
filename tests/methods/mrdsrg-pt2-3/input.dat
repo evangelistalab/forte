@@ -72,6 +72,7 @@ set forte {
   relax_ref             iterate
   e_convergence         9
   maxiter_relax_ref     15
+  mcscf_reference      false
 }
 
 energy('scf')

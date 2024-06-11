@@ -124,6 +124,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
         as_solver_ = active_space_solver;
     }
 
+    /// If amplitudes are converged
+    bool converged() { return converged_; }
+
   protected:
     /// Startup function called in constructor
     void startup();
@@ -157,6 +160,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     size_t ntamp_;
     /// Threshold for amplitudes considered as intruders
     double intruder_tamp_;
+
+    /// If the amplitudes are converged or not
+    bool converged_ = true;
 
     /// Relaxation type
     std::string relax_ref_;

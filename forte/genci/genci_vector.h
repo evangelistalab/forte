@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -38,7 +38,7 @@
 
 #include "base_classes/rdms.h"
 #include "genci_string_lists.h"
-#include "sparse_ci/sparse_state_vector.h"
+#include "sparse_ci/sparse_state.h"
 
 namespace psi {
 class Matrix;
@@ -77,8 +77,8 @@ class GenCIVector {
     void zero();
     /// @brief print the vector
     void print(double threshold = 1e-9) const;
-    /// @brief return the state as a StateVector object
-    std::shared_ptr<StateVector> as_state_vector() const;
+    /// @brief return the state as a SparseState object
+    SparseState as_state_vector() const;
 
     /// copy the wave function object
     void copy(GenCIVector& wfn);

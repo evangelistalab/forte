@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -31,7 +31,7 @@
 #include "integrals/active_space_integrals.h"
 #include "helpers/timer.h"
 
-#include "sparse_ci/sparse_state_vector.h"
+#include "sparse_ci/sparse_state.h"
 #include "sparse_ci/sparse_operator.h"
 #include "sparse_ci/determinant_hashvector.h"
 
@@ -41,7 +41,7 @@ class ActiveSpaceIntegrals;
 
 /**
  * @brief The SparseHamiltonian class
- * This class implements an algorithm to apply the Hamiltonian to a StateVector object.
+ * This class implements an algorithm to apply the Hamiltonian to a SparseState object.
  */
 class SparseHamiltonian {
   public:
@@ -55,14 +55,14 @@ class SparseHamiltonian {
     ///     |H_IJ C_J| > screen_thresh
     /// @param state the state to which the Hamiltonian will be applied
     /// @param screen_thresh a threshold to select which elements of H are applied to the state
-    StateVector compute(const StateVector& state, double screen_thresh);
+    SparseState compute(const SparseState& state, double screen_thresh);
 
     /// @brief Compute the state H|state> using an on-the-fly algorithm that has no memory footprint
     /// This function applies only those elements of H that satisfy the condition:
     ///     |H_IJ C_J| > screen_thresh
     /// @param state the state to which the Hamiltonian will be applied
     /// @param screen_thresh a threshold to select which elements of H are applied to the state
-    StateVector compute_on_the_fly(const StateVector& state, double screen_thresh);
+    SparseState compute_on_the_fly(const SparseState& state, double screen_thresh);
 
     /// @return timings for this class
     std::map<std::string, double> timings() const;
@@ -71,7 +71,7 @@ class SparseHamiltonian {
     /// Compute couplings for new determinants
     void compute_new_couplings(const std::vector<Determinant>& new_dets, double screen_thresh);
     /// Compute sigma using the couplings
-    StateVector compute_sigma(const StateVector& state, double screen_thresh);
+    SparseState compute_sigma(const SparseState& state, double screen_thresh);
 
     /// The integral object
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;

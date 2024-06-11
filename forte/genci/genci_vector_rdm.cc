@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -635,14 +635,14 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
         for (size_t p = 0; p < ncmo; p++) {
             for (size_t q = 0; q < ncmo; ++q) {
                 double rdm = 0.0;
-                for (const auto& [I, c_I] : *state_vector_r) {
+                for (const auto& [I, c_I] : state_vector_r) {
                     J = I;
                     double sign = 1.0;
                     sign *= J.destroy_alfa_bit(q);
                     sign *= J.create_alfa_bit(p);
                     if (sign != 0) {
-                        if (state_vector_l->count(J) != 0) {
-                            rdm += sign * (*state_vector_l)[J] * c_I;
+                        if (state_vector_l.count(J) != 0) {
+                            rdm += sign * state_vector_l[J] * c_I;
                         }
                     }
                 }
@@ -655,14 +655,14 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
         for (size_t p = 0; p < ncmo; p++) {
             for (size_t q = 0; q < ncmo; ++q) {
                 double rdm = 0.0;
-                for (const auto& [I, c_I] : *state_vector_r) {
+                for (const auto& [I, c_I] : state_vector_r) {
                     J = I;
                     double sign = 1.0;
                     sign *= J.destroy_beta_bit(q);
                     sign *= J.create_beta_bit(p);
                     if (sign != 0) {
-                        if (state_vector_l->count(J) != 0) {
-                            rdm += sign * (*state_vector_l)[J] * c_I;
+                        if (state_vector_l.count(J) != 0) {
+                            rdm += sign * state_vector_l[J] * c_I;
                         }
                     }
                 }
@@ -705,7 +705,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                 for (size_t r = 0; r < ncmo; ++r) {
                     for (size_t s = 0; s < ncmo; ++s) {
                         double rdm = 0.0;
-                        for (const auto& [I, c_I] : *state_vector_r) {
+                        for (const auto& [I, c_I] : state_vector_r) {
                             J = I;
                             double sign = 1.0;
                             sign *= J.destroy_alfa_bit(r);
@@ -713,8 +713,8 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                             sign *= J.create_alfa_bit(q);
                             sign *= J.create_alfa_bit(p);
                             if (sign != 0) {
-                                if (state_vector_l->count(J) != 0) {
-                                    rdm += sign * (*state_vector_l)[J] * c_I;
+                                if (state_vector_l.count(J) != 0) {
+                                    rdm += sign * state_vector_l[J] * c_I;
                                 }
                             }
                         }
@@ -735,7 +735,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                 for (size_t r = 0; r < ncmo; ++r) {
                     for (size_t s = 0; s < ncmo; ++s) {
                         double rdm = 0.0;
-                        for (const auto& [I, c_I] : *state_vector_r) {
+                        for (const auto& [I, c_I] : state_vector_r) {
                             J = I;
                             double sign = 1.0;
                             sign *= J.destroy_beta_bit(r);
@@ -743,8 +743,8 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                             sign *= J.create_beta_bit(q);
                             sign *= J.create_beta_bit(p);
                             if (sign != 0) {
-                                if (state_vector_l->count(J) != 0) {
-                                    rdm += sign * (*state_vector_l)[J] * c_I;
+                                if (state_vector_l.count(J) != 0) {
+                                    rdm += sign * state_vector_l[J] * c_I;
                                 }
                             }
                         }
@@ -765,7 +765,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                 for (size_t r = 0; r < ncmo; ++r) {
                     for (size_t s = 0; s < ncmo; ++s) {
                         double rdm = 0.0;
-                        for (const auto& [I, c_I] : *state_vector_r) {
+                        for (const auto& [I, c_I] : state_vector_r) {
                             J = I;
                             double sign = 1.0;
                             sign *= J.destroy_alfa_bit(r);
@@ -773,8 +773,8 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                             sign *= J.create_beta_bit(q);
                             sign *= J.create_alfa_bit(p);
                             if (sign != 0) {
-                                if (state_vector_l->count(J) != 0) {
-                                    rdm += sign * (*state_vector_l)[J] * c_I;
+                                if (state_vector_l.count(J) != 0) {
+                                    rdm += sign * state_vector_l[J] * c_I;
                                 }
                             }
                         }
@@ -800,7 +800,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                         for (size_t t = s + 1; t < ncmo; ++t) {
                             for (size_t a = t + 1; a < ncmo; ++a) {
                                 double rdm = 0.0;
-                                for (const auto& [I, c_I] : *state_vector_r) {
+                                for (const auto& [I, c_I] : state_vector_r) {
                                     J = I;
                                     double sign = 1.0;
                                     sign *= J.destroy_alfa_bit(s);
@@ -810,8 +810,8 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                                     sign *= J.create_alfa_bit(q);
                                     sign *= J.create_alfa_bit(p);
                                     if (sign != 0) {
-                                        if (state_vector_l->count(J) != 0) {
-                                            rdm += sign * (*state_vector_l)[J] * c_I;
+                                        if (state_vector_l.count(J) != 0) {
+                                            rdm += sign * state_vector_l[J] * c_I;
                                         }
                                     }
                                 }
@@ -837,7 +837,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                         for (size_t t = s + 1; t < ncmo; ++t) {
                             for (size_t a = 0; a < ncmo; ++a) {
                                 double rdm = 0.0;
-                                for (const auto& [I, c_I] : *state_vector_r) {
+                                for (const auto& [I, c_I] : state_vector_r) {
                                     J = I;
                                     double sign = 1.0;
                                     sign *= J.destroy_alfa_bit(s);
@@ -847,8 +847,8 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                                     sign *= J.create_alfa_bit(q);
                                     sign *= J.create_alfa_bit(p);
                                     if (sign != 0) {
-                                        if (state_vector_l->count(J) != 0) {
-                                            rdm += sign * (*state_vector_l)[J] * c_I;
+                                        if (state_vector_l.count(J) != 0) {
+                                            rdm += sign * state_vector_l[J] * c_I;
                                         }
                                     }
                                 }
@@ -874,7 +874,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                         for (size_t t = s + 1; t < ncmo; ++t) {
                             for (size_t a = 0; a < ncmo; ++a) {
                                 double rdm = 0.0;
-                                for (const auto& [I, c_I] : *state_vector_r) {
+                                for (const auto& [I, c_I] : state_vector_r) {
                                     J = I;
                                     double sign = 1.0;
                                     sign *= J.destroy_alfa_bit(s);
@@ -884,8 +884,8 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                                     sign *= J.create_beta_bit(q);
                                     sign *= J.create_alfa_bit(p);
                                     if (sign != 0) {
-                                        if (state_vector_l->count(J) != 0) {
-                                            rdm += sign * (*state_vector_l)[J] * c_I;
+                                        if (state_vector_l.count(J) != 0) {
+                                            rdm += sign * state_vector_l[J] * c_I;
                                         }
                                     }
                                 }
@@ -912,7 +912,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                         for (size_t t = s + 1; t < ncmo; ++t) {
                             for (size_t a = t + 1; a < ncmo; ++a) {
                                 double rdm = 0.0;
-                                for (const auto& [I, c_I] : *state_vector_r) {
+                                for (const auto& [I, c_I] : state_vector_r) {
                                     J = I;
                                     double sign = 1.0;
                                     sign *= J.destroy_beta_bit(s);
@@ -922,8 +922,8 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                                     sign *= J.create_beta_bit(q);
                                     sign *= J.create_beta_bit(p);
                                     if (sign != 0) {
-                                        if (state_vector_l->count(J) != 0) {
-                                            rdm += sign * (*state_vector_l)[J] * c_I;
+                                        if (state_vector_l.count(J) != 0) {
+                                            rdm += sign * state_vector_l[J] * c_I;
                                         }
                                     }
                                 }

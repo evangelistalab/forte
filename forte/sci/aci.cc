@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -156,7 +156,7 @@ void AdaptiveCI::print_info() {
                           {"Root used for properties", root_},
                           {"Roots used for averaging", naverage_},
                           {"Root averaging offset", average_offset_}});
-                          
+
     std::string table = printer.get_table("ACI Solver");
     psi::outfile->Printf("%s", table.c_str());
 

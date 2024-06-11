@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -41,39 +41,50 @@ namespace forte {
 
 class ForteOptions;
 
-/**
- * @brief The SemiCanonical class
- * Computes semi-canonical orbitals for given 1RDMs
- */
+/// @brief The SemiCanonical class
+/// This class computes semi-canonical orbitals from the 1RDM and optionally transforms the integrals and RDMs
+/// Semi-canonical orbitals are obtained by diagonalizing the Fock matrix in each orbital space separately
+/// The class can also produce natural orbitals. These differ by the semi-canonical orbital only in the active space
+/// where they are defined to be eigenvectors of the 1RDM
+/// 
+/// The final orbitals are ordered by increasing energy within each irrep and space. Natural orbitals are ordered
+/// by decreasing occupation number
 class SemiCanonical {
   public:
-    /**
-     * @brief SemiCanonical Constructor
-     * @param options ForteOptions
-     * @param ints ForteIntegrals
-     * @param mo_space_info MOSpaceInfo
-     * @param quiet_banner Method banner is not printed if set to true
-     */
+    
+    /// @brief SemiCanonical Constructor
+    /// @param mo_space_info The MOSpaceInfo object
+    /// @param ints The ForteIntegrals object
+    /// @param options The ForteOptions object
+    /// @param inactive_mix Mix the frozen and restricted orbitals together?
+    /// @param active_mix Mix all GAS orbitals together?
+    /// @param quiet_banner Method banner is not printed if set to true
     SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
-                  std::shared_ptr<ForteOptions> options, bool quiet = false);
+                  std::shared_ptr<ForteOptions> options, bool inactive_mix, bool active_mix,
+                  bool quiet_banner = false);
 
     /// Transforms integrals and RDMs
+    /// @brief Semicanonicalize the orbitals and transform the integrals and RDMs
+    /// @param rdms The RDMs of the state to be semicanonicalized
+    /// @param build_fock If true, the Fock matrix is built and diagonalized
+    /// @param nat_orb If true, the natural orbitals are used to semicanonicalize
+    /// @param transform If true, the orbitals are transformed
     void semicanonicalize(std::shared_ptr<RDMs> rdms, const bool& build_fock = true,
                           const bool& nat_orb = false, const bool& transform = true);
 
-    /// Return the alpha rotation matrix
+    /// @return the alpha rotation matrix
     std::shared_ptr<psi::Matrix> Ua() { return Ua_; }
 
-    /// Return the beta rotation matrix
+    /// @return the beta rotation matrix
     std::shared_ptr<psi::Matrix> Ub() { return Ub_; }
 
-    /// Return the alpha rotation matrix in the active space
+    /// @return the alpha rotation matrix in the active space
     ambit::Tensor Ua_t() const { return Ua_t_.clone(); }
 
-    /// Return the beta rotation matrix in the active space
+    /// @return the beta rotation matrix in the active space
     ambit::Tensor Ub_t() const { return Ub_t_.clone(); }
 
-    /// Return if the orbital ordering and phases are fixed successfully
+    /// @return if the orbital ordering and phases are fixed successfully
     bool fix_orbital_success() const { return fix_orbital_success_; }
 
   private:

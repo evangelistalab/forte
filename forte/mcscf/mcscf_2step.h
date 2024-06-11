@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -37,7 +37,7 @@
 #include "base_classes/scf_info.h"
 #include "base_classes/state_info.h"
 #include "integrals/integrals.h"
-#include "casscf/casscf_orb_grad.h"
+#include "mcscf/mcscf_orb_grad.h"
 
 namespace forte {
 
@@ -157,8 +157,8 @@ class MCSCF_2STEP {
     bool is_single_reference();
 
     /// Class to store iteration data
-    struct CASSCF_HISTORY {
-        CASSCF_HISTORY(double ec, double eo, double g, int n)
+    struct MCSCF_HISTORY {
+        MCSCF_HISTORY(double ec, double eo, double g, int n)
             : e_c(ec), e_o(eo), g_rms(g), n_micro(n) {}
         double e_c;   // energy from CI
         double e_o;   // energy after orbital optimization
@@ -167,10 +167,10 @@ class MCSCF_2STEP {
     };
 
     /// Test energy history and return if the energies are converging or not
-    bool test_history(const std::vector<CASSCF_HISTORY>& history, const int& n_samples);
+    bool test_history(const std::vector<MCSCF_HISTORY>& history, const int& n_samples);
 
     /// Print iteration information
-    void print_macro_iteration(const std::vector<CASSCF_HISTORY>& history);
+    void print_macro_iteration(const std::vector<MCSCF_HISTORY>& history);
 };
 
 std::unique_ptr<MCSCF_2STEP>

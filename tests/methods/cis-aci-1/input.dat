@@ -28,11 +28,10 @@ set forte {
   aci_n_average 2
   active_ref_type CIS
   sci_excited_algorithm average
+  mcscf_reference false
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refscf, variable("SCF total energy"),10, "SCF energy") #TEST
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(refaci_root0, variable("ACI ENERGY"),10, "ACI energy") #TEST
 compare_values(refaci_root0, variable("ENERGY ROOT 0 1AG"),10, "ACI energy root 0") #TEST
 compare_values(refaci_root1, variable("ENERGY ROOT 1 1AG"),10, "ACI energy root 1") #TEST

@@ -2,12 +2,45 @@ Running Forte computations
 ==========================
 
 In this section, we will look at the basics of running computations in
-Forte.
+Forte via the **standard workflow**.This is a predefined workflow that
+supports standard multireference computations and should be sufficient
+for the majority of applications of Forte.
 
-There are two ways one can run Forte:
+There are two ways one can run the standard workflow in Forte: 1. Using
+the plugin interface in Psi4. 1. Using Forte’s python API.
 
-1. Using the plugin interface in Psi4.
-2. Using Forte’s python API.
+The standard workflow
+---------------------
+
+The simplest way to run Forte computations is through the standard
+workflow. This requires the user to write an input file or a python
+script that is then executed by calling Psi4 on the command line or via
+Python.
+
+The main steps in the standard workflow are shown below:
+
+.. figure:: ../source/images/standard_workflow.png
+   :alt: Forte’s standard workflow scheme
+
+   Forte’s standard workflow scheme
+
+The steps in the standard workflow based on a Psi4 input file are as
+follow: 1. The computation starts from an input file in the Psithon
+format. 1. Options for performing a computation are read from the file
+and passed to Forte 1. Orbitals and integrals are generated in Psi4
+(after running a SCF computation) or read from a file. 1. Optionally,
+the orbitals are localized or AVAS orbitals are formed 1. An active
+space solver computation is performed on the system (e.g. CASCI) 1. An
+MCSCF computation is performed using the active space solver used in
+step e) 1. Optionally, the orbitals are transformed to enable an
+embedding computation 1. A dynamical correlation solver computation is
+performed (e.g., MR-DSRG)
+
+This standard workflow encompasses a variety of user case scenarios,
+allowing any combination of integrals, active space solvers, and
+dynamical correlation solvers. This is possible due to Forte’s extensive
+use of abstract interfaces and polymorphism, which enables using a
+single workflow code that is easy to maintain.
 
 Running a FCI computation using the plugin interface
 ----------------------------------------------------

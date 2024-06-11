@@ -33,11 +33,11 @@ set forte {
   gas1min             [0,0]
   avg_state           [[0,1,1],[2,1,1]]
   active_space_solver genci
-  casscf_maxiter      100
-  casscf_e_convergence 1e-10
-  casscf_g_convergence 1e-8
-  casscf_active_frozen_orbital [0]
-  casscf_micro_maxiter 2
+  mcscf_maxiter      100
+  mcscf_e_convergence 1e-10
+  mcscf_g_convergence 1e-8
+  mcscf_active_frozen_orbital [0]
+  mcscf_micro_maxiter 2
 }
 
 escf, wfn = energy('scf', return_wfn=True)

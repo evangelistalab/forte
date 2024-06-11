@@ -25,6 +25,7 @@ set forte {
   frozen_docc        [1,0,0,0]
   restricted_docc    [0,0,0,0]
   active             [9,1,4,4]
+  mcscf_reference   false
 }
 
 energy('scf')

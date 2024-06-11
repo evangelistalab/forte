@@ -35,10 +35,9 @@ set forte {
   nroot 1
   aci_screen_alg batch_vec
   aci_nbatch 2
+  mcscf_reference false
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refscf, variable("SCF total energy"),10, "SCF energy") #TEST
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(refaci, variable("ACI ENERGY"),10, "ACI energy") #TEST
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),10, "ACI+PT2 energy") #TEST

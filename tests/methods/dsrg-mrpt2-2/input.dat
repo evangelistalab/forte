@@ -15,28 +15,19 @@ set globals{
 }
 
 set forte{
-  job_type                mcscf_two_step
   active_space_solver     fci
-  restricted_docc         [2,0,1,1]
+  correlation_solver      dsrg-mrpt2
+  frozen_docc             [1,0,0,0]
+  restricted_docc         [1,0,1,1]
   active                  [2,0,0,0]
-  casscf_e_convergence    12
-  casscf_g_convergence    8
+  root_sym                0
+  nroot                   1
+  dsrg_s                  1.0
+  mcscf_e_convergence    12
+  mcscf_g_convergence    8
 }
 
-Emcscf, wfn = energy('forte', return_wfn=True)
-compare_values(refmcscf, variable("CURRENT ENERGY"), 10, "MCSCF energy")
+energy('forte')
 
-set forte{
-   job_type                newdriver
-   active_space_solver     detci
-   correlation_solver      dsrg-mrpt2
-   frozen_docc             [1,0,0,0]
-   restricted_docc         [1,0,1,1]
-   active                  [2,0,0,0]
-   root_sym                0
-   nroot                   1
-   dsrg_s                  1.0
-}
-
-energy('forte',ref_wfn=wfn)
+compare_values(refmcscf,variable("DSRG REFERENCE ENERGY"),10,"CASSCF energy")
 compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8,"DSRG-MRPT2 energy")

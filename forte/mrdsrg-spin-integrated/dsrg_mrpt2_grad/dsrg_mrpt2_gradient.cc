@@ -11,9 +11,13 @@
  */
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/matrix.h"
+
 #include "helpers/printing.h"
-#include "../dsrg_mrpt2.h"
 #include "helpers/timer.h"
+
+#include "../dsrg_mrpt2.h"
+
+#include "integrals/one_body_integrals.h"
 
 using namespace ambit;
 using namespace psi;

@@ -1,0 +1,4066 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.10a1.dev23 
+
+                         Git: Rev {master} 8a781dc 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Monday, 13 May 2024 11:57AM
+
+    Process ID: 93775
+    Host:       macbook-pro-158.wireless.emory.edu
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    2
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+# tests/manual/mcscf-3/input.dat
+
+import forte
+
+molecule CO{
+0 1
+C
+O  1 1.128
+}
+
+set {
+  basis                cc-pcvdz
+  reference            rhf
+  e_convergence        10
+  d_convergence        8
+  docc                 [5,0,1,1]
+  opt_coordinates      cartesian
+}
+
+set forte {
+  active_space_solver  fci
+  restricted_docc      [4,0,0,0]
+  active               [2,0,2,2]
+  e_convergence        8  # energy convergence of the FCI iterations
+  r_convergence        8  # residual convergence of the FCI iterations
+  mcscf_e_convergence  8  # energy convergence of the MCSCF iterations
+  mcscf_g_convergence  6  # gradient convergence of the MCSCF iterations
+  mcscf_micro_maxiter  4  # do at least 4 micro iterations per macro iteration
+}
+
+set findif{
+  points 5  
+}
+
+G, wfn = gradient('forte', dertype=0, return_wfn=True)
+wfn.gradient().print_out()
+--------------------------------------------------------------------------
+
+Scratch directory: /tmp/
+
+         ----------------------------------------------------------
+                                   FINDIF
+                     R. A. King and Jonathon Misiewicz
+         ----------------------------------------------------------
+
+  Using finite-differences of energies to determine gradients.
+    Generating geometries for use with 5-point formula.
+    Displacement size will be 5.00e-03.
+    Number of atoms is 2.
+    Number of symmetric SALCs is 1.
+    Translations projected? 1. Rotations projected? 1.
+    Number of geometries (including reference) is 5.
+ 5 displacements needed ...
+
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>//
+  //    FiniteDifference Computations  //
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<//
+
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.10a1.dev23 
+
+                         Git: Rev {master} 8a781dc 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Monday, 13 May 2024 11:57AM
+
+    Process ID: 93775
+    Host:       macbook-pro-158.wireless.emory.edu
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    2
+    
+  ==> Input QCSchema <==
+
+--------------------------------------------------------------------------
+{'driver': 'energy',
+ 'extras': {'psiapi': True, 'wfn_qcvars_only': True},
+ 'id': None,
+ 'keywords': {'DOCC': [5, 0, 1, 1],
+              'D_CONVERGENCE': 1e-08,
+              'E_CONVERGENCE': 1e-10,
+              'FINDIF__POINTS': 5,
+              'OPT_COORDINATES': 'CARTESIAN',
+              'PARENT_SYMMETRY': 'C2v(Z)',
+              'REFERENCE': 'RHF',
+              'forte__active': [2, 0, 2, 2],
+              'forte__active_space_solver': 'FCI',
+              'forte__basis': 'CC-PCVDZ',
+              'forte__d_convergence': 1e-08,
+              'forte__e_convergence': 1e-08,
+              'forte__mcscf_g_convergence': 1e-06,
+              'forte__mcscf_micro_maxiter': 4,
+              'forte__r_convergence': 1e-08,
+              'forte__reference': 'RHF',
+              'forte__restricted_docc': [4, 0, 0, 0],
+              'function_kwargs': {}},
+ 'model': {'basis': 'cc-pcvdz', 'method': 'forte'},
+ 'molecule': {'atom_labels': ['', ''],
+              'atomic_numbers': [6, 8],
+              'extras': {},
+              'fix_com': True,
+              'fix_orientation': True,
+              'fragment_charges': [0.0],
+              'fragment_multiplicities': [1],
+              'fragments': [[0, 1]],
+              'geometry': [0.0, 0.0, -1.2178975189733685, 0.0, 0.0, 0.9137135505430612],
+              'mass_numbers': [12, 16],
+              'masses': [12.0, 15.99491461957],
+              'molecular_charge': 0.0,
+              'molecular_multiplicity': 1,
+              'name': 'CO',
+              'provenance': {'creator': 'QCElemental',
+                             'routine': 'qcelemental.molparse.from_string',
+                             'version': '0.27.1'},
+              'real': [True, True],
+              'schema_name': 'qcschema_molecule',
+              'schema_version': 2,
+              'symbols': ['C', 'O'],
+              'validated': True},
+ 'protocols': {'stdout': True},
+ 'provenance': {'creator': 'QCElemental', 'routine': 'qcelemental.models.results', 'version': '0.27.1'},
+ 'schema_name': 'qcschema_input',
+ 'schema_version': 1}
+--------------------------------------------------------------------------
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: mcscf_fc - git commit: 84f751ea
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  No reference wave function provided for Forte. Computing SCF orbitals using Psi4 ...
+   => Libint2 <=
+
+    Primary   basis highest AM E, G, H:  6, 6, 3
+    Auxiliary basis highest AM E, G, H:  7, 7, 4
+    Onebody   basis highest AM E, G, H:  -, -, -
+    Solid Harmonics ordering:            Gaussian
+
+*** tstart() called on macbook-pro-158.wireless.emory.edu
+*** at Mon May 13 11:57:54 2024
+
+   => Loading Basis Set <=
+
+    Name: CC-PCVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry C          line   178 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pcvdz.gbs 
+    atoms 2 entry O          line   246 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pcvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        2 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Bohr), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         C            0.000000000000     0.000000000000    -1.217897518973    12.000000000000
+         O            0.000000000000     0.000000000000     0.913713550543    15.994914619570
+
+  Running in c2v symmetry.
+
+  Rotational constants: A = ************  B =      1.93239  C =      1.93239 [cm^-1]
+  Rotational constants: A = ************  B =  57931.52687  C =  57931.52687 [MHz]
+  Nuclear repulsion =   22.518179177446811
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 14
+  Nalpha       = 7
+  Nbeta        = 7
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-10
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: CC-PCVDZ
+    Blend: CC-PCVDZ
+    Number of shells: 16
+    Number of basis functions: 36
+    Number of Cartesian functions: 38
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              16
+      Number of primitives:             48
+      Number of atomic orbitals:        38
+      Number of basis functions:        36
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 2
+
+  Performing in-core PK
+  Using 444222 doubles for integral storage.
+  We computed 10549 shell quartets total.
+  Whereas there are 9316 unique shell quartets.
+    13.24 percent of shell quartets recomputed by reordering.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              375
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              2
+
+  Minimum eigenvalue in the overlap matrix is 2.0505153821E-02.
+  Reciprocal condition number of the overlap matrix is 6.5686881376E-03.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     A1        18      18 
+     A2         2       2 
+     B1         8       8 
+     B2         8       8 
+   -------------------------
+    Total      36      36
+   -------------------------
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter SAD:  -111.88996774534561   -1.11890e+02   0.00000e+00 
+   @RHF iter   1:  -112.72731115785292   -8.37343e-01   1.17690e-02 DIIS/ADIIS
+   @RHF iter   2:  -112.73600273753506   -8.69158e-03   9.44286e-03 DIIS/ADIIS
+   @RHF iter   3:  -112.74990454053412   -1.39018e-02   8.27905e-04 DIIS/ADIIS
+   @RHF iter   4:  -112.75004009699113   -1.35556e-04   1.09960e-04 DIIS/ADIIS
+   @RHF iter   5:  -112.75004315352187   -3.05653e-06   2.29236e-05 DIIS
+   @RHF iter   6:  -112.75004330910608   -1.55584e-07   3.36788e-06 DIIS
+   @RHF iter   7:  -112.75004331337787   -4.27180e-09   8.06215e-07 DIIS
+   @RHF iter   8:  -112.75004331359273   -2.14854e-10   1.95003e-07 DIIS
+   @RHF iter   9:  -112.75004331360650   -1.37703e-11   2.65759e-08 DIIS
+   @RHF iter  10:  -112.75004331360661   -1.13687e-13   1.53427e-09 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1A1   -20.668890     2A1   -11.365963     3A1    -1.523140  
+       4A1    -0.802554     1B2    -0.634873     1B1    -0.634873  
+       5A1    -0.549177  
+
+    Virtual:                                                              
+
+       2B2     0.154401     2B1     0.154401     6A1     0.380852  
+       3B2     0.670613     3B1     0.670613     7A1     0.701250  
+       8A1     0.986742     9A1     1.059106     4B2     1.221623  
+       4B1     1.221623     1A2     1.343977    10A1     1.343977  
+       5B2     1.557876     5B1     1.557876    11A1     1.851977  
+      12A1     2.296636     2A2     2.936755    13A1     2.936755  
+       6B1     3.425935     6B2     3.425935    14A1     3.835986  
+      15A1    19.382076     7B1    22.459965     7B2    22.459965  
+      16A1    23.403736    17A1    34.440172     8B1    39.147618  
+       8B2    39.147618    18A1    39.842295  
+
+    Final Occupation by Irrep:
+             A1    A2    B1    B2 
+    DOCC [     5,    0,    1,    1 ]
+    NA   [     5,    0,    1,    1 ]
+    NB   [     5,    0,    1,    1 ]
+
+  @RHF Final Energy:  -112.75004331360661
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =             22.5181791774468110
+    One-Electron Energy =                -198.1775054187801288
+    Two-Electron Energy =                  62.9092829277266929
+    Total Energy =                       -112.7500433136066107
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :         -0.0935137            0.0023233           -0.0911904
+ Magnitude           :                                                    0.0911904
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on macbook-pro-158.wireless.emory.edu at Mon May 13 11:57:54 2024
+Module time:
+	user time   =       0.37 seconds =       0.01 minutes
+	system time =       0.05 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.37 seconds =       0.01 minutes
+	system time =       0.05 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space RESTRICTED_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0
+    RESTRICTED_DOCC     4     0     0     0     4
+    GAS1                2     0     2     2     6
+    GAS2                0     0     0     0     0
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC    12     2     6     6    26
+    FROZEN_UOCC         0     0     0     0     0
+    Total              18     2     8     8    36
+  -------------------------------------------------   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry C          line    61 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry O          line    81 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  State Singlet (Ms = 0) A1 GAS min: 0 0 0 0 0 0 ; GAS max: 12 0 0 0 0 0 ; weights:
+      1.000000000000
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: CC-PCVDZ
+    Blend: CC-PCVDZ
+    Number of shells: 16
+    Number of basis functions: 36
+    Number of Cartesian functions: 38
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              16
+      Number of primitives:             48
+      Number of atomic orbitals:        38
+      Number of basis functions:        36
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 2
+
+  Performing in-core PK
+  Using 444222 doubles for integral storage.
+  We computed 10549 shell quartets total.
+  Whereas there are 9316 unique shell quartets.
+    13.24 percent of shell quartets recomputed by reordering.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              400
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              2
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         36
+  Number of correlated molecular orbitals:              36
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
+
+
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01830250 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.037542 GB
+  Timing for conventional integral transformation:            0.113 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing conventional integrals:                0.113 s.
+
+          -----------------------------------------------------------
+                  Multi-Configurational Self Consistent Field
+                Two-Step Approximate Second-Order AO Algorithm
+            written by Chenyang Li, Kevin P. Hannon, and Shuhe Wang
+          -----------------------------------------------------------
+
+
+  ==> MCSCF Calculation Information <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Integral type                               CONVENTIONAL
+    CI solver type                                       FCI
+    Final orbital type                             CANONICAL
+    Derivative type                                     NONE
+    Optimize orbitals                                   TRUE
+    Include internal rotations                         FALSE
+    Debug printing                                     FALSE
+    Energy convergence                             1.000e-08
+    Gradient convergence                           1.000e-06
+    Max value for rotation                         2.000e-01
+    Max number of macro iterations                       100
+    Max number of micro iterations                         4
+    Min number of micro iterations                         4
+    DIIS start                                            15
+    Min DIIS vectors                                       3
+    Max DIIS vectors                                       8
+    Frequency of DIIS extrapolation                        1
+    --------------------------------------------------------
+
+  ==> Independent Orbital Rotations <==
+
+    ORBITAL SPACES                        A1     A2     B1     B2
+    -------------------------------------------------------------
+             ACTIVE / RESTRICTED_DOCC      8      0      0      0
+    RESTRICTED_UOCC /          ACTIVE     24      0     12     12
+    RESTRICTED_UOCC / RESTRICTED_DOCC     48      0      0      0
+    -------------------------------------------------------------
+
+  ==> MCSCF Iterations <==
+
+                      Energy CI                    Energy Orbital
+           ------------------------------  ------------------------------
+    Iter.        Total Energy       Delta        Total Energy       Delta  Orb. Grad.  Micro
+    ----------------------------------------------------------------------------------------
+       1    -112.799334478816 -1.1280e+02   -112.835361046366 -1.1284e+02  9.0014e-03    4/N
+       2    -112.843929490680 -1.1284e+02   -112.850192701163 -1.1285e+02  9.8284e-03    4/N
+       3    -112.862380136782 -6.3046e-02   -112.870774577019 -3.5414e-02  3.4663e-03    4/N
+       4    -112.871727851451 -2.7798e-02   -112.871822724588 -2.1630e-02  1.4560e-03    4/N
+       5    -112.871841756076 -9.4616e-03   -112.871846159544 -1.0716e-03  1.1426e-04    4/N
+       6    -112.871847288432 -1.1944e-04   -112.871847575122 -2.4851e-05  2.4092e-05    4/N
+       7    -112.871847655079 -5.8990e-06   -112.871847676652 -1.5171e-06  5.0938e-06    4/N
+       8    -112.871847682875 -3.9444e-07   -112.871847684607 -1.0948e-07  1.2387e-06    4/N
+       9    -112.871847685113 -3.0034e-08   -112.871847685255 -8.6038e-09  3.2736e-07    3/Y
+      10    -112.871847685297 -2.4227e-09   -112.871847685309 -7.0244e-10  7.3159e-08    2/Y
+    ----------------------------------------------------------------------------------------
+
+  A miracle has come to pass: MCSCF iterations have converged!
+
+  Performing final CI Calculation using converged orbitals
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              3
+    number of beta electrons                               3
+    number of alpha strings                               20
+    number of beta strings                                20
+    --------------------------------------------------------
+
+  ==> FCI Solver <==
+
+    --------------------------------------------------------
+    Spin adapt                                         FALSE
+    Number of determinants                               112
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Root No. 0 <==
+
+    20 20 20      0.97314990
+    20 20 02     -0.09877161
+    20 02 20     -0.09877161
+    20 ba ab     -0.06630576
+    20 ab ba     -0.06630576
+    02 20 20     -0.04908302
+    20 ba ba     -0.04637230
+    20 ab ab     -0.04637230
+    ba ab 20      0.04344694
+    ba 20 ab      0.04344694
+    ab ba 20      0.04344694
+    ab 20 ba      0.04344694
+    ab 20 ab      0.02947298
+    ab ab 20      0.02947298
+    ba ba 20      0.02947298
+    ba 20 ba      0.02947298
+    20 20 ba      0.02751535
+    20 ab 20      0.02751535
+    20 20 ab      0.02751535
+    20 ba 20      0.02751535
+    20 02 02      0.02040802
+    20 bb aa      0.01993346
+    20 aa bb      0.01993346
+    bb 20 aa     -0.01397396
+    bb aa 20     -0.01397396
+    aa bb 20     -0.01397396
+    aa 20 bb     -0.01397396
+    20 22 00     -0.01253239
+    20 00 22     -0.01253239
+    22 00 20     -0.01077178
+    22 20 00     -0.01077178
+    ab ba 02     -0.01015190
+    ab 02 ba     -0.01015190
+    ba 02 ab     -0.01015190
+    ba ab 02     -0.01015190
+
+    Total Energy:    -112.871847685313, <S^2>: 0.000000
+    Time for FCI:       0.010441500000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0     -112.871847685313   0.000000
+    --------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981840      1B1     1.957280      1B2     1.957280  
+        2B2     0.042630      2B1     0.042630      6A1     0.018339  
+
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.13069572     0.13069572
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00232329     0.00232329
+    --------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981840      1B1     1.957280      1B2     1.957280  
+        2B2     0.042630      2B1     0.042630      6A1     0.018339  
+
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -7.67388798     0.00000000     0.00000000    -7.67388798     0.00000000    -9.14200982
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    15.57862582
+    --------------------------------------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981840      1B1     1.957280      1B2     1.957280  
+        2B2     0.042630      2B1     0.042630      6A1     0.018339  
+
+  Canonicalizing final MCSCF orbitals
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS          TRUE
+    MIX GAS ACTIVE ORBITALS       FALSE
+    GAS1                          CANONICAL
+    INACTIVE_DOCC                 CANONICAL
+    INACTIVE_UOCC                 CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    GAS1                 0.0316013818   0.0492635262
+    INACTIVE_DOCC        0.2778521990   0.4478488023
+    INACTIVE_UOCC        0.2717064969   0.7583094583
+    ------------------------------------------------
+
+    Canonicalization test failed
+
+  Timing for orbital canonicalization:                        0.000 s.
+
+  !!! WARNING: Final Active Orbitals Maybe Different from the Original !!!
+
+    Based on projections of maximum overlap method:
+          4A1 -> 7A1       RESTRICTED_UOCC
+          5A1 -> 3A1       RESTRICTED_DOCC
+  Integrals are about to be updated.
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01627533 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.037542 GB
+  Timing for conventional integral transformation:            0.109 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Integrals update took     0.109 s.
+
+  The integrals are not consistent with the orbitals. Re-transforming them.
+
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              3
+    number of beta electrons                               3
+    number of alpha strings                               20
+    number of beta strings                                20
+    --------------------------------------------------------
+
+  ==> FCI Solver <==
+
+    --------------------------------------------------------
+    Spin adapt                                         FALSE
+    Number of determinants                               112
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+  Initial guess space is incomplete.
+  Adding 9 determinant(s).
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         59
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+    25       1       *
+    25       3        
+     8       5        
+     1       7        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   singlet    0     -112.857015556537  -0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-08
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                    112
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -112.857015556537      112.857015556537        0.234406673619      1
+       1     -112.871201365029        0.014185808491        0.052509499833      2
+       2     -112.871748878314        0.000547513286        0.018596703921      3
+       3     -112.871842692925        0.000093814610        0.003965512914      4
+       4     -112.871847427940        0.000004735015        0.000852089369      5
+       5     -112.871847649568        0.000000221629        0.000271004127      6
+       6     -112.871847684417        0.000000034848        0.000044356388      7
+       7     -112.871847685293        0.000000000876        0.000007317477      8
+       8     -112.871847685312        0.000000000020        0.000001342571      9
+       9     -112.871847685313        0.000000000001        0.000000269733     10
+      10     -112.871847685313        0.000000000000        0.000000059304      3
+      11     -112.871847685313        0.000000000000        0.000000008828      4
+  ---------------------------------------------------------------------------------
+
+  ==> Root No. 0 <==
+
+    20 20 20     -0.97409021
+    20 20 02      0.09922742
+    20 02 20      0.09922742
+    20 ba ab      0.06672239
+    20 ab ba      0.06672239
+    02 20 20      0.04914559
+    20 ab ab      0.04676421
+    20 ba ba      0.04676421
+    ab 20 ba     -0.04309169
+    ba ab 20     -0.04309169
+    ba 20 ab     -0.04309169
+    ab ba 20     -0.04309169
+    ba ba 20     -0.02912253
+    ab ab 20     -0.02912253
+    ba 20 ba     -0.02912253
+    ab 20 ab     -0.02912253
+    20 02 02     -0.02039660
+    20 aa bb     -0.01995818
+    20 bb aa     -0.01995818
+    20 20 ab     -0.01668631
+    20 20 ba     -0.01668631
+    20 ba 20     -0.01668631
+    20 ab 20     -0.01668631
+    aa 20 bb      0.01396915
+    bb aa 20      0.01396915
+    aa bb 20      0.01396915
+    bb 20 aa      0.01396915
+    20 22 00      0.01254684
+    20 00 22      0.01254684
+    22 20 00      0.01077213
+    22 00 20      0.01077213
+    ab ba 02      0.01014661
+    ab 02 ba      0.01014661
+    ba 02 ab      0.01014661
+    ba ab 02      0.01014661
+
+    Total Energy:    -112.871847685313, <S^2>: -0.000000
+    Time for FCI:       0.017859625000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0     -112.871847685313  -0.000000
+    --------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981840      1B1     1.957280      1B2     1.957280  
+        2B2     0.042630      2B1     0.042630      6A1     0.018339  
+
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.14010983     0.14010983
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00232329     0.00232329
+    --------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981840      1B1     1.957280      1B2     1.957280  
+        2B2     0.042630      2B1     0.042630      6A1     0.018339  
+
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -7.44514706     0.00000000     0.00000000    -7.44514706     0.00000000    -9.08620696
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    15.57862582
+    --------------------------------------------------------------------------------------------------
+
+  Time to prepare integrals:        0.415 seconds
+  Time to run job          :        1.101 seconds
+  Total                    :        1.515 seconds
+
+    Psi4 stopped on: Monday, 13 May 2024 11:57AM
+    Psi4 wall time for execution: 0:00:01.57
+
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.10a1.dev23 
+
+                         Git: Rev {master} 8a781dc 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Monday, 13 May 2024 11:57AM
+
+    Process ID: 93775
+    Host:       macbook-pro-158.wireless.emory.edu
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    2
+    
+  ==> Input QCSchema <==
+
+--------------------------------------------------------------------------
+{'driver': 'energy',
+ 'extras': {'psiapi': True, 'wfn_qcvars_only': True},
+ 'id': None,
+ 'keywords': {'DOCC': [5, 0, 1, 1],
+              'D_CONVERGENCE': 1e-08,
+              'E_CONVERGENCE': 1e-10,
+              'FINDIF__POINTS': 5,
+              'OPT_COORDINATES': 'CARTESIAN',
+              'PARENT_SYMMETRY': 'C2v(Z)',
+              'REFERENCE': 'RHF',
+              'forte__active': [2, 0, 2, 2],
+              'forte__active_space_solver': 'FCI',
+              'forte__basis': 'CC-PCVDZ',
+              'forte__d_convergence': 1e-08,
+              'forte__e_convergence': 1e-08,
+              'forte__mcscf_g_convergence': 1e-06,
+              'forte__mcscf_micro_maxiter': 4,
+              'forte__r_convergence': 1e-08,
+              'forte__reference': 'RHF',
+              'forte__restricted_docc': [4, 0, 0, 0],
+              'function_kwargs': {'write_orbitals': False}},
+ 'model': {'basis': 'cc-pcvdz', 'method': 'forte'},
+ 'molecule': {'atom_labels': ['', ''],
+              'atomic_numbers': [6, 8],
+              'extras': {},
+              'fix_com': True,
+              'fix_orientation': True,
+              'fragment_charges': [0.0],
+              'fragment_multiplicities': [1],
+              'fragments': [[0, 1]],
+              'geometry': [0.0, 0.0, -1.2200795492203205, 0.0, 0.0, 0.9153505935399262],
+              'mass_numbers': [12, 16],
+              'masses': [12.0, 15.99491461957],
+              'molecular_charge': 0.0,
+              'molecular_multiplicity': 1,
+              'name': 'CO',
+              'provenance': {'creator': 'QCElemental',
+                             'routine': 'qcelemental.molparse.from_string',
+                             'version': '0.27.1'},
+              'real': [True, True],
+              'schema_name': 'qcschema_molecule',
+              'schema_version': 2,
+              'symbols': ['C', 'O'],
+              'validated': True},
+ 'protocols': {'stdout': True},
+ 'provenance': {'creator': 'QCElemental', 'routine': 'qcelemental.models.results', 'version': '0.27.1'},
+ 'schema_name': 'qcschema_input',
+ 'schema_version': 1}
+--------------------------------------------------------------------------
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: mcscf_fc - git commit: 84f751ea
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  No reference wave function provided for Forte. Computing SCF orbitals using Psi4 ...
+   => Libint2 <=
+
+    Primary   basis highest AM E, G, H:  6, 6, 3
+    Auxiliary basis highest AM E, G, H:  7, 7, 4
+    Onebody   basis highest AM E, G, H:  -, -, -
+    Solid Harmonics ordering:            Gaussian
+
+*** tstart() called on macbook-pro-158.wireless.emory.edu
+*** at Mon May 13 11:57:56 2024
+
+   => Loading Basis Set <=
+
+    Name: CC-PCVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry C          line   178 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pcvdz.gbs 
+    atoms 2 entry O          line   246 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pcvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        2 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Bohr), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         C            0.000000000000     0.000000000000    -1.220079549220    12.000000000000
+         O            0.000000000000     0.000000000000     0.915350593540    15.994914619570
+
+  Running in c2v symmetry.
+
+  Rotational constants: A = ************  B =      1.92548  C =      1.92548 [cm^-1]
+  Rotational constants: A = ************  B =  57724.49888  C =  57724.49888 [MHz]
+  Nuclear repulsion =   22.477906927901390
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 14
+  Nalpha       = 7
+  Nbeta        = 7
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-10
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: CC-PCVDZ
+    Blend: CC-PCVDZ
+    Number of shells: 16
+    Number of basis functions: 36
+    Number of Cartesian functions: 38
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              16
+      Number of primitives:             48
+      Number of atomic orbitals:        38
+      Number of basis functions:        36
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 2
+
+  Performing in-core PK
+  Using 444222 doubles for integral storage.
+  We computed 10549 shell quartets total.
+  Whereas there are 9316 unique shell quartets.
+    13.24 percent of shell quartets recomputed by reordering.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              375
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              2
+
+  Minimum eigenvalue in the overlap matrix is 2.0558715513E-02.
+  Reciprocal condition number of the overlap matrix is 6.5890658609E-03.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     A1        18      18 
+     A2         2       2 
+     B1         8       8 
+     B2         8       8 
+   -------------------------
+    Total      36      36
+   -------------------------
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter SAD:  -111.88534436912101   -1.11885e+02   0.00000e+00 
+   @RHF iter   1:  -112.72689252206983   -8.41548e-01   1.18142e-02 DIIS/ADIIS
+   @RHF iter   2:  -112.73556354039277   -8.67102e-03   9.51552e-03 DIIS/ADIIS
+   @RHF iter   3:  -112.74970017928734   -1.41366e-02   8.30320e-04 DIIS/ADIIS
+   @RHF iter   4:  -112.74983653649501   -1.36357e-04   1.10828e-04 DIIS/ADIIS
+   @RHF iter   5:  -112.74983964822839   -3.11173e-06   2.29134e-05 DIIS
+   @RHF iter   6:  -112.74983980419978   -1.55971e-07   3.32083e-06 DIIS
+   @RHF iter   7:  -112.74983980835657   -4.15679e-09   7.78446e-07 DIIS
+   @RHF iter   8:  -112.74983980855797   -2.01396e-10   1.92045e-07 DIIS
+   @RHF iter   9:  -112.74983980857122   -1.32587e-11   2.71856e-08 DIIS
+   @RHF iter  10:  -112.74983980857138   -1.56319e-13   1.56375e-09 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1A1   -20.668926     2A1   -11.366775     3A1    -1.521728  
+       4A1    -0.802361     1B1    -0.633993     1B2    -0.633993  
+       5A1    -0.549414  
+
+    Virtual:                                                              
+
+       2B1     0.153567     2B2     0.153567     6A1     0.380704  
+       3B1     0.670541     3B2     0.670541     7A1     0.700922  
+       8A1     0.985304     9A1     1.057756     4B1     1.221971  
+       4B2     1.221971     1A2     1.343929    10A1     1.343929  
+       5B1     1.556222     5B2     1.556222    11A1     1.851916  
+      12A1     2.292894     2A2     2.936483    13A1     2.936483  
+       6B1     3.423936     6B2     3.423936    14A1     3.833386  
+      15A1    19.380820     7B2    22.458336     7B1    22.458336  
+      16A1    23.399093    17A1    34.438461     8B2    39.146829  
+       8B1    39.146829    18A1    39.835338  
+
+    Final Occupation by Irrep:
+             A1    A2    B1    B2 
+    DOCC [     5,    0,    1,    1 ]
+    NA   [     5,    0,    1,    1 ]
+    NB   [     5,    0,    1,    1 ]
+
+  @RHF Final Energy:  -112.74983980857138
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =             22.4779069279013903
+    One-Electron Energy =                -198.1011136764044238
+    Two-Electron Energy =                  62.8733669399316639
+    Total Energy =                       -112.7498398085713802
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :         -0.0974193            0.0023275           -0.0950919
+ Magnitude           :                                                    0.0950919
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on macbook-pro-158.wireless.emory.edu at Mon May 13 11:57:56 2024
+Module time:
+	user time   =       0.21 seconds =       0.00 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       3.18 seconds =       0.05 minutes
+	system time =       0.15 seconds =       0.00 minutes
+	total time  =          2 seconds =       0.03 minutes
+
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space RESTRICTED_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0
+    RESTRICTED_DOCC     4     0     0     0     4
+    GAS1                2     0     2     2     6
+    GAS2                0     0     0     0     0
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC    12     2     6     6    26
+    FROZEN_UOCC         0     0     0     0     0
+    Total              18     2     8     8    36
+  -------------------------------------------------   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry C          line    61 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry O          line    81 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  State Singlet (Ms = 0) A1 GAS min: 0 0 0 0 0 0 ; GAS max: 12 0 0 0 0 0 ; weights:
+      1.000000000000
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: CC-PCVDZ
+    Blend: CC-PCVDZ
+    Number of shells: 16
+    Number of basis functions: 36
+    Number of Cartesian functions: 38
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              16
+      Number of primitives:             48
+      Number of atomic orbitals:        38
+      Number of basis functions:        36
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 2
+
+  Performing in-core PK
+  Using 444222 doubles for integral storage.
+  We computed 10549 shell quartets total.
+  Whereas there are 9316 unique shell quartets.
+    13.24 percent of shell quartets recomputed by reordering.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              400
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              2
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         36
+  Number of correlated molecular orbitals:              36
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
+
+
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01903963 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.037542 GB
+  Timing for conventional integral transformation:            0.112 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing conventional integrals:                0.112 s.
+
+          -----------------------------------------------------------
+                  Multi-Configurational Self Consistent Field
+                Two-Step Approximate Second-Order AO Algorithm
+            written by Chenyang Li, Kevin P. Hannon, and Shuhe Wang
+          -----------------------------------------------------------
+
+
+  ==> MCSCF Calculation Information <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Integral type                               CONVENTIONAL
+    CI solver type                                       FCI
+    Final orbital type                             CANONICAL
+    Derivative type                                     NONE
+    Optimize orbitals                                   TRUE
+    Include internal rotations                         FALSE
+    Debug printing                                     FALSE
+    Energy convergence                             1.000e-08
+    Gradient convergence                           1.000e-06
+    Max value for rotation                         2.000e-01
+    Max number of macro iterations                       100
+    Max number of micro iterations                         4
+    Min number of micro iterations                         4
+    DIIS start                                            15
+    Min DIIS vectors                                       3
+    Max DIIS vectors                                       8
+    Frequency of DIIS extrapolation                        1
+    --------------------------------------------------------
+
+  ==> Independent Orbital Rotations <==
+
+    ORBITAL SPACES                        A1     A2     B1     B2
+    -------------------------------------------------------------
+             ACTIVE / RESTRICTED_DOCC      8      0      0      0
+    RESTRICTED_UOCC /          ACTIVE     24      0     12     12
+    RESTRICTED_UOCC / RESTRICTED_DOCC     48      0      0      0
+    -------------------------------------------------------------
+
+  ==> MCSCF Iterations <==
+
+                      Energy CI                    Energy Orbital
+           ------------------------------  ------------------------------
+    Iter.        Total Energy       Delta        Total Energy       Delta  Orb. Grad.  Micro
+    ----------------------------------------------------------------------------------------
+       1    -112.799327551973 -1.1280e+02   -112.835513164778 -1.1284e+02  9.1904e-03    4/N
+       2    -112.844117233452 -1.1284e+02   -112.850597719657 -1.1285e+02  1.0079e-02    4/N
+       3    -112.863669095608 -6.4342e-02   -112.871111956083 -3.5599e-02  3.9794e-03    4/N
+       4    -112.871842827012 -2.7726e-02   -112.871917497539 -2.1320e-02  1.3021e-03    4/N
+       5    -112.871932941949 -8.2638e-03   -112.871936536056 -8.2458e-04  1.0519e-04    4/N
+       6    -112.871937468485 -9.4641e-05   -112.871937706169 -2.0209e-05  2.1267e-05    4/N
+       7    -112.871937772852 -4.8309e-06   -112.871937790870 -1.2548e-06  4.5761e-06    4/N
+       8    -112.871937796085 -3.2760e-07   -112.871937797540 -9.1370e-08  1.1225e-06    4/N
+       9    -112.871937797965 -2.5113e-08   -112.871937798086 -7.2158e-09  2.9839e-07    3/Y
+      10    -112.871937798121 -2.0365e-09   -112.871937798131 -5.9187e-10  6.6363e-08    2/Y
+    ----------------------------------------------------------------------------------------
+
+  A miracle has come to pass: MCSCF iterations have converged!
+
+  Performing final CI Calculation using converged orbitals
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              3
+    number of beta electrons                               3
+    number of alpha strings                               20
+    number of beta strings                                20
+    --------------------------------------------------------
+
+  ==> FCI Solver <==
+
+    --------------------------------------------------------
+    Spin adapt                                         FALSE
+    Number of determinants                               112
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Root No. 0 <==
+
+    20 20 20      0.97300972
+    20 02 20     -0.09896590
+    20 20 02     -0.09896590
+    20 ba ab     -0.06641421
+    20 ab ba     -0.06641421
+    02 20 20     -0.04926876
+    20 ab ab     -0.04642037
+    20 ba ba     -0.04642037
+    ab 20 ba      0.04357920
+    ab ba 20      0.04357920
+    ba 20 ab      0.04357920
+    ba ab 20      0.04357920
+    ab 20 ab      0.02955661
+    ab ab 20      0.02955661
+    ba 20 ba      0.02955661
+    ba ba 20      0.02955661
+    20 ba 20      0.02768802
+    20 ab 20      0.02768802
+    20 20 ab      0.02768802
+    20 20 ba      0.02768802
+    20 02 02      0.02047818
+    20 bb aa      0.01999384
+    20 aa bb      0.01999384
+    aa bb 20     -0.01402259
+    aa 20 bb     -0.01402259
+    bb 20 aa     -0.01402259
+    bb aa 20     -0.01402259
+    20 00 22     -0.01255786
+    20 22 00     -0.01255786
+    22 20 00     -0.01080248
+    22 00 20     -0.01080248
+    ba 02 ab     -0.01020069
+    ba ab 02     -0.01020069
+    ab 02 ba     -0.01020069
+    ab ba 02     -0.01020069
+
+    Total Energy:    -112.871937798134, <S^2>: 0.000000
+    Time for FCI:       0.010435250000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0     -112.871937798134   0.000000
+    --------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981720      1B2     1.957094      1B1     1.957094  
+        2B1     0.042816      2B2     0.042816      6A1     0.018461  
+
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.12791395     0.12791395
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00232745     0.00232745
+    --------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981720      1B2     1.957094      1B1     1.957094  
+        2B1     0.042816      2B2     0.042816      6A1     0.018461  
+
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -7.67838441     0.00000000     0.00000000    -7.67838441     0.00000000    -9.14191577
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    15.63449831
+    --------------------------------------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981720      1B2     1.957094      1B1     1.957094  
+        2B1     0.042816      2B2     0.042816      6A1     0.018461  
+
+  Canonicalizing final MCSCF orbitals
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS          TRUE
+    MIX GAS ACTIVE ORBITALS       FALSE
+    GAS1                          CANONICAL
+    INACTIVE_DOCC                 CANONICAL
+    INACTIVE_UOCC                 CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    GAS1                 0.0320816148   0.0498873446
+    INACTIVE_DOCC        0.2774386241   0.4459045337
+    INACTIVE_UOCC        0.2666009442   0.7587913743
+    ------------------------------------------------
+
+    Canonicalization test failed
+
+  Timing for orbital canonicalization:                        0.000 s.
+
+  !!! WARNING: Final Active Orbitals Maybe Different from the Original !!!
+
+    Based on projections of maximum overlap method:
+          4A1 -> 7A1       RESTRICTED_UOCC
+          5A1 -> 3A1       RESTRICTED_DOCC
+  Integrals are about to be updated.
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01998979 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.037542 GB
+  Timing for conventional integral transformation:            0.116 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Integrals update took     0.116 s.
+
+  The integrals are not consistent with the orbitals. Re-transforming them.
+
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              3
+    number of beta electrons                               3
+    number of alpha strings                               20
+    number of beta strings                                20
+    --------------------------------------------------------
+
+  ==> FCI Solver <==
+
+    --------------------------------------------------------
+    Spin adapt                                         FALSE
+    Number of determinants                               112
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+  Initial guess space is incomplete.
+  Adding 9 determinant(s).
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         59
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+    25       1       *
+    25       3        
+     8       5        
+     1       7        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   singlet    0     -112.857036178672  -0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-08
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                    112
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -112.857036178672      112.857036178672        0.234559120918      1
+       1     -112.871283287280        0.014247108607        0.052806828668      2
+       2     -112.871837701886        0.000554414606        0.018687634960      3
+       3     -112.871932701729        0.000094999844        0.003999105235      4
+       4     -112.871937536689        0.000004834959        0.000857441439      5
+       5     -112.871937761449        0.000000224760        0.000274002761      6
+       6     -112.871937797207        0.000000035758        0.000045074425      7
+       7     -112.871937798113        0.000000000906        0.000007459146      8
+       8     -112.871937798134        0.000000000020        0.000001374957      9
+       9     -112.871937798134        0.000000000001        0.000000279070     10
+      10     -112.871937798134        0.000000000000        0.000000061483      3
+      11     -112.871937798134        0.000000000000        0.000000009230      4
+  ---------------------------------------------------------------------------------
+
+  ==> Root No. 0 <==
+
+    20 20 20     -0.97396302
+    20 20 02      0.09942780
+    20 02 20      0.09942780
+    20 ba ab      0.06683568
+    20 ab ba      0.06683568
+    02 20 20      0.04933484
+    20 ba ba      0.04681632
+    20 ab ab      0.04681632
+    ab ba 20     -0.04321443
+    ba ab 20     -0.04321443
+    ba 20 ab     -0.04321443
+    ab 20 ba     -0.04321443
+    ab ab 20     -0.02919669
+    ba 20 ba     -0.02919669
+    ab 20 ab     -0.02919669
+    ba ba 20     -0.02919669
+    20 02 02     -0.02046812
+    20 bb aa     -0.02001936
+    20 aa bb     -0.02001936
+    20 20 ba     -0.01683959
+    20 20 ab     -0.01683959
+    20 ba 20     -0.01683959
+    20 ab 20     -0.01683959
+    bb 20 aa      0.01401773
+    aa bb 20      0.01401773
+    aa 20 bb      0.01401773
+    bb aa 20      0.01401773
+    20 22 00      0.01257275
+    20 00 22      0.01257275
+    22 00 20      0.01080283
+    22 20 00      0.01080283
+    ab ba 02      0.01019578
+    ba 02 ab      0.01019578
+    ba ab 02      0.01019578
+    ab 02 ba      0.01019578
+
+    Total Energy:    -112.871937798134, <S^2>: 0.000000
+    Time for FCI:       0.017926708000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0     -112.871937798134   0.000000
+    --------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981720      1B1     1.957094      1B2     1.957094  
+        2B2     0.042816      2B1     0.042816      6A1     0.018461  
+
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.13771448     0.13771448
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00232745     0.00232745
+    --------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981720      1B1     1.957094      1B2     1.957094  
+        2B2     0.042816      2B1     0.042816      6A1     0.018461  
+
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -7.44884727     0.00000000     0.00000000    -7.44884727     0.00000000    -9.08761113
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    15.63449831
+    --------------------------------------------------------------------------------------------------
+
+  Time to prepare integrals:        0.298 seconds
+  Time to run job          :        1.104 seconds
+  Total                    :        1.401 seconds
+
+    Psi4 stopped on: Monday, 13 May 2024 11:57AM
+    Psi4 wall time for execution: 0:00:01.45
+
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.10a1.dev23 
+
+                         Git: Rev {master} 8a781dc 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Monday, 13 May 2024 11:57AM
+
+    Process ID: 93775
+    Host:       macbook-pro-158.wireless.emory.edu
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    2
+    
+  ==> Input QCSchema <==
+
+--------------------------------------------------------------------------
+{'driver': 'energy',
+ 'extras': {'psiapi': True, 'wfn_qcvars_only': True},
+ 'id': None,
+ 'keywords': {'DOCC': [5, 0, 1, 1],
+              'D_CONVERGENCE': 1e-08,
+              'E_CONVERGENCE': 1e-10,
+              'FINDIF__POINTS': 5,
+              'OPT_COORDINATES': 'CARTESIAN',
+              'PARENT_SYMMETRY': 'C2v(Z)',
+              'REFERENCE': 'RHF',
+              'forte__active': [2, 0, 2, 2],
+              'forte__active_space_solver': 'FCI',
+              'forte__basis': 'CC-PCVDZ',
+              'forte__d_convergence': 1e-08,
+              'forte__e_convergence': 1e-08,
+              'forte__mcscf_g_convergence': 1e-06,
+              'forte__mcscf_micro_maxiter': 4,
+              'forte__r_convergence': 1e-08,
+              'forte__reference': 'RHF',
+              'forte__restricted_docc': [4, 0, 0, 0],
+              'function_kwargs': {'write_orbitals': False}},
+ 'model': {'basis': 'cc-pcvdz', 'method': 'forte'},
+ 'molecule': {'atom_labels': ['', ''],
+              'atomic_numbers': [6, 8],
+              'extras': {},
+              'fix_com': True,
+              'fix_orientation': True,
+              'fragment_charges': [0.0],
+              'fragment_multiplicities': [1],
+              'fragments': [[0, 1]],
+              'geometry': [0.0, 0.0, -1.2189885340968445, 0.0, 0.0, 0.9145320720414938],
+              'mass_numbers': [12, 16],
+              'masses': [12.0, 15.99491461957],
+              'molecular_charge': 0.0,
+              'molecular_multiplicity': 1,
+              'name': 'CO',
+              'provenance': {'creator': 'QCElemental',
+                             'routine': 'qcelemental.molparse.from_string',
+                             'version': '0.27.1'},
+              'real': [True, True],
+              'schema_name': 'qcschema_molecule',
+              'schema_version': 2,
+              'symbols': ['C', 'O'],
+              'validated': True},
+ 'protocols': {'stdout': True},
+ 'provenance': {'creator': 'QCElemental', 'routine': 'qcelemental.models.results', 'version': '0.27.1'},
+ 'schema_name': 'qcschema_input',
+ 'schema_version': 1}
+--------------------------------------------------------------------------
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: mcscf_fc - git commit: 84f751ea
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  No reference wave function provided for Forte. Computing SCF orbitals using Psi4 ...
+   => Libint2 <=
+
+    Primary   basis highest AM E, G, H:  6, 6, 3
+    Auxiliary basis highest AM E, G, H:  7, 7, 4
+    Onebody   basis highest AM E, G, H:  -, -, -
+    Solid Harmonics ordering:            Gaussian
+
+*** tstart() called on macbook-pro-158.wireless.emory.edu
+*** at Mon May 13 11:57:57 2024
+
+   => Loading Basis Set <=
+
+    Name: CC-PCVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry C          line   178 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pcvdz.gbs 
+    atoms 2 entry O          line   246 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pcvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        2 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Bohr), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         C            0.000000000000     0.000000000000    -1.218988534097    12.000000000000
+         O            0.000000000000     0.000000000000     0.914532072041    15.994914619570
+
+  Running in c2v symmetry.
+
+  Rotational constants: A = ************  B =      1.92893  C =      1.92893 [cm^-1]
+  Rotational constants: A = ************  B =  57827.87391  C =  57827.87391 [MHz]
+  Nuclear repulsion =   22.498025030505683
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 14
+  Nalpha       = 7
+  Nbeta        = 7
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-10
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: CC-PCVDZ
+    Blend: CC-PCVDZ
+    Number of shells: 16
+    Number of basis functions: 36
+    Number of Cartesian functions: 38
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              16
+      Number of primitives:             48
+      Number of atomic orbitals:        38
+      Number of basis functions:        36
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 2
+
+  Performing in-core PK
+  Using 444222 doubles for integral storage.
+  We computed 10549 shell quartets total.
+  Whereas there are 9316 unique shell quartets.
+    13.24 percent of shell quartets recomputed by reordering.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              375
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              2
+
+  Minimum eigenvalue in the overlap matrix is 2.0531925851E-02.
+  Reciprocal condition number of the overlap matrix is 6.5788709697E-03.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     A1        18      18 
+     A2         2       2 
+     B1         8       8 
+     B2         8       8 
+   -------------------------
+    Total      36      36
+   -------------------------
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter SAD:  -111.88765515395690   -1.11888e+02   0.00000e+00 
+   @RHF iter   1:  -112.72710467085292   -8.39450e-01   1.17915e-02 DIIS/ADIIS
+   @RHF iter   2:  -112.73578615107722   -8.68148e-03   9.47909e-03 DIIS/ADIIS
+   @RHF iter   3:  -112.74980480607391   -1.40187e-02   8.29109e-04 DIIS/ADIIS
+   @RHF iter   4:  -112.74994076183009   -1.35956e-04   1.10394e-04 DIIS/ADIIS
+   @RHF iter   5:  -112.74994384581747   -3.08399e-06   2.29190e-05 DIIS
+   @RHF iter   6:  -112.74994400159841   -1.55781e-07   3.34428e-06 DIIS
+   @RHF iter   7:  -112.74994400581274   -4.21433e-09   7.92524e-07 DIIS
+   @RHF iter   8:  -112.74994400602085   -2.08118e-10   1.93624e-07 DIIS
+   @RHF iter   9:  -112.74994400603434   -1.34861e-11   2.68776e-08 DIIS
+   @RHF iter  10:  -112.74994400603458   -2.41585e-13   1.54880e-09 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1A1   -20.668908     2A1   -11.366369     3A1    -1.522434  
+       4A1    -0.802458     1B1    -0.634433     1B2    -0.634433  
+       5A1    -0.549296  
+
+    Virtual:                                                              
+
+       2B2     0.153984     2B1     0.153984     6A1     0.380778  
+       3B1     0.670577     3B2     0.670577     7A1     0.701086  
+       8A1     0.986040     9A1     1.058413     4B2     1.221797  
+       4B1     1.221797     1A2     1.343953    10A1     1.343953  
+       5B2     1.557048     5B1     1.557048    11A1     1.851946  
+      12A1     2.294762     2A2     2.936618    13A1     2.936618  
+       6B2     3.424935     6B1     3.424935    14A1     3.834687  
+      15A1    19.381449     7B2    22.459150     7B1    22.459150  
+      16A1    23.401417    17A1    34.439315     8B1    39.147222  
+       8B2    39.147222    18A1    39.838810  
+
+    Final Occupation by Irrep:
+             A1    A2    B1    B2 
+    DOCC [     5,    0,    1,    1 ]
+    NA   [     5,    0,    1,    1 ]
+    NB   [     5,    0,    1,    1 ]
+
+  @RHF Final Energy:  -112.74994400603458
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =             22.4980250305056835
+    One-Electron Energy =                -198.1392792539221546
+    Two-Electron Energy =                  62.8913102173818856
+    Total Energy =                       -112.7499440060345819
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :         -0.0954660            0.0023254           -0.0931406
+ Magnitude           :                                                    0.0931406
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on macbook-pro-158.wireless.emory.edu at Mon May 13 11:57:57 2024
+Module time:
+	user time   =       0.21 seconds =       0.00 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       5.99 seconds =       0.10 minutes
+	system time =       0.25 seconds =       0.00 minutes
+	total time  =          3 seconds =       0.05 minutes
+
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space RESTRICTED_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0
+    RESTRICTED_DOCC     4     0     0     0     4
+    GAS1                2     0     2     2     6
+    GAS2                0     0     0     0     0
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC    12     2     6     6    26
+    FROZEN_UOCC         0     0     0     0     0
+    Total              18     2     8     8    36
+  -------------------------------------------------   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry C          line    61 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry O          line    81 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  State Singlet (Ms = 0) A1 GAS min: 0 0 0 0 0 0 ; GAS max: 12 0 0 0 0 0 ; weights:
+      1.000000000000
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: CC-PCVDZ
+    Blend: CC-PCVDZ
+    Number of shells: 16
+    Number of basis functions: 36
+    Number of Cartesian functions: 38
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              16
+      Number of primitives:             48
+      Number of atomic orbitals:        38
+      Number of basis functions:        36
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 2
+
+  Performing in-core PK
+  Using 444222 doubles for integral storage.
+  We computed 10549 shell quartets total.
+  Whereas there are 9316 unique shell quartets.
+    13.24 percent of shell quartets recomputed by reordering.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              400
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              2
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         36
+  Number of correlated molecular orbitals:              36
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
+
+
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01853808 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.037542 GB
+  Timing for conventional integral transformation:            0.112 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing conventional integrals:                0.112 s.
+
+          -----------------------------------------------------------
+                  Multi-Configurational Self Consistent Field
+                Two-Step Approximate Second-Order AO Algorithm
+            written by Chenyang Li, Kevin P. Hannon, and Shuhe Wang
+          -----------------------------------------------------------
+
+
+  ==> MCSCF Calculation Information <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Integral type                               CONVENTIONAL
+    CI solver type                                       FCI
+    Final orbital type                             CANONICAL
+    Derivative type                                     NONE
+    Optimize orbitals                                   TRUE
+    Include internal rotations                         FALSE
+    Debug printing                                     FALSE
+    Energy convergence                             1.000e-08
+    Gradient convergence                           1.000e-06
+    Max value for rotation                         2.000e-01
+    Max number of macro iterations                       100
+    Max number of micro iterations                         4
+    Min number of micro iterations                         4
+    DIIS start                                            15
+    Min DIIS vectors                                       3
+    Max DIIS vectors                                       8
+    Frequency of DIIS extrapolation                        1
+    --------------------------------------------------------
+
+  ==> Independent Orbital Rotations <==
+
+    ORBITAL SPACES                        A1     A2     B1     B2
+    -------------------------------------------------------------
+             ACTIVE / RESTRICTED_DOCC      8      0      0      0
+    RESTRICTED_UOCC /          ACTIVE     24      0     12     12
+    RESTRICTED_UOCC / RESTRICTED_DOCC     48      0      0      0
+    -------------------------------------------------------------
+
+  ==> MCSCF Iterations <==
+
+                      Energy CI                    Energy Orbital
+           ------------------------------  ------------------------------
+    Iter.        Total Energy       Delta        Total Energy       Delta  Orb. Grad.  Micro
+    ----------------------------------------------------------------------------------------
+       1    -112.799333485476 -1.1280e+02   -112.835440747580 -1.1284e+02  9.0937e-03    4/N
+       2    -112.844027252954 -1.1284e+02   -112.850391032532 -1.1285e+02  9.9429e-03    4/N
+       3    -112.863001659715 -6.3668e-02   -112.870947195750 -3.5506e-02  3.6989e-03    4/N
+       4    -112.871787537434 -2.7760e-02   -112.871872467775 -2.1481e-02  1.3820e-03    4/N
+       5    -112.871889746264 -8.8881e-03   -112.871893758188 -9.4656e-04  1.0977e-04    4/N
+       6    -112.871894792366 -1.0725e-04   -112.871895055559 -2.2588e-05  2.2804e-05    4/N
+       7    -112.871895129171 -5.3829e-06   -112.871895149050 -1.3909e-06  4.8570e-06    4/N
+       8    -112.871895154793 -3.6243e-07   -112.871895156394 -1.0084e-07  1.1853e-06    4/N
+       9    -112.871895156862 -2.7691e-08   -112.871895156994 -7.9445e-09  3.1401e-07    3/Y
+      10    -112.871895157033 -2.2396e-09   -112.871895157044 -6.5016e-10  6.9948e-08    2/Y
+    ----------------------------------------------------------------------------------------
+
+  A miracle has come to pass: MCSCF iterations have converged!
+
+  Performing final CI Calculation using converged orbitals
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              3
+    number of beta electrons                               3
+    number of alpha strings                               20
+    number of beta strings                                20
+    --------------------------------------------------------
+
+  ==> FCI Solver <==
+
+    --------------------------------------------------------
+    Spin adapt                                         FALSE
+    Number of determinants                               112
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Root No. 0 <==
+
+    20 20 20      0.97307993
+    20 20 02     -0.09886877
+    20 02 20     -0.09886877
+    20 ba ab     -0.06636000
+    20 ab ba     -0.06636000
+    02 20 20     -0.04917587
+    20 ba ba     -0.04639636
+    20 ab ab     -0.04639636
+    ab ba 20      0.04351298
+    ba 20 ab      0.04351298
+    ba ab 20      0.04351298
+    ab 20 ba      0.04351298
+    ab ab 20      0.02951472
+    ab 20 ab      0.02951472
+    ba 20 ba      0.02951472
+    ba ba 20      0.02951472
+    20 ab 20      0.02760172
+    20 20 ba      0.02760172
+    20 20 ab      0.02760172
+    20 ba 20      0.02760172
+    20 02 02      0.02044311
+    20 bb aa      0.01996364
+    20 aa bb      0.01996364
+    bb aa 20     -0.01399826
+    aa bb 20     -0.01399826
+    aa 20 bb     -0.01399826
+    bb 20 aa     -0.01399826
+    20 00 22     -0.01254513
+    20 22 00     -0.01254513
+    22 20 00     -0.01078712
+    22 00 20     -0.01078712
+    ab 02 ba     -0.01017628
+    ba 02 ab     -0.01017628
+    ab ba 02     -0.01017628
+    ba ab 02     -0.01017628
+
+    Total Energy:    -112.871895157048, <S^2>: -0.000000
+    Time for FCI:       0.010425833000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0     -112.871895157048  -0.000000
+    --------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981780      1B2     1.957187      1B1     1.957187  
+        2B2     0.042723      2B1     0.042723      6A1     0.018400  
+
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.12930967     0.12930967
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00232537     0.00232537
+    --------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981780      1B2     1.957187      1B1     1.957187  
+        2B2     0.042723      2B1     0.042723      6A1     0.018400  
+
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -7.67613534     0.00000000     0.00000000    -7.67613534     0.00000000    -9.14198266
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    15.60654956
+    --------------------------------------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981780      1B2     1.957187      1B1     1.957187  
+        2B2     0.042723      2B1     0.042723      6A1     0.018400  
+
+  Canonicalizing final MCSCF orbitals
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS          TRUE
+    MIX GAS ACTIVE ORBITALS       FALSE
+    GAS1                          CANONICAL
+    INACTIVE_DOCC                 CANONICAL
+    INACTIVE_UOCC                 CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    GAS1                 0.0318375509   0.0495702059
+    INACTIVE_DOCC        0.2776464344   0.4468984983
+    INACTIVE_UOCC        0.2691153513   0.7585456948
+    ------------------------------------------------
+
+    Canonicalization test failed
+
+  Timing for orbital canonicalization:                        0.000 s.
+
+  !!! WARNING: Final Active Orbitals Maybe Different from the Original !!!
+
+    Based on projections of maximum overlap method:
+          4A1 -> 7A1       RESTRICTED_UOCC
+          5A1 -> 3A1       RESTRICTED_DOCC
+  Integrals are about to be updated.
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01611021 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.037542 GB
+  Timing for conventional integral transformation:            0.109 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Integrals update took     0.109 s.
+
+  The integrals are not consistent with the orbitals. Re-transforming them.
+
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              3
+    number of beta electrons                               3
+    number of alpha strings                               20
+    number of beta strings                                20
+    --------------------------------------------------------
+
+  ==> FCI Solver <==
+
+    --------------------------------------------------------
+    Spin adapt                                         FALSE
+    Number of determinants                               112
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+  Initial guess space is incomplete.
+  Adding 9 determinant(s).
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         59
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+    25       1       *
+    25       3        
+     8       5        
+     1       7        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   singlet    0     -112.857028310086  -0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-08
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                    112
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -112.857028310086      112.857028310086        0.234482928754      1
+       1     -112.871244752665        0.014216442579        0.052658003427      2
+       2     -112.871795707243        0.000550954578        0.018642136090      3
+       3     -112.871890112897        0.000094405654        0.003982285583      4
+       4     -112.871894897643        0.000004784746        0.000854768286      5
+       5     -112.871895120835        0.000000223192        0.000272500917      6
+       6     -112.871895156136        0.000000035301        0.000044714015      7
+       7     -112.871895157027        0.000000000891        0.000007387984      8
+       8     -112.871895157047        0.000000000020        0.000001358662      9
+       9     -112.871895157048        0.000000000001        0.000000274364     10
+      10     -112.871895157048        0.000000000000        0.000000060384      3
+      11     -112.871895157048        0.000000000000        0.000000009027      4
+  ---------------------------------------------------------------------------------
+
+  ==> Root No. 0 <==
+
+    20 20 20      0.97402669
+    20 02 20     -0.09932761
+    20 20 02     -0.09932761
+    20 ba ab     -0.06677905
+    20 ab ba     -0.06677905
+    02 20 20     -0.04924015
+    20 ba ba     -0.04679030
+    20 ab ab     -0.04679030
+    ab 20 ba      0.04315303
+    ba 20 ab      0.04315303
+    ab ba 20      0.04315303
+    ba ab 20      0.04315303
+    ba 20 ba      0.02915961
+    ab ab 20      0.02915961
+    ab 20 ab      0.02915961
+    ba ba 20      0.02915961
+    20 02 02      0.02043236
+    20 bb aa      0.01998876
+    20 aa bb      0.01998876
+    20 ba 20      0.01676281
+    20 20 ab      0.01676281
+    20 20 ba      0.01676281
+    20 ab 20      0.01676281
+    bb 20 aa     -0.01399343
+    aa 20 bb     -0.01399343
+    aa bb 20     -0.01399343
+    bb aa 20     -0.01399343
+    20 22 00     -0.01255980
+    20 00 22     -0.01255980
+    22 00 20     -0.01078748
+    22 20 00     -0.01078748
+    ab ba 02     -0.01017118
+    ab 02 ba     -0.01017118
+    ba 02 ab     -0.01017118
+    ba ab 02     -0.01017118
+
+    Total Energy:    -112.871895157048, <S^2>: 0.000000
+    Time for FCI:       0.017879208000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0     -112.871895157048   0.000000
+    --------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981780      1B2     1.957187      1B1     1.957187  
+        2B1     0.042723      2B2     0.042723      6A1     0.018400  
+
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.13891188     0.13891188
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00232537     0.00232537
+    --------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981780      1B2     1.957187      1B1     1.957187  
+        2B1     0.042723      2B2     0.042723      6A1     0.018400  
+
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -7.44699848     0.00000000     0.00000000    -7.44699848     0.00000000    -9.08691184
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    15.60654956
+    --------------------------------------------------------------------------------------------------
+
+  Time to prepare integrals:        0.298 seconds
+  Time to run job          :        1.100 seconds
+  Total                    :        1.399 seconds
+
+    Psi4 stopped on: Monday, 13 May 2024 11:57AM
+    Psi4 wall time for execution: 0:00:01.45
+
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.10a1.dev23 
+
+                         Git: Rev {master} 8a781dc 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Monday, 13 May 2024 11:57AM
+
+    Process ID: 93775
+    Host:       macbook-pro-158.wireless.emory.edu
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    2
+    
+  ==> Input QCSchema <==
+
+--------------------------------------------------------------------------
+{'driver': 'energy',
+ 'extras': {'psiapi': True, 'wfn_qcvars_only': True},
+ 'id': None,
+ 'keywords': {'DOCC': [5, 0, 1, 1],
+              'D_CONVERGENCE': 1e-08,
+              'E_CONVERGENCE': 1e-10,
+              'FINDIF__POINTS': 5,
+              'OPT_COORDINATES': 'CARTESIAN',
+              'PARENT_SYMMETRY': 'C2v(Z)',
+              'REFERENCE': 'RHF',
+              'forte__active': [2, 0, 2, 2],
+              'forte__active_space_solver': 'FCI',
+              'forte__basis': 'CC-PCVDZ',
+              'forte__d_convergence': 1e-08,
+              'forte__e_convergence': 1e-08,
+              'forte__mcscf_g_convergence': 1e-06,
+              'forte__mcscf_micro_maxiter': 4,
+              'forte__r_convergence': 1e-08,
+              'forte__reference': 'RHF',
+              'forte__restricted_docc': [4, 0, 0, 0],
+              'function_kwargs': {'write_orbitals': False}},
+ 'model': {'basis': 'cc-pcvdz', 'method': 'forte'},
+ 'molecule': {'atom_labels': ['', ''],
+              'atomic_numbers': [6, 8],
+              'extras': {},
+              'fix_com': True,
+              'fix_orientation': True,
+              'fragment_charges': [0.0],
+              'fragment_multiplicities': [1],
+              'fragments': [[0, 1]],
+              'geometry': [0.0, 0.0, -1.2168065038498925, 0.0, 0.0, 0.9128950290446287],
+              'mass_numbers': [12, 16],
+              'masses': [12.0, 15.99491461957],
+              'molecular_charge': 0.0,
+              'molecular_multiplicity': 1,
+              'name': 'CO',
+              'provenance': {'creator': 'QCElemental',
+                             'routine': 'qcelemental.molparse.from_string',
+                             'version': '0.27.1'},
+              'real': [True, True],
+              'schema_name': 'qcschema_molecule',
+              'schema_version': 2,
+              'symbols': ['C', 'O'],
+              'validated': True},
+ 'protocols': {'stdout': True},
+ 'provenance': {'creator': 'QCElemental', 'routine': 'qcelemental.models.results', 'version': '0.27.1'},
+ 'schema_name': 'qcschema_input',
+ 'schema_version': 1}
+--------------------------------------------------------------------------
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: mcscf_fc - git commit: 84f751ea
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  No reference wave function provided for Forte. Computing SCF orbitals using Psi4 ...
+   => Libint2 <=
+
+    Primary   basis highest AM E, G, H:  6, 6, 3
+    Auxiliary basis highest AM E, G, H:  7, 7, 4
+    Onebody   basis highest AM E, G, H:  -, -, -
+    Solid Harmonics ordering:            Gaussian
+
+*** tstart() called on macbook-pro-158.wireless.emory.edu
+*** at Mon May 13 11:57:59 2024
+
+   => Loading Basis Set <=
+
+    Name: CC-PCVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry C          line   178 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pcvdz.gbs 
+    atoms 2 entry O          line   246 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pcvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        2 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Bohr), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         C            0.000000000000     0.000000000000    -1.216806503850    12.000000000000
+         O            0.000000000000     0.000000000000     0.912895029045    15.994914619570
+
+  Running in c2v symmetry.
+
+  Rotational constants: A = ************  B =      1.93585  C =      1.93585 [cm^-1]
+  Rotational constants: A = ************  B =  58035.45877  C =  58035.45877 [MHz]
+  Nuclear repulsion =   22.538369465679171
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 14
+  Nalpha       = 7
+  Nbeta        = 7
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-10
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: CC-PCVDZ
+    Blend: CC-PCVDZ
+    Number of shells: 16
+    Number of basis functions: 36
+    Number of Cartesian functions: 38
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              16
+      Number of primitives:             48
+      Number of atomic orbitals:        38
+      Number of basis functions:        36
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 2
+
+  Performing in-core PK
+  Using 444222 doubles for integral storage.
+  We computed 10549 shell quartets total.
+  Whereas there are 9316 unique shell quartets.
+    13.24 percent of shell quartets recomputed by reordering.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              375
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              2
+
+  Minimum eigenvalue in the overlap matrix is 2.0478399254E-02.
+  Reciprocal condition number of the overlap matrix is 6.5585172966E-03.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     A1        18      18 
+     A2         2       2 
+     B1         8       8 
+     B2         8       8 
+   -------------------------
+    Total      36      36
+   -------------------------
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter SAD:  -111.89228212817824   -1.11892e+02   0.00000e+00 
+   @RHF iter   1:  -112.72751195060775   -8.35230e-01   1.17465e-02 DIIS/ADIIS
+   @RHF iter   2:  -112.73621327600301   -8.70133e-03   9.40682e-03 DIIS/ADIIS
+   @RHF iter   3:  -112.74999934871843   -1.37861e-02   8.26707e-04 DIIS/ADIIS
+   @RHF iter   4:  -112.75013450807708   -1.35159e-04   1.09529e-04 DIIS/ADIIS
+   @RHF iter   5:  -112.75013753744128   -3.02936e-06   2.29271e-05 DIIS
+   @RHF iter   6:  -112.75013769282162   -1.55380e-07   3.39157e-06 DIIS
+   @RHF iter   7:  -112.75013769715092   -4.32929e-09   8.19519e-07 DIIS
+   @RHF iter   8:  -112.75013769737241   -2.21490e-10   1.96195e-07 DIIS
+   @RHF iter   9:  -112.75013769738618   -1.37703e-11   2.62807e-08 DIIS
+   @RHF iter  10:  -112.75013769738644   -2.55795e-13   1.52012e-09 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1A1   -20.668871     2A1   -11.365556     3A1    -1.523846  
+       4A1    -0.802650     1B2    -0.635315     1B1    -0.635315  
+       5A1    -0.549057  
+
+    Virtual:                                                              
+
+       2B2     0.154819     2B1     0.154819     6A1     0.380925  
+       3B2     0.670649     3B1     0.670649     7A1     0.701414  
+       8A1     0.987411     9A1     1.059835     4B2     1.221449  
+       4B1     1.221449     1A2     1.344001    10A1     1.344001  
+       5B1     1.558707     5B2     1.558707    11A1     1.852009  
+      12A1     2.298515     2A2     2.936894    13A1     2.936894  
+       6B1     3.426936     6B2     3.426936    14A1     3.837283  
+      15A1    19.382702     7B2    22.460783     7B1    22.460783  
+      16A1    23.406051    17A1    34.441034     8B1    39.148018  
+       8B2    39.148018    18A1    39.845796  
+
+    Final Occupation by Irrep:
+             A1    A2    B1    B2 
+    DOCC [     5,    0,    1,    1 ]
+    NA   [     5,    0,    1,    1 ]
+    NB   [     5,    0,    1,    1 ]
+
+  @RHF Final Energy:  -112.75013769738644
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =             22.5383694656791711
+    One-Electron Energy =                -198.2157922931504288
+    Two-Electron Energy =                  62.9272851300848188
+    Total Energy =                       -112.7501376973864353
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :         -0.0915624            0.0023212           -0.0892412
+ Magnitude           :                                                    0.0892412
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on macbook-pro-158.wireless.emory.edu at Mon May 13 11:57:59 2024
+Module time:
+	user time   =       0.21 seconds =       0.00 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       8.79 seconds =       0.15 minutes
+	system time =       0.35 seconds =       0.01 minutes
+	total time  =          5 seconds =       0.08 minutes
+
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space RESTRICTED_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0
+    RESTRICTED_DOCC     4     0     0     0     4
+    GAS1                2     0     2     2     6
+    GAS2                0     0     0     0     0
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC    12     2     6     6    26
+    FROZEN_UOCC         0     0     0     0     0
+    Total              18     2     8     8    36
+  -------------------------------------------------   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry C          line    61 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry O          line    81 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  State Singlet (Ms = 0) A1 GAS min: 0 0 0 0 0 0 ; GAS max: 12 0 0 0 0 0 ; weights:
+      1.000000000000
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: CC-PCVDZ
+    Blend: CC-PCVDZ
+    Number of shells: 16
+    Number of basis functions: 36
+    Number of Cartesian functions: 38
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              16
+      Number of primitives:             48
+      Number of atomic orbitals:        38
+      Number of basis functions:        36
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 2
+
+  Performing in-core PK
+  Using 444222 doubles for integral storage.
+  We computed 10549 shell quartets total.
+  Whereas there are 9316 unique shell quartets.
+    13.24 percent of shell quartets recomputed by reordering.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              400
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              2
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         36
+  Number of correlated molecular orbitals:              36
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
+
+
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01747104 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.037542 GB
+  Timing for conventional integral transformation:            0.110 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing conventional integrals:                0.110 s.
+
+          -----------------------------------------------------------
+                  Multi-Configurational Self Consistent Field
+                Two-Step Approximate Second-Order AO Algorithm
+            written by Chenyang Li, Kevin P. Hannon, and Shuhe Wang
+          -----------------------------------------------------------
+
+
+  ==> MCSCF Calculation Information <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Integral type                               CONVENTIONAL
+    CI solver type                                       FCI
+    Final orbital type                             CANONICAL
+    Derivative type                                     NONE
+    Optimize orbitals                                   TRUE
+    Include internal rotations                         FALSE
+    Debug printing                                     FALSE
+    Energy convergence                             1.000e-08
+    Gradient convergence                           1.000e-06
+    Max value for rotation                         2.000e-01
+    Max number of macro iterations                       100
+    Max number of micro iterations                         4
+    Min number of micro iterations                         4
+    DIIS start                                            15
+    Min DIIS vectors                                       3
+    Max DIIS vectors                                       8
+    Frequency of DIIS extrapolation                        1
+    --------------------------------------------------------
+
+  ==> Independent Orbital Rotations <==
+
+    ORBITAL SPACES                        A1     A2     B1     B2
+    -------------------------------------------------------------
+             ACTIVE / RESTRICTED_DOCC      8      0      0      0
+    RESTRICTED_UOCC /          ACTIVE     24      0     12     12
+    RESTRICTED_UOCC / RESTRICTED_DOCC     48      0      0      0
+    -------------------------------------------------------------
+
+  ==> MCSCF Iterations <==
+
+                      Energy CI                    Energy Orbital
+           ------------------------------  ------------------------------
+    Iter.        Total Energy       Delta        Total Energy       Delta  Orb. Grad.  Micro
+    ----------------------------------------------------------------------------------------
+       1    -112.799330497490 -1.1280e+02   -112.835275244146 -1.1284e+02  8.9135e-03    4/N
+       2    -112.843825313676 -1.1284e+02   -112.850002413487 -1.1285e+02  9.7311e-03    4/N
+       3    -112.861804080537 -6.2474e-02   -112.870596066686 -3.5321e-02  3.2730e-03    4/N
+       4    -112.871664036623 -2.7839e-02   -112.871768279794 -2.1766e-02  1.5241e-03    4/N
+       5    -112.871788945105 -9.9849e-03   -112.871793707690 -1.1976e-03  1.1853e-04    4/N
+       6    -112.871794923192 -1.3089e-04   -112.871795231160 -2.6951e-05  2.5124e-05    4/N
+       7    -112.871795316834 -6.3717e-06   -112.871795339919 -1.6322e-06  5.2846e-06    4/N
+       8    -112.871795346568 -4.2338e-07   -112.871795348416 -1.1726e-07  1.2826e-06    4/N
+       9    -112.871795348955 -3.2121e-08   -112.871795349107 -9.1885e-09  3.3850e-07    3/Y
+      10    -112.871795349152 -2.5844e-09   -112.871795349165 -7.4849e-10  7.6024e-08    2/Y
+    ----------------------------------------------------------------------------------------
+
+  A miracle has come to pass: MCSCF iterations have converged!
+
+  Performing final CI Calculation using converged orbitals
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              3
+    number of beta electrons                               3
+    number of alpha strings                               20
+    number of beta strings                                20
+    --------------------------------------------------------
+
+  ==> FCI Solver <==
+
+    --------------------------------------------------------
+    Spin adapt                                         FALSE
+    Number of determinants                               112
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Root No. 0 <==
+
+    20 20 20     -0.97321959
+    20 02 20      0.09867441
+    20 20 02      0.09867441
+    20 ba ab      0.06625146
+    20 ab ba      0.06625146
+    02 20 20      0.04899018
+    20 ba ba      0.04634817
+    20 ab ab      0.04634817
+    ab 20 ba     -0.04338111
+    ba ab 20     -0.04338111
+    ba 20 ab     -0.04338111
+    ab ba 20     -0.04338111
+    ab 20 ab     -0.02943142
+    ab ab 20     -0.02943142
+    ba 20 ba     -0.02943142
+    ba ba 20     -0.02943142
+    20 20 ab     -0.02742899
+    20 20 ba     -0.02742899
+    20 ba 20     -0.02742899
+    20 ab 20     -0.02742899
+    20 02 02     -0.02037289
+    20 aa bb     -0.01990329
+    20 bb aa     -0.01990329
+    aa bb 20      0.01394969
+    bb 20 aa      0.01394969
+    bb aa 20      0.01394969
+    aa 20 bb      0.01394969
+    20 22 00      0.01251965
+    20 00 22      0.01251965
+    22 20 00      0.01075644
+    22 00 20      0.01075644
+    ab ba 02      0.01012755
+    ab 02 ba      0.01012755
+    ba 02 ab      0.01012755
+    ba ab 02      0.01012755
+
+    Total Energy:    -112.871795349168, <S^2>: -0.000000
+    Time for FCI:       0.010449750000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0     -112.871795349168  -0.000000
+    --------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981900      1B2     1.957373      1B1     1.957373  
+        2B1     0.042537      2B2     0.042537      6A1     0.018279  
+
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.13207035     0.13207035
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00232121     0.00232121
+    --------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981900      1B2     1.957373      1B1     1.957373  
+        2B1     0.042537      2B2     0.042537      6A1     0.018279  
+
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -7.67164419     0.00000000     0.00000000    -7.67164419     0.00000000    -9.14198800
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    15.55072708
+    --------------------------------------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981900      1B2     1.957373      1B1     1.957373  
+        2B1     0.042537      2B2     0.042537      6A1     0.018279  
+
+  Canonicalizing final MCSCF orbitals
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS          TRUE
+    MIX GAS ACTIVE ORBITALS       FALSE
+    GAS1                          CANONICAL
+    INACTIVE_DOCC                 CANONICAL
+    INACTIVE_UOCC                 CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    GAS1                 0.0313755242   0.0489705048
+    INACTIVE_DOCC        0.2780578854   0.4487635050
+    INACTIVE_UOCC        0.2743496585   0.7580933438
+    ------------------------------------------------
+
+    Canonicalization test failed
+
+  Timing for orbital canonicalization:                        0.000 s.
+
+  !!! WARNING: Final Active Orbitals Maybe Different from the Original !!!
+
+    Based on projections of maximum overlap method:
+          4A1 -> 7A1       RESTRICTED_UOCC
+          5A1 -> 3A1       RESTRICTED_DOCC
+  Integrals are about to be updated.
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01530117 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.037542 GB
+  Timing for conventional integral transformation:            0.108 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Integrals update took     0.108 s.
+
+  The integrals are not consistent with the orbitals. Re-transforming them.
+
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              3
+    number of beta electrons                               3
+    number of alpha strings                               20
+    number of beta strings                                20
+    --------------------------------------------------------
+
+  ==> FCI Solver <==
+
+    --------------------------------------------------------
+    Spin adapt                                         FALSE
+    Number of determinants                               112
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+  Initial guess space is incomplete.
+  Adding 9 determinant(s).
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         59
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+    25       1       *
+    25       3        
+     8       5        
+     1       7        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   singlet    0     -112.856997884222  -0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-08
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                    112
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -112.856997884222      112.856997884222        0.234330355872      1
+       1     -112.871153090703        0.014155206481        0.052361317768      2
+       2     -112.871697181354        0.000544090651        0.018551338505      3
+       3     -112.871790408053        0.000093226700        0.003948787278      4
+       4     -112.871795093816        0.000004685763        0.000849404805      5
+       5     -112.871795313887        0.000000220071        0.000269512412      6
+       6     -112.871795348287        0.000000034400        0.000044001523      7
+       7     -112.871795349148        0.000000000861        0.000007247618      8
+       8     -112.871795349168        0.000000000019        0.000001326682      9
+       9     -112.871795349168        0.000000000001        0.000000265175     10
+      10     -112.871795349168        0.000000000000        0.000000058243      3
+      11     -112.871795349168        0.000000000000        0.000000008634      4
+  ---------------------------------------------------------------------------------
+
+  ==> Root No. 0 <==
+
+    20 20 20     -0.97415360
+    20 02 20      0.09912723
+    20 20 02      0.09912723
+    20 ba ab      0.06666570
+    20 ab ba      0.06666570
+    02 20 20      0.04905115
+    20 ba ba      0.04673807
+    20 ab ab      0.04673807
+    ba 20 ab     -0.04303038
+    ba ab 20     -0.04303038
+    ab ba 20     -0.04303038
+    ab 20 ba     -0.04303038
+    ab ab 20     -0.02908548
+    ba 20 ba     -0.02908548
+    ab 20 ab     -0.02908548
+    ba ba 20     -0.02908548
+    20 02 02     -0.02036083
+    20 aa bb     -0.01992764
+    20 bb aa     -0.01992764
+    20 20 ab     -0.01661008
+    20 20 ba     -0.01661008
+    20 ab 20     -0.01661008
+    20 ba 20     -0.01661008
+    aa bb 20      0.01394491
+    aa 20 bb      0.01394491
+    bb aa 20      0.01394491
+    bb 20 aa      0.01394491
+    20 00 22      0.01253388
+    20 22 00      0.01253388
+    22 00 20      0.01075679
+    22 20 00      0.01075679
+    ba 02 ab      0.01012208
+    ba ab 02      0.01012208
+    ab ba 02      0.01012208
+    ab 02 ba      0.01012208
+
+    Total Energy:    -112.871795349168, <S^2>: 0.000000
+    Time for FCI:       0.017878584000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0     -112.871795349168   0.000000
+    --------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981900      1B2     1.957373      1B1     1.957373  
+        2B1     0.042537      2B2     0.042537      6A1     0.018279  
+
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.14130834     0.14130834
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00232121     0.00232121
+    --------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981900      1B2     1.957373      1B1     1.957373  
+        2B1     0.042537      2B2     0.042537      6A1     0.018279  
+
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -7.44329300     0.00000000     0.00000000    -7.44329300     0.00000000    -9.08549650
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    15.55072708
+    --------------------------------------------------------------------------------------------------
+
+  Time to prepare integrals:        0.296 seconds
+  Time to run job          :        1.099 seconds
+  Total                    :        1.394 seconds
+
+    Psi4 stopped on: Monday, 13 May 2024 11:58AM
+    Psi4 wall time for execution: 0:00:01.45
+
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.10a1.dev23 
+
+                         Git: Rev {master} 8a781dc 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Monday, 13 May 2024 11:57AM
+
+    Process ID: 93775
+    Host:       macbook-pro-158.wireless.emory.edu
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    2
+    
+  ==> Input QCSchema <==
+
+--------------------------------------------------------------------------
+{'driver': 'energy',
+ 'extras': {'psiapi': True, 'wfn_qcvars_only': True},
+ 'id': None,
+ 'keywords': {'DOCC': [5, 0, 1, 1],
+              'D_CONVERGENCE': 1e-08,
+              'E_CONVERGENCE': 1e-10,
+              'FINDIF__POINTS': 5,
+              'OPT_COORDINATES': 'CARTESIAN',
+              'PARENT_SYMMETRY': 'C2v(Z)',
+              'REFERENCE': 'RHF',
+              'forte__active': [2, 0, 2, 2],
+              'forte__active_space_solver': 'FCI',
+              'forte__basis': 'CC-PCVDZ',
+              'forte__d_convergence': 1e-08,
+              'forte__e_convergence': 1e-08,
+              'forte__mcscf_g_convergence': 1e-06,
+              'forte__mcscf_micro_maxiter': 4,
+              'forte__r_convergence': 1e-08,
+              'forte__reference': 'RHF',
+              'forte__restricted_docc': [4, 0, 0, 0],
+              'function_kwargs': {'write_orbitals': False}},
+ 'model': {'basis': 'cc-pcvdz', 'method': 'forte'},
+ 'molecule': {'atom_labels': ['', ''],
+              'atomic_numbers': [6, 8],
+              'extras': {},
+              'fix_com': True,
+              'fix_orientation': True,
+              'fragment_charges': [0.0],
+              'fragment_multiplicities': [1],
+              'fragments': [[0, 1]],
+              'geometry': [0.0, 0.0, -1.2157154887264165, 0.0, 0.0, 0.9120765075461962],
+              'mass_numbers': [12, 16],
+              'masses': [12.0, 15.99491461957],
+              'molecular_charge': 0.0,
+              'molecular_multiplicity': 1,
+              'name': 'CO',
+              'provenance': {'creator': 'QCElemental',
+                             'routine': 'qcelemental.molparse.from_string',
+                             'version': '0.27.1'},
+              'real': [True, True],
+              'schema_name': 'qcschema_molecule',
+              'schema_version': 2,
+              'symbols': ['C', 'O'],
+              'validated': True},
+ 'protocols': {'stdout': True},
+ 'provenance': {'creator': 'QCElemental', 'routine': 'qcelemental.models.results', 'version': '0.27.1'},
+ 'schema_name': 'qcschema_input',
+ 'schema_version': 1}
+--------------------------------------------------------------------------
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: mcscf_fc - git commit: 84f751ea
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  No reference wave function provided for Forte. Computing SCF orbitals using Psi4 ...
+   => Libint2 <=
+
+    Primary   basis highest AM E, G, H:  6, 6, 3
+    Auxiliary basis highest AM E, G, H:  7, 7, 4
+    Onebody   basis highest AM E, G, H:  -, -, -
+    Solid Harmonics ordering:            Gaussian
+
+*** tstart() called on macbook-pro-158.wireless.emory.edu
+*** at Mon May 13 11:58:00 2024
+
+   => Loading Basis Set <=
+
+    Name: CC-PCVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry C          line   178 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pcvdz.gbs 
+    atoms 2 entry O          line   246 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pcvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        2 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Bohr), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         C            0.000000000000     0.000000000000    -1.215715488726    12.000000000000
+         O            0.000000000000     0.000000000000     0.912076507546    15.994914619570
+
+  Running in c2v symmetry.
+
+  Rotational constants: A = ************  B =      1.93933  C =      1.93933 [cm^-1]
+  Rotational constants: A = ************  B =  58139.67061  C =  58139.67061 [MHz]
+  Nuclear repulsion =   22.558595992505200
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 14
+  Nalpha       = 7
+  Nbeta        = 7
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-10
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: CC-PCVDZ
+    Blend: CC-PCVDZ
+    Number of shells: 16
+    Number of basis functions: 36
+    Number of Cartesian functions: 38
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              16
+      Number of primitives:             48
+      Number of atomic orbitals:        38
+      Number of basis functions:        36
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 2
+
+  Performing in-core PK
+  Using 444222 doubles for integral storage.
+  We computed 10549 shell quartets total.
+  Whereas there are 9316 unique shell quartets.
+    13.24 percent of shell quartets recomputed by reordering.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              375
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              2
+
+  Minimum eigenvalue in the overlap matrix is 2.0451661979E-02.
+  Reciprocal condition number of the overlap matrix is 6.5483583788E-03.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     A1        18      18 
+     A2         2       2 
+     B1         8       8 
+     B2         8       8 
+   -------------------------
+    Total      36      36
+   -------------------------
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter SAD:  -111.89459828721030   -1.11895e+02   0.00000e+00 
+   @RHF iter   1:  -112.72770701643744   -8.33109e-01   1.17242e-02 DIIS/ADIIS
+   @RHF iter   2:  -112.73641774242644   -8.71073e-03   9.37099e-03 DIIS/ADIIS
+   @RHF iter   3:  -112.75008919647475   -1.36715e-02   8.25515e-04 DIIS/ADIIS
+   @RHF iter   4:  -112.75022396098507   -1.34765e-04   1.09099e-04 DIIS/ADIIS
+   @RHF iter   5:  -112.75022696347315   -3.00249e-06   2.29295e-05 DIIS
+   @RHF iter   6:  -112.75022711864146   -1.55168e-07   3.41531e-06 DIIS
+   @RHF iter   7:  -112.75022712302837   -4.38691e-09   8.32432e-07 DIIS
+   @RHF iter   8:  -112.75022712325639   -2.28027e-10   1.97209e-07 DIIS
+   @RHF iter   9:  -112.75022712327009   -1.36993e-11   2.59921e-08 DIIS
+   @RHF iter  10:  -112.75022712327031   -2.13163e-13   1.50635e-09 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1A1   -20.668852     2A1   -11.365150     3A1    -1.524554  
+       4A1    -0.802747     1B1    -0.635757     1B2    -0.635757  
+       5A1    -0.548937  
+
+    Virtual:                                                              
+
+       2B2     0.155237     2B1     0.155237     6A1     0.380998  
+       3B2     0.670684     3B1     0.670684     7A1     0.701578  
+       8A1     0.988047     9A1     1.060600     4B2     1.221274  
+       4B1     1.221274    10A1     1.344025     1A2     1.344025  
+       5B1     1.559540     5B2     1.559540    11A1     1.852042  
+      12A1     2.300399     2A2     2.937033    13A1     2.937033  
+       6B1     3.427938     6B2     3.427938    14A1     3.838576  
+      15A1    19.383327     7B1    22.461603     7B2    22.461603  
+      16A1    23.408361    17A1    34.441900     8B1    39.148420  
+       8B2    39.148420    18A1    39.849310  
+
+    Final Occupation by Irrep:
+             A1    A2    B1    B2 
+    DOCC [     5,    0,    1,    1 ]
+    NA   [     5,    0,    1,    1 ]
+    NB   [     5,    0,    1,    1 ]
+
+  @RHF Final Energy:  -112.75022712327031
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =             22.5585959925052002
+    One-Electron Energy =                -198.2541399994535141
+    Two-Electron Energy =                  62.9453168836780179
+    Total Energy =                       -112.7502271232703066
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :         -0.0896122            0.0023191           -0.0872930
+ Magnitude           :                                                    0.0872930
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on macbook-pro-158.wireless.emory.edu at Mon May 13 11:58:00 2024
+Module time:
+	user time   =       0.22 seconds =       0.00 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =      11.60 seconds =       0.19 minutes
+	system time =       0.45 seconds =       0.01 minutes
+	total time  =          6 seconds =       0.10 minutes
+
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space RESTRICTED_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0
+    RESTRICTED_DOCC     4     0     0     0     4
+    GAS1                2     0     2     2     6
+    GAS2                0     0     0     0     0
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC    12     2     6     6    26
+    FROZEN_UOCC         0     0     0     0     0
+    Total              18     2     8     8    36
+  -------------------------------------------------   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry C          line    61 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry O          line    81 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  State Singlet (Ms = 0) A1 GAS min: 0 0 0 0 0 0 ; GAS max: 12 0 0 0 0 0 ; weights:
+      1.000000000000
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: CC-PCVDZ
+    Blend: CC-PCVDZ
+    Number of shells: 16
+    Number of basis functions: 36
+    Number of Cartesian functions: 38
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              16
+      Number of primitives:             48
+      Number of atomic orbitals:        38
+      Number of basis functions:        36
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 2
+
+  Performing in-core PK
+  Using 444222 doubles for integral storage.
+  We computed 10549 shell quartets total.
+  Whereas there are 9316 unique shell quartets.
+    13.24 percent of shell quartets recomputed by reordering.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              400
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              2
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         36
+  Number of correlated molecular orbitals:              36
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
+
+
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01880112 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.037542 GB
+  Timing for conventional integral transformation:            0.111 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing conventional integrals:                0.112 s.
+
+          -----------------------------------------------------------
+                  Multi-Configurational Self Consistent Field
+                Two-Step Approximate Second-Order AO Algorithm
+            written by Chenyang Li, Kevin P. Hannon, and Shuhe Wang
+          -----------------------------------------------------------
+
+
+  ==> MCSCF Calculation Information <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Integral type                               CONVENTIONAL
+    CI solver type                                       FCI
+    Final orbital type                             CANONICAL
+    Derivative type                                     NONE
+    Optimize orbitals                                   TRUE
+    Include internal rotations                         FALSE
+    Debug printing                                     FALSE
+    Energy convergence                             1.000e-08
+    Gradient convergence                           1.000e-06
+    Max value for rotation                         2.000e-01
+    Max number of macro iterations                       100
+    Max number of micro iterations                         4
+    Min number of micro iterations                         4
+    DIIS start                                            15
+    Min DIIS vectors                                       3
+    Max DIIS vectors                                       8
+    Frequency of DIIS extrapolation                        1
+    --------------------------------------------------------
+
+  ==> Independent Orbital Rotations <==
+
+    ORBITAL SPACES                        A1     A2     B1     B2
+    -------------------------------------------------------------
+             ACTIVE / RESTRICTED_DOCC      8      0      0      0
+    RESTRICTED_UOCC /          ACTIVE     24      0     12     12
+    RESTRICTED_UOCC / RESTRICTED_DOCC     48      0      0      0
+    -------------------------------------------------------------
+
+  ==> MCSCF Iterations <==
+
+                      Energy CI                    Energy Orbital
+           ------------------------------  ------------------------------
+    Iter.        Total Energy       Delta        Total Energy       Delta  Orb. Grad.  Micro
+    ----------------------------------------------------------------------------------------
+       1    -112.799321506812 -1.1280e+02   -112.835184385211 -1.1284e+02  8.8300e-03    4/N
+       2    -112.843715944313 -1.1284e+02   -112.849819546603 -1.1285e+02  9.6477e-03    4/N
+       3    -112.861271043170 -6.1950e-02   -112.870413750498 -3.5229e-02  3.1098e-03    4/N
+       4    -112.871597550671 -2.7882e-02   -112.871709319331 -2.1890e-02  1.5916e-03    4/N
+       5    -112.871731323528 -1.0460e-02   -112.871736380451 -1.3226e-03  1.2187e-04    4/N
+       6    -112.871737665670 -1.4011e-04   -112.871737990541 -2.8671e-05  2.5956e-05    4/N
+       7    -112.871738080696 -6.7572e-06   -112.871738104951 -1.7245e-06  5.4340e-06    4/N
+       8    -112.871738111926 -4.4626e-07   -112.871738113863 -1.2332e-07  1.3158e-06    4/N
+       9    -112.871738114427 -3.3732e-08   -112.871738114586 -9.6350e-09  3.4673e-07    3/Y
+      10    -112.871738114632 -2.7060e-09   -112.871738114646 -7.8286e-10  7.8317e-08    2/Y
+    ----------------------------------------------------------------------------------------
+
+  A miracle has come to pass: MCSCF iterations have converged!
+
+  Performing final CI Calculation using converged orbitals
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              3
+    number of beta electrons                               3
+    number of alpha strings                               20
+    number of beta strings                                20
+    --------------------------------------------------------
+
+  ==> FCI Solver <==
+
+    --------------------------------------------------------
+    Spin adapt                                         FALSE
+    Number of determinants                               112
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Root No. 0 <==
+
+    20 20 20      0.97328891
+    20 02 20     -0.09857713
+    20 20 02     -0.09857713
+    20 ba ab     -0.06619710
+    20 ab ba     -0.06619710
+    02 20 20     -0.04889730
+    20 ab ab     -0.04632396
+    20 ba ba     -0.04632396
+    ba 20 ab      0.04331562
+    ab 20 ba      0.04331562
+    ba ab 20      0.04331562
+    ab ba 20      0.04331562
+    ba ba 20      0.02939018
+    ba 20 ba      0.02939018
+    ab 20 ab      0.02939018
+    ab ab 20      0.02939018
+    20 ab 20      0.02734254
+    20 ba 20      0.02734254
+    20 20 ab      0.02734254
+    20 20 ba      0.02734254
+    20 02 02      0.02033770
+    20 bb aa      0.01987314
+    20 aa bb      0.01987314
+    aa bb 20     -0.01392544
+    bb aa 20     -0.01392544
+    bb 20 aa     -0.01392544
+    aa 20 bb     -0.01392544
+    20 22 00     -0.01250689
+    20 00 22     -0.01250689
+    22 00 20     -0.01074111
+    22 20 00     -0.01074111
+    ba 02 ab     -0.01010321
+    ab ba 02     -0.01010321
+    ab 02 ba     -0.01010321
+    ba ab 02     -0.01010321
+
+    Total Energy:    -112.871738114650, <S^2>: -0.000000
+    Time for FCI:       0.010455125000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0     -112.871738114650  -0.000000
+    --------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981960      1B2     1.957466      1B1     1.957466  
+        2B1     0.042445      2B2     0.042445      6A1     0.018218  
+
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.13342199     0.13342199
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00231913     0.00231913
+    --------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981960      1B2     1.957466      1B1     1.957466  
+        2B1     0.042445      2B2     0.042445      6A1     0.018218  
+
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -7.66941055     0.00000000     0.00000000    -7.66941055     0.00000000    -9.14187444
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    15.52285334
+    --------------------------------------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981960      1B2     1.957466      1B1     1.957466  
+        2B1     0.042445      2B2     0.042445      6A1     0.018218  
+
+  Canonicalizing final MCSCF orbitals
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS          TRUE
+    MIX GAS ACTIVE ORBITALS       FALSE
+    GAS1                          CANONICAL
+    INACTIVE_DOCC                 CANONICAL
+    INACTIVE_UOCC                 CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    GAS1                 0.0311707733   0.0487050865
+    INACTIVE_DOCC        0.2782594008   0.4496500333
+    INACTIVE_UOCC        0.2770201813   0.7579467399
+    ------------------------------------------------
+
+    Canonicalization test failed
+
+  Timing for orbital canonicalization:                        0.000 s.
+
+  !!! WARNING: Final Active Orbitals Maybe Different from the Original !!!
+
+    Based on projections of maximum overlap method:
+          4A1 -> 7A1       RESTRICTED_UOCC
+          5A1 -> 3A1       RESTRICTED_DOCC
+  Integrals are about to be updated.
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01555813 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.037542 GB
+  Timing for conventional integral transformation:            0.109 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Integrals update took     0.109 s.
+
+  The integrals are not consistent with the orbitals. Re-transforming them.
+
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              3
+    number of beta electrons                               3
+    number of alpha strings                               20
+    number of beta strings                                20
+    --------------------------------------------------------
+
+  ==> FCI Solver <==
+
+    --------------------------------------------------------
+    Spin adapt                                         FALSE
+    Number of determinants                               112
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+  Initial guess space is incomplete.
+  Adding 9 determinant(s).
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         59
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+    25       1       *
+    25       3        
+     8       5        
+     1       7        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   singlet    0     -112.856975259194  -0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-08
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                    112
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -112.856975259194      112.856975259194        0.234253975542      1
+       1     -112.871099895828        0.014124636634        0.052213456631      2
+       2     -112.871640582413        0.000540686586        0.018506039827      3
+       3     -112.871733224323        0.000092641910        0.003932108664      4
+       4     -112.871737861308        0.000004636985        0.000846714705      5
+       5     -112.871738079826        0.000000218518        0.000268025790      6
+       6     -112.871738113784        0.000000033957        0.000043649397      7
+       7     -112.871738114630        0.000000000847        0.000007178401      8
+       8     -112.871738114649        0.000000000019        0.000001310992      9
+       9     -112.871738114650        0.000000000001        0.000000260691     10
+      10     -112.871738114650        0.000000000000        0.000000057200      3
+      11     -112.871738114650        0.000000000000        0.000000008445      4
+  ---------------------------------------------------------------------------------
+
+  ==> Root No. 0 <==
+
+    20 20 20      0.97421685
+    20 20 02     -0.09902704
+    20 02 20     -0.09902704
+    20 ba ab     -0.06660899
+    20 ab ba     -0.06660899
+    02 20 20     -0.04895684
+    20 ab ab     -0.04671186
+    20 ba ba     -0.04671186
+    ba ab 20      0.04296913
+    ab 20 ba      0.04296913
+    ba 20 ab      0.04296913
+    ab ba 20      0.04296913
+    ba ba 20      0.02904844
+    ba 20 ba      0.02904844
+    ab 20 ab      0.02904844
+    ab ab 20      0.02904844
+    20 02 02      0.02032506
+    20 aa bb      0.01989713
+    20 bb aa      0.01989713
+    20 ab 20      0.01653412
+    20 ba 20      0.01653412
+    20 20 ab      0.01653412
+    20 20 ba      0.01653412
+    aa 20 bb     -0.01392069
+    bb 20 aa     -0.01392069
+    bb aa 20     -0.01392069
+    aa bb 20     -0.01392069
+    20 22 00     -0.01252092
+    20 00 22     -0.01252092
+    22 20 00     -0.01074146
+    22 00 20     -0.01074146
+    ba ab 02     -0.01009759
+    ab ba 02     -0.01009759
+    ba 02 ab     -0.01009759
+    ab 02 ba     -0.01009759
+
+    Total Energy:    -112.871738114650, <S^2>: -0.000000
+    Time for FCI:       0.017925291000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0     -112.871738114650  -0.000000
+    --------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981960      1B1     1.957466      1B2     1.957466  
+        2B2     0.042445      2B1     0.042445      6A1     0.018218  
+
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.14250738     0.14250738
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00231913     0.00231913
+    --------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        5A1     1.981960      1B1     1.957466      1B2     1.957466  
+        2B2     0.042445      2B1     0.042445      6A1     0.018218  
+
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A1 <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0A1    -7.44143629     0.00000000     0.00000000    -7.44143629     0.00000000    -9.08478047
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    15.52285334
+    --------------------------------------------------------------------------------------------------
+
+  Time to prepare integrals:        0.296 seconds
+  Time to run job          :        1.097 seconds
+  Total                    :        1.393 seconds
+
+    Psi4 stopped on: Monday, 13 May 2024 11:58AM
+    Psi4 wall time for execution: 0:00:01.44
+
+
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>//
+  //      FiniteDifference Results     //
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<//
+
+  Computing gradient from energies.
+    Using 5-point formula.
+    Energy without displacement: -112.8718476853
+    Check energies below for precision!
+    Forces are for mass-weighted, symmetry-adapted cartesians [a0].
+
+     Coord      Energy(-2)        Energy(-1)        Energy(+1)        Energy(+2)            Force
+        0   -112.8719377981   -112.8718951570   -112.8717953492   -112.8717381146      0.0099796592
+         -------------------------------------------------------------
+  ## New Matrix (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 3
+
+                 1                   2                   3
+
+    1     0.00000000000000     0.00000000000000     0.02613110177673
+    2     0.00000000000000     0.00000000000000    -0.02613110177673
+
+
+
+
+    Psi4 stopped on: Monday, 13 May 2024 11:58AM
+    Psi4 wall time for execution: 0:00:07.81
+
+*** Psi4 exiting successfully. Buy a developer a beer!

@@ -1,8 +1,7 @@
-#! Test AVAS algorithm using the cumulative threshold and sorting
+# Test AVAS algorithm using the cumulative threshold and sorting
 
 import forte
 
-refscf = -113.87663391962522
 reffci = -113.897668334147355
 
 molecule {
@@ -33,11 +32,9 @@ set forte {
   root_sym 0
   multiplicity 1
   ms 0.0
+  mcscf_reference false
 }
 
 
-Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refscf, variable("CURRENT ENERGY"), 9, "SCF energy")
-
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(reffci, variable("CURRENT ENERGY"), 9, "FCI energy")

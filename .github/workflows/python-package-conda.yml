@@ -1,34 +1,64 @@
 name: Python Package using Conda
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build-linux:
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 5
+    defaults:
+      run:
+        shell: bash -el {0}   
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
+    - name: Checkout code
+      uses: actions/checkout@v4
       with:
-        python-version: '3.10'
-    - name: Add conda to system path
+        submodules: 'true'
+
+    - name: Setup Conda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        activate-environment: forte
+        environment-file: environment.yml
+        channels: conda-forge
+        show-channel-urls: true
+        python-version: '3.11'
+        auto-activate-base: false
+        add-pip-as-python-dependency: true
+
+    - name: Install ambit
       run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        echo $CONDA/bin >> $GITHUB_PATH
-    - name: Install dependencies
+        conda info
+        conda list
+        cd $HOME
+        git clone https://github.com/jturney/ambit.git
+        cd ambit
+        cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/bin/ambit
+        cd objdir
+        make -j4
+        make install
+
+    - name: Compile psi4
       run: |
-        conda env update --file environment.yml --name base
-    - name: Lint with flake8
+        cd $HOME        
+        git clone https://github.com/psi4/psi4.git
+        cd psi4
+        git pull origin master --tags 
+        git fetch origin "refs/tags/*:refs/tags/*"
+        cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$HOME/psi4bin -DENABLE_ecpint=ON
+        cd objdir
+        make -j4
+
+    - name: Compile forte
       run: |
-        conda install flake8
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
-      run: |
-        conda install pytest
+        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib
+        export AMBITPATH=$HOME/bin/ambit
+        export PATH=$PATH:$HOME/psi4/objdir/stage/bin
+        cd $HOME/work/forte/forte
+        python setup.py develop
+        pip list
+        # cd $HOME/work/forte/forte/tests/pytest
         # pytest
+        export OPENBLAS_NUM_THREADS=1
+        cd $HOME/work/forte/forte/tests/methods
+        python run_forte_tests.py --failed_dump --bw

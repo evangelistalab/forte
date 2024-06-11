@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -36,8 +36,8 @@
 #include "helpers/printing.h"
 #include "lbfgs.h"
 #include "rosenbrock.h"
-#include "casscf/casscf_orb_grad.h"
-#include "casscf/cpscf.h"
+#include "mcscf/mcscf_orb_grad.h"
+#include "mcscf/cpscf.h"
 
 using namespace psi;
 
@@ -439,7 +439,7 @@ void LBFGS::reset() {
 }
 
 template double LBFGS::minimize(ROSENBROCK& func, std::shared_ptr<psi::Vector> x);
-template double LBFGS::minimize(CASSCF_ORB_GRAD& func, std::shared_ptr<psi::Vector> x);
+template double LBFGS::minimize(MCSCF_ORB_GRAD& func, std::shared_ptr<psi::Vector> x);
 template double LBFGS::minimize(CPSCF& func, std::shared_ptr<psi::Vector> x);
 
 } // namespace forte

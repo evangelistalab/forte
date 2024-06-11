@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -345,9 +345,6 @@ class ActiveSpaceMethod {
   protected:
     /// The list of active orbitals (absolute ordering)
     std::vector<size_t> active_mo_;
-
-    /// The list of doubly occupied orbitals (absolute ordering)
-    std::vector<size_t> core_mo_;
 
     /// The state to calculate
     StateInfo state_;

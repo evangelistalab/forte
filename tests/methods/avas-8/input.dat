@@ -88,6 +88,7 @@ set forte {
   avas               true
   avas_diagonalize   true
   avas_cutoff        0.5
+  mcscf_reference false
 }
 Ezero, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 
