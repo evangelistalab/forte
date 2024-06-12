@@ -277,8 +277,5 @@ class ObjectsFromPsi4(Module):
             psi4.core.print_out("\n  Forte will use psi4 integrals")
             # Make an integral object from the psi4 wavefunction object
             data.ints = make_ints_from_psi4(data.psi_wfn, data.options, data.mo_space_info)
-        
-        # print(data.psi_wfn.epsilon_a().to_array())
-        # print(data.psi_wfn.Ca().to_array())
 
         return data

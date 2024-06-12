@@ -26,7 +26,6 @@ molecule {H}
 set forte{
    correlation_solver   dsrg-mrpt2
    int_type             PYSCF
-#   job_type             newdriver
    active_space_solver  fci
    restricted_docc      [1,0,0,0]
    active               [2,0,1,1]

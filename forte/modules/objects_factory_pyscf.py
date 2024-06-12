@@ -15,8 +15,8 @@ def _make_ints_from_pyscf(pyscf_obj, data: ForteData, mo_coeff):
     """
     Make custom integrals from the PySCF wavefunction object
     """
-    int_ao = pyscf_obj.mol.intor("int2e", aosym="s1")
-    eri = pyscf.ao2mo.incore.full(int_ao, mo_coeff)
+    int_ao = pyscf_obj.mol.intor("int2e", aosym="s8")
+    eri = pyscf.ao2mo.incore.full(int_ao, mo_coeff, compact=False).reshape(mo_coeff.shape * 2)
     nmo = pyscf_obj.mol.nao_nr()
     
     eri_aa = np.zeros((nmo, nmo, nmo, nmo))
@@ -31,7 +31,7 @@ def _make_ints_from_pyscf(pyscf_obj, data: ForteData, mo_coeff):
     eri_bb += np.einsum("ikjl->ijkl", eri)
     eri_bb -= np.einsum("iljk->ijkl", eri)
     
-    enuc = pyscf_obj.mol.energy_nuc() # Should we also add the frozen-core energy?
+    enuc = pyscf_obj.mol.energy_nuc()
     hcore_ao = pyscf_obj.get_hcore()
     
     hcore = np.einsum("uv,up,vq->pq", hcore_ao, mo_coeff.conj(), mo_coeff, optimize="optimal")
@@ -54,14 +54,14 @@ def _make_ints_from_pyscf(pyscf_obj, data: ForteData, mo_coeff):
 
 def _make_state_info_from_pyscf(pyscf_obj, options):
     nel = pyscf_obj.mol.nelectron
-    multiplicity = pyscf_obj.mol.spin + 1
+    multiplicity = pyscf_obj.mol.spin + 1 # PySCF 'spin' is nalpha - nbeta
     
     twice_ms = (multiplicity + 1) % 2
     
     na = (nel + twice_ms) // 2
     nb = nel - na
 
-    if isinstance(pyscf_obj, pyscf.mcscf.casci.CASCI):
+    if isinstance(pyscf_obj, pyscf.mcscf.casci.CASBase):
         irrep = pyscf_obj.fcisolver.wfnsym
         if irrep is None:
             irrep = 0
@@ -95,8 +95,6 @@ def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
         nmopi_list = np.zeros(nirrep, dtype = int)
         for i in orbsym:
             nmopi_list[i] += 1
-        
-    # nmopi_offset = [sum(nmopi_list[0:h]) for h in range(nirrep)]
 
     nmopi = psi4.core.Dimension(list(nmopi_list))
     
