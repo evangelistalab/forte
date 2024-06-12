@@ -60,4 +60,3 @@ def register_option(key, vals, options):
             options.add_str(key, opt_val, opt_msg)
     if opt_typ == "deprecated":
         options.add_deprecated(key, opt_msg)
->>>>>>> main
