@@ -25,4 +25,5 @@ dependencies:
     - conda-forge::qcelemental
     - conda-forge::qcengine
     - conda-forge::optking
+    - conda-forge::pyscf
 
