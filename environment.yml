@@ -26,4 +26,5 @@ dependencies:
     - conda-forge::qcengine
     - conda-forge::optking
     - conda-forge::pyscf
+    - conda-forge::libecpint
 
