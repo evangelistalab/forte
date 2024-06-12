@@ -113,7 +113,7 @@ def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
         doccpi = psi4.core.Dimension([nb])
         soccpi = psi4.core.Dimension([ms2])
     else:
-        if isinstance(pyscf_obj, pyscf.mcscf.casci.CASCI):
+        if isinstance(pyscf_obj, pyscf.mcscf.casci.CASBase):
             mo_occ = pyscf_obj._scf.mo_occ
         elif isinstance(pyscf_obj, pyscf.scf.hf.SCF):
             mo_occ = pyscf_obj.mo_occ
@@ -131,7 +131,7 @@ def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
         doccpi = psi4.core.Dimension(list(doccpi))
         soccpi = psi4.core.Dimension(list(soccpi))  
     
-    if isinstance(pyscf_obj, pyscf.mcscf.casci.CASCI):
+    if isinstance(pyscf_obj, pyscf.mcscf.casci.CASBase):
         mo_energy_pyscf = pyscf_obj._scf.mo_energy
     elif isinstance(pyscf_obj, pyscf.scf.hf.SCF):
         mo_energy_pyscf = pyscf_obj.mo_energy

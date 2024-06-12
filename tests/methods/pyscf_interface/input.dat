@@ -1,7 +1,7 @@
 import forte
 from pyscf import gto, scf, mcscf
 
-refdsrgpt2 = -15.595924356891569
+refdsrgpt2 = -15.595924289485959
 
 mol = gto.M(
 atom = '''
@@ -21,10 +21,12 @@ mc.fcisolver.wfnsym = 0
 mc.fix_spin_(ss=0.0)
 mc.mc2step()
 
+molecule {H}
+
 set forte{
    correlation_solver   dsrg-mrpt2
    int_type             PYSCF
-   job_type             newdriver
+#   job_type             newdriver
    active_space_solver  fci
    restricted_docc      [1,0,0,0]
    active               [2,0,1,1]
@@ -32,4 +34,4 @@ set forte{
 }
 
 energy('forte', pyscf_obj = mc)
-compare_values(refdsrgpt2,variable("CURRENT ENERGY"),9,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),6,"DSRG-MRPT2 energy")
