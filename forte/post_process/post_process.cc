@@ -343,6 +343,7 @@ void PostProcess::unpaired_density() {
 
     std::vector<double> nus(nact);
 
+    outfile->Printf("\n  Number of unpaired electrons (nu_i) in alpha NOs");
     outfile->Printf("\n    N.O.      occ        nu_i  ");
     outfile->Printf("\n  --------  ---------  --------");
 
@@ -368,6 +369,10 @@ void PostProcess::unpaired_density() {
         ofile << std::setprecision(12) << nus[i]  << "\n";
     }
     ofile.close();
+
+    if (ints_->spin_restriction() == IntegralSpinRestriction::Restricted){
+        UB = UA->clone();
+    }
 
     ints_->rotate_orbitals(UA,UB);
 }
