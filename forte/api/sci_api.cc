@@ -121,7 +121,11 @@ void export_Determinant(py::module& m) {
         .def("__str__", [](const Determinant& a) { return str(a); })
         .def("__eq__", [](const Determinant& a, const Determinant& b) { return a == b; })
         .def("__lt__", [](const Determinant& a, const Determinant& b) { return a < b; })
-        .def("__hash__", [](const Determinant& a) { return Determinant::Hash()(a); });
+        .def("__hash__", [](const Determinant& a) { return Determinant::Hash()(a); })
+        .def(
+            "apply",
+            [](Determinant& d, const SQOperatorString op) { return apply_operator_to_det(d, op); },
+            "Apply an operator to this determinant. Returns the sign and changes the determinant.");
 
     py::class_<String>(
         m, "String",
@@ -285,6 +289,7 @@ void export_Determinant(py::module& m) {
         .def("str", &SQOperatorString::str)
         .def("count", &SQOperatorString::count)
         .def("__str__", &SQOperatorString::str)
+        .def("__repr___", &SQOperatorString::str)
         .def("__eq__", &SQOperatorString::operator==)
         .def("__lt__", &SQOperatorString::operator<);
 
@@ -310,6 +315,13 @@ void export_Determinant(py::module& m) {
             py::keep_alive<0, 1>()) // Essential: keep object alive while iterator exists
         .def(
             "coefficient",
+            [](const SparseOperator& op, const std::string& s) {
+                const auto [sqop, factor] = make_sq_operator_string(s, false);
+                return factor * op[sqop];
+            },
+            "Get the coefficient of a term")
+        .def(
+            "__getitem__",
             [](const SparseOperator& op, const std::string& s) {
                 const auto [sqop, factor] = make_sq_operator_string(s, false);
                 return factor * op[sqop];
@@ -368,8 +380,8 @@ void export_Determinant(py::module& m) {
         .def("latex", &SparseOperator::latex)
         .def("adjoint", [](const SparseOperator& op) { return op.adjoint(); })
         .def("__eq__", &SparseOperator::operator==)
-        .def("__repr__", [](const SparseOperator& op) { return join(op.str(), " "); })
-        .def("__str__", [](const SparseOperator& op) { return join(op.str(), " "); });
+        .def("__repr__", [](const SparseOperator& op) { return join(op.str(), "\n"); })
+        .def("__str__", [](const SparseOperator& op) { return join(op.str(), "\n"); });
 
     py::class_<SparseOperatorList>(m, "SparseOperatorList",
                                    "A class to represent a list of sparse operators")
@@ -386,7 +398,8 @@ void export_Determinant(py::module& m) {
             },
             py::keep_alive<0, 1>())
         .def("size", &SparseOperatorList::size)
-        .def("__str__", [](const SparseOperatorList& op) { return join(op.str(), " "); })
+        .def("__repr__", [](const SparseOperatorList& op) { return join(op.str(), "\n"); })
+        .def("__str__", [](const SparseOperatorList& op) { return join(op.str(), "\n"); })
         .def(
             "__getitem__", [](const SparseOperatorList& op, const size_t n) { return op[n]; },
             "Get the coefficient of a term")
@@ -496,10 +509,24 @@ void export_Determinant(py::module& m) {
             sim_trans_fact_antiherm(op, A, reverse, screen_thresh);
             auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> elapsed_seconds = end - start;
-            std::cout << "similarity_transform (antihermitian) took " << elapsed_seconds.count()
-                      << "s\n";
+            // std::cout << "similarity_transform (antihermitian) took " << elapsed_seconds.count()
+            //           << "s\n";
         },
         "op"_a, "A"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12);
+
+    m.def(
+        "sim_trans_fact_antiherm_grad",
+        [](SparseOperator& op, const SparseOperatorList& A, size_t n, bool reverse,
+           double screen_thresh) {
+            // time this call and print to std::cout
+            auto start = std::chrono::high_resolution_clock::now();
+            sim_trans_fact_antiherm_grad(op, A, n, reverse, screen_thresh);
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> elapsed_seconds = end - start;
+            // std::cout << "similarity_transform (antihermitian) took " << elapsed_seconds.count()
+            //           << "s\n";
+        },
+        "op"_a, "A"_a, "n"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12);
 
     py::class_<SparseState, std::shared_ptr<SparseState>>(
         m, "SparseState", "A class to represent a vector of determinants")

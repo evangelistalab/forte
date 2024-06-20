@@ -92,26 +92,26 @@ bool SQOperatorString::operator<(const SQOperatorString& other) const {
 SQOperatorString SQOperatorString::adjoint() const { return SQOperatorString(ann(), cre()); }
 
 std::string SQOperatorString::str() const {
-    std::string s = "[ ";
     auto acre = cre().get_alfa_occ(cre().norb());
     auto bcre = cre().get_beta_occ(cre().norb());
     auto aann = ann().get_alfa_occ(ann().norb());
     auto bann = ann().get_beta_occ(ann().norb());
     std::reverse(aann.begin(), aann.end());
     std::reverse(bann.begin(), bann.end());
+    std::vector<std::string> terms;
     for (auto p : acre) {
-        s += std::to_string(p) + "a+ ";
+        terms.push_back(std::to_string(p) + "a+");
     }
     for (auto p : bcre) {
-        s += std::to_string(p) + "b+ ";
+        terms.push_back(std::to_string(p) + "b+");
     }
     for (auto p : bann) {
-        s += std::to_string(p) + "b- ";
+        terms.push_back(std::to_string(p) + "b-");
     }
     for (auto p : aann) {
-        s += std::to_string(p) + "a- ";
+        terms.push_back(std::to_string(p) + "a-");
     }
-    s += "]";
+    std::string s = "[" + join(terms, " ") + "]";
 
     return s;
 }
