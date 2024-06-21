@@ -299,7 +299,7 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     /// Compute the DSRG-MRPT2 energy
     double compute_energy();
 
-    double compute_eom();
+    // double compute_eom();
 
     std::vector<ambit::BlockedTensor> compute_Heff_full();
     ambit::BlockedTensor get_gamma1() { return Gamma1; }

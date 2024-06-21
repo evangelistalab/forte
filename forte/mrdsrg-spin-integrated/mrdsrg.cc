@@ -332,13 +332,6 @@ double MRDSRG::compute_energy() {
     switch (corrlevelmap[corrlv_string_]) {
     case CORR_LV::LDSRG2: {
         Etotal += compute_energy_ldsrg2();
-
-        bool do_eom = false;
-        do_eom = foptions_->get_bool("DO_EOM");
-        if (do_eom) {
-            compute_eom();
-        }
-
         break;
     }
     case CORR_LV::LDSRG2_QC: {
