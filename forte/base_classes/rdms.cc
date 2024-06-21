@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -716,7 +716,7 @@ void RDMsSpinDependent::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub)
 
 void RDMsSpinDependent::dump_to_disk(const std::string& filename_prefix) const {
     std::string prefix = filename_prefix + (filename_prefix.empty() ? "" : ".");
-    
+
     if (max_rdm_ > 0) {
         ambit::save(g1a_, prefix + "g1a.bin");
         ambit::save(g1b_, prefix + "g1b.bin");
@@ -974,7 +974,7 @@ void RDMsSpinFree::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
 
 void RDMsSpinFree::dump_to_disk(const std::string& filename_prefix) const {
     std::string prefix = (filename_prefix.empty() ? "" : filename_prefix + ".");
-    
+
     if (max_rdm_ > 0) {
         ambit::save(SF_G1_, prefix + "g1.bin");
     }

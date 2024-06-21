@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -29,6 +29,9 @@
 
 #include <algorithm>
 #include <numeric>
+
+#define FMT_HEADER_ONLY
+#include "lib/fmt/core.h"
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -64,6 +67,22 @@ std::string MOSpaceInfo::str() const {
     return s;
 }
 
+size_t MOSpaceInfo::nirrep() const { return nirrep_; }
+
+const std::vector<std::string>& MOSpaceInfo::irrep_labels() const {
+    return symmetry_.irrep_labels();
+}
+
+const std::string& MOSpaceInfo::irrep_label(size_t h) const { return symmetry_.irrep_label(h); }
+
+std::string MOSpaceInfo::point_group_label() const { return symmetry_.point_group_label(); }
+
+const std::vector<std::string>& MOSpaceInfo::space_names() const { return elementary_spaces_; }
+
+std::map<std::string, std::vector<std::string>> MOSpaceInfo::composite_space_names() const {
+    return composite_spaces_;
+}
+
 size_t MOSpaceInfo::size(const std::string& space) const {
     size_t s = 0;
     if (composite_spaces_.count(space) == 0) {
@@ -96,7 +115,7 @@ psi::Dimension MOSpaceInfo::dimension(const std::string& space) const {
 std::vector<int> MOSpaceInfo::symmetry(const std::string& space) const {
     psi::Dimension dims = dimension(space);
     std::vector<int> result;
-    for (int h = 0; h < dims.n(); ++h) {
+    for (size_t h = 0; h < dims.n(); ++h) {
         fill_n(back_inserter(result), dims[h], h); // insert h for dims[h] times
     }
     return result;
@@ -318,6 +337,8 @@ void MOSpaceInfo::read_from_map(const std::map<std::string, std::vector<size_t>>
     }
 }
 
+const std::vector<size_t>& MOSpaceInfo::reorder() const { return reorder_; }
+
 void MOSpaceInfo::set_reorder(const std::vector<size_t>& reorder) { reorder_ = reorder; }
 
 void MOSpaceInfo::compute_space_info() {
@@ -332,11 +353,16 @@ void MOSpaceInfo::compute_space_info() {
 
     for (size_t h = 0; h < nirrep_; ++h) {
         if (unassigned[h] < 0) {
-            outfile->Printf("\n  There is an error in the definition of the "
-                            "orbital spaces.  Total unassigned MOs for irrep "
-                            "%d is %d.",
-                            h, unassigned[h]);
-            exit(1);
+            // Throw and exception if there are more orbitals assigned to an irrep than there are
+            // available
+            auto msg = fmt::format(
+                "There is an error in the definition of the orbital spaces.  Total assigned MOs "
+                "for irrep {} is {} leaving {} orbitals unassigned.",
+                h, nmopi_[h], unassigned[h]);
+            outfile->Printf("\n%s", msg.c_str());
+
+            // generate a runtime error and use the fmt library to print the error message
+            throw std::runtime_error(msg);
         }
     }
 

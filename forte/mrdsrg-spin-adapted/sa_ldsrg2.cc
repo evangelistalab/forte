@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -74,11 +74,13 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
 
     // iteration variables
     double Ecorr = 0.0;
-    bool converged = false;
+    converged_ = false;
 
     setup_ldsrg2_tensors();
 
     // setup DIIS
+    double T1rms = 1.0, T2rms = 1.0;
+    int bad_update_count = 0;
     if (diis_start_ > 0) {
         diis_manager_init();
     }
@@ -113,6 +115,8 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
 
         // update amplitudes
         local_timer t_amp;
+        T1rms = T1rms_;
+        T2rms = T2rms_;
         update_t();
         double time_amp = t_amp.get();
         od.stop();
@@ -125,13 +129,23 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
         timer diis("DIIS");
         // DIIS amplitudes
         if (diis_start_ > 0 and cycle >= diis_start_) {
+            outfile->Printf("  ");
+            if (bad_update_count > 3) {
+                psi::outfile->Printf("R/");
+                diis_manager_->reset_subspace();
+                bad_update_count = 0;
+            }
             diis_manager_add_entry();
-            outfile->Printf("  S");
+            outfile->Printf("S");
 
             if ((cycle - diis_start_) % diis_freq_ == 0 and
                 diis_manager_->subspace_size() >= diis_min_vec_) {
                 diis_manager_extrapolate();
                 outfile->Printf("/E");
+                auto tratio = T1rms_ / T1rms + T2rms_ / T2rms;
+                if (tratio > 1.0 and T1rms_ < 4.0e-3 and T2rms_ < 4.0e-3) {
+                    bad_update_count++;
+                }
             }
         }
         diis.stop();
@@ -139,7 +153,7 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
         if (std::fabs(Edelta) < e_conv_ && rms < r_conv_) {
-            converged = true;
+            converged_ = true;
             break;
         }
 
@@ -175,11 +189,6 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
     // dump amplitudes to disk
     dump_amps_to_disk();
 
-    // fail to converge
-    if (!converged) {
-        clean_checkpoints(); // clean amplitudes in scratch directory
-        throw psi::PSIEXCEPTION("The MR-LDSRG(2) computation does not converge.");
-    }
     final.stop();
 
     Hbar0_ = Ecorr;
@@ -194,7 +203,7 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
 }
 
 void SA_MRDSRG::compute_hbar() {
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
 
@@ -226,7 +235,7 @@ void SA_MRDSRG::compute_hbar() {
         C2_.zero();
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s", dash.c_str());
         }
@@ -264,7 +273,7 @@ void SA_MRDSRG::compute_hbar() {
         }
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s\n", dash.c_str());
         }
@@ -288,7 +297,7 @@ void SA_MRDSRG::compute_hbar() {
         // test convergence of C
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
-        if (print_ > 2) {
+        if (print_ > 3) {
             outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
                             C1_.norm(0), C2_.norm(0));
         }
@@ -305,7 +314,7 @@ void SA_MRDSRG::compute_hbar() {
 }
 
 void SA_MRDSRG::compute_hbar_sequential() {
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
 
@@ -420,7 +429,7 @@ void SA_MRDSRG::compute_hbar_sequential() {
         C2_.zero();
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s", dash.c_str());
         }
@@ -448,7 +457,7 @@ void SA_MRDSRG::compute_hbar_sequential() {
         }
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s\n", dash.c_str());
         }
@@ -472,7 +481,7 @@ void SA_MRDSRG::compute_hbar_sequential() {
         // test convergence of C
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
-        if (print_ > 2) {
+        if (print_ > 3) {
             outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
                             C1_.norm(0), C2_.norm(0));
         }

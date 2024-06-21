@@ -1,11 +1,9 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 memory 1 gb
 
 r_scf = -154.979263255832
 r_avg_cas = -154.745701429278
-r_0ag = -155.618385970396
+r_0ag = -155.6183871646
 
 molecule butadiene{
 0 1
@@ -30,15 +28,15 @@ set {
   df_basis_scf   def2-universal-jkfit
   df_basis_mp2   def2-universal-jkfit
   e_convergence  10
-  d_convergence  12
   maxiter        100
-  cubeprop_orbitals [14,15,16,17]
 }
+
 Escf, wfn = energy('scf', return_wfn=True)
 compare_values(r_scf, Escf, 8, "SCF energy")
 
 set forte{
-  job_type             casscf
+  job_type             mcscf_two_step
+  active_space_solver  fci
   int_type             df
   e_convergence        12
   dsrg_s               0.5
@@ -47,20 +45,19 @@ set forte{
   active               [4]
   avg_state            [[0,1,5]]
   rotate_mos           [1,17,20]
-  casscf_maxiter       250
-  casscf_g_convergence 1.0e-6
-  casscf_e_convergence 1.0e-8
-  casscf_max_rotation  0.2
-  casscf_diis_start    20
-  casscf_diis_freq     4
-  fci_maxiter          1000
+  mcscf_maxiter       250
+  mcscf_g_convergence 1.0e-6
+  mcscf_e_convergence 1.0e-12
+  ci_spin_adapt        true
+  mcscf_freeze_core   true
 }
+
 Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(r_avg_cas, Ecas, 8, "SA-CASSCF energy from FORTE CASSCF")
 
 set forte{
   job_type            newdriver
-  active_space_solver detci
+  active_space_solver fci
   correlation_solver  dsrg-mrpt2
   calc_type           sa
   int_type            df
@@ -75,5 +72,6 @@ set forte{
   orbital_type        local
   localize_space      [13,16]
 }
+
 energy('forte', ref_wfn=wfn)
 compare_values(r_0ag, variable("ENERGY ROOT 0 1A"), 8, "abs. energy of singlet 0Ag")

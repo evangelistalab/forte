@@ -1,0 +1,45 @@
+# H2O singlet, 6-31G**/GASSCF calculation for core-excited state with core orbital frozen
+
+import forte
+
+refgasscf = -76.07255292749
+
+molecule h2o{
+   O
+   H  1 1.00
+   H  1 1.00 2 103.1
+}
+
+set global {
+  basis 6-31g**
+  e_convergence 12
+  d_convergence 8
+  scf_type direct
+  reference rhf
+}
+
+set forte {
+  active_space_solver aci  
+  sigma               0.001  
+  sci_enforce_spin_complete true
+  active_ref_type gas_single  
+  ms                  0.0
+  multiplicity        1
+  root_sym            0
+  charge              0
+  e_convergence       12
+  r_convergence       8
+  restricted_docc     [1,0,0,0]
+  gas1                [2,0,1,1]
+  gas2                [1,0,0,1]
+  restricted_uocc     [8,2,3,5]  
+  gas1min             [6]
+  gas2max             [2]
+  job_type            mcscf_two_step
+  mcscf_maxiter      200
+  mcscf_e_convergence 1e-10
+}
+
+escf ,wfn = energy('scf',return_wfn = True)
+egasscf = energy('forte',ref_wfn = wfn)
+compare_values(refgasscf, egasscf ,9, "GASSCF energy") #TEST

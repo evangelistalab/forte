@@ -83,7 +83,7 @@ void TPDMBackTransform::backtransform_tpdm_restricted() {
 
     global_dpd_->buf4_init(&J, PSIF_FORTE_TPDM_PRESORT, 0, DPD_ID("[A>=A]+"), DPD_ID("[A,A]"),
                            DPD_ID("[A>=A]+"), DPD_ID("[A>=A]+"), 0, "MO TPDM (AA|AA)");
-    if (print_ > 2) {
+    if (print_ > 3) {
         global_dpd_->buf4_print(&J, "outfile", 1);
     }
 
@@ -108,7 +108,7 @@ void TPDMBackTransform::backtransform_tpdm_restricted() {
             rowsLeft = 0;
         }
 
-        if (print_ > 1) {
+        if (print_ > 2) {
             outfile->Printf("\n    h = %d; memfree         = %lu", h, memFree);
             outfile->Printf("\n    h = %d; rows_per_bucket = %lu", h, rowsPerBucket);
             outfile->Printf("\n    h = %d; rows_left       = %lu", h, rowsLeft);
@@ -191,7 +191,7 @@ void TPDMBackTransform::backtransform_tpdm_restricted() {
                 rowsLeft = 0;
             }
 
-            if (print_ > 1) {
+            if (print_ > 2) {
                 outfile->Printf("\n    h = %d; memfree         = %lu", h, memFree);
                 outfile->Printf("\n    h = %d; rows_per_bucket = %lu", h, rowsPerBucket);
                 outfile->Printf("\n    h = %d; rows_left       = %lu", h, rowsLeft);
@@ -301,7 +301,7 @@ void TPDMBackTransform::backtransform_tpdm_restricted() {
             rowsLeft = 0;
         }
 
-        if (print_ > 1) {
+        if (print_ > 2) {
             outfile->Printf("\th = %d; memfree         = %lu\n", h, memFree);
             outfile->Printf("\th = %d; rows_per_bucket = %lu\n", h, rowsPerBucket);
             outfile->Printf("\th = %d; rows_left       = %lu\n", h, rowsLeft);
@@ -497,7 +497,7 @@ void TPDMBackTransform::presort_mo_tpdm_restricted() {
                 int r = lblptr[labelIndex++];
                 int s = lblptr[labelIndex++];
                 double value = (double)valptr[index];
-                if (print_ > 1) {
+                if (print_ > 2) {
                     outfile->Printf("\tp%4d q%4d r%4d s%4d = %20.10f\n", p, q, r, s, value);
                 }
                 abDpdFiller(p, q, r, s, value);
@@ -554,7 +554,7 @@ void TPDMBackTransform::presort_mo_tpdm_restricted() {
                     int r = lblptr[labelIndex++];
                     int s = lblptr[labelIndex++];
                     double value = (double)valptr[index];
-                    if (print_ > 1) {
+                    if (print_ > 2) {
                         outfile->Printf("\tp%4d q%4d r%4d s%4d = %20.10f\n", p, q, r, s, value);
                     }
                     abDpdFiller(p, q, r, s, value);

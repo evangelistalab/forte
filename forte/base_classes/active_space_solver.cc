@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -57,14 +57,14 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
                                      const std::map<StateInfo, size_t>& state_nroots_map,
                                      std::shared_ptr<SCFInfo> scf_info,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info,
-                                     std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                                     std::shared_ptr<ForteOptions> options)
+                                     std::shared_ptr<ForteOptions> options,
+                                     std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : method_(method), state_nroots_map_(state_nroots_map), scf_info_(scf_info),
-      mo_space_info_(mo_space_info), as_ints_(as_ints), options_(options) {
+      mo_space_info_(mo_space_info), options_(options), as_ints_(as_ints) {
 
-    print_options();
+    // print_options();
 
-    print_ = options->get_int("PRINT");
+    print_ = int_to_print_level(options->get_int("PRINT"));
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
     read_initial_guess_ = options->get_bool("READ_ACTIVE_WFN_GUESS");
@@ -79,34 +79,76 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
         Ua_data[i * nactv + i] = 1.0;
         Ub_data[i * nactv + i] = 1.0;
     }
+}
 
-    // initialize multipole integrals
-    if (as_ints_->ints()->integral_type() != Custom) {
-        auto mp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_);
-        as_mp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(mp_ints);
+void ActiveSpaceSolver::set_print(PrintLevel level) { print_ = level; }
+
+void ActiveSpaceSolver::set_e_convergence(double e_convergence) { e_convergence_ = e_convergence; }
+
+void ActiveSpaceSolver::set_r_convergence(double r_convergence) { r_convergence_ = r_convergence; }
+
+void ActiveSpaceSolver::set_maxiter(int maxiter) { maxiter_ = maxiter; }
+
+void ActiveSpaceSolver::set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+    as_ints_ = as_ints;
+    for (const auto& [state, method] : state_method_map_) {
+        method->set_active_space_integrals(as_ints_);
     }
 }
 
-void ActiveSpaceSolver::set_print(int level) { print_ = level; }
+void ActiveSpaceSolver::set_active_multipole_integrals(
+    std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints) {
+    as_mp_ints_ = as_mp_ints;
+}
+
+const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::state_energies_map() const {
+    return state_energies_map_;
+}
 
 const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energy() {
+    // check if the integrals are available
+    if (not as_ints_) {
+        throw std::runtime_error("ActiveSpaceSolver: ActiveSpaceIntegrals are not available.");
+    }
+
+    // initialize multipole integrals
+    if (as_ints_->ints()->integral_type() != Custom) {
+        if (not as_mp_ints_) {
+            auto mp_ints = std::make_shared<MultipoleIntegrals>(as_ints_->ints(), mo_space_info_);
+            as_mp_ints_ = std::make_shared<ActiveMultipoleIntegrals>(mp_ints);
+        }
+    }
+
     state_energies_map_.clear();
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
         size_t nroot = state_nroot.second;
-        // compute the energy of state and save it
-        std::shared_ptr<ActiveSpaceMethod> method = make_active_space_method(
-            method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
+
+        // so far only FCI and DETCI supports restarting from a previous wavefunction
+        if ((method_ == "FCI") or (method_ == "DETCI")) {
+            auto [it, inserted] = state_method_map_.try_emplace(state);
+            if (inserted) {
+                it->second = make_active_space_method(method_, state, nroot, scf_info_,
+                                                      mo_space_info_, as_ints_, options_);
+            }
+            auto method = it->second;
+        } else {
+            state_method_map_[state] = make_active_space_method(method_, state, nroot, scf_info_,
+                                                                mo_space_info_, as_ints_, options_);
+        }
+        auto method = state_method_map_[state];
+        // set the convergence criteria
         method->set_print(print_);
         method->set_e_convergence(e_convergence_);
         method->set_r_convergence(r_convergence_);
-        state_method_map_[state] = method;
+        method->set_maxiter(maxiter_);
 
         if (read_initial_guess_) {
             state_filename_map_[state] = method->wfn_filename();
             method->set_read_wfn_guess(read_initial_guess_);
         }
 
+        // compute the energy of state and save it
         method->compute_energy();
         const auto& energies = method->energies();
         state_energies_map_[state] = energies;
@@ -147,11 +189,28 @@ void ActiveSpaceSolver::validate_spin(const std::vector<double>& spin2, const St
 }
 
 void ActiveSpaceSolver::print_energies() {
+    std::vector<std::string> irrep_symbol = mo_space_info_->irrep_labels();
+
+    for (const auto& state_nroot : state_nroots_map_) {
+        const auto& state = state_nroot.first;
+        int irrep = state.irrep();
+        int multi = state.multiplicity();
+        int nstates = state_nroot.second;
+        for (int i = 0; i < nstates; ++i) {
+            double energy = state_energies_map_[state][i];
+            auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
+                         irrep_symbol[irrep];
+            push_to_psi4_env_globals(energy, upper_string(label));
+        }
+    }
+
+    if (print_ < PrintLevel::Brief)
+        return;
+
     print_h2("Energy Summary");
     psi::outfile->Printf("\n    Multi.(2ms)  Irrep.  No.               Energy      <S^2>");
     std::string dash(56, '-');
     psi::outfile->Printf("\n    %s", dash.c_str());
-    std::vector<std::string> irrep_symbol = mo_space_info_->irrep_labels();
 
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
@@ -170,12 +229,7 @@ void ActiveSpaceSolver::print_energies() {
                 psi::outfile->Printf("\n     %3d  (%3d)   %3s    %2d  %20.12f       n/a", multi,
                                      twice_ms, irrep_symbol[irrep].c_str(), i, energy);
             }
-
-            auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
-                         irrep_symbol[irrep];
-            push_to_psi4_env_globals(energy, upper_string(label));
         }
-
         psi::outfile->Printf("\n    %s", dash.c_str());
     }
 }
@@ -343,9 +397,9 @@ void ActiveSpaceSolver::print_options() {
 std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
     const std::string& method, const std::map<StateInfo, size_t>& state_nroots_map,
     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
-    std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options) {
+    std::shared_ptr<ForteOptions> options, std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     return std::make_shared<ActiveSpaceSolver>(method, state_nroots_map, scf_info, mo_space_info,
-                                               as_ints, options);
+                                               options, as_ints);
 }
 
 std::map<StateInfo, size_t>

@@ -12,24 +12,19 @@ molecule CO{
 
 set {
   basis                  cc-pcvdz
-  reference              rhf
-  scf_type               out_of_core
-  maxiter                300
-  e_convergence          10
-  d_convergence          8
-  docc                   [5,0,1,1]
 }
 
 #Ecasscf, wfn_cas = energy('scf', return_wfn=True)
 #fcidump(wfn_cas,oe_ints=['EIGENVALUES'],write_pntgrp=True)
 
 set forte {
-  job_type           mcscf_two_step
+  active_space_solver fci
   int_type           fcidump
   frozen_docc        [2,0,0,0]
   frozen_uocc        [0,0,0,0]
   restricted_docc    [2,0,0,0]
   active             [2,0,2,2]
+  mcscf_freeze_core true
   e_convergence      8
   r_convergence      8
 }

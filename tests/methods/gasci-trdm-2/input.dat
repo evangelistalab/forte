@@ -1,0 +1,80 @@
+import forte
+
+molecule CO{
+C     0.000000     0.000000     0.70
+O     0.000000     0.000000    -0.70
+}
+
+set {
+  scf_type            df
+  e_convergence       8
+  d_convergence       8
+  basis               cc-pvdz
+  df_basis_mp2        cc-pvdz-jkfit
+  ints_tolerance      0.0
+}
+
+set forte {
+  int_type              df
+  active_space_solver   genci
+  avg_state             [[0,1,1],[2,1,1],[3,1,1]]
+  avg_weight            [[0],[1],[1]]
+  gas1                  [1,0,0,0]
+  gas2                  [5,0,2,2]
+  gas1max               [2,1,1]
+  gas1min               [2,1,1]
+  transition_dipoles    true
+  e_convergence         8
+  r_convergence         7
+  mcscf_reference      false
+}
+
+energy('forte')
+
+refvals = [
+    ("ENERGY ROOT 0 1A1"              ,    -112.723013183898),
+    ("ENERGY ROOT 0 1B1"              ,     -92.757487743845),
+    ("ENERGY ROOT 0 1B2"              ,     -92.757487743845),
+  # ("OSC. SINGLET 0A1 -> 0B1"        ,       0.021206761235),
+  # ("OSC. SINGLET 0A1 -> 0B2"        ,       0.021206762173),
+  # ("OSC. SINGLET 0B1 -> 0B2"        ,       0.000000000000),
+    ("SINGLET <0A1|DM_X|0A1>"         ,       0.000000000000),
+    ("SINGLET <0A1|DM_Y|0A1>"         ,       0.000000000000),
+    ("SINGLET <0A1|DM_Z|0A1>"         ,       0.281445791231),
+    ("SINGLET <0A1|QM_XX|0A1>"        ,      -8.082706691412),
+    ("SINGLET <0A1|QM_XY|0A1>"        ,       0.000000000000),
+    ("SINGLET <0A1|QM_XZ|0A1>"        ,       0.000000000000),
+    ("SINGLET <0A1|QM_YY|0A1>"        ,      -8.082706708209),
+    ("SINGLET <0A1|QM_YZ|0A1>"        ,       0.000000000000),
+    ("SINGLET <0A1|QM_ZZ|0A1>"        ,      -9.026729773791),
+    ("SINGLET <0B1|DM_X|0B1>"         ,       0.000000000000),
+    ("SINGLET <0B1|DM_Y|0B1>"         ,       0.000000000000),
+    ("SINGLET <0B1|DM_Z|0B1>"         ,       0.399104717490),
+    ("SINGLET <0B1|QM_XX|0B1>"        ,      -9.868437099538),
+    ("SINGLET <0B1|QM_XY|0B1>"        ,       0.000000000000),
+    ("SINGLET <0B1|QM_XZ|0B1>"        ,       0.000000000000),
+    ("SINGLET <0B1|QM_YY|0B1>"        ,      -8.132239512234),
+    ("SINGLET <0B1|QM_YZ|0B1>"        ,       0.000000000000),
+    ("SINGLET <0B1|QM_ZZ|0B1>"        ,      -9.931549494445),
+    ("SINGLET <0B2|DM_X|0B2>"         ,       0.000000000000),
+    ("SINGLET <0B2|DM_Y|0B2>"         ,       0.000000000000),
+    ("SINGLET <0B2|DM_Z|0B2>"         ,       0.399104717490),
+    ("SINGLET <0B2|QM_XX|0B2>"        ,      -8.132239512234),
+    ("SINGLET <0B2|QM_XY|0B2>"        ,       0.000000000000),
+    ("SINGLET <0B2|QM_XZ|0B2>"        ,       0.000000000000),
+    ("SINGLET <0B2|QM_YY|0B2>"        ,      -9.868437099538),
+    ("SINGLET <0B2|QM_YZ|0B2>"        ,       0.000000000000),
+    ("SINGLET <0B2|QM_ZZ|0B2>"        ,      -9.931549494445),
+    ("SINGLET |<0A1|DM|0A1>|"         ,       0.281445791231),
+    ("SINGLET |<0B1|DM|0B1>|"         ,       0.399104717490),
+    ("SINGLET |<0B2|DM|0B2>|"         ,       0.399104717490),
+    ("TRANS SINGLET S_MAX 0A1 -> 0B1" ,       1.037549685609),
+    ("TRANS SINGLET S_MAX 0A1 -> 0B2" ,       1.037549692740),
+    ("TRANS SINGLET S_MAX 0B1 -> 0B2" ,       0.979779245059),
+    ("TRANS SINGLET |<0A1|DM|0B1>|"   ,       0.039915578766),
+    ("TRANS SINGLET |<0A1|DM|0B2>|"   ,       0.039915579648),
+    ("TRANS SINGLET |<0B1|DM|0B2>|"   ,       0.000000000000),
+]
+
+for label, val in refvals:
+    compare_values(val, variable(label),7,label)

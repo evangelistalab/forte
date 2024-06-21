@@ -1,57 +1,51 @@
-#! Generated using commit GITCOMMIT 
-# GASCI calculation on energy and transitiondipole with states of different symmetries
+# H2O singlet, 6-31G* RHF/GASCI calculation with multiple GAS spaces
 
 import forte
 
 refscf = -76.0172965561
-refaci = -65.52803723267440716
-refacipt2 = -55.02612867161270316
-refosc_0a1_0b1 =  0.00000307 
-s_max_0a1_0b1 = 0.00986351
+refaci = -65.93594498028247131  # averaged ACI energy
 
 memory 6000mb
 molecule h2o{
-   O
-   H  1 1.00
-   H  1 1.00 2 103.1
+O
+H 1 1.00
+H 1 1.00 2 103.1
 }
 
 set global {
   basis 6-31g**
-  e_convergence 10
-  d_convergence 10
-  r_convergence 10
-  guess gwh
-  scf_type pk
+  e_convergence 12
+  d_convergence 8
+  r_convergence 8
+  scf_type direct
   reference rhf
 }
 
-set scf_type direct
 set forte {
-  active_space_solver aci
-  ms 0.0
-  multiplicity 1
-  sigma 0.00
-  one_cycle True
-  root_sym 0
-  charge 0
-  sci_enforce_spin_complete true
-  e_convergence 10
-  charge 0
-  active_ref_type gas
-  GAS2 [3,0,1,2]
-  GAS1 [1,0,0,0]
-  GAS1MAX [2,1]
-  GAS1MIN [0,0]
-  avg_state [[0,1,1],[2,1,1]]
-  transition_dipoles True
+  active_space_solver genci
+  ms                  0.0
+  multiplicity        1
+  root_sym            0
+  charge              0
+  e_convergence       10
+  gas1                [1,0,0,0]
+  gas2                [3,0,1,2]
+  gas1max             [2,1]
+  gas1min             [0,0]
+  avg_state           [[0,1,1],[0,1,1]] # 1 x 1A1 + 1 x 1A1
+  fci_test_rdms       true
+  mcscf_reference    false
 }
 
-escf, wfn = energy('scf', return_wfn=True)
-compare_values(refscf, variable("CURRENT ENERGY"), 9, "SCF energy")
+eaci = energy('forte')
+compare_values(refaci, eaci, 8, "Averaged GASCI energy")
 
-eaci = energy('forte', ref_wfn=wfn)
-compare_values(refaci, eaci, 8, "Averaged ACI energy")
-compare_values(refacipt2, variable("ACI+PT2 ENERGY"), 6, "ACI+PT2 energy")
-compare_values(refosc_0a1_0b1, variable("OSC. SINGLET 0A1 -> 0B1"), 6, "Oscillator strength singlet 0A1 -> 0B1")
-compare_values(s_max_0a1_0b1, variable("TRANS SINGLET S_MAX 0A1 -> 0B1"), 6, "S_MAX singlet 0A1 -> 0B1")
+compare_values(0.0, variable("AA 1-RDM ERROR"),12, "AA 1-RDM") #TEST
+compare_values(0.0, variable("BB 1-RDM ERROR"),12, "BB 1-RDM") #TEST
+compare_values(0.0, variable("AAAA 2-RDM ERROR"),12, "AAAA 2-RDM") #TEST
+compare_values(0.0, variable("BBBB 2-RDM ERROR"),12, "BBBB 2-RDM") #TEST
+compare_values(0.0, variable("ABAB 2-RDM ERROR"),12, "ABAB 2-RDM") #TEST
+compare_values(0.0, variable("AABAAB 3-RDM ERROR"),12, "AABAAB 3-RDM") #TEST
+compare_values(0.0, variable("ABBABB 3-RDM ERROR"),12, "ABBABB 3-RDM") #TEST
+compare_values(0.0, variable("AAAAAA 3-RDM ERROR"),12, "AAAAAA 3-RDM") #TEST
+compare_values(0.0, variable("BBBBBB 3-RDM ERROR"),12, "BBBBBB 3-RDM") #TEST

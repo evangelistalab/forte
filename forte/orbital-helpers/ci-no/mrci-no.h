@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -25,8 +25,7 @@
  *
  * @END LICENSE
  */
-#ifndef _mrci_no_h_
-#define _mrci_no_h_
+#pragma once
 
 #include "base_classes/orbital_transform.h"
 
@@ -97,8 +96,6 @@ class MRCINO : public OrbitalTransform {
     std::shared_ptr<psi::Matrix> Ub_;
 
     // ==> MRCINO Options <==
-    /// Add missing degenerate determinants excluded from the aimed selection?
-    bool project_out_spin_contaminants_ = true;
     /// The multiplicity of the reference
     int wavefunction_multiplicity_ = 0;
     // The number of correlated mos
@@ -141,5 +138,3 @@ class MRCINO : public OrbitalTransform {
             no_U);
 };
 } // namespace forte
-
-#endif // MRCISNO_H

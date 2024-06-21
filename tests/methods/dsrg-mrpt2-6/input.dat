@@ -44,6 +44,7 @@ set forte {
   frozen_uocc         [0,0,0,0,0,0,0,0]
   restricted_docc     [1,0,0,0,0,1,0,0]
   active              [1,0,1,1,0,1,1,1]
+  r_convergence       8
   root_sym            0
   nroot               1
   dsrg_s              0.5

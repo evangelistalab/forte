@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _configuration_h_
-#define _configuration_h_
+#pragma once
 
 namespace forte {
 
@@ -202,5 +201,3 @@ std::string str(const ConfigurationImpl<N>& d, int n = ConfigurationImpl<N>::nbi
 }
 
 } // namespace forte
-
-#endif // _configuration_h_

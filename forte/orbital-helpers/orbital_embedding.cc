@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -104,18 +104,20 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
     avas_selection_to_string[AVAS_SELECTION::ACTV_TOTAL] = "# ACTIVE MOS";
 
     // print options
-    print_selected_options("AVAS Options",
-                           {{"AVAS selection scheme", avas_selection_to_string[avas_selection]}},
-                           {{"Diagonalize projected overlap matrices", diagonalize_s}},
-                           {{"AVAS sigma threshold (cumulative)", avas_sigma},
-                            {"AVAS sigma direct cutoff", avas_cutoff},
-                            {"Nonzero eigenvalue threshold", nonzero_threshold}},
-                           {{"Number of doubly occupied MOs", doccpi.sum()},
-                            {"Number of singly occupied MOs", soccpi.sum()},
-                            {"Number of unoccupied MOs", uoccpi.sum()},
-                            {"# Active AVAS MOs requested", avas_num_active},
-                            {"# Active occupied AVAS MOs requested", avas_num_active_occ},
-                            {"# Active virtual AVAS MOs requested", avas_num_active_vir}});
+    table_printer printer;
+    printer.add_int_data({{"Number of doubly occupied MOs", doccpi.sum()},
+                          {"Number of singly occupied MOs", soccpi.sum()},
+                          {"Number of unoccupied MOs", uoccpi.sum()},
+                          {"# Active AVAS MOs requested", avas_num_active},
+                          {"# Active occupied AVAS MOs requested", avas_num_active_occ},
+                          {"# Active virtual AVAS MOs requested", avas_num_active_vir}});
+    printer.add_double_data({{"AVAS sigma threshold (cumulative)", avas_sigma},
+                             {"AVAS sigma direct cutoff", avas_cutoff},
+                             {"Nonzero eigenvalue threshold", nonzero_threshold}});
+    printer.add_string_data({{"AVAS selection scheme", avas_selection_to_string[avas_selection]}});
+    printer.add_bool_data({{"Diagonalize projected overlap matrices", diagonalize_s}});
+    std::string table = printer.get_table("AVAS Options");
+    psi::outfile->Printf("%s", table.c_str());
 
     // compute projected overlap matrix
     auto Ca = ref_wfn->Ca()->clone();

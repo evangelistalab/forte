@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -40,18 +40,6 @@
 #include "ci_spin_adaptation.h"
 
 namespace forte {
-
-/// @brief A flag to enable/disable debug messages
-// constexpr bool DEBUG_SPIN_ADAPTATION = false;
-
-// // #if DEBUG_SPIN_ADAPTATION
-// // template <typename... Args> void debug(const std::string& format, Args... args) {
-// //     std::string new_format = "[DEBUG] " + format;
-// //     psi::outfile->Printf(new_format.c_str(), args...);
-// // }
-// // #else
-// // template <typename... Args> void debug(const std::string& format, Args... args) {}
-// // #endif
 
 // Utility functions
 
@@ -236,19 +224,20 @@ void SpinAdapter::conf_to_csfs(const Configuration& conf, DeterminantHashVec& de
     Determinant det;
 
     size_t temp = ncoupling_;
-    for (auto [i, j, o] : N_to_overlaps_[N]) {
+    for (const auto& [i, j, o] : N_to_overlaps_[N]) {
         const auto& det_occ = determinant_occ[j];
         det.set_str(docc, docc);
         // keep track of the sign of the singly occupied orbitals
-        for (int i = N - 1; i >= 0; i--) {
-            if (det_occ.get_bit(i)) {
-                o *= det.create_beta_bit(socc_vec[i]);
+        double sign = 1.0;
+        for (int k = N - 1; k >= 0; k--) {
+            if (det_occ.get_bit(k)) {
+                sign *= det.create_beta_bit(socc_vec[k]);
             } else {
-                o *= det.create_alfa_bit(socc_vec[i]);
+                sign *= det.create_alfa_bit(socc_vec[k]);
             }
         }
         csf_to_det_coeff_[ncoupling_].first = det_hash.get_idx(det);
-        csf_to_det_coeff_[ncoupling_].second = o;
+        csf_to_det_coeff_[ncoupling_].second = sign * o;
         ncoupling_ += 1;
     }
     for (const auto& n : noverlaps) {

@@ -844,7 +844,7 @@ void MASTER_DSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& a
     E *= alpha;
     C0 += E;
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H1, T1] -> C0 : %12.3f", timer.get());
     }
     dsrg_time_.add("110", timer.get());
@@ -875,7 +875,7 @@ void MASTER_DSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& a
     E *= alpha;
     C0 += E;
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H1, T2] -> C0 : %12.3f", timer.get());
     }
     dsrg_time_.add("120", timer.get());
@@ -906,7 +906,7 @@ void MASTER_DSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& a
     E *= alpha;
     C0 += E;
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T1] -> C0 : %12.3f", timer.get());
     }
     dsrg_time_.add("210", timer.get());
@@ -1072,7 +1072,7 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
     E *= alpha;
     C0 += E;
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C0 : %12.3f", timer.get());
     }
     dsrg_time_.add("220", timer.get());
@@ -1087,7 +1087,7 @@ void MASTER_DSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& a
     C1["IP"] += alpha * H1["AP"] * T1["IA"];
     C1["QA"] -= alpha * T1["IA"] * H1["QI"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H1, T1] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("111", timer.get());
@@ -1102,7 +1102,7 @@ void MASTER_DSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& a
 //    C1["UV"] += alpha * H1["AV"] * T1["UA"];
 //    C1["UV"] -= alpha * T1["IV"] * H1["UI"];
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H1, T1] -> C1aa : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("111", timer.get());
@@ -1117,7 +1117,7 @@ void MASTER_DSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& a
 //    C1["UI"] += alpha * H1["AI"] * T1["UA"];
 //    C1["AU"] -= alpha * T1["IU"] * H1["AI"];
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H1, T1] -> C1ph : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("111", timer.get());
@@ -1132,7 +1132,7 @@ void MASTER_DSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& a
 //    C1["IB"] += alpha * H1["AB"] * T1["IA"];
 //    C1["JA"] -= alpha * T1["IA"] * H1["JI"];
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H1, T1] -> C1hp : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("111", timer.get());
@@ -1156,7 +1156,7 @@ void MASTER_DSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& a
     C1["IA"] += alpha * H1["BU"] * Gamma1_["UV"] * T2["IVAB"];
     C1["IA"] -= alpha * H1["VJ"] * Gamma1_["UV"] * T2["IJAU"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H1, T2] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("121", timer.get());
@@ -1180,7 +1180,7 @@ void MASTER_DSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& a
 //    C1["XY"] += alpha * H1["BU"] * Gamma1_["UV"] * T2["XVYB"];
 //    C1["XY"] -= alpha * H1["VJ"] * Gamma1_["UV"] * T2["XJYU"];
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H1, T2] -> C1aa : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("121", timer.get());
@@ -1214,7 +1214,7 @@ void MASTER_DSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& a
     C1["QP"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["QEPY"];
     C1["QP"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["QVPM"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("211", timer.get());
@@ -1238,7 +1238,7 @@ void MASTER_DSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& a
 //    C1["XY"] += alpha * T1["UE"] * Gamma1_["VU"] * H2["XEYV"];
 //    C1["XY"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["XVYM"];
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H2, T1] -> C1aa : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("211", timer.get());
@@ -1262,7 +1262,7 @@ void MASTER_DSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& a
 //    C1["KC"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["KECY"];
 //    C1["KC"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["KVCM"];
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H2, T1] -> C1hp : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("211", timer.get());
@@ -1286,7 +1286,7 @@ void MASTER_DSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& a
 //    C1["CK"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["CEKY"];
 //    C1["CK"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["CVKM"];
 
-//    if (print_ > 2) {
+//    if (print_ > 3) {
 //        outfile->Printf("\n    Time for [H2, T1] -> C1ph : %12.3f", timer.get());
 //    }
 //    dsrg_time_.add("211", timer.get());
@@ -1449,7 +1449,7 @@ void MASTER_DSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& a
     C1["qs"] -= alpha * temp["MU"] * H2["qUsM"];
     C1["QS"] -= alpha * temp["MU"] * H2["UQMS"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());
     }
     dsrg_time_.add("221", timer.get());
@@ -1474,7 +1474,7 @@ void MASTER_DSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& a
     C2["QJAB"] -= alpha * T2["IJAB"] * H1["QI"];
     C2["IQAB"] -= alpha * T2["IJAB"] * H1["QJ"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H1, T2] -> C2 : %12.3f", timer.get());
     }
     dsrg_time_.add("122", timer.get());
@@ -1499,7 +1499,7 @@ void MASTER_DSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& a
     C2["RSAQ"] -= alpha * T1["IA"] * H2["RSIQ"];
     C2["RSPA"] -= alpha * T1["IA"] * H2["RSPI"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.get());
     }
     dsrg_time_.add("212", timer.get());
@@ -1615,7 +1615,7 @@ void MASTER_DSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& a
     C2["iQaS"] -= alpha * Gamma1_["xy"] * T2["ijax"] * H2["yQjS"];
     C2["iQaS"] -= alpha * Gamma1_["XY"] * T2["iJaX"] * H2["YQJS"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.get());
     }
     dsrg_time_.add("222", timer.get());
@@ -1778,7 +1778,7 @@ void MASTER_DSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& a
     C3["iJSbPQ"] += alpha * H2["ASPQ"] * T2["iJbA"];
     C3["iSJbPQ"] -= alpha * H2["ASPQ"] * T2["iJbA"];
 
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n    Time for [H2, T2] -> C3 : %12.3f", timer.get());
     }
     dsrg_time_.add("223", timer.get());

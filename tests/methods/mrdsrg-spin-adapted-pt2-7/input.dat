@@ -32,11 +32,12 @@ Escf, wfn = energy('scf', return_wfn=True)
 
 set forte {
   job_type                  mcscf_two_step
+  active_space_solver       detci
   int_type                  df
   restricted_docc           [3,0,0,1,0,2,1,0]
   active                    [0,0,2,0,0,0,0,1]
   avg_state                 [[0,1,1],[5,1,2]]
-  casscf_final_orbital      unspecified
+  mcscf_final_orbital      unspecified
   dl_guess_per_root         1
 }
 Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _sa_mrpt3_h_
-#define _sa_mrpt3_h_
+#pragma once
 
 #include "sa_dsrgpt.h"
 
@@ -85,5 +84,3 @@ class SA_MRPT3 : public SA_DSRGPT {
                             const std::vector<int>& max_levels) override;
 };
 } // namespace forte
-
-#endif // _sa_mrpt3_h_

@@ -5,7 +5,7 @@
  * t    hat implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see LICENSE, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -62,6 +62,7 @@ void export_MOSpaceInfo(py::module& m) {
         .def("read_options", &MOSpaceInfo::read_options, "Read options")
         .def("read_from_map", &MOSpaceInfo::read_from_map,
              "Read the space info from a map {spacename -> dimension vector}")
+        .def("reorder", &MOSpaceInfo::reorder, "The input indexing vector used to reorder the MOs")
         .def("set_reorder", &MOSpaceInfo::set_reorder,
              "Reorder MOs according to the input indexing vector")
         .def("compute_space_info", &MOSpaceInfo::compute_space_info,

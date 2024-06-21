@@ -5,7 +5,7 @@
  * t    hat implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see LICENSE, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -54,8 +54,7 @@
 
 #include "forte.h"
 
-#include "casscf/casscf.h"
-#include "casscf/mcscf_2step.h"
+#include "mcscf/mcscf_2step.h"
 #include "fci/fci_solver.h"
 #include "mrdsrg-helper/run_dsrg.h"
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
@@ -63,6 +62,7 @@
 #include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
 #include "integrals/one_body_integrals.h"
 #include "sci/tdci.h"
+#include "genci/ci_occupation.h"
 
 #include "post_process/spin_corr.h"
 
@@ -72,11 +72,14 @@ using namespace pybind11::literals;
 namespace forte {
 
 // see the files in src/api for the implementation of the following methods
+void export_EPICTensors(py::module& m);
+void export_ActiveSpaceIntegrals(py::module& m);
 void export_ForteIntegrals(py::module& m);
 void export_ForteOptions(py::module& m);
 void export_MOSpaceInfo(py::module& m);
 void export_RDMs(py::module& m);
 void export_Determinant(py::module& m);
+void export_GAS(py::module& m);
 void export_StateInfo(py::module& m);
 void export_SigmaVector(py::module& m);
 void export_SparseCISolver(py::module& m);
@@ -84,6 +87,7 @@ void export_ForteCubeFile(py::module& m);
 void export_OrbitalTransform(py::module& m);
 void export_Localize(py::module& m);
 void export_SemiCanonical(py::module& m);
+void export_DavidsonLiuSolver(py::module& m);
 
 void set_master_screen_threshold(double value);
 double get_master_screen_threshold();
@@ -130,12 +134,6 @@ void export_ActiveSpaceSolver(py::module& m) {
           "Compute the average energy given the energies and weights of each state");
 }
 
-void export_CASSCF(py::module& m) {
-    py::class_<CASSCF>(m, "CASSCF")
-        .def("compute_energy", &CASSCF::compute_energy, "Compute the CASSCF energy")
-        .def("compute_gradient", &CASSCF::compute_gradient, "Compute the CASSCF gradient");
-}
-
 void export_MCSCF_2STEP(py::module& m) {
     py::class_<MCSCF_2STEP>(m, "MCSCF_2STEP")
         .def("compute_energy", &MCSCF_2STEP::compute_energy, "Compute the MCSCF energy");
@@ -170,6 +168,12 @@ PYBIND11_MODULE(_forte, m) {
     py::module::import("ambit");
 
     m.doc() = "pybind11 Forte module"; // module docstring
+
+    // export base classes
+    export_EPICTensors(m);
+
+    export_ActiveSpaceIntegrals(m);
+
     m.def("startup", &startup);
     m.def("cleanup", &cleanup);
     m.def("banner", &banner, "Print forte banner");
@@ -189,7 +193,10 @@ PYBIND11_MODULE(_forte, m) {
     m.def("make_ints_from_psi4", &make_forte_integrals_from_psi4, "ref_wfn"_a, "options"_a,
           "mo_space_info"_a, "int_type"_a = "", "Make a Forte integral object from psi4");
     m.def("make_active_space_method", &make_active_space_method, "Make an active space method");
-    m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver");
+    m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver",
+          "method"_a, "state_nroots_map"_a, "scf_info"_a, "mo_space_info"_a, "options"_a,
+          "as_ints"_a = std::shared_ptr<ActiveSpaceIntegrals>());
+
     m.def("make_orbital_transformation", &make_orbital_transformation,
           "Make an orbital transformation");
     m.def("make_state_info_from_psi", &make_state_info_from_psi,
@@ -213,8 +220,8 @@ PYBIND11_MODULE(_forte, m) {
     m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
           "Make a DSRG pointer (spin-adapted implementation)");
 
-    m.def("make_casscf", &make_casscf, "Make a CASSCF object");
     m.def("make_mcscf_two_step", &make_mcscf_two_step, "Make a 2-step MCSCF object");
+    m.def("make_mcscf", &make_mcscf_two_step, "Make a 2-step MCSCF object");
     m.def("test_lbfgs_rosenbrock", &test_lbfgs_rosenbrock, "Test L-BFGS on Rosenbrock function");
 
     m.def(
@@ -298,14 +305,22 @@ PYBIND11_MODULE(_forte, m) {
         },
         "Return the L3 in a dictionary");
 
-    //     py::class_<AdaptiveCI, std::shared_ptr<AdaptiveCI>>(m, "ACI");
+    m.def("get_gas_occupation", &get_gas_occupation);
+    m.def("get_ci_occupation_patterns", &get_ci_occupation_patterns);
+
+    py::enum_<PrintLevel>(m, "PrintLevel")
+        .value("Quiet", PrintLevel::Quiet)
+        .value("Brief", PrintLevel::Brief)
+        .value("Default", PrintLevel::Default)
+        .value("Verbose", PrintLevel::Verbose)
+        .value("Debug", PrintLevel::Debug)
+        .export_values();
 
     export_ForteOptions(m);
 
     export_ActiveSpaceMethod(m);
     export_ActiveSpaceSolver(m);
 
-    export_CASSCF(m);
     export_MCSCF_2STEP(m);
     export_ForteIntegrals(m);
 
@@ -315,6 +330,8 @@ PYBIND11_MODULE(_forte, m) {
     export_SemiCanonical(m);
 
     export_Determinant(m);
+
+    export_GAS(m);
 
     export_RDMs(m);
 
@@ -326,6 +343,8 @@ PYBIND11_MODULE(_forte, m) {
     export_ForteCubeFile(m);
 
     export_MOSpaceInfo(m);
+
+    export_DavidsonLiuSolver(m);
 
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
@@ -345,27 +364,6 @@ PYBIND11_MODULE(_forte, m) {
         .def("compute_energy", &DynamicCorrelationSolver::compute_energy)
         .def("set_ci_vectors", &DynamicCorrelationSolver::set_ci_vectors,
              "Set the CI eigenvectors for DSRG-MRPT2 analytic gradients");
-
-    // export ActiveSpaceIntegrals
-    py::class_<ActiveSpaceIntegrals, std::shared_ptr<ActiveSpaceIntegrals>>(m,
-                                                                            "ActiveSpaceIntegrals")
-        .def("slater_rules", &ActiveSpaceIntegrals::slater_rules,
-             "Compute the matrix element of the Hamiltonian between two determinants")
-        .def("nuclear_repulsion_energy", &ActiveSpaceIntegrals::nuclear_repulsion_energy,
-             "Get the nuclear repulsion energy")
-        .def("frozen_core_energy", &ActiveSpaceIntegrals::frozen_core_energy,
-             "Get the frozen core energy (contribution from FROZEN_DOCC)")
-        .def("scalar_energy", &ActiveSpaceIntegrals::scalar_energy,
-             "Get the scalar_energy energy (contribution from RESTRICTED_DOCC)")
-        .def("nmo", &ActiveSpaceIntegrals::nmo, "Get the number of active orbitals")
-        .def("mo_symmetry", &ActiveSpaceIntegrals::active_mo_symmetry,
-             "Return the symmetry of the active MOs")
-        .def("oei_a", &ActiveSpaceIntegrals::oei_a, "Get the alpha effective one-electron integral")
-        .def("oei_b", &ActiveSpaceIntegrals::oei_b, "Get the beta effective one-electron integral")
-        .def("tei_aa", &ActiveSpaceIntegrals::tei_aa, "alpha-alpha two-electron integral <pq||rs>")
-        .def("tei_ab", &ActiveSpaceIntegrals::tei_ab, "alpha-beta two-electron integral <pq|rs>")
-        .def("tei_bb", &ActiveSpaceIntegrals::tei_bb, "beta-beta two-electron integral <pq||rs>")
-        .def("print", &ActiveSpaceIntegrals::print, "Print the integrals (alpha-alpha case)");
 
     // export ActiveMultipoleIntegrals
     py::class_<ActiveMultipoleIntegrals, std::shared_ptr<ActiveMultipoleIntegrals>>(
@@ -404,6 +402,7 @@ PYBIND11_MODULE(_forte, m) {
              "Set if reading amplitudes in the current directory or not")
         .def("clean_checkpoints", &MASTER_DSRG::clean_checkpoints,
              "Delete amplitudes checkpoint files")
+        .def("converged", &MASTER_DSRG::converged, "Return if amplitudes are converged or not")
         .def("set_ci_vectors", &MASTER_DSRG::set_ci_vectors,
              "Set the CI eigenvector for DSRG-MRPT2 analytic gradients")
         .def("set_active_space_solver", &MASTER_DSRG::set_active_space_solver,
@@ -424,6 +423,7 @@ PYBIND11_MODULE(_forte, m) {
              "Set the map from state to the weights of all computed roots")
         .def("set_read_cwd_amps", &SADSRG::set_read_amps_cwd,
              "Set if reading amplitudes in the current directory or not")
+        .def("converged", &SADSRG::converged, "Return if amplitudes are converged or not")
         .def("clean_checkpoints", &SADSRG::clean_checkpoints, "Delete amplitudes checkpoint files");
 
     // export MRDSRG_SO

@@ -1,10 +1,5 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
-#refmcscf     =  -99.972055826365903 # cc-pVTZ
-#refdsrgpt2   = -100.200752137944022 # cc-pVTZ
-refmcscf     =  -99.87285247290
 refcasscf    = -99.9393153220043047
 
 memory 500 mb
@@ -17,37 +12,16 @@ molecule HF{
 }
 
 set globals{
-#   basis                   cc-pvtz
    basis                   cc-pvdz
-   reference               ROHF
-   d_convergence           10
-   e_convergence           12
-   frozen_docc             [1, 0, 0, 0]
-   restricted_docc         [1,0,1,1]
-   active                  [2,0,0,0]
-   scf_type                out_of_core
 }
-refmcscf = energy('casscf')
-energy('scf')
 
-
-set scf_type direct
 set forte{
-   job_type                casscf
+   active_space_solver     fci
    frozen_docc             [1,0,0,0]
    restricted_docc         [1,0,1,1]
    active                  [2,0,0,0]
-   root_sym                0
-   nroot                   1
-   casscf_ci_solver        FCI
-   CASSCF_REFERENCE        TRUE
-   int_type                conventional
-   CASSCF_MAXITER        25
-   print                    0
-   CASSCF_DO_DIIS           false
+   mcscf_freeze_core       true
 }
 
-#compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy")
-
-casscf = energy('forte')
+energy('forte')
 compare_values(refcasscf,variable("CURRENT ENERGY"),6,"CASSCF energy")

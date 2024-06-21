@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -124,6 +124,8 @@ void AdaptiveCI::startup() {
 }
 
 void AdaptiveCI::print_info() {
+    if (quiet_mode_)
+        return;
 
     print_method_banner({"Adaptive Configuration Interaction",
                          "written by Jeffrey B. Schriber and Francesco A. Evangelista"});
@@ -131,44 +133,46 @@ void AdaptiveCI::print_info() {
     outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
     outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
 
-    // Print a summary
-    std::vector<std::pair<std::string, int>> calculation_info{
-        {"Multiplicity", multiplicity_},
-        {"Symmetry", wavefunction_symmetry_},
-        {"Number of roots", nroot_},
-        {"Root used for properties", root_},
-        {"Roots used for averaging", naverage_},
-        {"Root averaging offset", average_offset_}};
+    table_printer printer;
+    printer.add_string_data(
+        {{"Ms", get_ms_string(twice_ms_)},
+         {"Diagonalization algorithm", options_->get_str("DIAG_ALGORITHM")},
+         {"Excited Algorithm", ex_alg_},
+         //        {"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"},
+         //        {"PT2 Parameters", options_->get_bool("PERTURB_SELECT") ?
+         //        "True" : "False"},
+         {"Project out spin contaminants", project_out_spin_contaminants_ ? "True" : "False"},
+         {"Enforce spin completeness of basis", spin_complete_ ? "True" : "False"},
+         {"Enforce complete aimed selection", add_aimed_degenerate_ ? "True" : "False"},
+         {"Multiroot averaging ", average_function_ == AverageFunction::MaxF ? "Max" : "Average"}});
 
-    std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"Sigma (Eh)", sigma_},
-        {"Gamma (Eh^(-1))", gamma_},
-        {"Convergence threshold", options_->get_double("ACI_CONVERGENCE")}};
-    std::vector<std::pair<std::string, std::string>> calculation_info_string{
-        {"Ms", get_ms_string(twice_ms_)},
-        {"Diagonalization algorithm", options_->get_str("DIAG_ALGORITHM")},
-        {"Excited Algorithm", ex_alg_},
-        //        {"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"},
-        //        {"PT2 Parameters", options_->get_bool("PERTURB_SELECT") ?
-        //        "True" : "False"},
-        {"Project out spin contaminants", project_out_spin_contaminants_ ? "True" : "False"},
-        {"Enforce spin completeness of basis", spin_complete_ ? "True" : "False"},
-        {"Enforce complete aimed selection", add_aimed_degenerate_ ? "True" : "False"},
-        {"Multiroot averaging ", average_function_ == AverageFunction::MaxF ? "Max" : "Average"}};
+    printer.add_double_data({{{"Sigma (Eh)", sigma_},
+                              {"Gamma (Eh^(-1))", gamma_},
+                              {"Convergence threshold", options_->get_double("ACI_CONVERGENCE")}}});
 
-    // Print some information
-    outfile->Printf("\n  ==> Calculation Information <==\n");
-    outfile->Printf("\n  %s", std::string(65, '-').c_str());
-    for (auto& str_dim : calculation_info) {
-        outfile->Printf("\n    %-40s %-5d", str_dim.first.c_str(), str_dim.second);
-    }
-    for (auto& str_dim : calculation_info_double) {
-        outfile->Printf("\n    %-40s %8.2e", str_dim.first.c_str(), str_dim.second);
-    }
-    for (auto& str_dim : calculation_info_string) {
-        outfile->Printf("\n    %-40s %s", str_dim.first.c_str(), str_dim.second.c_str());
-    }
-    outfile->Printf("\n  %s", std::string(65, '-').c_str());
+    printer.add_int_data({{"Multiplicity", multiplicity_},
+                          {"Symmetry", wavefunction_symmetry_},
+                          {"Number of roots", nroot_},
+                          {"Root used for properties", root_},
+                          {"Roots used for averaging", naverage_},
+                          {"Root averaging offset", average_offset_}});
+
+    std::string table = printer.get_table("ACI Solver");
+    psi::outfile->Printf("%s", table.c_str());
+
+    // // Print some information
+    // outfile->Printf("\n  ==> Calculation Information <==\n");
+    // outfile->Printf("\n  %s", std::string(65, '-').c_str());
+    // for (auto& str_dim : calculation_info) {
+    //     outfile->Printf("\n    %-40s %-5d", str_dim.first.c_str(), str_dim.second);
+    // }
+    // for (auto& str_dim : calculation_info_double) {
+    //     outfile->Printf("\n    %-40s %8.2e", str_dim.first.c_str(), str_dim.second);
+    // }
+    // for (auto& str_dim : calculation_info_string) {
+    //     outfile->Printf("\n    %-40s %s", str_dim.first.c_str(), str_dim.second.c_str());
+    // }
+    // outfile->Printf("\n  %s", std::string(65, '-').c_str());
 
     if (options_->get_bool("PRINT_1BODY_EVALS")) {
         outfile->Printf("\n  Reference orbital energies:");
@@ -617,19 +621,11 @@ void AdaptiveCI::pre_iter_preparation() {
         P_space_.add(detb);
     }
 
+    sparse_solver_->set_options(options_);
+
     if (quiet_mode_) {
         sparse_solver_->set_print_details(false);
     }
-    sparse_solver_->set_parallel(true);
-    sparse_solver_->set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
-    sparse_solver_->set_e_convergence(options_->get_double("E_CONVERGENCE"));
-    sparse_solver_->set_r_convergence(options_->get_double("R_CONVERGENCE"));
-    sparse_solver_->set_guess_per_root(options_->get_int("DL_GUESS_PER_ROOT"));
-    sparse_solver_->set_ndets_per_guess_state(options_->get_int("DL_DETS_PER_GUESS"));
-    sparse_solver_->set_collapse_per_root(options_->get_int("DL_COLLAPSE_PER_ROOT"));
-    sparse_solver_->set_subspace_per_root(options_->get_int("DL_SUBSPACE_PER_ROOT"));
-    sparse_solver_->set_maxiter_davidson(options_->get_int("DL_MAXITER"));
-    sparse_solver_->set_spin_project(project_out_spin_contaminants_);
     sparse_solver_->set_spin_project_full(
         (gas_iteration_ and sigma_ == 0.0) ? true : options_->get_bool("SPIN_PROJECT_FULL"));
 }

@@ -15,14 +15,14 @@ def test_sparse_operator2():
      H
      H 1 1.0
     """
-    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis='DZ', reference='RHF')
-    forte_objs = forte.utils.prepare_forte_objects(psi4_wfn, mo_spaces={})
+    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis="DZ", reference="RHF")
+    data = forte.modules.ObjectsUtilPsi4(ref_wnf=psi4_wfn).run()
 
-    as_ints = forte_objs['as_ints']
+    as_ints = data.as_ints  # forte_objs["as_ints"]
 
     ham_op = forte.SparseHamiltonian(as_ints)
 
-    ref = forte.StateVector({det("20"): 1.0})
+    ref = forte.SparseState({det("20"): 1.0})
     Href1 = ham_op.compute(ref, 0.0)
     Href2 = ham_op.compute_on_the_fly(ref, 0.0)
     assert Href1[det("20")] == pytest.approx(-1.094572, abs=1e-6)

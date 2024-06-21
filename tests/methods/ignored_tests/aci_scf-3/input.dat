@@ -1,0 +1,64 @@
+#! Generated using commit GITCOMMIT
+#! Perform aci on benzyne
+
+import forte
+
+memory 500 mb
+
+refscf    = -229.20378006852584
+refaciscf = -229.419635547400
+
+molecule mbenzyne{
+  0 1
+   C   0.0000000000  -2.5451795941   0.0000000000
+   C   0.0000000000   2.5451795941   0.0000000000
+   C  -2.2828001669  -1.3508352528   0.0000000000
+   C   2.2828001669  -1.3508352528   0.0000000000
+   C   2.2828001669   1.3508352528   0.0000000000
+   C  -2.2828001669   1.3508352528   0.0000000000
+   H  -4.0782187459  -2.3208602146   0.0000000000
+   H   4.0782187459  -2.3208602146   0.0000000000
+   H   4.0782187459   2.3208602146   0.0000000000
+   H  -4.0782187459   2.3208602146   0.0000000000
+
+  units bohr
+}
+
+set globals{
+   basis                   DZ
+   df_basis_mp2            cc-pvdz-ri
+   reference               rhf
+   scf_type                out_of_core
+   d_convergence           10
+   e_convergence           12
+   frozen_docc            [2,1,0,0,0,0,2,1]
+   restricted_docc        [3,2,0,0,0,0,2,3]
+   active                 [1,0,1,2,1,2,1,0]
+}
+scf, refwfn = energy('scf', return_wfn=True)
+#compare_values(refscf, scf,10,"SCF Energy")
+
+set scf_type direct
+set forte {
+  multiplicity 1
+  frozen_docc            [2,1,0,0,0,0,2,1]
+  restricted_docc        [3,2,0,0,0,0,2,3]
+  active                 [1,0,1,2,1,2,1,0]
+  root_sym               0
+  nroot                  1
+  sigma                  0.001
+  sci_enforce_spin_complete   true
+  mcscf_reference       true
+  active_space_solver    aci
+  job_type               mcscf_two_step
+  print_no               true
+  mcscf_maxiter         50
+  CASSCF_DIIS_NORM        1e-3
+  CASSCF_DIIS_START       5
+  mcscf_debug_printing   false
+}
+
+
+energy('forte', ref_wfn=refwfn)
+#compare_values(refaci, variable("ACI ENERGY"),10,"ACI energy")
+#compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8,"ACI+PT2 energy")

@@ -28,19 +28,19 @@ set globals{
   num_roots           3
   avg_states          [0, 1, 2]
 }
-casscf_energy = energy('casscf')
+mcscf_energy = energy('casscf')
 
 set scf_type direct
 set forte {
-  job_type               casscf
-  casscf_reference       true
-  casscf_maxiter         25
+  job_type               mcscf_two_step
+  active_space_solver    fci
+  mcscf_maxiter         25
   restricted_docc        [1, 0, 0, 0, 0, 1, 0, 0]
   active                 [2, 0, 1, 1, 0, 2, 1, 1]
   print                  1
-  casscf_g_convergence   1e-6
-  casscf_e_convergence   1e-10
-  casscf_debug_printing  false
+  mcscf_g_convergence   1e-6
+  mcscf_e_convergence   1e-10
+  mcscf_debug_printing  false
   avg_state              [[0, 1, 3]]
   int_type               conventional
 }

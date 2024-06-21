@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _string_algorithms_h_
-#define _string_algorithms_h_
+#pragma once
 
 #include <sstream>
 #include <string>
@@ -54,7 +53,22 @@ template <typename T> std::string to_string_with_precision(const T val, const in
     std::ostringstream out;
     out.precision(n);
     out << std::fixed << val;
-    return out.str();
+    auto s = out.str();
+    s.erase(s.find_last_not_of('0') + 1, std::string::npos);
+    if (s.back() == '.') {
+        s.pop_back();
+    }
+    return s;
+}
+
+inline std::string double_to_string_latex(double value) {
+    if (value == -1.0) {
+        return "-";
+    }
+    if (value == 1.0) {
+        return "+";
+    }
+    return (value > 0.0 ? "+" : "") + std::to_string(value);
 }
 
 /// Find a string in a vector of strings in a case insensitive
@@ -62,5 +76,3 @@ std::vector<std::string>::const_iterator find_case_insensitive(const std::string
                                                                const std::vector<std::string>& vec);
 
 } // namespace forte
-
-#endif // _string_algorithms_h_

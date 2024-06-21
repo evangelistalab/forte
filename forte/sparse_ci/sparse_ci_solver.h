@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,14 +26,11 @@
  * @END LICENSE
  */
 
-#ifndef _sparse_ci_h_
-#define _sparse_ci_h_
+#pragma once
 
-#include "sparse_ci/determinant_hashvector.h"
 #include "psi4/libmints/dimension.h"
-
-#define BIGNUM 1E100
-#define MAXIT 100
+#include "sparse_ci/determinant_hashvector.h"
+#include "helpers/printing.h"
 
 namespace psi {
 class Matrix;
@@ -46,6 +43,7 @@ class SigmaVector;
 class ActiveSpaceIntegrals;
 class SpinAdapter;
 class DavidsonLiuSolver;
+class ForteOptions;
 
 /**
  * @brief The SparseCISolver class
@@ -90,6 +88,9 @@ class SparseCISolver {
     /// Enable/disable the parallel algorithms
     void set_parallel(bool parallel) { parallel_ = parallel; }
 
+    /// Set the print level
+    void set_print(PrintLevel print);
+
     /// Enable/disable printing of details
     void set_print_details(bool print_details) { print_details_ = print_details; }
 
@@ -126,6 +127,9 @@ class SparseCISolver {
     /// Set the maximum subspace size for each root
     void set_subspace_per_root(int value);
 
+    /// Set the options
+    void set_options(std::shared_ptr<ForteOptions> options);
+
     /// Build the full Hamiltonian matrix
     std::shared_ptr<psi::Matrix>
     build_full_hamiltonian(const std::vector<Determinant>& space,
@@ -149,10 +153,9 @@ class SparseCISolver {
     void reset_initial_guess();
 
   private:
-    /// std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
-    void initial_guess_det(const DeterminantHashVec& space,
+    auto initial_guess_det(const DeterminantHashVec& space,
                            std::shared_ptr<SigmaVector> sigma_vector, size_t guess_size,
-                           DavidsonLiuSolver& dls, int multiplicity, bool do_spin_project);
+                           int multiplicity, bool do_spin_project);
 
     std::vector<Determinant>
     initial_guess_generate_dets(const DeterminantHashVec& space,
@@ -171,8 +174,8 @@ class SparseCISolver {
     /// @param dls The Davidson-Liu-Solver object
     /// @param temp A temporary vector of dimension ncfs to store the guess vectors
     /// @param multiplicity The multiplicity
-    void initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
-                           DavidsonLiuSolver& dls, int multiplicity);
+    auto initial_guess_csf(std::shared_ptr<psi::Vector> diag, size_t num_guess_states,
+                           int multiplicity);
 
     /// @brief Compute the diagonal of the Hamiltonian in the CSF basis
     /// @param ci_ints The integrals object
@@ -190,10 +193,14 @@ class SparseCISolver {
     std::vector<double> spin_;
     /// A object that handles spin adaptation
     std::shared_ptr<SpinAdapter> spin_adapter_;
+    /// The Davidson-Liu-Solver object
+    std::shared_ptr<DavidsonLiuSolver> dl_solver_;
     /// Use a OMP parallel algorithm?
     bool parallel_ = false;
     /// Print details?
     bool print_details_ = true;
+    /// A variable to control printing information
+    PrintLevel print_ = PrintLevel::Default;
     /// Project solutions onto given multiplicity?
     bool spin_project_ = false;
     /// Project solutions onto given multiplicity in full algorithm?
@@ -211,23 +218,19 @@ class SparseCISolver {
     double r_convergence_ = 1.0e-6;
     /// The number of guess vectors for each root
     size_t guess_per_root_ = 2;
+    /// Number of determinants used to form guess vector per root
+    size_t ndets_per_guess_ = 10;
     /// Number of collapse vectors per roots
     size_t collapse_per_root_ = 2;
     /// Number of max subspace vectors per roots
     size_t subspace_per_root_ = 4;
     /// Maximum number of iterations in the Davidson-Liu algorithm
     int maxiter_davidson_ = 100;
-    /// Number of determinants used to form guess vector per root
-    size_t ndets_per_guess_ = 10;
     /// Options for forcing diagonalization method
     bool force_diag_ = false;
     /// Additional roots to project out
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
-    /// A variable to control printing information
-    int print_ = 0;
     // nroot of guess size of (id, coefficent)
     std::vector<std::vector<std::pair<size_t, double>>> user_guess_;
 };
 } // namespace forte
-
-#endif // _sparse_ci_h_

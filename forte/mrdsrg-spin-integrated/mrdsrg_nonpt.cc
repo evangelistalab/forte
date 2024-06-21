@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -47,7 +47,7 @@ using namespace psi;
 namespace forte {
 
 void MRDSRG::compute_hbar() {
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
 
@@ -93,7 +93,7 @@ void MRDSRG::compute_hbar() {
         C2_.zero();
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s", dash.c_str());
         }
@@ -165,7 +165,7 @@ void MRDSRG::compute_hbar() {
         }
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s\n", dash.c_str());
         }
@@ -203,7 +203,7 @@ void MRDSRG::compute_hbar() {
         // test convergence of C
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
-        if (print_ > 2) {
+        if (print_ > 3) {
             outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
                             C1_.norm(0), C2_.norm(0));
         }
@@ -219,7 +219,7 @@ void MRDSRG::compute_hbar() {
 }
 
 void MRDSRG::compute_hbar_sequential() {
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
     //    outfile->Printf("\n\n  ==> compute_hbar_sequential() <==\n");
@@ -256,7 +256,7 @@ void MRDSRG::compute_hbar_sequential() {
         C2_.zero();
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s", dash.c_str());
         }
@@ -271,7 +271,7 @@ void MRDSRG::compute_hbar_sequential() {
         H2_T1_C2(O2_, T1_, factor, C2_);
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s\n", dash.c_str());
         }
@@ -309,7 +309,7 @@ void MRDSRG::compute_hbar_sequential() {
         // test convergence of C
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
-        if (print_ > 2) {
+        if (print_ > 3) {
             outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
                             C1_.norm(0), C2_.norm(0));
         }
@@ -344,7 +344,7 @@ void MRDSRG::compute_hbar_sequential() {
         C2_.zero();
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s", dash.c_str());
         }
@@ -360,7 +360,7 @@ void MRDSRG::compute_hbar_sequential() {
         H2_T2_C2(O2_, T2_, factor, C2_);
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s\n", dash.c_str());
         }
@@ -398,7 +398,7 @@ void MRDSRG::compute_hbar_sequential() {
         // test convergence of C
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
-        if (print_ > 2) {
+        if (print_ > 3) {
             outfile->Printf("\n  n = %3d, C1norm = %20.15f, C2norm = %20.15f", n, norm_C1, norm_C2);
         }
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
@@ -413,7 +413,7 @@ void MRDSRG::compute_hbar_sequential() {
 }
 
 void MRDSRG::compute_hbar_sequential_rotation() {
-    if (print_ > 2) {
+    if (print_ > 3) {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
 
@@ -586,7 +586,7 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         C2_.zero();
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s", dash.c_str());
         }
@@ -614,7 +614,7 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         }
 
         // printing level
-        if (print_ > 2) {
+        if (print_ > 3) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s\n", dash.c_str());
         }
@@ -652,7 +652,7 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         // test convergence of C
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
-        if (print_ > 2) {
+        if (print_ > 3) {
             outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
                             C1_.norm(0), C2_.norm(0));
         }
@@ -726,10 +726,10 @@ double MRDSRG::compute_energy_ldsrg2() {
 
     // iteration variables
     double Ecorr = 0.0;
-    int maxiter = foptions_->get_int("MAXITER");
+    int maxiter = foptions_->get_int("DSRG_MAXITER");
     double e_conv = foptions_->get_double("E_CONVERGENCE");
     double r_conv = foptions_->get_double("R_CONVERGENCE");
-    bool converged = false;
+    converged_ = false;
     Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"gg"}));
     O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"gg"}));
     C1_ = BTF_->build(tensor_type_, "C1", spin_cases({"gg"}));
@@ -789,7 +789,7 @@ double MRDSRG::compute_energy_ldsrg2() {
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
         if (std::fabs(Edelta) < e_conv && rms < r_conv) {
-            converged = true;
+            converged_ = true;
             break;
         }
 
@@ -825,11 +825,6 @@ double MRDSRG::compute_energy_ldsrg2() {
     // dump amplitudes to file
     dump_amps_to_disk();
 
-    // fail to converge
-    if (!converged) {
-        clean_checkpoints(); // clean amplitudes in scratch directory
-        throw psi::PSIEXCEPTION("The MR-LDSRG(2) computation does not converge.");
-    }
     final.stop();
 
     Hbar0_ = Ecorr;
@@ -1111,10 +1106,10 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
 
     // iteration variables
     double Ecorr = 0.0;
-    int maxiter = foptions_->get_int("MAXITER");
+    int maxiter = foptions_->get_int("DSRG_MAXITER");
     double e_conv = foptions_->get_double("E_CONVERGENCE");
     double r_conv = foptions_->get_double("R_CONVERGENCE");
-    bool converged = false;
+    converged_ = false;
     Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"hp"}));
     Hbar2_ = BTF_->build(tensor_type_, "Hbar2", spin_cases({"hhpp"}));
     O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"aa"}));
@@ -1179,7 +1174,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
         if (std::fabs(Edelta) < e_conv && rms < r_conv) {
-            converged = true;
+            converged_ = true;
             break;
         }
 
@@ -1213,12 +1208,6 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
 
     // dump amplitudes to file
     dump_amps_to_disk();
-
-    // fail to converge
-    if (!converged) {
-        clean_checkpoints(); // clean amplitudes in scratch directory
-        throw psi::PSIEXCEPTION("The MR-LDSRG(2)-QC computation does not converge.");
-    }
 
     Hbar0_ = Ecorr;
     return Ecorr;

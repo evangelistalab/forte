@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _forte_options_h_
-#define _forte_options_h_
+#pragma once
 
 #include <pybind11/pybind11.h>
 
@@ -204,6 +203,13 @@ class ForteOptions {
     void add_double_array(const std::string& label, const std::string& description = "");
 
     /**
+     * @brief Add a deprecated option
+     * @param label Option label
+     * @param description Description of the option
+     */
+    void add_deprecated(const std::string& label, const std::string& msg = "");
+
+    /**
      * @brief Get a boolean option
      * @param label Option label
      */
@@ -354,5 +360,3 @@ class ForteOptions {
     std::string group_ = "";
 };
 } // namespace forte
-
-#endif // _forte_options_h_

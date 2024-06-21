@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,23 +26,25 @@
  * @END LICENSE
  */
 
-#ifndef _active_space_solver_h_
-#define _active_space_solver_h_
+#pragma once
 
 #include <map>
 #include <vector>
 #include <string>
+
 #include <ambit/tensor.h>
+#include "psi4/libmints/matrix.h"
 
 namespace ambit {
 class BlockedTensor;
 }
 
-#include "psi4/libmints/matrix.h"
 #include "base_classes/state_info.h"
 #include "base_classes/rdms.h"
-#include "integrals/one_body_integrals.h"
+#include "helpers/printing.h"
+
 #include "sparse_ci/determinant_hashvector.h"
+
 namespace forte {
 
 class ActiveSpaceMethod;
@@ -51,6 +53,7 @@ class ForteIntegrals;
 class ForteOptions;
 class MOSpaceInfo;
 class SCFInfo;
+class ActiveMultipoleIntegrals;
 
 /**
  * @class ActiveSpaceSolver
@@ -76,14 +79,14 @@ class ActiveSpaceSolver {
     ActiveSpaceSolver(const std::string& method,
                       const std::map<StateInfo, size_t>& state_nroots_map,
                       std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
-                      std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                      std::shared_ptr<ForteOptions> options);
+                      std::shared_ptr<ForteOptions> options,
+                      std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     // ==> Class Interface <==
 
     /// Set the print level
-    /// @param level the print level (0 = no printing, 1 default)
-    void set_print(int level);
+    /// @param level the print level
+    void set_print(PrintLevel level);
 
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::map<StateInfo, std::vector<double>>& compute_energy();
@@ -162,23 +165,17 @@ class ActiveSpaceSolver {
     std::map<StateInfo, size_t> state_space_size_map() const;
 
     /// Return a map of StateInfo to the computed nroots of energies
-    const std::map<StateInfo, std::vector<double>>& state_energies_map() const {
-        return state_energies_map_;
-    }
-
+    const std::map<StateInfo, std::vector<double>>& state_energies_map() const;
     /// Return a map of StateInfo to the CI wave functions (deterministic determinant space)
     std::map<StateInfo, std::shared_ptr<psi::Matrix>> state_ci_wfn_map() const;
 
     /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian)
-    /// @param as_ints the pointer to a set of acitve-space integrals
-    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
-        as_ints_ = as_ints;
-    }
+    /// @param as_ints the pointer to a set of active-space integrals
+    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Pass multipole integrals to the solver (e.g. correlation dressed dipole/quadrupole)
-    void set_active_multipole_integrals(std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints) {
-        as_mp_ints_ = as_mp_ints;
-    }
+    /// @param as_mp_ints the pointer to a set of multipole integrals
+    void set_active_multipole_integrals(std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints);
 
     /// Return the map of StateInfo to the wave function file name
     std::map<StateInfo, std::string> state_filename_map() const { return state_filename_map_; }
@@ -187,10 +184,13 @@ class ActiveSpaceSolver {
     void dump_wave_function();
 
     /// Set energy convergence
-    void set_e_convergence(double e_convergence) { e_convergence_ = e_convergence; }
+    void set_e_convergence(double e_convergence);
 
     /// Set residual convergence
-    void set_r_convergence(double r_convergence) { r_convergence_ = r_convergence; }
+    void set_r_convergence(double r_convergence);
+
+    /// Set the maximum number of iterations
+    void set_maxiter(int maxiter);
 
     /// Set if read wave function from file as initial guess
     void set_read_initial_guess(bool read_guess) { read_initial_guess_ = read_guess; }
@@ -218,6 +218,9 @@ class ActiveSpaceSolver {
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
+    /// User-provided options
+    std::shared_ptr<ForteOptions> options_;
+
     /// The molecular integrals for the active space
     /// This object holds only the integrals for the orbital contained in the
     /// active_mo_vector.
@@ -227,9 +230,6 @@ class ActiveSpaceSolver {
 
     /// The multipole integrals for the active space
     std::shared_ptr<ActiveMultipoleIntegrals> as_mp_ints_;
-
-    /// User-provided options
-    std::shared_ptr<ForteOptions> options_;
 
     /// A map of state symmetries to the associated ActiveSpaceMethod
     std::map<StateInfo, std::shared_ptr<ActiveSpaceMethod>> state_method_map_;
@@ -250,13 +250,16 @@ class ActiveSpaceSolver {
     std::map<StateInfo, std::string> state_filename_map_;
 
     /// A variable to control printing information
-    int print_ = 1;
+    PrintLevel print_ = PrintLevel::Default;
 
     /// The energy convergence criterion
     double e_convergence_ = 1.0e-10;
 
     /// The residual 2-norm convergence criterion
     double r_convergence_ = 1.0e-6;
+
+    /// The maximum number of iterations
+    size_t maxiter_ = 100;
 
     /// Read wave function from disk as initial guess
     bool read_initial_guess_;
@@ -288,7 +291,8 @@ class ActiveSpaceSolver {
 std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
     const std::string& method, const std::map<StateInfo, size_t>& state_nroots_map,
     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
-    std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options);
+    std::shared_ptr<ForteOptions> options,
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints = std::shared_ptr<ActiveSpaceIntegrals>());
 
 /**
  * @brief Convert a map of StateInfo to weight lists to a map of StateInfo to number of roots.
@@ -318,5 +322,3 @@ compute_average_state_energy(const std::map<StateInfo, std::vector<double>>& sta
                              const std::map<StateInfo, std::vector<double>>& state_weight_map);
 
 } // namespace forte
-
-#endif // _active_space_solver_h_

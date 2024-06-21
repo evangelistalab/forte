@@ -60,7 +60,7 @@ class CMakeBuild(build_ext):
     def build_extension(self, ext):
         import subprocess
 
-        cfg = "Debug" if self.debug else "Release"
+        cfg = "Debug" if self.debug else "RelWithDebInfo"
 
         # if nprocs is not specified we use os.cpu_count() to find the CPU count
         if self.nprocs in [None, "None", ""]:
@@ -153,7 +153,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name="forte",
-    version="0.2.3",
+    version="0.4.0",
     author="Forte developers",
     description="A hybrid Python/C++ quantum chemistry package for strongly correlated electrons.",
     long_description="Forte is an open-source plugin to Psi4 that implements a variety of quantum chemistry methods for strongly correlated electrons.",

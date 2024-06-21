@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -27,8 +27,7 @@
  * @END LICENSE
  */
 
-#ifndef _pci_h_
-#define _pci_h_
+#pragma once
 
 #include <fstream>
 #include <functional>
@@ -311,19 +310,6 @@ class ProjectorCI : public SelectedCIMethod {
                                                   std::vector<double>& C);
     /// Estimates the projective energy
     double estimate_proj_energy(const det_hashvec& dets, std::vector<double>& C);
-    /// Estimates the variational energy
-    /// @param dets The set of determinants that form the wave function
-    /// @param C The wave function coefficients
-    /// @param tollerance The accuracy of the estimate.  Used to impose |C_I
-    /// C_J| < tollerance
-    double estimate_var_energy(const det_hashvec& dets_hashvec, std::vector<double>& C,
-                               double tollerance = 1.0e-14);
-    /// Estimates the variational energy within a given error
-    /// @param dets The set of determinants that form the wave function
-    /// @param C The wave function coefficients
-    /// @param max_error The accuracy of the estimate. |E_est - E_var|<max_error
-    double estimate_var_energy_within_error(const det_hashvec& dets_hashvec, std::vector<double>& C,
-                                            double max_error = 0.0);
     /// Estimates the variational energy within a given error by sigma vector algorithm
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
@@ -340,9 +326,6 @@ class ProjectorCI : public SelectedCIMethod {
     /// Form the product H c
     double form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
                     size_t& thread_num_off_diag_elem);
-    /// Form the product H c
-    double form_H_C_2(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
-                      size_t cut_index);
     /// Do we have OpenMP?
     static bool have_omp_;
 
@@ -366,12 +349,7 @@ class ProjectorCI : public SelectedCIMethod {
     /// Compute half the single and double excitation couplings
     void compute_couplings_half(const det_hashvec& dets, size_t cut_index);
 
-    /// Returns a vector of orbital energy, sym label pairs
-    std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
-
     /// Sort the determinants by coefficients
     void sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vector<double>& C);
 };
 } // namespace forte
-
-#endif // _pci_h_

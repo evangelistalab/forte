@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -78,24 +78,13 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     }
 
     core_ex_ = options->get_bool("SCI_CORE_EX");
-    quiet_ = options->get_bool("SCI_QUIET_MODE");
     direct_rdms_ = options->get_bool("SCI_DIRECT_RDMS");
     test_rdms_ = options->get_bool("SCI_TEST_RDMS");
     save_final_wfn_ = options->get_bool("SCI_SAVE_FINAL_WFN");
     first_iter_roots_ = options->get_bool("SCI_FIRST_ITER_ROOTS");
     transition_dipole_ = options->get_bool("TRANSITION_DIPOLES");
     sparse_solver_ = std::make_shared<SparseCISolver>();
-    sparse_solver_->set_parallel(true);
-    sparse_solver_->set_force_diag(options->get_bool("FORCE_DIAG_METHOD"));
-    sparse_solver_->set_e_convergence(options->get_double("E_CONVERGENCE"));
-    sparse_solver_->set_r_convergence(options->get_double("R_CONVERGENCE"));
-    sparse_solver_->set_guess_per_root(options->get_int("DL_GUESS_PER_ROOT"));
-    sparse_solver_->set_ndets_per_guess_state(options->get_int("DL_DETS_PER_GUESS"));
-    sparse_solver_->set_collapse_per_root(options->get_int("DL_COLLAPSE_PER_ROOT"));
-    sparse_solver_->set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
-    sparse_solver_->set_maxiter_davidson(options->get_int("DL_MAXITER"));
-    sparse_solver_->set_spin_project(options->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
-    sparse_solver_->set_spin_project_full(options->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
+    sparse_solver_->set_options(options);
     sci_->set_options(options);
 }
 
@@ -129,7 +118,7 @@ double ExcitedStateSolver::compute_energy() {
         {"Selected Configuration Interaction Excited States",
          "written by Jeffrey B. Schriber, Tianyuan Zhang, and Francesco A. Evangelista"});
     print_info();
-    if (!quiet_) {
+    if (print_ >= PrintLevel::Default) {
         psi::outfile->Printf("\n  Using %d thread(s)", omp_get_max_threads());
     }
 
@@ -160,7 +149,7 @@ double ExcitedStateSolver::compute_energy() {
     std::shared_ptr<psi::Vector> PQ_evals;
 
     for (int i = 0; i < nrun; ++i) {
-        if (!quiet_)
+        if (print_ >= PrintLevel::Default)
             psi::outfile->Printf("\n  Computing wavefunction for root %d", i);
 
         if (multi_state) {
@@ -189,7 +178,7 @@ double ExcitedStateSolver::compute_energy() {
 
         if (ex_alg_ == "ROOT_COMBINE") {
             sizes[i] = PQ_space.size();
-            if (!quiet_)
+            if (print_ >= PrintLevel::Default)
                 psi::outfile->Printf("\n  Combining determinant spaces");
             // Combine selected determinants into total space
             full_space.merge(PQ_space);
@@ -829,7 +818,7 @@ void ExcitedStateSolver::save_old_root(DeterminantHashVec& dets,
                                        int ref_root) {
     std::vector<std::pair<Determinant, double>> vec;
 
-    if (!quiet_ and nroot_ > 0) {
+    if (print_ >= PrintLevel::Default and nroot_ > 0) {
         psi::outfile->Printf("\n  Saving root %d, ref_root is %d", root, ref_root);
     }
     const det_hashvec& detmap = dets.wfn_hash();
@@ -837,7 +826,7 @@ void ExcitedStateSolver::save_old_root(DeterminantHashVec& dets,
         vec.push_back(std::make_pair(detmap[i], PQ_evecs->get(i, ref_root)));
     }
     old_roots_.push_back(vec);
-    if (!quiet_ and nroot_ > 0) {
+    if (print_ >= PrintLevel::Default and nroot_ > 0) {
         psi::outfile->Printf("\n  Number of old roots: %zu", old_roots_.size());
     }
 }

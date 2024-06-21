@@ -40,9 +40,9 @@ set forte {
   GAS2 [5,0,2,2]
   AVG_STATE [[0,1,1],[2,3,1]]
   GAS1MAX [2,1]
+  mcscf_reference false
 }
 
-escf ,wfn = energy('scf',return_wfn = True)
 
 ave_e = energy('forte')
 compare_values(exaci, variable("ACI ENERGY"),9, "ACI energy") #TEST     

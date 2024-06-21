@@ -1,0 +1,46 @@
+#! Generated using commit GITCOMMIT 
+# GASACI-SCF for core-excited state with Core frozen/different symmetry
+# Without CASSCF_FROZEN_ORBITAL this will collapse to ground state and not converge
+
+import forte
+
+refscf    = -76.0172965561
+refgasscf = -65.9021656537
+
+molecule h2o{
+   O
+   H  1 1.00
+   H  1 1.00 2 103.1
+}
+
+set global {
+  basis 6-31g**
+  e_convergence 12
+  d_convergence 8
+  scf_type direct
+  reference rhf
+}
+
+set forte {
+  active_space_solver aci
+  ms                  0.0
+  sigma               0.001
+  sci_enforce_spin_complete true
+  e_convergence       12
+  r_convergence       8
+  active_ref_type     gas_single
+  gas1                [1,0,0,0]
+  gas2                [3,0,1,2]  
+  gas1min             [0,0]
+  gas1max             [2,1]
+  avg_state           [[0,1,1],[2,3,1]]  
+  mcscf_e_convergence 1e-10
+  mcscf_g_convergence 1e-8     
+  mcscf_active_frozen_orbital [0]
+  mcscf_micro_maxiter 1
+  mcscf_diis_start    15 
+}
+
+escf ,wfn = energy('scf',return_wfn = True)
+egasscf = energy('forte') #,ref_wfn=wfn)
+compare_values(refgasscf, egasscf ,9, "GASSCF energy") #TEST

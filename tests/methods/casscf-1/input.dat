@@ -1,4 +1,3 @@
-#! Generated using commit GITCOMMIT
 #! A test of CASSCF on BeH2 with no symmetry
 
 import forte
@@ -11,42 +10,34 @@ molecule {
   Be        0.000000000000     0.000000000000     0.000000000000
   H         0.000000000000     1.390000000000     2.500000000000
   H         0.000000000000    -1.390000000000     2.500000000000
-  symmetry c1
+  #symmetry c1
   units bohr
   no_reorient
 }
 
-set globals {
+set {
    scf_type             out_of_core
-   MCSCF_E_CONVERGENCE  8
-   MCSCF_R_CONVERGENCE  6
+   mcscf_e_convergence  8
+   mcscf_r_convergence  6
    basis                3-21g
-#  docc                 [2,0,0,0]
-#  socc                 [1,0,0,1]
-   restricted_docc      [2]
-   active               [2]
+   restricted_docc      [2,0,0,0]
+   active               [1,0,0,1]
    maxiter              20
-   reference            RHF
+   reference            rhf
    mcscf_type           conv
+   diag_method          rsp
 }
 refscf = energy('casscf')
 
 set scf_type direct
 
 set forte{
-   job_type             casscf
-   CASSCF_REFERENCE     true
-   CASSCF_MAXITER       25
-   CASSCF_G_CONVERGENCE 1e-6
-   CASSCF_E_CONVERGENCE 1e-8
-   restricted_docc      [2]
-   active               [2]
-   int_type             conventional
-   print                0
-   casscf_do_diis       true
-   casscf_ci_solver     fci
+   active_space_solver  fci
+   mcscf_g_convergence  1e-6
+   mcscf_e_convergence  1e-8
+   restricted_docc      [2,0,0,0]
+   active               [1,0,0,1]
 }
 e_casscf = energy('forte')
 
 compare_values(refcasscf, e_casscf, 6, "CASSCF ENERGY")
-

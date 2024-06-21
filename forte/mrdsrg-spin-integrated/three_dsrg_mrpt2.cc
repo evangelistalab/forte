@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -211,7 +211,7 @@ void THREE_DSRG_MRPT2::startup() {
         Fa_ = Fdiag_a_;
         Fb_ = Fdiag_b_;
 
-        if (print_ > 1) {
+        if (print_ > 2) {
             Gamma1_.print(stdout);
             Eta1_.print(stdout);
             F_.print(stdout);
@@ -297,12 +297,14 @@ void THREE_DSRG_MRPT2::startup() {
 
 void THREE_DSRG_MRPT2::print_options_summary() {
     // Print a summary
-    std::vector<std::pair<std::string, int>> calculation_info_int;
+    table_printer printer;
 
-    std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"Flow parameter", s_},
-        {"Taylor expansion threshold", std::pow(10.0, -double(taylor_threshold_))},
-        {"Cholesky tolerance", foptions_->get_double("CHOLESKY_TOLERANCE")}};
+    printer.add_double_data(
+        {{"Flow parameter", s_},
+         {"Taylor expansion threshold", std::pow(10.0, -double(taylor_threshold_))},
+         {"Cholesky tolerance", foptions_->get_double("CHOLESKY_TOLERANCE")}});
+
+    printer.add_bool_data({{"form Hbar3", foptions_->get_bool("FORM_HBAR3")}});
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"Psi4 ref_type", ref_type_},
@@ -323,13 +325,11 @@ void THREE_DSRG_MRPT2::print_options_summary() {
         calculation_info_string.push_back({"Internal_amp", foptions_->get_str("INTERNAL_AMP")});
         calculation_info_string.push_back({"Internal_amp_select", internal_amp_select_});
     }
-
-    std::vector<std::pair<std::string, bool>> calculation_info_bool{
-        {"form Hbar3", foptions_->get_bool("FORM_HBAR3")}};
+    printer.add_string_data(calculation_info_string);
 
     // print information
-    print_selected_options("Calculation Information", calculation_info_string,
-                           calculation_info_bool, calculation_info_double, calculation_info_int);
+    std::string table = printer.get_table("Calculation Information");
+    psi::outfile->Printf("%s", table.c_str());
 }
 
 void THREE_DSRG_MRPT2::cleanup() {}
@@ -384,10 +384,10 @@ double THREE_DSRG_MRPT2::compute_energy() {
         // renormalize F
         renormalize_F();
 
-        if (print_ > 1) {
+        if (print_ > 2) {
             F_.print();
         }
-        if (print_ > 2) {
+        if (print_ > 3) {
             T1_.print();
         }
     }
@@ -1567,7 +1567,7 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
             //            Lambda3_aAA("pqrstu") = L3abb_("pqrstu");
             //            Lambda3_AAA("pqrstu") = L3bbb_("pqrstu");
 
-            //            if (print_ > 3){
+            //            if (print_ > 4){
             //                Lambda3.print(stdout);
             //            }
 
@@ -2282,7 +2282,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     double Ealpha = 0.0;
     double Emixed = 0.0;
     double Ebeta = 0.0;
-    auto Cwfn = ints_->Ca();
+    auto Cwfn = ints_->Ca()->clone();
     if (mo_space_info_->nirrep() != 1)
         throw psi::PSIEXCEPTION("AO-DSRGMPT2 does not work with symmetry");
 
@@ -2819,7 +2819,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
     Eacvv += tempTAA_all("v,u") * Gamma1_AA("v,u");
     Eacvv += tempTaa_all("v,u") * Gamma1_aa("v,u");
 
-    if (print_ > 0) {
+    if (print_ > 1) {
         outfile->Printf("\n\n  CAVV computation takes %8.8f", ccvaTimer.get());
     }
 
@@ -2949,7 +2949,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
     }
     Eccva += tempTaa_all("vu") * Eta1_aa("uv");
     Eccva += tempTAA_all("VU") * Eta1_AA("UV");
-    if (print_ > 0) {
+    if (print_ > 1) {
         outfile->Printf("\n\n  CCVA takes %8.8f", cavvTimer.get());
     }
 
@@ -3379,147 +3379,6 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool s
         }
     }
 }
-
-// std::vector<double>
-// THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
-
-//    // reference relaxation
-//    std::vector<double> Erelax;
-//    std::string cas_type;
-
-//    if (foptions_->get_str("CAS_TYPE") == "CASSCF") {
-//        cas_type = foptions_->get_str("CASSCF_CI_SOLVER");
-//    } else {
-//        cas_type = foptions_->get_str("CAS_TYPE");
-//    }
-
-//    // check CAS_TYPE to decide diagonalization code
-//    if (cas_type == "CAS") {
-
-//        FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
-//        fci_mo.set_localize_actv(false);
-//        double Eci = fci_mo.compute_energy();
-
-//        // test state specific or state average
-//        if (!multi_state_) {
-//            Erelax.push_back(Eci);
-//        } else {
-//            std::vector<std::vector<std::pair<std::shared_ptr<psi::Vector>, double>>> eigens
-//            = fci_mo.eigens(); size_t nentry = eigens.size(); for (size_t n = 0; n < nentry; ++n)
-//            {
-//                std::vector<std::pair<std::shared_ptr<psi::Vector>, double>> eigen =
-//                eigens[n]; size_t ni = eigen.size(); for (size_t i = 0; i < ni; ++i) {
-//                    Erelax.push_back(eigen[i].second);
-//                }
-//            }
-//        }
-
-//    } else if (cas_type == "ACI") {
-
-//        size_t nroot = foptions_->get_int("NROOT");
-//        // Only do ground state ACI for now
-//        auto state = make_state_info_from_psi(ints_->wfn());
-//        AdaptiveCI aci(state, nroot, scf_info_, foptions_, mo_space_info_,
-//                       fci_ints); // ints_->wfn() is implicitly converted to StateInfo
-//        if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
-//            aci.update_sigma();
-//        }
-
-//        double relaxed_aci_en = aci.compute_energy();
-//        Erelax.push_back(relaxed_aci_en);
-
-//        // Compute relaxed NOs
-//        if (foptions_->get_bool("ACI_NO")) {
-//            aci.compute_nos();
-//        }
-//        if (foptions_->get_bool("ACI_SPIN_ANALYSIS")) {
-//            aci.spin_analysis();
-//        }
-
-//        if (foptions_->get_bool("UNPAIRED_DENSITY")) {
-
-//            aci.unpaired_density(Ua_full_, Ub_full_);
-//        }
-
-//    } else {
-
-//        // common (SS and SA) setup
-//        psi::Dimension active_dim = mo_space_info_->dimension("ACTIVE");
-//        std::shared_ptr<psi::Molecule> molecule = psi::Process::environment.molecule();
-//        double Enuc = ints_->nuclear_repulsion_energy();
-//        int charge = molecule->molecular_charge();
-//        if ((foptions_->psi_options())["CHARGE"].has_changed()) {
-//            charge = foptions_->get_int("CHARGE");
-//        }
-//        auto nelec = 0;
-//        int natom = molecule->natom();
-//        for (int i = 0; i < natom; ++i) {
-//            nelec += molecule->fZ(i);
-//        }
-//        nelec -= charge;
-
-//        // if state specific, read from fci_root and fci_nroot
-//        if ((foptions_->psi_options())["AVG_STATE"].size() == 0) {
-//            // TODO: update this code to use the State object
-//            int multi = psi::Process::environment.molecule()->multiplicity();
-//            if ((foptions_->psi_options())["MULTIPLICITY"].has_changed()) {
-//                multi = foptions_->get_int("MULTIPLICITY");
-//            }
-//            int twice_ms = (multi + 1) % 2;
-//            if ((foptions_->psi_options())["MS"].has_changed()) {
-//                twice_ms = std::round(2.0 * foptions_->get_double("MS"));
-//            }
-//            auto nelec_actv = nelec;
-//            auto na = (nelec_actv + twice_ms) / 2;
-//            auto nb = nelec_actv - na;
-
-//            StateInfo state(na, nb, multi, multi - 1,
-//                            foptions_->get_int("ROOT_SYM")); // assumes highest Ms
-//                                                             // TODO use base class info
-//            size_t nroot = foptions_->get_int("NROOT");
-
-//            auto
-
-//            auto fci = make_active_space_method("FCI", state, nroot, scf_info_, mo_space_info_,
-//                                                ints_, foptions_);
-//            fci->set_active_space_integrals(fci_ints);
-//            fci->set_print(print_);
-//            Erelax.push_back(fci->compute_energy());
-//        } else {
-//            int nentry = (foptions_->psi_options())["AVG_STATE"].size();
-
-//            for (int n = 0; n < nentry; ++n) {
-//                int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
-//                int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
-//                int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
-
-//                // TODO: remove this code in
-//                int ms = (multi + 1) % 2;
-//                auto nelec_actv = nelec;
-//                //                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 *
-//                core_mos_.size(); auto na = (nelec_actv + ms) / 2; auto nb = nelec_actv - na;
-
-//                StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
-//                // TODO use base class info
-//                auto fci = make_active_space_method("FCI", state, nstates, scf_info_,
-//                                                    mo_space_info_, ints_, foptions_);
-//                fci->set_max_rdm_level(1);
-//                fci->set_root(nstates - 1);
-//                // set integrals manually
-//                fci->set_active_space_integrals(fci_ints);
-
-//                // compute energy and fill in results
-//                fci->compute_energy();
-//                auto Ems = fci->evals();
-//                for (int i = 0; i < nstates; ++i) {
-//                    Erelax.push_back(Ems->get(i) + Enuc);
-//                }
-//            }
-//        }
-//    }
-
-//    return Erelax;
-//}
 
 void THREE_DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit::Tensor& H1b,
                                                  ambit::Tensor& H2aa, ambit::Tensor& H2ab,

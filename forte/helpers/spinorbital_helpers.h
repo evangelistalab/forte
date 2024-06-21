@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _spinorbital_helpers_h_
-#define _spinorbital_helpers_h_
+#pragma once
 
 #include <vector>
 #include "base_classes/rdms.h"
@@ -94,5 +93,3 @@ std::vector<ambit::Tensor> spinorbital_rdms(std::shared_ptr<RDMs> rdms);
 std::vector<ambit::Tensor> spinorbital_cumulants(std::shared_ptr<RDMs> rdms);
 
 } // namespace forte
-
-#endif // _spinorbital_helpers_h_

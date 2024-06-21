@@ -21,8 +21,8 @@ set globals{
    df_basis_scf            cc-pvdz-jkfit
    reference               rhf
    scf_type                df
-   d_convergence           10
-   e_convergence           12
+   d_convergence           8
+   e_convergence           13
 }
 
 set forte {
@@ -34,14 +34,13 @@ set forte {
   root_sym                    0
   nroot                       1
   dsrg_s                      1.0
+  r_convergence               8
   active_space_solver         detci
   relax_ref                   once
   semi_canonical_mix_inactive true
+  mcscf_reference            false
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refrhf, Escf, 10, "SCF energy")
-
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(refpt2_u, variable("UNRELAXED ENERGY"), 10, "unrelaxed DSRG-MRPT2 energy")
 compare_values(refpt2_pr, variable("CURRENT ENERGY"), 10, "DSRG-MRPT2 energy")

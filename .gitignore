@@ -5,6 +5,7 @@
 *.log
 *.dat
 *.clean
+*.swp
 Makefile.*
 Makefile
 timer.dat
@@ -12,7 +13,7 @@ timer.dat
 forte/version.h
 forte.egg-info
 docs/build
-
+build/**
 
 # Qt Creator project files
 *.config
@@ -20,6 +21,8 @@ docs/build
 *.creator.user
 *.files
 *.includes
+
+.vscode/**
 
 forte_tests
 forte_benchmarks
@@ -36,7 +39,12 @@ forte_benchmarks
 /tests/methods/*/timer.dat
 /tests/methods/*/*.txt
 /tests/methods/*/*.npz
+/tests/**/failed_tests.yaml
+/tests/**/test_results_*
+/tests/**/*.json
 tests/pytest/.cache/
+**/.ipynb_checkpoints
+
 
 doc/doxygen/html
 doc/doxygen/latex

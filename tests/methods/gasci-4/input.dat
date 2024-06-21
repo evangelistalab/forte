@@ -1,0 +1,48 @@
+# H2O 1A1 + 1B1 singlet, RHF/GASCI energy + transition dipoles
+
+import forte
+
+refscf = -76.0172965561
+refaci = -65.52803723267440716
+refacipt2 = -55.02612867161270316
+refosc_0a1_0b1 =  0.00000307 
+s_max_0a1_0b1 = 0.00986351
+
+molecule h2o{
+   O
+   H  1 1.00
+   H  1 1.00 2 103.1
+}
+
+set global {
+  basis 6-31g**
+  scf_type direct
+  e_convergence 12
+  d_convergence 8
+  reference rhf
+}
+
+
+set forte {
+  active_space_solver genci
+  ms                  0.0
+  multiplicity        1
+  root_sym            0
+  charge              0
+  e_convergence       12
+  r_convergence       8
+  charge              0
+  GAS1                [1,0,0,0]
+  GAS2                [3,0,1,2]
+  GAS1MAX             [2,1]
+  GAS1MIN             [0,0]
+  avg_state           [[0,1,1],[2,1,1]]
+  transition_dipoles  true
+  mcscf_reference    false
+}
+
+
+eaci = energy('forte')
+compare_values(refaci, eaci, 8, "Averaged ACI energy")
+compare_values(refosc_0a1_0b1, variable("OSC. SINGLET 0A1 -> 0B1"), 6, "Oscillator strength singlet 0A1 -> 0B1")
+compare_values(s_max_0a1_0b1, variable("TRANS SINGLET S_MAX 0A1 -> 0B1"), 6, "S_MAX singlet 0A1 -> 0B1")

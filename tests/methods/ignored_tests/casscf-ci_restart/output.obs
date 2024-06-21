@@ -1,0 +1,1724 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.9a1.dev50 
+
+                         Git: Rev {fixtemp} 466ebc2 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Friday, 13 October 2023 02:50PM
+
+    Process ID: 3078
+    Host:       macbook-pro-158.wireless.emory.edu
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+import forte
+
+molecule {
+  0 1
+  N
+  N 1 2.0
+  symmetry c1
+  units bohr
+  no_reorient
+}
+
+set globals {
+   scf_type direct
+   basis                cc-pVDZ
+   maxiter              20
+   reference            RHF
+}
+
+
+set forte{
+   job_type             mcscf_two_step
+   CASSCF_MAXITER       25
+   CASSCF_G_CONVERGENCE 1e-6
+   CASSCF_E_CONVERGENCE 1e-8
+   restricted_docc      [2]
+   active               [10]
+   int_type             conventional
+   print                0
+   casscf_do_diis       true
+   casscf_ci_solver     fci
+   dl_dets_per_guess    1
+}
+
+e_casscf = energy('forte')
+--------------------------------------------------------------------------
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: resci - git commit: 279f3162
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  No reference wave function provided for Forte. Computing SCF orbitals using Psi4 ...
+   => Libint2 <=
+
+    Primary   basis highest AM E, G, H:  5, 4, 3
+    Auxiliary basis highest AM E, G, H:  6, 5, 4
+    Onebody   basis highest AM E, G, H:  6, 5, 4
+    Solid Harmonics ordering:            gaussian
+
+*** tstart() called on macbook-pro-158.wireless.emory.edu
+*** at Fri Oct 13 14:50:03 2023
+
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry N          line   168 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c1
+    Full point group: D_inf_h
+
+    Geometry (in Bohr), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         N            0.000000000000     0.000000000000    -1.000000000000    14.003074004430
+         N            0.000000000000     0.000000000000     1.000000000000    14.003074004430
+
+  Running in c1 symmetry.
+
+  Rotational constants: A = ************  B =      2.14952  C =      2.14952 [cm^-1]
+  Rotational constants: A = ************  B =  64440.89360  C =  64440.89360 [MHz]
+  Nuclear repulsion =   24.500000000000000
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 14
+  Nalpha       = 7
+  Nbeta        = 7
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is DIRECT.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-08
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 12
+    Number of basis functions: 28
+    Number of Cartesian functions: 30
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+   => Loading Basis Set <=
+
+    Name: (CC-PVDZ AUX)
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1-2 entry N          line   171 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
+
+  Starting with a DF guess...
+
+  ==> Integral Setup <==
+
+  DFHelper Memory: AOs need 0.001 GiB; user supplied 0.366 GiB. 
+  Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:               375
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       0.0000
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: (CC-PVDZ AUX)
+    Blend: CC-PVDZ-JKFIT
+    Number of shells: 48
+    Number of basis functions: 140
+    Number of Cartesian functions: 162
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+  Minimum eigenvalue in the overlap matrix is 5.2561917433E-03.
+  Reciprocal condition number of the overlap matrix is 1.6813479506E-03.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     A         28      28 
+   -------------------------
+    Total      28      28
+   -------------------------
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+   @DF-RHF iter SAD:  -108.18989721575062   -1.08190e+02   0.00000e+00 
+   @DF-RHF iter   1:  -108.94913113828403   -7.59234e-01   3.40396e-03 ADIIS/DIIS
+   @DF-RHF iter   2:  -108.95372054702950   -4.58941e-03   6.07608e-04 ADIIS/DIIS
+   @DF-RHF iter   3:  -108.95390636156489   -1.85815e-04   1.32488e-04 ADIIS/DIIS
+   @DF-RHF iter   4:  -108.95391726394024   -1.09024e-05   2.23013e-05 DIIS
+   @DF-RHF iter   5:  -108.95391756383927   -2.99899e-07   4.21412e-06 DIIS
+   @DF-RHF iter   6:  -108.95391757323027   -9.39100e-09   3.16097e-07 DIIS
+   @DF-RHF iter   7:  -108.95391757327830   -4.80327e-11   1.87680e-08 DIIS
+   @DF-RHF iter   8:  -108.95391757327846   -1.56319e-13   1.57596e-09 DIIS
+
+  DF guess converged.
+
+  ==> DirectJK: Integral-Direct J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Integrals threads:           1
+    Screening Type:           CSAM
+    Screening Cutoff:        1E-12
+    Incremental Fock:           No
+
+   @RHF iter   9:  -108.95420967167811   -1.08954e+02   2.43524e-05 DIIS
+   @RHF iter  10:  -108.95420986947909   -1.97801e-07   4.52909e-06 DIIS
+   @RHF iter  11:  -108.95420987601520   -6.53611e-09   9.53933e-07 DIIS
+   @RHF iter  12:  -108.95420987644486   -4.29665e-10   1.50486e-07 DIIS
+   @RHF iter  13:  -108.95420987645701   -1.21503e-11   2.33108e-08 DIIS
+   @RHF iter  14:  -108.95420987645736   -3.41061e-13   2.36550e-09 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1A    -15.673958     2A    -15.669618     3A     -1.500472  
+       4A     -0.761112     5A     -0.629442     6A     -0.625493  
+       7A     -0.625493  
+
+    Virtual:                                                              
+
+       8A      0.197062     9A      0.197062    10A      0.605496  
+      11A      0.805759    12A      0.860426    13A      0.860426  
+      14A      0.997308    15A      1.060695    16A      1.060695  
+      17A      1.206194    18A      1.687389    19A      1.744911  
+      20A      1.744911    21A      1.924266    22A      1.924266  
+      23A      2.326788    24A      2.326788    25A      2.913912  
+      26A      3.040953    27A      3.040953    28A      3.385794  
+
+    Final Occupation by Irrep:
+              A 
+    DOCC [     7 ]
+    NA   [     7 ]
+    NB   [     7 ]
+
+  @RHF Final Energy:  -108.95420987645736
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =             24.5000000000000000
+    One-Electron Energy =                -195.9372409234906058
+    Two-Electron Energy =                  62.4830310470332435
+    Total Energy =                       -108.9542098764573552
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :         -0.0000000            0.0000000           -0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :          0.0000000            0.0000000            0.0000000
+ Magnitude           :                                                    0.0000000
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on macbook-pro-158.wireless.emory.edu at Fri Oct 13 14:50:04 2023
+Module time:
+	user time   =       1.06 seconds =       0.02 minutes
+	system time =       1.47 seconds =       0.02 minutes
+	total time  =          1 seconds =       0.02 minutes
+Total time:
+	user time   =       1.06 seconds =       0.02 minutes
+	system time =       1.47 seconds =       0.02 minutes
+	total time  =          1 seconds =       0.02 minutes
+
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space RESTRICTED_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------
+                        A   Sum
+  -------------------------------
+    FROZEN_DOCC         0     0
+    RESTRICTED_DOCC     2     2
+    GAS1               10    10
+    GAS2                0     0
+    GAS3                0     0
+    GAS4                0     0
+    GAS5                0     0
+    GAS6                0     0
+    RESTRICTED_UOCC    16    16
+    FROZEN_UOCC         0     0
+    Total              28    28
+  -------------------------------   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-2 entry N          line    71 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 12
+    Number of basis functions: 28
+    Number of Cartesian functions: 30
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              12
+      Number of primitives:             44
+      Number of atomic orbitals:        30
+      Number of basis functions:        28
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 165242 doubles for integral storage.
+  We computed 3081 shell quartets total.
+  Whereas there are 3081 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              400
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         28
+  Number of correlated molecular orbitals:              28
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
+
+
+  Skip integral allocation and transformation for AO-driven CASSCF.
+
+          -----------------------------------------------------------
+                  Multi-Configurational Self Consistent Field
+                Two-Step Approximate Second-Order AO Algorithm
+            written by Chenyang Li, Kevin P. Hannon, and Shuhe Wang
+          -----------------------------------------------------------
+
+
+  ==> MCSCF Calculation Information <==
+
+    Integral type                               CONVENTIONAL
+    CI solver type                                       FCI
+    Final orbital type                             CANONICAL
+    Derivative type                                     NONE
+    Optimize orbitals                                   TRUE
+    Include internal rotations                         FALSE
+    Debug printing                                     FALSE
+    Energy convergence                             1.000e-08
+    Gradient convergence                           1.000e-06
+    Max value for rotation                         2.000e-01
+    Printing level                                         0
+    Max number of macro iterations                        25
+    Max number of micro iterations                        40
+    Min number of micro iterations                         6
+    DIIS start                                            15
+    Min DIIS vectors                                       3
+    Max DIIS vectors                                       8
+    Frequency of DIIS extrapolation                        1
+
+
+  ==> Independent Orbital Rotations <==
+
+    ORBITAL SPACES                         A
+    ----------------------------------------
+             ACTIVE / RESTRICTED_DOCC     20
+    RESTRICTED_UOCC /          ACTIVE    160
+    RESTRICTED_UOCC / RESTRICTED_DOCC     32
+    ----------------------------------------
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+        A      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -108.954209876457      108.954209876457        0.377140309131      1
+       1     -109.033237967233        0.079028090776        0.121469268309      2
+       2     -109.039266273243        0.006028306010        0.029346654974      3
+       3     -109.039547193329        0.000280920086        0.007279804829      4
+       4     -109.039564706523        0.000017513194        0.002012385880      5
+       5     -109.039565865877        0.000001159354        0.000516017249      6
+       6     -109.039565935819        0.000000069942        0.000118300030      7
+       7     -109.039565939601        0.000000003782        0.000029741770      8
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.039565939601   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.46434901     0.00230061     0.00000000    -7.47149735     0.00000000    -8.83184003
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 1 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.039565939601 (-1.0904e+02)   -109.088089981928 (-1.0909e+02)   -4.8524e-02    9.6831e-03    6/N
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.088089981928        0.048524042327        0.244367898878      1
+       1     -109.106157088045        0.018067106117        0.091444279240      2
+       2     -109.108669079653        0.002511991609        0.025253252184      3
+       3     -109.108844297871        0.000175218218        0.006426793195      4
+       4     -109.108854657741        0.000010359870        0.001820336149      5
+       5     -109.108855557007        0.000000899267        0.000494777688      6
+       6     -109.108855619472        0.000000062465        0.000134071769      7
+       7     -109.108855623642        0.000000004170        0.000038521826      8
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.108855623642   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45708336     0.00624351     0.00000000    -7.47648158     0.00000000    -8.90401828
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 2 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.108855623642 (-6.9290e-02)   -109.113943584477 (-2.5854e-02)   -5.0880e-03    2.4248e-04    6/N
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.113943584477        0.005087960836        0.069402624843      1
+       1     -109.115467586219        0.001524001742        0.015761121575      2
+       2     -109.115522266030        0.000054679811        0.004660223437      3
+       3     -109.115526971753        0.000004705723        0.001761886635      4
+       4     -109.115527698705        0.000000726952        0.000506687914      5
+       5     -109.115527755883        0.000000057178        0.000121206277      6
+       6     -109.115527758955        0.000000003071        0.000032358855      7
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.115527758955   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45178316     0.00668650     0.00000000    -7.47257816     0.00000000    -8.88005796
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 3 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.115527758955 (-6.6721e-03)   -109.116097026597 (-2.1534e-03)   -5.6927e-04    2.1876e-05    6/N
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.116097026597        0.000569267642        0.033089173242      1
+       1     -109.116424842951        0.000327816355        0.008404965925      2
+       2     -109.116440303755        0.000015460803        0.002519706784      3
+       3     -109.116441701912        0.000001398157        0.001037194541      4
+       4     -109.116441925054        0.000000223142        0.000307277083      5
+       5     -109.116441942931        0.000000017877        0.000067261617      6
+       6     -109.116441943802        0.000000000871        0.000018250816      7
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.116441943802   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45128719     0.00651829     0.00000000    -7.47156664     0.00000000    -8.86158575
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 4 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.116441943802 (-9.1418e-04)   -109.116718916588 (-6.2189e-04)   -2.7697e-04    4.1728e-06    6/N
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.116718916588        0.000276972786        0.028017229221      1
+       1     -109.116954166741        0.000235250154        0.007601590343      2
+       2     -109.116967111046        0.000012944304        0.002149939711      3
+       3     -109.116968019971        0.000000908925        0.000547793981      4
+       4     -109.116968074589        0.000000054618        0.000220754811      5
+       5     -109.116968084822        0.000000010233        0.000061718090      6
+       6     -109.116968085508        0.000000000686        0.000015660058      7
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.116968085508   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45175079     0.00638246     0.00000000    -7.47161005     0.00000000    -8.85106313
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 5 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.116968085508 (-5.2614e-04)   -109.117201694436 (-4.8278e-04)   -2.3361e-04    1.7991e-06    6/N
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.117201694436        0.000233608928        0.026787976571      1
+       1     -109.117416622945        0.000214928509        0.007478992491      2
+       2     -109.117429230944        0.000012607999        0.002227535513      3
+       3     -109.117430194352        0.000000963408        0.000706437147      4
+       4     -109.117430309530        0.000000115178        0.000294085803      5
+       5     -109.117430325027        0.000000015497        0.000064392306      6
+       6     -109.117430325711        0.000000000684        0.000014894551      7
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.117430325711   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45217319     0.00631033     0.00000000    -7.47180924     0.00000000    -8.84235612
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 6 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.117430325711 (-4.6224e-04)   -109.117655178320 (-4.5348e-04)   -2.2485e-04    1.2011e-06    6/N
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.117655178320        0.000224852608        0.026894074884      1
+       1     -109.117870973934        0.000215795614        0.007558801815      2
+       2     -109.117883974304        0.000013000370        0.002334903745      3
+       3     -109.117885046013        0.000001071710        0.000780562953      4
+       4     -109.117885187862        0.000000141849        0.000315781837      5
+       5     -109.117885205272        0.000000017410        0.000069819060      6
+       6     -109.117885206034        0.000000000761        0.000015173067      7
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.117885206034   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45243678     0.00628400     0.00000000    -7.47199186     0.00000000    -8.83370774
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 7 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.117885206034 (-4.5488e-04)   -109.118118386241 (-4.6321e-04)   -2.3318e-04    2.1266e-06    6/N
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.118118386241        0.000233180207        0.027758048422      1
+       1     -109.118347872130        0.000229485889        0.007739678529      2
+       2     -109.118361618575        0.000013746445        0.002469450669      3
+       3     -109.118362832037        0.000001213463        0.000846525528      4
+       4     -109.118362998687        0.000000166650        0.000341408777      5
+       5     -109.118363018938        0.000000020251        0.000078659494      6
+       6     -109.118363019889        0.000000000951        0.000016603397      7
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.118363019889   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45255952     0.00629102     0.00000000    -7.47213741     0.00000000    -8.82477488
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 8 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.118363019889 (-4.7781e-04)   -109.118611454874 (-4.9307e-04)   -2.4843e-04    3.4045e-06    6/N
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.118611454874        0.000248434985        0.028444679257      1
+       1     -109.118853635352        0.000242180478        0.007758407233      2
+       2     -109.118867532453        0.000013897101        0.002551126281      3
+       3     -109.118868840913        0.000001308460        0.000889302932      4
+       4     -109.118869024144        0.000000183231        0.000360251431      5
+       5     -109.118869047002        0.000000022858        0.000088528082      6
+       6     -109.118869048232        0.000000001230        0.000018798512      7
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.118869048232   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45260216     0.00631727     0.00000000    -7.47226288     0.00000000    -8.81578453
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 9 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.118869048232 (-5.0603e-04)   -109.119119192705 (-5.0774e-04)   -2.5014e-04    3.7157e-06    6/N
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.119119192705        0.000250144473        0.027544397532      1
+       1     -109.119349199909        0.000230007203        0.007229965858      2
+       2     -109.119361306544        0.000012106635        0.002436810032      3
+       3     -109.119362507082        0.000001200538        0.000854819024      4
+       4     -109.119362674190        0.000000167108        0.000349218560      5
+       5     -109.119362696358        0.000000022168        0.000093239220      6
+       6     -109.119362697779        0.000000001421        0.000020364043      7
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.119362697779   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45265761     0.00634181     0.00000000    -7.47239610     0.00000000    -8.80744376
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 10 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.119362697779 (-4.9365e-04)   -109.119578472710 (-4.5928e-04)   -2.1577e-04    2.4580e-06    6/N
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.119578472710        0.000215774931        0.024124043889      1
+       1     -109.119758139780        0.000179667070        0.005987492666      2
+       2     -109.119766444930        0.000008305150        0.002040202557      3
+       3     -109.119767286818        0.000000841888        0.000708663251      4
+       4     -109.119767397194        0.000000110376        0.000291634222      5
+       5     -109.119767413470        0.000000016276        0.000086093846      6
+       6     -109.119767414733        0.000000001263        0.000019531669      7
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.119767414733   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45280071     0.00634455     0.00000000    -7.47254921     0.00000000    -8.80066465
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 11 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.119767414733 (-4.0472e-04)   -109.119917084491 (-3.3861e-04)   -1.4967e-04    1.8277e-06    6/N
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.119917084491        0.000149669758        0.018849254865      1
+       1     -109.120028864053        0.000111779562        0.004376142486      2
+       2     -109.120033291165        0.000004427112        0.001466951075      3
+       3     -109.120033728283        0.000000437117        0.000494071049      4
+       4     -109.120033776803        0.000000048520        0.000198264537      5
+       5     -109.120033784980        0.000000008177        0.000067538986      6
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.120033784980   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45301473     0.00632373     0.00000000    -7.47269961     0.00000000    -8.79596944
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 12 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.120033784980 (-2.6637e-04)   -109.120117614891 (-2.0053e-04)   -8.3830e-05    2.6584e-06    6/N
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.120117614891        0.000083829911        0.013399912746      1
+       1     -109.120174942084        0.000057327193        0.002923210601      2
+       2     -109.120176907449        0.000001965365        0.000938125291      3
+       3     -109.120177090185        0.000000182736        0.000298093401      4
+       4     -109.120177106490        0.000000016306        0.000092346973      5
+       5     -109.120177108161        0.000000001670        0.000040676272      6
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.120177108161   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45324786     0.00628898     0.00000000    -7.47282518     0.00000000    -8.79308592
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 13 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.120177108161 (-1.4332e-04)   -109.120217086493 (-9.9472e-05)   -3.9978e-05    2.6439e-06    6/N
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.120217086493        0.000039978332        0.008953697013      1
+       1     -109.120242885805        0.000025799312        0.001867920560      2
+       2     -109.120243678904        0.000000793099        0.000567163638      3
+       3     -109.120243746165        0.000000067260        0.000183629020      4
+       4     -109.120243753089        0.000000006924        0.000072424189      5
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.120243753089   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45342353     0.00625867     0.00000000    -7.47290677     0.00000000    -8.79152136
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 14 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.120243753089 (-6.6645e-05)   -109.120260985208 (-4.3899e-05)   -1.7232e-05    2.0390e-06    6/N
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.120260985208        0.000017232119        0.005771848383      1
+       1     -109.120271733158        0.000010747950        0.001175857846      2
+       2     -109.120272041110        0.000000307952        0.000355038260      3
+       3     -109.120272067615        0.000000026505        0.000142555315      4
+       4     -109.120272072344        0.000000004728        0.000052637098      5
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.120272072344   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45355336     0.00623356     0.00000000    -7.47295856     0.00000000    -8.79065383
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 15 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.120272072344 (-2.8319e-05)   -109.120279083229 (-1.8098e-05)   -7.0109e-06    1.3745e-06    6/N   S
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.120279083229        0.000007010885        0.003649127014      1
+       1     -109.120283373206        0.000004289977        0.000730859759      2
+       2     -109.120283491141        0.000000117934        0.000212795055      3
+       3     -109.120283500474        0.000000009333        0.000087737379      4
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.120283500474   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45362551     0.00621781     0.00000000    -7.47298168     0.00000000    -8.79020197
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 16 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.120283500474 (-1.1428e-05)   -109.120286259823 (-7.1766e-06)   -2.7593e-06    8.7157e-07    6/N   S
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.120286259823        0.000002759349        0.002276723443      1
+       1     -109.120287929647        0.000001669824        0.000469240925      2
+       2     -109.120287978793        0.000000049146        0.000127047485      3
+       3     -109.120287982054        0.000000003262        0.000045426833      4
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.120287982054   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45368568     0.00620688     0.00000000    -7.47300790     0.00000000    -8.78999092
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 17 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.120287982054 (-4.4816e-06)   -109.120289049543 (-2.7897e-06)   -1.0675e-06    5.3860e-07    6/N   S
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.120289049543        0.000001067488        0.001417790704      1
+       1     -109.120289690377        0.000000640835        0.000293496370      2
+       2     -109.120289708113        0.000000017736        0.000101327270      3
+       3     -109.120289710488        0.000000002374        0.000038872231      4
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.120289710488   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45371638     0.00619986     0.00000000    -7.47301678     0.00000000    -8.78984766
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 18 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.120289710488 (-1.7284e-06)   -109.120290118786 (-1.0692e-06)   -4.0830e-07    3.2671e-07    6/N   S/E
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.120289108692        0.000000601796        0.002261853596      1
+       1     -109.120290726778        0.000001618086        0.000451136624      2
+       2     -109.120290770921        0.000000044143        0.000121207531      3
+       3     -109.120290773780        0.000000002859        0.000046917938      4
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.120290773780   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45376005     0.00619024     0.00000000    -7.47303055     0.00000000    -8.78970063
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 19 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.120290773780 (-1.0633e-06)   -109.120290773988 (-6.5520e-07)   -2.0862e-10    4.9277e-07    3/Y   S/E
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.120290773763        0.000000000017        0.000047122087      1
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.120290773763   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45376005     0.00619024     0.00000000    -7.47303055     0.00000000    -8.78970063
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 20 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+     -109.120290773763 ( 1.6712e-11)   -109.120290773988 (-1.4211e-14)   -2.2534e-10    1.2802e-08    3/Y
+
+  A miracle has come to pass: MCSCF iterations have converged!
+
+  ==> MCSCF Iteration Summary <==
+
+                      Energy CI                    Energy Orbital
+           ------------------------------  ------------------------------
+    Iter.        Total Energy       Delta        Total Energy       Delta  Orb. Grad.  Micro
+    ----------------------------------------------------------------------------------------
+       1    -109.039565939601  0.0000e+00   -109.088089981928  0.0000e+00  9.6831e-03     6
+       2    -109.108855623642 -6.9290e-02   -109.113943584477 -2.5854e-02  2.4248e-04     6
+       3    -109.115527758955 -6.6721e-03   -109.116097026597 -2.1534e-03  2.1876e-05     6
+       4    -109.116441943802 -9.1418e-04   -109.116718916588 -6.2189e-04  4.1728e-06     6
+       5    -109.116968085508 -5.2614e-04   -109.117201694436 -4.8278e-04  1.7991e-06     6
+       6    -109.117430325711 -4.6224e-04   -109.117655178320 -4.5348e-04  1.2011e-06     6
+       7    -109.117885206034 -4.5488e-04   -109.118118386241 -4.6321e-04  2.1266e-06     6
+       8    -109.118363019889 -4.7781e-04   -109.118611454874 -4.9307e-04  3.4045e-06     6
+       9    -109.118869048232 -5.0603e-04   -109.119119192705 -5.0774e-04  3.7157e-06     6
+      10    -109.119362697779 -4.9365e-04   -109.119578472710 -4.5928e-04  2.4580e-06     6
+      11    -109.119767414733 -4.0472e-04   -109.119917084491 -3.3861e-04  1.8277e-06     6
+      12    -109.120033784980 -2.6637e-04   -109.120117614891 -2.0053e-04  2.6584e-06     6
+      13    -109.120177108161 -1.4332e-04   -109.120217086493 -9.9472e-05  2.6439e-06     6
+      14    -109.120243753089 -6.6645e-05   -109.120260985208 -4.3899e-05  2.0390e-06     6
+      15    -109.120272072344 -2.8319e-05   -109.120279083229 -1.8098e-05  1.3745e-06     6
+      16    -109.120283500474 -1.1428e-05   -109.120286259823 -7.1766e-06  8.7157e-07     6
+      17    -109.120287982054 -4.4816e-06   -109.120289049543 -2.7897e-06  5.3860e-07     6
+      18    -109.120289710488 -1.7284e-06   -109.120290118786 -1.0692e-06  3.2671e-07     6
+      19    -109.120290773780 -1.0633e-06   -109.120290773988 -6.5520e-07  4.9277e-07     3
+      20    -109.120290773763  1.6712e-11   -109.120290773988 -1.4211e-14  1.2802e-08     3
+    ----------------------------------------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-02
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                  63504
+    Number of roots                                        1
+    Maximum number of iterations                          50
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    Print level                                            0
+
+
+  Davidson-Liu solver: restarting from previous calculation.
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -109.120290773988        0.000000000225        0.000047810914      1
+  ---------------------------------------------------------------------------------
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -109.120290773988   0.000000
+    --------------------------------------------------------
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A    -7.45376005     0.00619024     0.00000000    -7.47303055     0.00000000    -8.78970063
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000     0.00000000    14.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS   ...... FALSE
+    MIX GAS ACTIVE ORBITALS ...... FALSE
+    FROZEN_DOCC     ...  CANONICAL
+    FROZEN_UOCC     ...  CANONICAL
+    GAS1            ...  CANONICAL
+    RESTRICTED_DOCC ...  CANONICAL
+    RESTRICTED_UOCC ...  CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    GAS1                 0.0410519698   0.0666849281
+    RESTRICTED_DOCC      0.0000000000   0.0000000000
+    RESTRICTED_UOCC      0.9613533848   1.6126261432
+    ------------------------------------------------
+
+    Canonicalization test failed
+
+  Timing for orbital canonicalization:                        0.000 s.
+
+  !!! WARNING: Final Active Orbitals Maybe Different from the Original !!!
+
+    Based on projections of maximum overlap method:
+           9A -> 16A       RESTRICTED_UOCC
+          10A -> 13A       RESTRICTED_UOCC
+          11A -> 14A       RESTRICTED_UOCC
+
+  Time to prepare integrals:        0.030 seconds
+  Time to run job          :       31.723 seconds
+  Total                    :       31.753 seconds
+
+    Psi4 stopped on: Friday, 13 October 2023 02:50PM
+    Psi4 wall time for execution: 0:00:32.52
+
+*** Psi4 exiting successfully. Buy a developer a beer!

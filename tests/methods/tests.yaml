@@ -88,6 +88,7 @@ casscf:
       - casscf-gradient-2
       - casscf-opt-1
       # - casscf-opt-2
+      - sa-casscf-1
    long:
       - casscf-8
 cd-dsrg-mrpt2:
@@ -241,11 +242,14 @@ fci:
       - fci-ecp-1
       - fci-ecp-2
       - fci-rdms-2
+      - fci-trdms-1
+      - fci-trdms-2
    long:
       - fci-6
       - fci-7 # moved to pytest
       - fci-ex-1 # moved to pytest
       - fci-rdms-1 # moved to pytest
+      - fci-trdms-3
       - fci-one-electron # moved to pytest
 sa-fci:
    short:
@@ -256,30 +260,42 @@ sa-fci:
    long:
       - sa-fci-6
       - sa-fci-7
+
 gasci:
    short:
       - gasci-1
-      - gasaci-1
-      - gasaci-4
-      - gasci-dsrg-mrpt2-2
    medium:
       - gasci-2
       - gasci-3
+      - gasci-4
+      - gasci-5
+      - gasci-trdm-1
+      - gasci-trdm-2
+   long:
+      - gasci-dsrg-mrpt2
       # - gasaci-2 # disabled because of issues with reference
+
+gasaci:
+   short:
+      - gasaci-1
+      - gasaci-4
+   medium:
       - gasaci-3
+      - gasaciscf-1
+#      - sa-gasaciscf-1
    long:
       - gasaci-5
+
 gasscf:
    short:
       - gasscf-1
-      - gasscf-3
       - sa-gasscf-1
       - sa-gasscf-2
       - sa-gasscf-dsrg-mrpt2-1
    medium:
       - gasscf-2
       - gasscf-dsrg-mrpt2-1
-      - sa-gasscf-3
+
 integrals:
    short:
       - integrals-3
@@ -343,8 +359,6 @@ mrdsrg-ldsrg2-spin-integrated:
       - mrdsrg-ldsrg2-qc-2
    long:
       - mrdsrg-ldsrg2-qc-1
-      - mrdsrg-srgpt2-1
-      - mrdsrg-srgpt2-2
 mrdsrg-pt2:
    short:
       - mrdsrg-pt2-2
@@ -378,22 +392,26 @@ mrdsrg-spin-adapted-pt3:
       - mrdsrg-spin-adapted-pt3-1
    medium:
       - mrdsrg-spin-adapted-pt3-2
-pci:
-   short:
-      - pci-1
-      - pci-3
-      - pci-4
-   medium:
-      #   - pci-2
-      #   - pci-5
-      - pci-6
-      #   - pci-7
-      - pci-8
-#   - pci-9
+# pci:
+#    short:
+#       - pci-1
+#       - pci-3
+#       - pci-4
+#    medium:
+#       #- pci-2
+#       #- pci-5
+#       - pci-6
+#       #- pci-7
+#       - pci-8
+#       #- pci-9
 read-orbitals:
    short:
       - read-orbitals-1
       - read-orbitals-2
+srg:
+   short:
+      - mr-srg-pt2-1
+      - mrdsrg-srgpt2-1
 tdci:
    short:
       - tdci-1

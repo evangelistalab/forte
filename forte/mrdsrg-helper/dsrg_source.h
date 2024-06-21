@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,8 +26,7 @@
  * @END LICENSE
  */
 
-#ifndef _dsrg_source_h_
-#define _dsrg_source_h_
+#pragma once
 
 #include <cmath>
 #include <stdexcept>
@@ -199,5 +198,3 @@ class MP2_SOURCE : public DSRG_SOURCE {
     virtual double compute_renormalized_denominator(const double& D) { return 1.0 / D; }
 };
 } // namespace forte
-
-#endif // DSRG_SOURCE_H

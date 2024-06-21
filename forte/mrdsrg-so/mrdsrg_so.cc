@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2023 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -153,9 +153,11 @@ void MRDSRG_SO::startup() {
     size_t nmo = nso_ / 2;
     size_t na_mo = na_ / 2;
 
-    BTF_->add_mo_space("c", "m,n,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9", core_sos, AlphaSpin);
-    BTF_->add_mo_space("a", "u,v,w,x,y,z,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9", actv_sos, AlphaSpin);
-    BTF_->add_mo_space("v", "e,f,g,h,v0,v1,v2,v3,v4,v5,v6,v7,v8,v9", virt_sos, AlphaSpin);
+    BlockedTensor::reset_mo_spaces();
+
+    BTF_->add_mo_space("c", "mn", core_sos, AlphaSpin);
+    BTF_->add_mo_space("a", "uvwxyz", actv_sos, AlphaSpin);
+    BTF_->add_mo_space("v", "ef", virt_sos, AlphaSpin);
 
     BTF_->add_composite_mo_space("h", "ijkl", {"c", "a"});
     BTF_->add_composite_mo_space("p", "abcd", {"a", "v"});
