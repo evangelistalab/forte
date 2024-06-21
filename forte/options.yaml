@@ -1071,6 +1071,10 @@ DSRG:
       "  - Multi-state approach (currently only for MRPT2)\n"
       "    - MS:  form 2nd-order Heff_MN = <M|H|N> + 0.5 * [<M|(T_M)^+ H|N> + <M|H T_N|N>]\n"
       "    - XMS: rotate references such that <M|F|N> is diagonal before MS procedure"
+  FULL_HBAR:
+    type: bool
+    default: False
+    help: "Form full Hbar."
   FORM_HBAR3:
     type: bool
     default: False
