@@ -270,11 +270,6 @@ ActiveSpaceMethod::compute_permanent_dipole(std::shared_ptr<ActiveMultipoleInteg
             auto dz = dipole->get(2);
             auto dm = dipole->norm();
             psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", name.c_str(), dx, dy, dz, dm);
-
-            std::string name0 = std::to_string(root2) + upper_string(irrep_label);
-            // push to results to spectra_results_ vector
-            std::vector<std::string> data {name0, name, std::to_string(dx), std::to_string(dy), std::to_string(dz)};
-            add_spectra_results(data);
         }
         psi::outfile->Printf("\n    %s", dash.c_str());
 
