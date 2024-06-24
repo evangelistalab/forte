@@ -16,21 +16,19 @@ set globals{
 }
 
 set forte{
-   job_type               mcscf_two_step
    active_space_solver    fci
    restricted_docc        [2,0,1,1]
    active                 [2,0,0,0]
    root_sym               0
    nroot                  1
-   casscf_e_convergence   12
-   casscf_g_convergence   8
+   mcscf_e_convergence   12
+   mcscf_g_convergence   8
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)
 compare_values(refmcscf,variable("CURRENT ENERGY"),8,"MCSCF energy") #TEST
 
 set forte{
-  job_type               newdriver
   active_space_solver    fci
   correlation_solver     mrdsrg
   int_type               cholesky
@@ -43,12 +41,15 @@ set forte{
   nroot                  1
   dsrg_s                 1.0
   maxiter                100
-  e_convergence          8
+  e_convergence          12
   r_convergence          6
+  mcscf_e_convergence   12
+  mcscf_g_convergence   8
   semi_canonical         false
   dsrg_read_amps         true
   dsrg_diis_start        1
+  mcscf_reference       false
 }
 
-energy('forte', ref_wfn=wfn)
+energy('forte',ref_wfn=wfn)
 compare_values(refdsrg,variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy") #TEST

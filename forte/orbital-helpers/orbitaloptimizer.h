@@ -208,10 +208,10 @@ class OrbitalOptimizer {
     void startup();
 
     /// DEBUG PRINTING
-    bool casscf_debug_print_;
+    bool mcscf_debug_print_;
     /// Freeze the core and leave them unchanged
     /// Uses this to override MOSPACEINFO
-    bool casscf_freeze_core_;
+    bool mcscf_freeze_core_;
     /// Print timings
     bool timings_ = false;
 

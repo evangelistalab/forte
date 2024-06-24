@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-def test_ccsd():
+def test_dccsd():
     """Test CCSD on H2 using RHF/DZ orbitals"""
 
     import pytest
@@ -25,8 +25,7 @@ def test_ccsd():
         data.mo_space_info,
         cc_type="dcc",
         max_exc=2,
-        e_convergence=1.0e-11,
-        on_the_fly=True,
+        e_convergence=1.0e-11
     )
 
     psi4.core.clean()
@@ -41,4 +40,4 @@ def test_ccsd():
 
 
 if __name__ == "__main__":
-    test_ccsd()
+    test_dccsd()

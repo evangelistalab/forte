@@ -35,9 +35,9 @@ set forte {
   gas2            [1,0,0,1]
   gas1min         [6]
   fci_test_rdms   true
+  mcscf_reference false 
 }
 
-energy('scf')
 energy('forte')
 compare_values(refgasci, variable("CURRENT ENERGY"),9, "GASCI energy")
 compare_values(0.0, variable("AA 1-RDM ERROR"),12, "AA 1-RDM") #TEST

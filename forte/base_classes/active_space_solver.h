@@ -43,7 +43,6 @@ class BlockedTensor;
 #include "base_classes/rdms.h"
 #include "helpers/printing.h"
 
-#include "integrals/one_body_integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
 
 namespace forte {
@@ -54,6 +53,7 @@ class ForteIntegrals;
 class ForteOptions;
 class MOSpaceInfo;
 class SCFInfo;
+class ActiveMultipoleIntegrals;
 
 /**
  * @class ActiveSpaceSolver

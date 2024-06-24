@@ -48,10 +48,8 @@ set forte{
   nroot               1
   root_sym            0
   charge              0
+  mcscf_reference    false
 }
-#set cubeprop_tasks ['orbitals']
-#set cubeprop_orbitals [14,15,16,17]
 
-E,awfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+E = energy('forte')
 compare_values(r_0ag, E, 8, "ACI ENERGY")
-#cubeprop(awfn)

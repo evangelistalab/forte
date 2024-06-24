@@ -60,6 +60,7 @@ set forte {
   root               0
   d_convergence      10
   dsrg_s             0.5
+  mcscf_reference   false
 }
 
 Eforte, wfn_emb = energy('forte', ref_wfn = wfn_cas, return_wfn=True)

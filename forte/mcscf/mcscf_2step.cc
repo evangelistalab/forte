@@ -46,8 +46,8 @@
 #include "orbital-helpers/semi_canonicalize.h"
 
 #include "gradient_tpdm/backtransform_tpdm.h"
-#include "casscf/casscf_orb_grad.h"
-#include "casscf/mcscf_2step.h"
+#include "mcscf/mcscf_orb_grad.h"
+#include "mcscf/mcscf_2step.h"
 
 using namespace ambit;
 
@@ -76,7 +76,7 @@ void MCSCF_2STEP::startup() {
 
 void MCSCF_2STEP::read_options() {
     print_ = int_to_print_level(options_->get_int("PRINT"));
-    debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
+    debug_print_ = options_->get_bool("MCSCF_DEBUG_PRINTING");
 
     int_type_ = options_->get_str("INT_TYPE");
 
@@ -84,33 +84,31 @@ void MCSCF_2STEP::read_options() {
     if (der_type_ == "FIRST" and ints_->integral_type() == Custom)
         throw std::runtime_error("MCSCF energy gradient not available for CUSTOM integrals!");
 
-    maxiter_ = options_->get_int("CASSCF_MAXITER");
-    micro_maxiter_ = options_->get_int("CASSCF_MICRO_MAXITER");
-    micro_miniter_ = options_->get_int("CASSCF_MICRO_MINITER");
+    maxiter_ = options_->get_int("MCSCF_MAXITER");
+    micro_maxiter_ = options_->get_int("MCSCF_MICRO_MAXITER");
+    micro_miniter_ = options_->get_int("MCSCF_MICRO_MINITER");
     if (micro_maxiter_ < micro_miniter_)
         micro_miniter_ = micro_maxiter_;
 
-    e_conv_ = options_->get_double("CASSCF_E_CONVERGENCE");
-    g_conv_ = options_->get_double("CASSCF_G_CONVERGENCE");
+    e_conv_ = options_->get_double("MCSCF_E_CONVERGENCE");
+    g_conv_ = options_->get_double("MCSCF_G_CONVERGENCE");
 
-    orb_type_redundant_ = options_->get_str("CASSCF_FINAL_ORBITAL");
+    orb_type_redundant_ = options_->get_str("MCSCF_FINAL_ORBITAL");
 
-    ci_type_ = options_->get_str("CASSCF_CI_SOLVER");
-    if (ci_type_ == "")
-        ci_type_ = options_->get_str("ACTIVE_SPACE_SOLVER");
+    ci_type_ = options_->get_str("ACTIVE_SPACE_SOLVER");
     if (ci_type_ == "") {
-        throw std::runtime_error("ACTIVE_SPACE_SOLVER or CASSCF_CI_SOLVER are not specified!");
+        throw std::runtime_error("ACTIVE_SPACE_SOLVER is not specified!");
     }
 
-    opt_orbs_ = not options_->get_bool("CASSCF_NO_ORBOPT");
-    max_rot_ = options_->get_double("CASSCF_MAX_ROTATION");
-    internal_rot_ = options_->get_bool("CASSCF_INTERNAL_ROT");
+    opt_orbs_ = not options_->get_bool("MCSCF_NO_ORBOPT");
+    max_rot_ = options_->get_double("MCSCF_MAX_ROTATION");
+    internal_rot_ = options_->get_bool("MCSCF_INTERNAL_ROT");
 
     // DIIS options
-    diis_freq_ = options_->get_int("CASSCF_DIIS_FREQ");
-    diis_start_ = options_->get_int("CASSCF_DIIS_START");
-    diis_max_vec_ = options_->get_int("CASSCF_DIIS_MAX_VEC");
-    diis_min_vec_ = options_->get_int("CASSCF_DIIS_MIN_VEC");
+    diis_freq_ = options_->get_int("MCSCF_DIIS_FREQ");
+    diis_start_ = options_->get_int("MCSCF_DIIS_START");
+    diis_max_vec_ = options_->get_int("MCSCF_DIIS_MAX_VEC");
+    diis_min_vec_ = options_->get_int("MCSCF_DIIS_MIN_VEC");
     do_diis_ = diis_start_ >= 1;
 }
 
@@ -161,16 +159,17 @@ double MCSCF_2STEP::compute_energy() {
         std::stringstream msg;
         msg << (sr ? "SCF" : "MCSCF") << " did not converge in " << maxiter_ << " iterations!";
         psi::outfile->Printf("\n  %s", msg.str().c_str());
-        psi::outfile->Printf("\n  Please increase CASSCF_MAXITER!");
-        if (options_->get_bool("CASSCF_DIE_IF_NOT_CONVERGED")) {
+        psi::outfile->Printf("\n  Please increase MCSCF_MAXITER!");
+        if (options_->get_bool("MCSCF_DIE_IF_NOT_CONVERGED")) {
             psi::outfile->Printf(
-                "\n  This error may be ignored by setting CASSCF_DIE_IF_NOT_CONVERGED.");
+                "\n  This error may be ignored by setting MCSCF_DIE_IF_NOT_CONVERGED.");
             throw std::runtime_error(msg.str());
         }
     };
 
     // prepare for orbital gradients
-    CASSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_);
+    const bool freeze_core = options_->get_bool("MCSCF_FREEZE_CORE");
+    MCSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_, freeze_core);
     auto nrot = cas_grad.nrot();
     auto dG = std::make_shared<psi::Vector>("dG", nrot);
 
@@ -220,9 +219,6 @@ double MCSCF_2STEP::compute_energy() {
 
     bool converged = false;
 
-    // }
-    // psi::outfile->Printf("\n    %s", dash2.c_str());
-
     if (is_single_reference()) { // Case 2: if there is only 1 determinant
         lbfgs_param->maxiter = micro_maxiter_ > maxiter_ ? micro_maxiter_ : maxiter_;
         maxiter_ = lbfgs_param->maxiter;
@@ -260,7 +256,7 @@ double MCSCF_2STEP::compute_energy() {
         bool skip_de_conv = (ci_type_.find("DMRG") != std::string::npos or
                              ci_type_.find("BLOCK2") != std::string::npos);
 
-        std::vector<CASSCF_HISTORY> history;
+        std::vector<MCSCF_HISTORY> history;
 
         // std::string title = "         Energy CI (  Delta E  )"
         //                     "         Energy Opt. (  Delta E  )"
@@ -277,7 +273,7 @@ double MCSCF_2STEP::compute_energy() {
             "Delta  Orb. Grad.  Micro");
         psi::outfile->Printf("\n    %s", dash2.c_str());
 
-        for (int macro = 1; macro <= maxiter_; ++macro) {
+        for (int macro = 0; macro <= maxiter_; ++macro) {
             // optimize orbitals
             cas_grad.set_rdms(rdms);
 
@@ -296,7 +292,7 @@ double MCSCF_2STEP::compute_energy() {
             char o_conv = lbfgs.converged() ? 'Y' : 'N';
 
             // save data for this macro iteration
-            CASSCF_HISTORY hist(e_c, e_o, g_rms, n_micro);
+            MCSCF_HISTORY hist(e_c, e_o, g_rms, n_micro);
             history.push_back(hist);
 
             double de = e_o - e_c;
@@ -418,7 +414,7 @@ double MCSCF_2STEP::compute_energy() {
                                 {print_, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
 
     if (ints_->integral_type() != Custom) {
-        auto final_orbs = options_->get_str("CASSCF_FINAL_ORBITAL");
+        auto final_orbs = options_->get_str("MCSCF_FINAL_ORBITAL");
 
         if (final_orbs != "UNSPECIFIED" or der_type_ == "FIRST") {
             // fix orbitals for redundant pairs
@@ -426,13 +422,20 @@ double MCSCF_2STEP::compute_energy() {
             auto F = cas_grad.fock(rdms);
             ints_->set_fock_matrix(F, F);
 
-            SemiCanonical semi(mo_space_info_, ints_, options_);
+            auto inactive_mix = options_->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
+            auto active_mix = options_->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
+
+            // if we do not freeze the core, we need to set the inactive_mix flag to make sure
+            // the core orbitals are canonicalized together with the active orbitals
+            if (not freeze_core) {
+                inactive_mix = true;
+            }
+
+            psi::outfile->Printf("\n  Canonicalizing final MCSCF orbitals");
+            SemiCanonical semi(mo_space_info_, ints_, options_, inactive_mix, active_mix);
             semi.semicanonicalize(rdms, false, final_orbs == "NATURAL", false);
 
             cas_grad.canonicalize_final(semi.Ua());
-
-            // TODO: need to implement the transformation of CI coefficients due to orbital
-            // changes
         }
 
         // pass to wave function
@@ -516,7 +519,7 @@ MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solv
     return compute_average_state_energy(state_energies_map, state_weights_map_);
 }
 
-bool MCSCF_2STEP::test_history(const std::vector<CASSCF_HISTORY>& history, const int& n_samples) {
+bool MCSCF_2STEP::test_history(const std::vector<MCSCF_HISTORY>& history, const int& n_samples) {
     if (n_samples < 6)
         return true;
 
@@ -564,7 +567,7 @@ bool MCSCF_2STEP::test_history(const std::vector<CASSCF_HISTORY>& history, const
     return false;
 }
 
-void MCSCF_2STEP::print_macro_iteration(const std::vector<CASSCF_HISTORY>& history) {
+void MCSCF_2STEP::print_macro_iteration(const std::vector<MCSCF_HISTORY>& history) {
     print_h2("MCSCF Iteration Summary");
     std::string dash1 = std::string(30, '-');
     std::string dash2 = std::string(88, '-');

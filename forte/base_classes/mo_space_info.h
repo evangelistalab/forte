@@ -176,17 +176,15 @@ class MOSpaceInfo {
     /// @return A string representation of this object
     std::string str() const;
     /// @return A vector of labels of each irrep (e.g. ["A1","A2"])
-    const std::vector<std::string>& irrep_labels() const { return symmetry_.irrep_labels(); }
+    const std::vector<std::string>& irrep_labels() const;
     /// @return The label of each irrep h (e.g. h = 0 -> "A1")
-    const std::string& irrep_label(size_t h) const { return symmetry_.irrep_label(h); }
+    const std::string& irrep_label(size_t h) const;
     /// @return The label of the molecular point groupo (e.g. "C2V")
-    std::string point_group_label() const { return symmetry_.point_group_label(); }
+    std::string point_group_label() const;
     /// @return The names of the elementary orbital spaces
-    const std::vector<std::string>& space_names() const { return elementary_spaces_; }
+    const std::vector<std::string>& space_names() const;
     /// @return The names of the composite orbital spaces
-    std::map<std::string, std::vector<std::string>> composite_space_names() const {
-        return composite_spaces_;
-    }
+    std::map<std::string, std::vector<std::string>> composite_space_names() const;
     /// @return The names of nonzero GAS spaces
     std::vector<std::string> nonzero_gas_spaces() const;
     /// @return The number of orbitals in a space
@@ -219,11 +217,13 @@ class MOSpaceInfo {
     /// Reorder MOs according to the input indexing vector
     void set_reorder(const std::vector<size_t>& reorder);
 
+    const std::vector<size_t>& reorder() const;
+
     /// Process current MOSpaceInfo: calculate frozen core, count, and assign orbitals
     void compute_space_info();
 
     /// @return The number of irreps
-    size_t nirrep() { return nirrep_; }
+    size_t nirrep() const;
 
   private:
     // ==> Class Data <==

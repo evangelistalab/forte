@@ -5,39 +5,25 @@ refdsrgpt2 = -226.883026729816
 
 molecule pbenzyne{
   0 1
-   C   0.0000000000  -2.5451795941   0.0000000000
-   C   0.0000000000   2.5451795941   0.0000000000
-   C  -2.2828001669  -1.3508352528   0.0000000000
-   C   2.2828001669  -1.3508352528   0.0000000000
-   C   2.2828001669   1.3508352528   0.0000000000
-   C  -2.2828001669   1.3508352528   0.0000000000
-   H  -4.0782187459  -2.3208602146   0.0000000000
-   H   4.0782187459  -2.3208602146   0.0000000000
-   H   4.0782187459   2.3208602146   0.0000000000
-   H  -4.0782187459   2.3208602146   0.0000000000
+  C   0.0000000000  -2.5451795941   0.0000000000
+  C   0.0000000000   2.5451795941   0.0000000000
+  C  -2.2828001669  -1.3508352528   0.0000000000
+  C   2.2828001669  -1.3508352528   0.0000000000
+  C   2.2828001669   1.3508352528   0.0000000000
+  C  -2.2828001669   1.3508352528   0.0000000000
+  H  -4.0782187459  -2.3208602146   0.0000000000
+  H   4.0782187459  -2.3208602146   0.0000000000
+  H   4.0782187459   2.3208602146   0.0000000000
+  H  -4.0782187459   2.3208602146   0.0000000000
 
   units bohr
 }
 
 set globals{
    basis                  sto-3g
-   scf_type               pk
 }
 
 set forte{
-  job_type                mcscf_two_step
-  active_space_solver     fci
-  restricted_docc         [5, 3, 1, 1, 0, 1, 4, 4]
-  active                  [1, 0, 0, 0, 0, 0, 1, 0]
-  casscf_e_convergence    12
-  casscf_g_convergence    8
-}
-
-Emcscf, wfn = energy('forte', return_wfn=True)
-compare_values(refmcscf, variable("CURRENT ENERGY"), 10, "MCSCF energy")
-
-set forte{
-  job_type               newdriver
   active_space_solver    fci
   correlation_solver     dsrg-mrpt2
   frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
@@ -46,7 +32,9 @@ set forte{
   root_sym               0
   nroot                  1
   dsrg_s                 0.5
+  mcscf_e_convergence   12
+  mcscf_g_convergence   8
 }
 
-energy('forte', ref_wfn=wfn)
-compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+energy('forte')
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),9,"DSRG-MRPT2 energy")

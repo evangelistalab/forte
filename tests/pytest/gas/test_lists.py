@@ -19,7 +19,7 @@ def test_gas_lists1():
     # gas_vector.print()
     state_vector = gas_vector.as_state_vector()
     assert len(state_vector) == 4
-    state_vector_test = forte.StateVector({det("220"): 1.0, det("202"): 1.0, det("2+-"): 1.0, det("2-+"): 1.0})
+    state_vector_test = forte.SparseState({det("220"): 1.0, det("202"): 1.0, det("2+-"): 1.0, det("2-+"): 1.0})
     assert state_vector == state_vector_test
 
 
@@ -52,7 +52,7 @@ def test_gas_lists2():
     gas_vector.set_to(1.0)
     state_vector = gas_vector.as_state_vector()
     assert len(state_vector) == 8
-    state_vector_test = forte.StateVector(
+    state_vector_test = forte.SparseState(
         {
             det("+-022"): 1.0,
             det("220+-"): 1.0,

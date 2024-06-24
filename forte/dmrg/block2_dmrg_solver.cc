@@ -238,9 +238,8 @@ Block2DMRGSolver::Block2DMRGSolver(StateInfo state, size_t nroot, std::shared_pt
                           psi::Process::environment.molecule()->name();
     Block2ScratchManager::manager().scratch_folders.insert(scratch);
     impl_ = make_shared<Block2DMRGSolverImpl>(is_spin_adapted, 1024LL, scratch);
-    // TODO: read this info from the base class
-    na_ = static_cast<int>(state.na() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC"));
-    nb_ = static_cast<int>(state.nb() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC"));
+    na_ = state.na() - mo_space_info->size("INACTIVE_DOCC");
+    nb_ = state.nb() - mo_space_info->size("INACTIVE_DOCC");
 }
 
 Block2DMRGSolver::~Block2DMRGSolver() {

@@ -34,6 +34,7 @@ set forte{
   correlation_solver   three-dsrg-mrpt2
   active_space_solver  detci
   print                0
+  mcscf_reference     false
 }
 
 basis {
@@ -69,6 +70,5 @@ S   1   1.00
 ****
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-forte_energy = energy('forte', ref_wfn=wfn)
+forte_energy = energy('forte')
 compare_values(forte_energy, refdsrgpt2, 8, "DSRG-MRPT2 Energy")

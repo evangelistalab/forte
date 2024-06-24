@@ -748,7 +748,7 @@ Default value: False
 CASSCF options
 ==============
 
-**CASSCF_ACTIVE_FROZEN_ORBITAL**
+**MCSCF_ACTIVE_FROZEN_ORBITAL**
 
 A list of active orbitals to be frozen in the MCSCF optimization (in Pitzer order, zero based). Useful when doing core-excited state computations.
 
@@ -756,7 +756,7 @@ Type: int_list
 
 Default value: []
 
-**CASSCF_CI_FREQ**
+**MCSCF_CI_FREQ**
 
 How often to solve CI?
 < 1: do CI in the first macro iteration ONLY
@@ -766,23 +766,15 @@ Type: int
 
 Default value: 1
 
-**CASSCF_CI_SOLVER**
+**MCSCF_CI_STEP**
 
-The active space solver to use in CASSCF
-
-Type: str
-
-Default value: FCI
-
-**CASSCF_CI_STEP**
-
-Do a CAS step for every CASSCF_CI_FREQ
+Do a CAS step for every MCSCF_CI_FREQ
 
 Type: bool
 
 Default value: False
 
-**CASSCF_CI_STEP_START**
+**MCSCF_CI_STEP_START**
 
 When to start skipping CI steps
 
@@ -790,7 +782,7 @@ Type: int
 
 Default value: -1
 
-**CASSCF_DEBUG_PRINTING**
+**MCSCF_DEBUG_PRINTING**
 
 Enable debug printing if True
 
@@ -798,7 +790,7 @@ Type: bool
 
 Default value: False
 
-**CASSCF_DIE_IF_NOT_CONVERGED**
+**MCSCF_DIE_IF_NOT_CONVERGED**
 
 Stop Forte if MCSCF is not converged
 
@@ -806,7 +798,7 @@ Type: bool
 
 Default value: True
 
-**CASSCF_DIIS_FREQ**
+**MCSCF_DIIS_FREQ**
 
 How often to do DIIS extrapolation
 
@@ -814,7 +806,7 @@ Type: int
 
 Default value: 1
 
-**CASSCF_DIIS_MAX_VEC**
+**MCSCF_DIIS_MAX_VEC**
 
 Maximum size of DIIS vectors for orbital rotations
 
@@ -822,7 +814,7 @@ Type: int
 
 Default value: 8
 
-**CASSCF_DIIS_MIN_VEC**
+**MCSCF_DIIS_MIN_VEC**
 
 Minimum size of DIIS vectors for orbital rotations
 
@@ -830,7 +822,7 @@ Type: int
 
 Default value: 3
 
-**CASSCF_DIIS_NORM**
+**MCSCF_DIIS_NORM**
 
 Do DIIS when the orbital gradient norm is below this value
 
@@ -838,7 +830,7 @@ Type: float
 
 Default value: 0.001
 
-**CASSCF_DIIS_START**
+**MCSCF_DIIS_START**
 
 Iteration number to start adding error vectors (< 1 will not do DIIS)
 
@@ -846,7 +838,7 @@ Type: int
 
 Default value: 15
 
-**CASSCF_DO_DIIS**
+**MCSCF_DO_DIIS**
 
 Use DIIS in CASSCF orbital optimization
 
@@ -854,7 +846,7 @@ Type: bool
 
 Default value: True
 
-**CASSCF_E_CONVERGENCE**
+**MCSCF_E_CONVERGENCE**
 
 The energy convergence criterion (two consecutive energies)
 
@@ -862,7 +854,7 @@ Type: float
 
 Default value: 1e-08
 
-**CASSCF_FINAL_ORBITAL**
+**MCSCF_FINAL_ORBITAL**
 
 Constraints for redundant orbital pairs at the end of macro iteration
 
@@ -872,7 +864,7 @@ Default value: CANONICAL
 
 Allowed values: ['CANONICAL', 'NATURAL', 'UNSPECIFIED']
 
-**CASSCF_G_CONVERGENCE**
+**MCSCF_G_CONVERGENCE**
 
 The orbital gradient convergence criterion (RMS of gradient vector)
 
@@ -880,7 +872,7 @@ Type: float
 
 Default value: 1e-07
 
-**CASSCF_INTERNAL_ROT**
+**MCSCF_INTERNAL_ROT**
 
 Keep GASn-GASn orbital rotations if true
 
@@ -888,7 +880,7 @@ Type: bool
 
 Default value: False
 
-**CASSCF_MAXITER**
+**MCSCF_MAXITER**
 
 The maximum number of CASSCF macro iterations
 
@@ -896,7 +888,7 @@ Type: int
 
 Default value: 100
 
-**CASSCF_MAX_ROTATION**
+**MCSCF_MAX_ROTATION**
 
 Max value in orbital update vector
 
@@ -904,7 +896,7 @@ Type: float
 
 Default value: 0.2
 
-**CASSCF_MICRO_MAXITER**
+**MCSCF_MICRO_MAXITER**
 
 The maximum number of CASSCF micro iterations
 
@@ -912,7 +904,7 @@ Type: int
 
 Default value: 40
 
-**CASSCF_MICRO_MINITER**
+**MCSCF_MICRO_MINITER**
 
 The minimum number of CASSCF micro iterations
 
@@ -920,7 +912,7 @@ Type: int
 
 Default value: 6
 
-**CASSCF_MULTIPLICITY**
+**MCSCF_MULTIPLICITY**
 
 Multiplicity for the CASSCF solution (if different from multiplicity)
     You should not use this if you are interested in having a CASSCF
@@ -930,7 +922,7 @@ Type: int
 
 Default value: 0
 
-**CASSCF_NO_ORBOPT**
+**MCSCF_NO_ORBOPT**
 
 No orbital optimization if true
 
@@ -938,7 +930,7 @@ Type: bool
 
 Default value: False
 
-**CASSCF_ORB_ORTHO_TRANS**
+**MCSCF_ORB_ORTHO_TRANS**
 
 Ways to compute the orthogonal transformation U from orbital rotation R
 
@@ -948,7 +940,7 @@ Default value: CAYLEY
 
 Allowed values: ['CAYLEY', 'POWER', 'PADE']
 
-**CASSCF_REFERENCE**
+**MCSCF_REFERENCE**
 
 Run a FCI followed by CASSCF computation?
 
@@ -956,7 +948,7 @@ Type: bool
 
 Default value: False
 
-**CASSCF_SOSCF**
+**MCSCF_SOSCF**
 
 Run a complete SOSCF (form full Hessian)?
 
@@ -964,7 +956,7 @@ Type: bool
 
 Default value: False
 
-**CASSCF_ZERO_ROT**
+**MCSCF_ZERO_ROT**
 
 An array of MOs [[irrep1, mo1, mo2], [irrep2, mo3, mo4], ...]
 

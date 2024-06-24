@@ -71,10 +71,8 @@ set forte {
   maxiter             100
   relax_ref           once
   maxiter_relax_ref   15
+  mcscf_reference    false
 }
-
-energy('scf')
-compare_values(refrohf,variable("CURRENT ENERGY"),10,"ROHF energy") #TEST
 
 energy('forte')
 compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10, "MRDSRG-PT2 relaxed energy") #TEST

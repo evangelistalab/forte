@@ -53,7 +53,22 @@ template <typename T> std::string to_string_with_precision(const T val, const in
     std::ostringstream out;
     out.precision(n);
     out << std::fixed << val;
-    return out.str();
+    auto s = out.str();
+    s.erase(s.find_last_not_of('0') + 1, std::string::npos);
+    if (s.back() == '.') {
+        s.pop_back();
+    }
+    return s;
+}
+
+inline std::string double_to_string_latex(double value) {
+    if (value == -1.0) {
+        return "-";
+    }
+    if (value == 1.0) {
+        return "+";
+    }
+    return (value > 0.0 ? "+" : "") + std::to_string(value);
 }
 
 /// Find a string in a vector of strings in a case insensitive
