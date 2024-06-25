@@ -99,6 +99,9 @@ void MCSCF_2STEP::read_options() {
     if (ci_type_ == "") {
         throw std::runtime_error("ACTIVE_SPACE_SOLVER is not specified!");
     }
+    mci_maxiter_ = options_->get_int("MCSCF_MCI_MAXITER");
+    if (ci_type_ == "BLOCK2")
+        mci_maxiter_ = options_->get_int("BLOCK2_N_TOTAL_SWEEPS");
 
     opt_orbs_ = not options_->get_bool("MCSCF_NO_ORBOPT");
     max_rot_ = options_->get_double("MCSCF_MAX_ROTATION");
@@ -115,9 +118,10 @@ void MCSCF_2STEP::read_options() {
 void MCSCF_2STEP::print_options() {
     // fill in information
     std::vector<std::pair<std::string, int>> info_int{
-        {"Max number of macro iterations", maxiter_},
-        {"Max number of micro iterations", micro_maxiter_},
-        {"Min number of micro iterations", micro_miniter_}};
+        {"Max number of macro iter.", maxiter_},
+        {"Max number of micro iter. for orbitals", micro_maxiter_},
+        {"Min number of micro iter. for orbitals", micro_miniter_},
+        {"Max number of micro iter. for CI", mci_maxiter_}};
 
     std::vector<std::pair<std::string, std::string>> info_string;
 
@@ -182,14 +186,16 @@ double MCSCF_2STEP::compute_energy() {
     // convergence for final CI
     auto r_conv = options_->get_double("R_CONVERGENCE");
     auto as_maxiter = options_->get_int("DL_MAXITER");
+    if (ci_type_ == "BLOCK2")
+        as_maxiter = options_->get_int("BLOCK2_N_TOTAL_SWEEPS");
 
     auto active_space_ints = cas_grad.active_space_ints();
     as_solver_->set_active_space_integrals(active_space_ints);
 
-    as_solver_->set_print(PrintLevel::Quiet);
+    as_solver_->set_print(PrintLevel::Default);
     as_solver_->set_e_convergence(e_conv_);
     as_solver_->set_r_convergence(r_conv);
-    as_solver_->set_maxiter(no_orb_opt ? as_maxiter : 15);
+    as_solver_->set_maxiter(no_orb_opt ? as_maxiter : mci_maxiter_);
 
     // initial CI and resulting RDMs
     const auto state_energies_map = as_solver_->compute_energy();
@@ -244,8 +250,8 @@ double MCSCF_2STEP::compute_energy() {
         }
 
         // CI solver set up
-        bool restart = (ci_type_ == "FCI" or ci_type_ == "DETCI" or ci_type_ == "CAS");
-        as_solver_->set_maxiter(restart ? 15 : as_maxiter);
+        bool restart = (ci_type_ == "FCI" or ci_type_ == "DETCI");
+        as_solver_->set_maxiter(restart ? mci_maxiter_ : as_maxiter);
 
         // CI convergence criteria along the way
         double dl_e_conv = 5.0e-7;
@@ -253,15 +259,11 @@ double MCSCF_2STEP::compute_energy() {
 
         // start iterations
         lbfgs_param->maxiter = micro_miniter_;
+        int bad_count = 0;
         bool skip_de_conv = (ci_type_.find("DMRG") != std::string::npos or
                              ci_type_.find("BLOCK2") != std::string::npos);
 
         std::vector<MCSCF_HISTORY> history;
-
-        // std::string title = "         Energy CI (  Delta E  )"
-        //                     "         Energy Opt. (  Delta E  )"
-        //                     "  E_OPT - E_CI   Orbital RMS  Micro";
-        // psi::outfile->Printf("\n    %s", title.c_str());
 
         print_h2("MCSCF Iterations");
         std::string dash1 = std::string(30, '-');
@@ -301,20 +303,14 @@ double MCSCF_2STEP::compute_energy() {
 
             // print data of this iteration
             if (print_ >= PrintLevel::Verbose) {
-                print_h2("MCSCF Macro Iter. " + std::to_string(macro));
-                std::string title = "         Energy CI (  Delta E  )"
-                                    "         Energy Opt. (  Delta E  )"
-                                    "  E_OPT - E_CI   Orbital RMS  Micro";
+                std::string title = "Iter.        Total Energy       Delta        Total Energy     "
+                                    "  Delta  Orb. Grad.  Micro";
                 if (do_diis_)
                     title += "  DIIS";
-                psi::outfile->Printf("\n    %s", title.c_str());
+                psi::outfile->Printf("\n\n    %s", title.c_str());
             }
             psi::outfile->Printf("\n    %4d %20.12f %11.4e%20.12f %11.4e  %10.4e %4d/%c", macro + 1,
                                  e_c, de_c, e_o, de_o, g_rms, n_micro, o_conv);
-
-            // psi::outfile->Printf("\n    %18.12f (%11.4e)  %18.12f (%11.4e)  %12.4e  %12.4e
-            // %4d/%c",
-            //                      e_c, de_c, e_o, de_o, de, g_rms, n_micro, o_conv);
 
             // test convergence
             if (macro == 1 and lbfgs.converged() and std::fabs(de) < e_conv_) {
@@ -338,26 +334,59 @@ double MCSCF_2STEP::compute_energy() {
 
             // test history
             bool reset_diis = false;
-            int increase_lbfgs = 0;
-            if (macro > 6) {
-                if (macro > maxiter_ * 3 / 2) {
-                    int n_samples = 20 < maxiter_ / 2 ? 20 : maxiter_ / 2;
-                    if (not test_history(history, n_samples)) {
-                        psi::outfile->Printf(
-                            "\n\n  MCSCF does not seem to be converging! Quitting!");
-                        break;
+            if (macro > 6 and
+                (de_o > 0.0 or de_c > 0.0 or (g_rms / history[macro - 2].g_rms > 1.0)))
+                ++bad_count;
+            if (bad_count > 5) {
+                reset_diis = true;
+                mci_maxiter_ += 5;
+                as_solver_->set_maxiter(mci_maxiter_);
+                bad_count = 0;
+            }
+            if (ci_type_ == "BLOCK2" or ci_type_ == "DMRG") {
+                if (std::fabs(de_c) < 1.0e-2 or g_rms < 1.0e-3) {
+                    options_->set_bool("READ_ACTIVE_WFN_GUESS", true);
+                    mci_maxiter_ = 16;
+                    // focus on the last bond dimension
+                    if (ci_type_ == "BLOCK2") {
+                        auto nsweeps = options_->get_int_list("BLOCK2_SWEEP_N_SWEEPS");
+                        auto bond_dims = options_->get_int_list("BLOCK2_SWEEP_BOND_DIMS");
+                        auto noises = options_->get_double_list("BLOCK2_SWEEP_NOISES");
+                        auto dltols = options_->get_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS");
+                        if (bond_dims.size() == 0) {
+                            options_->set_int_list("BLOCK2_SWEEP_BOND_DIMS", {500});
+                            options_->set_int_list("BLOCK2_SWEEP_N_SWEEPS", {10});
+                            options_->set_double_list("BLOCK2_SWEEP_NOISES", {0.0});
+                            options_->set_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS", {1.0e-8});
+                        } else {
+                            auto bond_dim = bond_dims.back();
+                            options_->set_int_list("BLOCK2_SWEEP_BOND_DIMS",
+                                                   {bond_dim, bond_dim, bond_dim});
+                            options_->set_int_list("BLOCK2_SWEEP_N_SWEEPS", {4, 4, 6});
+                            options_->set_double_list("BLOCK2_SWEEP_NOISES", {1.0e-6, 1.0e-7, 0.0});
+                            options_->set_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS",
+                                                      {1.0e-7, 1.0e-8, 1.0e-9});
+                        }
+                    } else {
+                        auto nsweeps = options_->get_int_list("DMRG_SWEEP_MAX_SWEEPS");
+                        auto bond_dims = options_->get_int_list("DMRG_SWEEP_STATES");
+                        auto noises = options_->get_double_list("DMRG_SWEEP_NOISE_PREFAC");
+                        auto dltols = options_->get_double_list("DMRG_SWEEP_DVDSON_RTOL");
+                        auto etols = options_->get_double_list("DMRG_SWEEP_ENERGY_CONV");
+                        auto bond_dim = bond_dims.back();
+                        options_->set_int_list("DMRG_SWEEP_MAX_SWEEPS",
+                                               {bond_dim, bond_dim, bond_dim});
+                        options_->set_int_list("DMRG_SWEEP_MAX_SWEEPS", {4, 4, 6});
+                        options_->set_double_list("DMRG_SWEEP_NOISE_PREFAC", {1.0e-2, 5.0e-3, 0.0});
+                        options_->set_double_list("DMRG_SWEEP_DVDSON_RTOL",
+                                                  {1.0e-5, 1.0e-6, 1.0e-7});
+                        options_->set_double_list("DMRG_SWEEP_ENERGY_CONV",
+                                                  {1.0e-6, 1.0e-7, 1.0e-8});
                     }
-                }
-                if (not test_history(history, 5 + macro / 6)) {
-                    reset_diis = true;
-                    increase_lbfgs = (lbfgs_param->maxiter + 2) < micro_maxiter_ ? 2 : 0;
                 } else {
-                    increase_lbfgs = lbfgs_param->maxiter > micro_miniter_ ? -1 : 0;
+                    as_solver_->set_maxiter(++mci_maxiter_);
                 }
             }
-
-            // adjust max number micro iterations
-            lbfgs_param->maxiter += increase_lbfgs;
 
             // DIIS for orbitals
             if (do_diis_) {

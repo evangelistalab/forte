@@ -1288,6 +1288,10 @@ MCSCF:
     type: int
     default: 6
     help: "The minimum number of MCSCF micro iterations"
+  MCSCF_MCI_MAXITER:
+    type: int
+    default: 12
+    help: "The maximum number of micro CI iterations in every macro iteration"
   CPSCF_MAXITER:
     type: int
     default: 50

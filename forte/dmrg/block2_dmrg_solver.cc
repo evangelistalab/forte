@@ -229,10 +229,6 @@ Block2DMRGSolver::Block2DMRGSolver(StateInfo state, size_t nroot, std::shared_pt
     bool is_spin_adapted =
         as_ints->ints()->spin_restriction() == IntegralSpinRestriction::Restricted &&
         options_->get_bool("BLOCK2_SPIN_ADAPTED");
-    print_method_banner(
-        {is_spin_adapted ? "block2 DMRG (spin-adapted)" : "block2 DMRG (non-spin-adapted)",
-         "by Huanchen Zhai", "Jan 14-16, 2023"});
-    psi::outfile->Printf("\n    Reference: H. Zhai & G. K. Chan J. Chem. Phys. 2021, 154, 224116.");
     std::string scratch = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
                           std::to_string(getpid()) + ".block2." +
                           psi::Process::environment.molecule()->name();
@@ -240,6 +236,7 @@ Block2DMRGSolver::Block2DMRGSolver(StateInfo state, size_t nroot, std::shared_pt
     impl_ = make_shared<Block2DMRGSolverImpl>(is_spin_adapted, 1024LL, scratch);
     na_ = state.na() - mo_space_info->size("INACTIVE_DOCC");
     nb_ = state.nb() - mo_space_info->size("INACTIVE_DOCC");
+    maxiter_ = options_->get_int("BLOCK2_N_TOTAL_SWEEPS");
 }
 
 Block2DMRGSolver::~Block2DMRGSolver() {
@@ -256,6 +253,14 @@ Block2DMRGSolver::~Block2DMRGSolver() {
 }
 
 double Block2DMRGSolver::compute_energy() {
+    if (print_ > PrintLevel::Quiet) {
+        print_method_banner({impl_->is_spin_adapted_ ? "block2 DMRG (spin-adapted)"
+                                                     : "block2 DMRG (non-spin-adapted)",
+                             "by Huanchen Zhai", "Jan 14-16, 2023"});
+        psi::outfile->Printf(
+            "\n    Reference: H. Zhai & G. K. Chan J. Chem. Phys. 2021, 154, 224116.");
+    }
+
     timer t("BLOCK2 Solver Compute Energy");
 
     // reset stack memory
@@ -321,7 +326,6 @@ double Block2DMRGSolver::compute_energy() {
     // dmrg sweep settings
     double e_conv = dmrg_options_->get_double("BLOCK2_SWEEP_ENERGY_CONV");
     double mps_cutoff = dmrg_options_->get_double("BLOCK2_CUTOFF");
-    int n_total_sweeps = dmrg_options_->get_int("BLOCK2_N_TOTAL_SWEEPS");
     std::vector<int> sweep_n_sweeps = dmrg_options_->get_int_list("BLOCK2_SWEEP_N_SWEEPS");
     std::vector<int> sweep_bond_dims = dmrg_options_->get_int_list("BLOCK2_SWEEP_BOND_DIMS");
     std::vector<double> sweep_noises = dmrg_options_->get_double_list("BLOCK2_SWEEP_NOISES");
@@ -346,7 +350,7 @@ double Block2DMRGSolver::compute_energy() {
             sweep_bond_dims.push_back(sweep_bond_dims.back());
     while (sweep_n_sweeps.size() < n_schedule)
         if (n_schedule == 1)
-            sweep_n_sweeps.push_back(n_total_sweeps == 0 ? 10 : n_total_sweeps);
+            sweep_n_sweeps.push_back(maxiter_ == 0 ? 10 : maxiter_);
         else
             sweep_n_sweeps.push_back(6);
 
@@ -363,10 +367,31 @@ double Block2DMRGSolver::compute_energy() {
         }
     }
 
-    if (n_total_sweeps == 0)
-        n_total_sweeps = n_total_cnt;
+    if (maxiter_ == 0)
+        maxiter_ = n_total_cnt;
 
     bool read_initial_guess = options_->get_bool("READ_ACTIVE_WFN_GUESS");
+
+    if (read_initial_guess) {
+        if (fs::is_empty(impl_->scratch_)) {
+            fs::path dir_from{"block2.o" + std::to_string(mo_space_info_->size("ACTIVE")) + "." +
+                              state_.str_short()};
+            fs::path dir_to{impl_->scratch_};
+            if (fs::exists(dir_from)) {
+                psi::outfile->Printf("\n  Copying block2 files to scratch directory");
+                for (const auto& file : fs::directory_iterator(dir_from)) {
+                    if (file.path().filename().string().find("KET") != std::string::npos and
+                        file.path().filename().string().find(state_.str_short()) !=
+                            std::string::npos) {
+                        fs::copy_file(file.path(), dir_to / file.path().filename(),
+                                      fs::copy_options::overwrite_existing);
+                    }
+                }
+            } else {
+                read_initial_guess = false;
+            }
+        }
+    }
 
     // print sweep schedule
     if (print_ >= PrintLevel::Default) {
@@ -383,7 +408,7 @@ double Block2DMRGSolver::compute_energy() {
         psi::outfile->Printf("\n    Davidson tols  = ");
         for (auto& x : sweep_davidson_tols)
             psi::outfile->Printf("%10.2E", x);
-        psi::outfile->Printf("\n    N total sweeps = %10d", n_total_sweeps);
+        psi::outfile->Printf("\n    N total sweeps = %10d", maxiter_);
         psi::outfile->Printf("\n    E convergence  = %10.2E", e_conv);
         psi::outfile->Printf("\n    Cutoff         = %10.2E", mps_cutoff);
         psi::outfile->Printf("\n    Initial guess  = %10s", (read_initial_guess ? "load" : "new"));
@@ -452,7 +477,7 @@ double Block2DMRGSolver::compute_energy() {
 
     // do dmrg
     auto mpo = impl_->get_mpo(r, dmrg_verbose);
-    energies_ = impl_->dmrg(mpo, ket, n_total_sweeps, e_conv, bond_dims, noises, davidson_tols,
+    energies_ = impl_->dmrg(mpo, ket, maxiter_, e_conv, bond_dims, noises, davidson_tols,
                             dmrg_verbose, mps_cutoff);
 
     // compute <S^2>
@@ -729,6 +754,20 @@ void Block2DMRGSolver::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_sp
     psi::outfile->Printf("\n");
 }
 
+void Block2DMRGSolver::dump_wave_function(const std::string&) {
+    // create a folder for the wave function
+    fs::path folder{"block2.o" + std::to_string(mo_space_info_->size("ACTIVE")) + "." +
+                    state_.str_short()};
+    fs::create_directory(folder);
+    // copy KET files to the folder
+    for (const auto& file : fs::directory_iterator(impl_->scratch_)) {
+        if (file.path().filename().string().find("KET") != std::string::npos and
+            file.path().filename().string().find(state_.str_short()) != std::string::npos) {
+            fs::copy_file(file.path(), folder / file.path().filename(),
+                          fs::copy_options::overwrite_existing);
+        }
+    }
+}
 } // namespace forte
 
 #endif // HAVE_BLOCK2
