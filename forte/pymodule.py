@@ -39,7 +39,6 @@ from forte.modules import (
     OptionsFactory,
     ObjectsFromFCIDUMP,
     ObjectsFromPsi4,
-    ObjectsFromPySCF,
     ActiveSpaceInts,
     ActiveSpaceSolver,
     ActiveSpaceRDMs,
@@ -47,6 +46,12 @@ from forte.modules import (
     MCSCF,
     TDACI,
 )
+
+try:
+    from forte.modules import ObjectsFromPySCF
+except ImportError:
+    pass
+
 from forte.proc.external_active_space_solver import (
     write_external_active_space_file,
     write_external_rdm_file,
@@ -101,13 +106,15 @@ def forte_driver(data: ForteData):
         write_external_rdm_file(data.rdms, data.active_space_solver)
 
     if options.get_bool("SPIN_ANALYSIS"):
-        data = ActiveSpaceRDMs(max_rdm_level=2, rdms_type=forte.RDMsType.spin_dependent).run(data)
+        data = ActiveSpaceRDMs(
+            max_rdm_level=2, rdms_type=forte.RDMsType.spin_dependent).run(data)
         forte.perform_spin_analysis(data.rdms, options, mo_space_info, as_ints)
 
     # solver for dynamical correlation from DSRG
     correlation_solver_type = options.get_str("CORRELATION_SOLVER")
     if correlation_solver_type != "NONE":
-        dsrg_proc = ProcedureDSRG(data.active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
+        dsrg_proc = ProcedureDSRG(
+            data.active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
         return_en = dsrg_proc.compute_energy()
         dsrg_proc.print_summary()
         dsrg_proc.push_to_psi4_environment()
@@ -118,13 +125,15 @@ def forte_driver(data: ForteData):
             #          DSRG reads consistent CI coefficients before and after SemiCanonical class.
             #       2. This is OK only when running ground-state calculations
             state = list(state_map.keys())[0]
-            psi4.core.print_out(f"\n  ==> Coupling Coefficients for {state} <==")
+            psi4.core.print_out(
+                f"\n  ==> Coupling Coefficients for {state} <==")
             ci_vectors = data.active_space_solver.eigenvectors(state)
             dsrg_proc.compute_gradient(ci_vectors)
         else:
             psi4.core.print_out("\n  Semicanonical orbitals must be used!\n")
     else:
-        average_energy = forte.compute_average_state_energy(state_energies_list, state_weights_map)
+        average_energy = forte.compute_average_state_energy(
+            state_energies_list, state_weights_map)
         return_en = average_energy
 
     return return_en
@@ -163,8 +172,9 @@ def energy_forte(name, **kwargs):
     if "FCIDUMP" in data.options.get_str("INT_TYPE"):
         data = ObjectsFromFCIDUMP(options=kwargs).run(data)
     elif data.options.get_str("INT_TYPE") == "PYSCF":
-        data = ObjectsFromPySCF(kwargs.get("pyscf_obj"), options=kwargs).run(data)
-        #data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER")).run(data)
+        data = ObjectsFromPySCF(kwargs.get("pyscf_obj"),
+                                options=kwargs).run(data)
+        # data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER")).run(data)
     else:
         data = ObjectsFromPsi4(**kwargs).run(data)
 
@@ -181,7 +191,8 @@ def energy_forte(name, **kwargs):
     # if data.options.get_str("INT_TYPE") == "FCIDUMP":
     #     psi4.core.print_out("\n\n  Skipping MCSCF computation. Using integrals from FCIDUMP input\n")
     if data.options.get_bool("MCSCF_REFERENCE") is False:
-        psi4.core.print_out("\n\n  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn\n")
+        psi4.core.print_out(
+            "\n\n  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn\n")
     else:
         active_space_solver_type = data.options.get_str("ACTIVE_SPACE_SOLVER")
         mcscf_freeze_core = data.options.get_bool("MCSCF_FREEZE_CORE")
@@ -230,9 +241,12 @@ def energy_forte(name, **kwargs):
 
     psi4.core.set_scalar_variable("CURRENT ENERGY", energy)
 
-    psi4.core.print_out(f"\n\n  Time to prepare integrals: {start - start_pre_ints:12.3f} seconds")
-    psi4.core.print_out(f"\n  Time to run job          : {end - start:12.3f} seconds")
-    psi4.core.print_out(f"\n  Total                    : {end - start_pre_ints:12.3f} seconds\n")
+    psi4.core.print_out(
+        f"\n\n  Time to prepare integrals: {start - start_pre_ints:12.3f} seconds")
+    psi4.core.print_out(
+        f"\n  Time to run job          : {end - start:12.3f} seconds")
+    psi4.core.print_out(
+        f"\n  Total                    : {end - start_pre_ints:12.3f} seconds\n")
 
     if "FCIDUMP" not in data.options.get_str("INT_TYPE"):
         if data.options.get_bool("DUMP_ORBITALS"):
@@ -279,7 +293,8 @@ def gradient_forte(name, **kwargs):
     # Make an integral object
     time_pre_ints = time.time()
 
-    data.ints = forte.make_ints_from_psi4(data.psi_wfn, data.options, data.mo_space_info)
+    data.ints = forte.make_ints_from_psi4(
+        data.psi_wfn, data.options, data.mo_space_info)
 
     start = time.time()
 
@@ -322,8 +337,10 @@ def gradient_forte(name, **kwargs):
     ]
     max_key_size = max(len(k) for k, v in times)
     for key, value in times:
-        psi4.core.print_out(f"\n  Time to {key:{max_key_size}} : {value:12.3f} seconds")
-    psi4.core.print_out(f'\n  {"Total":{max_key_size + 8}} : {end - time_pre_ints:12.3f} seconds\n')
+        psi4.core.print_out(
+            f"\n  Time to {key:{max_key_size}} : {value:12.3f} seconds")
+    psi4.core.print_out(
+        f'\n  {"Total":{max_key_size + 8}} : {end - time_pre_ints:12.3f} seconds\n')
 
     # Dump orbitals if needed
     if data.options.get_bool("DUMP_ORBITALS"):
@@ -357,14 +374,17 @@ def mr_dsrg_pt2(job_type, data):
         raise Exception("Forte: VCIS/VCISD is not supported for MR-DSRG-PT2")
     max_rdm_level = 2 if options.get_str("THREEPDC") == "ZERO" else 3
     data = ActiveSpaceInts(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
-    ci = forte.make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, options, data.as_ints)
+    ci = forte.make_active_space_solver(
+        cas_type, state_map, scf_info, mo_space_info, options, data.as_ints)
     ci.compute_energy()
 
-    rdms = ci.compute_average_rdms(state_weights_map, max_rdm_level, forte.RDMsType.spin_dependent)
+    rdms = ci.compute_average_rdms(
+        state_weights_map, max_rdm_level, forte.RDMsType.spin_dependent)
     inactive_mix = options.get_bool("SEMI_CANONICAL_MIX_INACTIVE")
     active_mix = options.get_bool("SEMI_CANONICAL_MIX_ACTIVE")
     # Semi-canonicalize orbitals and rotation matrices
-    semi = forte.SemiCanonical(mo_space_info, ints, options, inactive_mix, active_mix)
+    semi = forte.SemiCanonical(
+        mo_space_info, ints, options, inactive_mix, active_mix)
     semi.semicanonicalize(rdms)
 
     mcsrgpt2_mo = forte.MCSRGPT2_MO(rdms, options, ints, mo_space_info)
