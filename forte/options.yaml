@@ -1075,6 +1075,10 @@ DSRG:
     type: bool
     default: False
     help: "Form full Hbar."
+  DO_WICKED:
+    type: bool
+    default: False
+    help: "Compute hbar with Wicked. (only for spin orbital ldsrg2)."
   FORM_HBAR3:
     type: bool
     default: False

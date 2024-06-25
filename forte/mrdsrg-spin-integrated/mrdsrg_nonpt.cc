@@ -825,6 +825,10 @@ double MRDSRG::compute_energy_ldsrg2() {
     // dump amplitudes to file
     dump_amps_to_disk();
 
+    if (foptions_->get_bool("FULL_HBAR")) {
+        compute_hbar();
+    }
+
     final.stop();
 
     Hbar0_ = Ecorr;

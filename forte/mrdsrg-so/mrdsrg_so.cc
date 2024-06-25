@@ -1485,6 +1485,7 @@ void MRDSRG_SO::H3_T2_C2(BlockedTensor& H3, BlockedTensor& T2, const double& alp
     C2["toqr"] -= alpha * temp["mx"] * H3["xtomqr"];
 }
 std::vector<ambit::BlockedTensor> MRDSRG_SO::compute_Heff_full() {
+    compute_hbar();
     std::vector<ambit::BlockedTensor> Heff = {Hbar1, Hbar2};
     return Heff;
 }
