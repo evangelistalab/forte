@@ -167,7 +167,7 @@ bool SemiCanonical::check_orbitals(std::shared_ptr<RDMs> rdms, const bool& nat_o
             if (npi.sum() != 0) {
                 outfile->Printf("\n    %-15s              %10s", name.c_str(), nat.c_str());
             }
-        } else if (name.find("ACTIVE") != std::string::npos) {
+        } else if (name == "ACTIVE") {
             outfile->Printf("\n    %-15s              %10s", name.c_str(), nat.c_str());
         } else {
             outfile->Printf("\n    %-15s              %10s", name.c_str(), "CANONICAL");
