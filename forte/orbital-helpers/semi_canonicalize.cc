@@ -163,12 +163,10 @@ bool SemiCanonical::check_orbitals(std::shared_ptr<RDMs> rdms, const bool& nat_o
     // print orbitals requested
     std::string nat = nat_orb ? "NATURAL" : "CANONICAL";
     for (const auto& [name, npi] : mo_dims_) {
-        if (name.find("GAS") != std::string::npos) {
+        if (mo_space_info_->contained_in_space(name, "ACTIVE")) {
             if (npi.sum() != 0) {
                 outfile->Printf("\n    %-15s              %10s", name.c_str(), nat.c_str());
             }
-        } else if (name == "ACTIVE") {
-            outfile->Printf("\n    %-15s              %10s", name.c_str(), nat.c_str());
         } else {
             outfile->Printf("\n    %-15s              %10s", name.c_str(), "CANONICAL");
         }
