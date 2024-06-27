@@ -429,9 +429,6 @@ double MCSCF_2STEP::compute_energy() {
 
         diis_manager.reset_subspace();
         diis_manager.delete_diis_file();
-
-        // print summary
-        // print_macro_iteration(history);
     }
 
     // perform final CI using converged orbitals
