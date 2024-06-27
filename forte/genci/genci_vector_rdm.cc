@@ -642,7 +642,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                     sign *= J.create_alfa_bit(p);
                     if (sign != 0) {
                         if (state_vector_l.count(J) != 0) {
-                            rdm += sign * state_vector_l[J] * c_I;
+                            rdm += sign * to_double(state_vector_l[J] * c_I);
                         }
                     }
                 }
@@ -662,7 +662,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                     sign *= J.create_beta_bit(p);
                     if (sign != 0) {
                         if (state_vector_l.count(J) != 0) {
-                            rdm += sign * state_vector_l[J] * c_I;
+                            rdm += sign * to_double(state_vector_l[J] * c_I);
                         }
                     }
                 }
@@ -714,7 +714,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                             sign *= J.create_alfa_bit(p);
                             if (sign != 0) {
                                 if (state_vector_l.count(J) != 0) {
-                                    rdm += sign * state_vector_l[J] * c_I;
+                                    rdm += sign * to_double(state_vector_l[J] * c_I);
                                 }
                             }
                         }
@@ -744,7 +744,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                             sign *= J.create_beta_bit(p);
                             if (sign != 0) {
                                 if (state_vector_l.count(J) != 0) {
-                                    rdm += sign * state_vector_l[J] * c_I;
+                                    rdm += sign * to_double(state_vector_l[J] * c_I);
                                 }
                             }
                         }
@@ -774,7 +774,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                             sign *= J.create_alfa_bit(p);
                             if (sign != 0) {
                                 if (state_vector_l.count(J) != 0) {
-                                    rdm += sign * state_vector_l[J] * c_I;
+                                    rdm += sign * to_double(state_vector_l[J] * c_I);
                                 }
                             }
                         }
@@ -811,7 +811,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                                     sign *= J.create_alfa_bit(p);
                                     if (sign != 0) {
                                         if (state_vector_l.count(J) != 0) {
-                                            rdm += sign * state_vector_l[J] * c_I;
+                                            rdm += sign * to_double(state_vector_l[J] * c_I);
                                         }
                                     }
                                 }
@@ -848,7 +848,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                                     sign *= J.create_alfa_bit(p);
                                     if (sign != 0) {
                                         if (state_vector_l.count(J) != 0) {
-                                            rdm += sign * state_vector_l[J] * c_I;
+                                            rdm += sign * to_double(state_vector_l[J] * c_I);
                                         }
                                     }
                                 }
@@ -885,7 +885,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                                     sign *= J.create_alfa_bit(p);
                                     if (sign != 0) {
                                         if (state_vector_l.count(J) != 0) {
-                                            rdm += sign * state_vector_l[J] * c_I;
+                                            rdm += sign * to_double(state_vector_l[J] * c_I);
                                         }
                                     }
                                 }
@@ -923,7 +923,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                                     sign *= J.create_beta_bit(p);
                                     if (sign != 0) {
                                         if (state_vector_l.count(J) != 0) {
-                                            rdm += sign * state_vector_l[J] * c_I;
+                                            rdm += sign * to_double(state_vector_l[J] * c_I);
                                         }
                                     }
                                 }

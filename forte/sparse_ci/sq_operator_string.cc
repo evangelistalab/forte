@@ -466,8 +466,8 @@ std::vector<std::pair<SQOperatorString, double>> commutator(const SQOperatorStri
 #define debug_print(x) ; // std::cout << #x << ": " << x << std::endl;
 
 void SQOperatorProductComputer::product(
-    const SQOperatorString& lhs, const SQOperatorString& rhs, double factor,
-    std::function<void(const SQOperatorString&, const double)> func) {
+    const SQOperatorString& lhs, const SQOperatorString& rhs, sparse_scalar_t factor,
+    std::function<void(const SQOperatorString&, const sparse_scalar_t)> func) {
 
     // apologies to those who read this code, it's meant to be fast, not readable.
 
@@ -612,8 +612,8 @@ void SQOperatorProductComputer::product(
 }
 
 void SQOperatorProductComputer::commutator(
-    const SQOperatorString& lhs, const SQOperatorString& rhs, double factor,
-    std::function<void(const SQOperatorString&, const double)> func) {
+    const SQOperatorString& lhs, const SQOperatorString& rhs, sparse_scalar_t factor,
+    std::function<void(const SQOperatorString&, const sparse_scalar_t)> func) {
     product(lhs, rhs, factor, func);
     product(rhs, lhs, -factor, func);
 }

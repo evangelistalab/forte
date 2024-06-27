@@ -31,13 +31,15 @@
 #include <vector>
 #include <unordered_map>
 
+#include "sparse_ci/sparse.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/sparse_operator.h"
 
 namespace forte {
 
 /// @brief A class to represent general Fock space states
-class SparseState : public VectorSpace<SparseState, Determinant, double, Determinant::Hash> {
+class SparseState
+    : public VectorSpace<SparseState, Determinant, sparse_scalar_t, Determinant::Hash> {
   public:
     /// @return a string representation of the object
     /// @param n the number of spatial orbitals to print
@@ -62,13 +64,13 @@ SparseState apply_operator_antiherm(const SparseOperator& op, const SparseState&
                                     double screen_thresh = 1.0e-12);
 
 /// compute the projection  <state0 | op | ref>, for each operator op in gop
-std::vector<double> get_projection(const SparseOperatorList& sop, const SparseState& ref,
-                                   const SparseState& state0);
+std::vector<sparse_scalar_t> get_projection(const SparseOperatorList& sop, const SparseState& ref,
+                                            const SparseState& state0);
 
 /// apply the number projection operator P^alpha_na P^beta_nb |state>
 SparseState apply_number_projector(int na, int nb, const SparseState& state);
 
 /// compute the overlap value <left_state|right_state>
-double overlap(const SparseState& left_state, const SparseState& right_state);
+sparse_scalar_t overlap(const SparseState& left_state, const SparseState& right_state);
 
 } // namespace forte

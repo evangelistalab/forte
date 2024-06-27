@@ -32,6 +32,7 @@
 #include <functional>
 #include <vector>
 
+#include "sparse_ci/sparse.h"
 #include "sparse_ci/determinant.h"
 
 namespace forte {
@@ -128,10 +129,11 @@ class SQOperatorString {
 class SQOperatorProductComputer {
   public:
     SQOperatorProductComputer() = default;
-    void product(const SQOperatorString& lhs, const SQOperatorString& rhs, double factor,
-                 std::function<void(const SQOperatorString&, const double)> func);
-    void commutator(const SQOperatorString& lhs, const SQOperatorString& rhs, double factor,
-                    std::function<void(const SQOperatorString&, const double)> func);
+    void product(const SQOperatorString& lhs, const SQOperatorString& rhs, sparse_scalar_t factor,
+                 std::function<void(const SQOperatorString&, const sparse_scalar_t)> func);
+    void commutator(const SQOperatorString& lhs, const SQOperatorString& rhs,
+                    sparse_scalar_t factor,
+                    std::function<void(const SQOperatorString&, const sparse_scalar_t)> func);
 
   private:
     constexpr static size_t max_contracted_ops_ = 32;
@@ -142,7 +144,7 @@ class SQOperatorProductComputer {
     Determinant ucon_rhs_cre_;
     Determinant con_rhs_cre_;
     Determinant ucon_rhs_ann_;
-    double phase_;
+    sparse_scalar_t phase_;
     std::vector<short> set_bits_ = std::vector<short>(max_contracted_ops_, 0);
     std::bitset<max_contracted_ops_> sign_;
 };
