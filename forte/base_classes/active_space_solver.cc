@@ -62,13 +62,14 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
     : method_(method), state_nroots_map_(state_nroots_map), scf_info_(scf_info),
       mo_space_info_(mo_space_info), options_(options), as_ints_(as_ints) {
 
-    // print_options();
-
     print_ = int_to_print_level(options->get_int("PRINT"));
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
     read_initial_guess_ = options->get_bool("READ_ACTIVE_WFN_GUESS");
     gas_diff_only_ = options->get_bool("PRINT_DIFFERENT_GAS_ONLY");
+
+    if (options->get_str("ACTIVE_SPACE_SOLVER") == "BLOCK2")
+        maxiter_ = options_->get_int("BLOCK2_N_TOTAL_SWEEPS");
 
     auto nactv = mo_space_info_->size("ACTIVE");
     Ua_actv_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nactv, nactv});
