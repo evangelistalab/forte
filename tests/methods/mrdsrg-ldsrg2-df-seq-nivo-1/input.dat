@@ -81,11 +81,9 @@ set forte {
   dsrg_read_amps         true
   dsrg_diis_start        1
   dsrg_rsc_ncomm         4
+  mcscf_reference       false
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refrohf,variable("CURRENT ENERGY"),10,"ROHF energy")
-
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(refudsrg, variable("UNRELAXED ENERGY"), 6, "MRDSRG unrelaxed energy")
 compare_values(refprdsrg, variable("PARTIALLY RELAXED ENERGY"), 6, "MRDSRG partially relaxed energy")

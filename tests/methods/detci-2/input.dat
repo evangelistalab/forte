@@ -34,6 +34,7 @@ set forte {
   GAS1MAX [2,1]
   GAS1MIN [0,0]
   avg_state [[0,1,1],[0,1,1]] #For same symmetry and different GAS
+  mcscf_reference false
 }
 
 egas = energy('forte', ref_wfn=wfn)

@@ -1,10 +1,7 @@
-#! This tests the Adaptive-CI procedure using energy selection
-#! Generated using commit GITCOMMIT
-#
+# This tests the Adaptive-CI procedure using energy selection
 
 import forte
 
-refscf = -2.0310813811962456 #TEST
 refaci = -2.115455548674 #TEST
 refacipt2 = -2.116454734743 #TEST
 spin_val = 1.02027340
@@ -40,13 +37,10 @@ set forte {
   aci_nbatch 2
   spin_analysis true
   spin_test true
+  mcscf_reference false
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-
-compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
-
-energy('forte', ref_wfn=wfn)
+energy('forte')
 compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST
 compare_values(spin_val, variable("SPIN CORRELATION TEST"),7, "Spin Correlation") #TEST

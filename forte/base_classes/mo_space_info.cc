@@ -67,6 +67,22 @@ std::string MOSpaceInfo::str() const {
     return s;
 }
 
+size_t MOSpaceInfo::nirrep() const { return nirrep_; }
+
+const std::vector<std::string>& MOSpaceInfo::irrep_labels() const {
+    return symmetry_.irrep_labels();
+}
+
+const std::string& MOSpaceInfo::irrep_label(size_t h) const { return symmetry_.irrep_label(h); }
+
+std::string MOSpaceInfo::point_group_label() const { return symmetry_.point_group_label(); }
+
+const std::vector<std::string>& MOSpaceInfo::space_names() const { return elementary_spaces_; }
+
+std::map<std::string, std::vector<std::string>> MOSpaceInfo::composite_space_names() const {
+    return composite_spaces_;
+}
+
 size_t MOSpaceInfo::size(const std::string& space) const {
     size_t s = 0;
     if (composite_spaces_.count(space) == 0) {
@@ -99,7 +115,7 @@ psi::Dimension MOSpaceInfo::dimension(const std::string& space) const {
 std::vector<int> MOSpaceInfo::symmetry(const std::string& space) const {
     psi::Dimension dims = dimension(space);
     std::vector<int> result;
-    for (int h = 0; h < dims.n(); ++h) {
+    for (size_t h = 0; h < dims.n(); ++h) {
         fill_n(back_inserter(result), dims[h], h); // insert h for dims[h] times
     }
     return result;
@@ -320,6 +336,8 @@ void MOSpaceInfo::read_from_map(const std::map<std::string, std::vector<size_t>>
         }
     }
 }
+
+const std::vector<size_t>& MOSpaceInfo::reorder() const { return reorder_; }
 
 void MOSpaceInfo::set_reorder(const std::vector<size_t>& reorder) { reorder_ = reorder; }
 

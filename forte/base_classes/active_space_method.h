@@ -161,12 +161,17 @@ class ActiveSpaceMethod {
     /// Compute the overlap of two wave functions acted by complementary operators
     /// Return a map from state to roots of values
     /// Computes the overlap of \sum_{p} \sum_{σ} <Ψ| h^+_{pσ} (v) h_{pσ} (t) |Ψ>, where
-    /// h_{pσ} (t) = \sum_{uvw} t^{uv}_{pw} \sum_{τ} w^+_{τ} v_{τ} u_{σ}
+    /// h_{pσ} (t) = \sum_{uvw} t_{pw}^{uv} \sum_{τ} w^+_{τ} v_{τ} u_{σ}
     /// Useful to get the 3-RDM contribution of fully contracted term of two 2-body operators:
-    /// \sum_{puvwxyzστθ} v_{pwxy} t_{uvpz} <Ψ| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ>
-    virtual std::vector<double>
-    compute_complementary_H2caa_overlap(const std::vector<size_t>& /*roots*/,
-                                        ambit::Tensor /*Tbra*/, ambit::Tensor /*Tket*/) {
+    /// \sum_{puvwxyzστθ} v_{pwxy} t_{pzuv} <Ψ| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ>
+    /// @param roots  a list of roots to be computed
+    /// @param Tbra   the v_{pwxy} integrals
+    /// @param Tket   the t_{pzuv} integrals
+    /// @param p_syms the symmetry of p index
+    /// @return a list of overlap for every root
+    virtual std::vector<double> compute_complementary_H2caa_overlap(
+        [[maybe_unused]] const std::vector<size_t>& roots, [[maybe_unused]] ambit::Tensor Tbra,
+        [[maybe_unused]] ambit::Tensor Tket, [[maybe_unused]] const std::vector<int>& p_syms) {
         throw std::runtime_error(
             "ActiveSpaceMethod::compute_complementary_H2caa_overlap: Not yet implemented!");
     }
@@ -345,9 +350,6 @@ class ActiveSpaceMethod {
   protected:
     /// The list of active orbitals (absolute ordering)
     std::vector<size_t> active_mo_;
-
-    /// The list of doubly occupied orbitals (absolute ordering)
-    std::vector<size_t> core_mo_;
 
     /// The state to calculate
     StateInfo state_;

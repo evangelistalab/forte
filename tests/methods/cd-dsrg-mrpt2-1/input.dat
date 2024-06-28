@@ -46,8 +46,8 @@ S   1   1.00
 }
 
 set forte{
-   casscf_reference     true
-   casscf_e_convergence 12   
+   mcscf_reference     true
+   mcscf_e_convergence 12   
    active_space_solver  fci
    correlation_solver   three-dsrg-mrpt2
    restricted_docc      [2,0,0,0]

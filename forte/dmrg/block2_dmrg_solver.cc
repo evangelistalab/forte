@@ -157,15 +157,18 @@ struct Block2DMRGSolverImpl {
              std::shared_ptr<void> bra, int site_type = 0, int iprint = 0,
              block2::ExpectationAlgorithmTypes algo_type =
                  block2::ExpectationAlgorithmTypes::SymbolFree |
-                 block2::ExpectationAlgorithmTypes::Compressed) const {
+                 block2::ExpectationAlgorithmTypes::Compressed,
+             int max_bond_dim = -1) const {
         if (is_spin_adapted_) {
             auto ket_ = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
             auto bra_ = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(bra);
-            return driver_su2_->get_npdm(exprs, ket_, bra_, site_type, algo_type, iprint);
+            return driver_su2_->get_npdm(exprs, ket_, bra_, site_type, algo_type, iprint, 1.0e-16,
+                                         true, max_bond_dim);
         } else {
             auto ket_ = std::static_pointer_cast<block2::MPS<block2::SZ, double>>(ket);
             auto bra_ = std::static_pointer_cast<block2::MPS<block2::SZ, double>>(bra);
-            return driver_sz_->get_npdm(exprs, ket_, bra_, site_type, algo_type, iprint);
+            return driver_sz_->get_npdm(exprs, ket_, bra_, site_type, algo_type, iprint, 1.0e-16,
+                                        true, max_bond_dim);
         }
     }
     std::shared_ptr<void> split_mps(std::shared_ptr<void> ket, int nroot, int iroot,
@@ -229,18 +232,14 @@ Block2DMRGSolver::Block2DMRGSolver(StateInfo state, size_t nroot, std::shared_pt
     bool is_spin_adapted =
         as_ints->ints()->spin_restriction() == IntegralSpinRestriction::Restricted &&
         options_->get_bool("BLOCK2_SPIN_ADAPTED");
-    print_method_banner(
-        {is_spin_adapted ? "block2 DMRG (spin-adapted)" : "block2 DMRG (non-spin-adapted)",
-         "by Huanchen Zhai", "Jan 14-16, 2023"});
-    psi::outfile->Printf("\n    Reference: H. Zhai & G. K. Chan J. Chem. Phys. 2021, 154, 224116.");
     std::string scratch = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
                           std::to_string(getpid()) + ".block2." +
                           psi::Process::environment.molecule()->name();
     Block2ScratchManager::manager().scratch_folders.insert(scratch);
     impl_ = make_shared<Block2DMRGSolverImpl>(is_spin_adapted, 1024LL, scratch);
-    // TODO: read this info from the base class
-    na_ = static_cast<int>(state.na() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC"));
-    nb_ = static_cast<int>(state.nb() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC"));
+    na_ = state.na() - mo_space_info->size("INACTIVE_DOCC");
+    nb_ = state.nb() - mo_space_info->size("INACTIVE_DOCC");
+    maxiter_ = options_->get_int("BLOCK2_N_TOTAL_SWEEPS");
 }
 
 Block2DMRGSolver::~Block2DMRGSolver() {
@@ -257,6 +256,14 @@ Block2DMRGSolver::~Block2DMRGSolver() {
 }
 
 double Block2DMRGSolver::compute_energy() {
+    if (print_ > PrintLevel::Quiet) {
+        print_method_banner({impl_->is_spin_adapted_ ? "block2 DMRG (spin-adapted)"
+                                                     : "block2 DMRG (non-spin-adapted)",
+                             "by Huanchen Zhai", "Jan 14-16, 2023"});
+        psi::outfile->Printf(
+            "\n    Reference: H. Zhai & G. K. Chan J. Chem. Phys. 2021, 154, 224116.");
+    }
+
     timer t("BLOCK2 Solver Compute Energy");
 
     // reset stack memory
@@ -322,7 +329,6 @@ double Block2DMRGSolver::compute_energy() {
     // dmrg sweep settings
     double e_conv = dmrg_options_->get_double("BLOCK2_SWEEP_ENERGY_CONV");
     double mps_cutoff = dmrg_options_->get_double("BLOCK2_CUTOFF");
-    int n_total_sweeps = dmrg_options_->get_int("BLOCK2_N_TOTAL_SWEEPS");
     std::vector<int> sweep_n_sweeps = dmrg_options_->get_int_list("BLOCK2_SWEEP_N_SWEEPS");
     std::vector<int> sweep_bond_dims = dmrg_options_->get_int_list("BLOCK2_SWEEP_BOND_DIMS");
     std::vector<double> sweep_noises = dmrg_options_->get_double_list("BLOCK2_SWEEP_NOISES");
@@ -347,7 +353,7 @@ double Block2DMRGSolver::compute_energy() {
             sweep_bond_dims.push_back(sweep_bond_dims.back());
     while (sweep_n_sweeps.size() < n_schedule)
         if (n_schedule == 1)
-            sweep_n_sweeps.push_back(n_total_sweeps == 0 ? 10 : n_total_sweeps);
+            sweep_n_sweeps.push_back(maxiter_ == 0 ? 10 : maxiter_);
         else
             sweep_n_sweeps.push_back(6);
 
@@ -364,10 +370,31 @@ double Block2DMRGSolver::compute_energy() {
         }
     }
 
-    if (n_total_sweeps == 0)
-        n_total_sweeps = n_total_cnt;
+    if (maxiter_ == 0)
+        maxiter_ = n_total_cnt;
 
     bool read_initial_guess = options_->get_bool("READ_ACTIVE_WFN_GUESS");
+
+    if (read_initial_guess) {
+        if (fs::is_empty(impl_->scratch_)) {
+            fs::path dir_from{"block2.o" + std::to_string(mo_space_info_->size("ACTIVE")) + "." +
+                              state_.str_short()};
+            fs::path dir_to{impl_->scratch_};
+            if (fs::exists(dir_from)) {
+                psi::outfile->Printf("\n  Copying block2 files to scratch directory");
+                for (const auto& file : fs::directory_iterator(dir_from)) {
+                    if (file.path().filename().string().find("KET") != std::string::npos and
+                        file.path().filename().string().find(state_.str_short()) !=
+                            std::string::npos) {
+                        fs::copy_file(file.path(), dir_to / file.path().filename(),
+                                      fs::copy_options::overwrite_existing);
+                    }
+                }
+            } else {
+                read_initial_guess = false;
+            }
+        }
+    }
 
     // print sweep schedule
     if (print_ >= PrintLevel::Default) {
@@ -384,7 +411,7 @@ double Block2DMRGSolver::compute_energy() {
         psi::outfile->Printf("\n    Davidson tols  = ");
         for (auto& x : sweep_davidson_tols)
             psi::outfile->Printf("%10.2E", x);
-        psi::outfile->Printf("\n    N total sweeps = %10d", n_total_sweeps);
+        psi::outfile->Printf("\n    N total sweeps = %10d", maxiter_);
         psi::outfile->Printf("\n    E convergence  = %10.2E", e_conv);
         psi::outfile->Printf("\n    Cutoff         = %10.2E", mps_cutoff);
         psi::outfile->Printf("\n    Initial guess  = %10s", (read_initial_guess ? "load" : "new"));
@@ -453,7 +480,7 @@ double Block2DMRGSolver::compute_energy() {
 
     // do dmrg
     auto mpo = impl_->get_mpo(r, dmrg_verbose);
-    energies_ = impl_->dmrg(mpo, ket, n_total_sweeps, e_conv, bond_dims, noises, davidson_tols,
+    energies_ = impl_->dmrg(mpo, ket, maxiter_, e_conv, bond_dims, noises, davidson_tols,
                             dmrg_verbose, mps_cutoff);
 
     // compute <S^2>
@@ -557,8 +584,17 @@ Block2DMRGSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& 
                                    jroot, ket_tag);
 
         // compute all rdms
-        std::vector<std::shared_ptr<block2::GTensor<double>>> npdms =
-            impl_->get_npdm(exprs, ket, bra, 0, dmrg_verbose);
+        auto rdm_algo_type = ((block2::ExpectationAlgorithmTypes::SymbolFree) |
+                              (block2::ExpectationAlgorithmTypes::Compressed));
+        if (dmrg_options_->get_bool("BLOCK2_RDM_LOW_MEM_ALG"))
+            rdm_algo_type = ((block2::ExpectationAlgorithmTypes::SymbolFree) |
+                             (block2::ExpectationAlgorithmTypes::Compressed) |
+                             (block2::ExpectationAlgorithmTypes::LowMem));
+        auto sweep_bond_dims = dmrg_options_->get_int_list("BLOCK2_SWEEP_BOND_DIMS");
+        if (sweep_bond_dims.size() == 0)
+            sweep_bond_dims.push_back(500);
+        std::vector<std::shared_ptr<block2::GTensor<double>>> npdms = impl_->get_npdm(
+            exprs, ket, bra, 0, dmrg_verbose, rdm_algo_type, -1);
 
         // currently no need to add the interface for 4rdm
         assert(max_rdm_level <= 3);
@@ -682,6 +718,284 @@ Block2DMRGSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& 
     return rdms;
 }
 
+std::vector<double>
+Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>& roots,
+                                                      ambit::Tensor Tbra, ambit::Tensor Tket,
+                                                      const std::vector<int>& p_syms) {
+    /// |bra_{pσ}> = \sum_{uvw} Tbra_{pwuv} \sum_{σ1} w^+_{σ1} v_{σ1} u_{σ} |Ψ>
+    /// |ket_{pσ}> = \sum_{uvw} Tket_{pwuv} \sum_{σ1} w^+_{σ1} v_{σ1} u_{σ} |Ψ>
+    /// energy <- \sum_{p} \sum_{σ} <bra_{pσ}|ket_{pσ}>
+
+    auto dims_bra = Tbra.dims();
+    auto dims_ket = Tket.dims();
+    auto nactv = mo_space_info_->size("ACTIVE");
+    auto np = p_syms.size();
+
+    if (dims_bra.size() != 4)
+        throw std::runtime_error("Invalid Tensor for bra: Dimension must be 4!");
+    if (dims_ket.size() != 4)
+        throw std::runtime_error("Invalid Tensor for ket: Dimension must be 4!");
+    if ((dims_bra[1] != nactv) or (dims_bra[2] != nactv) or (dims_bra[3] != nactv))
+        throw std::runtime_error("Invalid Tensor for bra: Inconsistent active indices");
+    if ((dims_ket[1] != nactv) or (dims_ket[2] != nactv) or (dims_ket[3] != nactv))
+        throw std::runtime_error("Invalid Tensor for ket: Inconsistent active indices");
+    if (dims_bra[0] != dims_ket[0] or dims_bra[0] != np)
+        throw std::runtime_error("Invalid non-active indices for bra and ket Tensors");
+
+    auto nroots = roots.size();
+    std::vector<double> out(nroots, 0.0);
+
+    auto& Tbra_data = Tbra.data();
+    auto& Tket_data = Tket.data();
+
+    auto na1 = static_cast<int>(nactv);
+    auto na2 = na1 * na1;
+    auto na3 = na2 * na1;
+    const std::vector<int> tshape{na1, na1, na1};
+    const std::vector<size_t> tstride{nactv * nactv, 1, nactv};
+
+    // reset stack memory
+    auto stack_mem =
+        static_cast<size_t>(dmrg_options_->get_double("BLOCK2_STACK_MEM") * 1024 * 1024 * 1024);
+    impl_->reset_stack_memory(stack_mem);
+
+    // system initialization
+    bool singlet_embedding = dmrg_options_->get_bool("BLOCK2_SINGLET_EMBEDDING");
+    auto actv_irreps = mo_space_info_->symmetry("ACTIVE");
+    int n_sites = static_cast<int>(mo_space_info_->size("ACTIVE"));
+    int n_elec = na_ + nb_;
+    int spin = state_.multiplicity() - 1;
+    int pg_irrep = state_.irrep();
+    impl_->initialize_system(n_sites, n_elec, spin, pg_irrep, actv_irreps, singlet_embedding);
+
+    int dmrg_verbose = dmrg_options_->get_int("BLOCK2_VERBOSE");
+
+    auto expr_id = impl_->expr_builder();
+    expr_id->exprs.push_back("");
+    expr_id->indices.push_back({});
+    expr_id->data.push_back({1.0});
+    expr_id->adjust_order();
+
+    for (size_t ir = 0; ir < nroots; ++ir) {
+        double value = 0.0;
+
+        // loading MPSs from disk
+        std::string ket_tag_sa = "KET@" + state().str_short();
+        std::string ket_tag =
+            "KET@" + block2::Parsing::to_string(ir) + "@" + state().str_short() + "@TMP";
+        auto ket = impl_->split_mps(impl_->load_mps(ket_tag_sa, this->nroot()), this->nroot(), ir,
+                                    ket_tag);
+
+        if (impl_->is_spin_adapted_) {
+            auto impo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
+                impl_->get_mpo(expr_id, dmrg_verbose));
+
+            auto ket0 = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
+            auto bond_dim = ket0->info->bond_dim;
+            std::vector<block2::ubond_t> bra_bond_dims{2 * bond_dim};
+            std::vector<block2::ubond_t> ket_bond_dims{bond_dim};
+            std::vector<double> noises{0.0};
+
+            for (size_t p = 0; p < np; ++p) {
+                psi::outfile->Printf("\n orbital %2zu", p);
+                auto bra_expr = impl_->expr_builder();
+                bra_expr->exprs.push_back("((C+D)0+D)1");
+                bra_expr->add_sum_term(Tbra_data.data() + p * na3, na3, tshape, tstride, 1.0e-12,
+                                       2.0);
+                bra_expr = bra_expr->adjust_order();
+
+                auto bmpo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
+                    impl_->get_mpo(bra_expr, dmrg_verbose));
+                auto bq = bmpo->op->q_label + ket0->info->target;
+                auto bra_left_vacuum = ket0->info->left_dims_fci[0]->quanta[0] + bmpo->left_vacuum;
+
+                auto ket_expr = impl_->expr_builder();
+                ket_expr->exprs.push_back("((C+D)0+D)1");
+                ket_expr->add_sum_term(Tket_data.data() + p * na3, na3, tshape, tstride, 1.0e-12,
+                                       2.0);
+                ket_expr = ket_expr->adjust_order();
+
+                auto kmpo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
+                    impl_->get_mpo(ket_expr, dmrg_verbose));
+                auto kq = kmpo->op->q_label + ket0->info->target;
+                auto ket_left_vacuum = ket0->info->left_dims_fci[0]->quanta[0] + kmpo->left_vacuum;
+
+                auto vacuum = impl_->driver_su2_->vacuum;
+                for (int j = 0; j < bra_left_vacuum.count(); ++j) {
+                    psi::outfile->Printf(" j = %2d", j);
+                    auto binfo = std::make_shared<block2::MPSInfo<block2::SU2>>(
+                        na1, vacuum, bq, impl_->driver_su2_->ghamil->basis);
+                    binfo->tag = ket0->info->tag + "@BRA";
+                    binfo->set_bond_dimension_fci(bra_left_vacuum[j], vacuum);
+                    binfo->set_bond_dimension(bond_dim);
+                    binfo->bond_dim = bond_dim;
+
+                    if (binfo->get_max_bond_dimension() == 0)
+                        continue;
+
+                    auto bra = std::make_shared<block2::MPS<block2::SU2, double>>(na1, ket0->center,
+                                                                                  ket0->dot);
+                    // bra->info->tag = "BRA." + std::to_string(p) + "." + std::to_string(j);
+                    bra->initialize(binfo);
+                    bra->random_canonicalize();
+                    bra->tensors[bra->center]->normalize();
+                    bra->save_mutable();
+                    binfo->save_mutable();
+                    bra->save_data();
+
+                    auto bref = ket0->deep_copy("DSRG-BRA@TMP");
+                    auto bme =
+                        std::make_shared<block2::MovingEnvironment<block2::SU2, double, double>>(
+                            bmpo, bra, bref, "DSRG-CPS1");
+                    bme->delayed_contraction = block2::OpNamesSet::normal_ops();
+                    bme->cached_contraction = true;
+                    bme->init_environments(true);
+
+                    auto bcps = std::make_shared<block2::Linear<block2::SU2, double, double>>(
+                        bme, bra_bond_dims, ket_bond_dims, noises);
+                    bcps->iprint = 2;
+                    auto bnorm = bcps->solve(10, true, 1.0e-6);
+
+                    auto kinfo = std::make_shared<block2::MPSInfo<block2::SU2>>(
+                        na1, vacuum, kq, impl_->driver_su2_->ghamil->basis);
+                    kinfo->tag = ket0->info->tag + "@KET";
+                    kinfo->set_bond_dimension_fci(ket_left_vacuum[j], vacuum);
+                    kinfo->set_bond_dimension(bond_dim);
+                    kinfo->bond_dim = bond_dim;
+
+                    auto ket = std::make_shared<block2::MPS<block2::SU2, double>>(na1, ket0->center,
+                                                                                  ket0->dot);
+                    // ket->info->tag = "KET." + std::to_string(p) + "." + std::to_string(j);
+                    ket->initialize(kinfo);
+                    ket->random_canonicalize();
+                    ket->tensors[ket->center]->normalize();
+                    ket->save_mutable();
+                    kinfo->save_mutable();
+                    ket->save_data();
+
+                    auto kref = ket0->deep_copy("DSRG-KET@TMP");
+                    auto kme =
+                        std::make_shared<block2::MovingEnvironment<block2::SU2, double, double>>(
+                            kmpo, ket, kref, "DSRG-CPS2");
+                    kme->delayed_contraction = block2::OpNamesSet::normal_ops();
+                    kme->cached_contraction = true;
+                    kme->init_environments(true);
+
+                    auto kcps = std::make_shared<block2::Linear<block2::SU2, double, double>>(
+                        kme, bra_bond_dims, ket_bond_dims, noises);
+                    kcps->iprint = 2;
+                    auto knorm = kcps->solve(10, true, 1.0e-6);
+
+                    auto xme =
+                        std::make_shared<block2::MovingEnvironment<block2::SU2, double, double>>(
+                            impo, bra, ket, "DSRG-CPS-EX");
+                    xme->delayed_contraction = block2::OpNamesSet::normal_ops();
+                    xme->cached_contraction = true;
+                    xme->init_environments(true);
+
+                    auto expect = std::make_shared<block2::Expect<block2::SU2, double, double>>(
+                        xme, bra->info->bond_dim, ket->info->bond_dim);
+                    auto pvalue = expect->solve(false, bra->center == 0);
+                    expect->me->remove_partition_files();
+
+                    psi::outfile->Printf("  pvalue = %20.15f", pvalue);
+                    value += pvalue;
+                }
+            }
+        } else {
+            auto impo = std::static_pointer_cast<block2::MPO<block2::SZ, double>>(
+                impl_->get_mpo(expr_id, dmrg_verbose));
+            auto ket0 = std::static_pointer_cast<block2::MPS<block2::SZ, double>>(ket);
+            auto bond_dim = ket0->info->bond_dim;
+
+            for (size_t p = 0; p < np; ++p) {
+                psi::outfile->Printf("\n orbital %zu", p);
+                for (size_t sigma = 0; sigma != 2; ++sigma) {
+                    auto bra_expr = impl_->expr_builder();
+                    if (sigma == 0) {
+                        bra_expr->exprs.push_back("cdd");
+                        bra_expr->exprs.push_back("CDd");
+                    } else {
+                        bra_expr->exprs.push_back("cdD");
+                        bra_expr->exprs.push_back("CDD");
+                    }
+                    bra_expr->add_sum_term(Tbra_data.data() + p * na3, na3, tshape, tstride,
+                                           1.0e-12, 1.0, actv_irreps, {}, p_syms[p]);
+                    bra_expr->add_sum_term(Tbra_data.data() + p * na3, na3, tshape, tstride,
+                                           1.0e-12, 1.0, actv_irreps, {}, p_syms[p]);
+                    bra_expr = bra_expr->adjust_order();
+
+                    auto bmpo = std::static_pointer_cast<block2::MPO<block2::SZ, double>>(
+                        impl_->get_mpo(bra_expr, dmrg_verbose));
+                    auto bq = bmpo->op->q_label + ket0->info->target;
+                    std::string btag = "BRA." + std::to_string(p);
+                    btag += (sigma == 0 ? ".A" : ".B");
+                    auto bra =
+                        impl_->driver_sz_->get_random_mps(btag, bond_dim, ket0->center, 2, bq);
+
+                    auto bme = make_shared<block2::MovingEnvironment<block2::SZ, double, double>>(
+                        bmpo, bra, ket0, "MULT");
+                    bme->delayed_contraction = block2::OpNamesSet::normal_ops();
+                    bme->cached_contraction = true;
+                    bme->init_environments(true);
+
+                    std::vector<block2::ubond_t> bra_bond_dims{2 * bond_dim};
+                    std::vector<block2::ubond_t> ket_bond_dims{bond_dim};
+                    std::vector<double> noises{0.0};
+
+                    auto bcps = std::make_shared<block2::Linear<block2::SZ, double, double>>(
+                        bme, bra_bond_dims, ket_bond_dims, noises);
+                    auto bnorm = bcps->solve(10, true, 1.0e-6);
+
+                    auto ket_expr = impl_->expr_builder();
+                    if (sigma == 0) {
+                        ket_expr->exprs.push_back("cdd");
+                        ket_expr->exprs.push_back("CDd");
+                    } else {
+                        ket_expr->exprs.push_back("cdD");
+                        ket_expr->exprs.push_back("CDD");
+                    }
+                    ket_expr->add_sum_term(Tket_data.data() + p * na3, na3, tshape, tstride,
+                                           1.0e-12, 1.0, actv_irreps, {}, p_syms[p]);
+                    ket_expr->add_sum_term(Tket_data.data() + p * na3, na3, tshape, tstride,
+                                           1.0e-12, 1.0, actv_irreps, {}, p_syms[p]);
+                    ket_expr = ket_expr->adjust_order();
+
+                    auto kmpo = std::static_pointer_cast<block2::MPO<block2::SZ, double>>(
+                        impl_->get_mpo(ket_expr, dmrg_verbose));
+                    // auto kq = kmpo->op->q_label + ket0->info->target;
+                    // std::string ktag = "KET." + std::to_string(p);
+                    // ktag += (sigma == 0 ? ".A" : ".B");
+                    // auto ket =
+                    //     impl_->driver_sz_->get_random_mps(ktag, bond_dim, ket0->center, 2, kq);
+
+                    // auto kme = make_shared<block2::MovingEnvironment<block2::SZ, double,
+                    // double>>(
+                    //     kmpo, ket, ket0, "MULT");
+                    // kme->delayed_contraction = block2::OpNamesSet::normal_ops();
+                    // kme->cached_contraction = true;
+                    // kme->init_environments(true);
+
+                    // auto kcps = std::make_shared<block2::Linear<block2::SZ, double, double>>(
+                    //     kme, bra_bond_dims, ket_bond_dims, noises);
+                    // auto knorm = kcps->solve(10, true, 1.0e-6);
+
+                    // auto pvalue = impl_->driver_sz_->expectation(bra, impo, ket, true);
+                    auto pvalue = impl_->driver_sz_->expectation(bra, kmpo, ket0, true);
+                    if (sigma == 0) {
+                        psi::outfile->Printf(" alpha = %20.15f", pvalue);
+                    } else {
+                        psi::outfile->Printf(" beta = %20.15f", pvalue);
+                    }
+                    value += pvalue;
+                }
+            }
+        }
+        out[ir] = value;
+    }
+    return out;
+}
+
 void Block2DMRGSolver::set_options(std::shared_ptr<ForteOptions> options) {
     dmrg_options_ = options;
 }
@@ -730,6 +1044,20 @@ void Block2DMRGSolver::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_sp
     psi::outfile->Printf("\n");
 }
 
+void Block2DMRGSolver::dump_wave_function(const std::string&) {
+    // create a folder for the wave function
+    fs::path folder{"block2.o" + std::to_string(mo_space_info_->size("ACTIVE")) + "." +
+                    state_.str_short()};
+    fs::create_directory(folder);
+    // copy KET files to the folder
+    for (const auto& file : fs::directory_iterator(impl_->scratch_)) {
+        if (file.path().filename().string().find("KET") != std::string::npos and
+            file.path().filename().string().find(state_.str_short()) != std::string::npos) {
+            fs::copy_file(file.path(), folder / file.path().filename(),
+                          fs::copy_options::overwrite_existing);
+        }
+    }
+}
 } // namespace forte
 
 #endif // HAVE_BLOCK2

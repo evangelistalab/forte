@@ -71,7 +71,7 @@ void SA_MRDSRG::read_options() {
     rsc_ncomm_ = foptions_->get_int("DSRG_RSC_NCOMM");
     rsc_conv_ = foptions_->get_double("DSRG_RSC_THRESHOLD");
 
-    maxiter_ = foptions_->get_int("MAXITER");
+    maxiter_ = foptions_->get_int("DSRG_MAXITER");
     e_conv_ = foptions_->get_double("E_CONVERGENCE");
     r_conv_ = foptions_->get_double("R_CONVERGENCE");
 

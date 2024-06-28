@@ -24,7 +24,7 @@ set forte {
   dsrg_s               0.5
   active               [1, 0, 0, 0, 0, 1, 0, 0]
   restricted_docc      [0, 0, 0, 0, 0, 0, 0, 0]
-
+  mcscf_reference     false
 }
 
 energy('forte')

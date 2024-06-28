@@ -35,6 +35,7 @@
 #include "base_classes/state_info.h"
 #include "base_classes/scf_info.h"
 #include "base_classes/forte_options.h"
+#include "block2.hpp"
 
 namespace forte {
 
@@ -94,6 +95,25 @@ class Block2DMRGSolver : public ActiveSpaceMethod {
     /// Assume user specified active space
     void print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info,
                                 std::shared_ptr<RDMs> rdms);
+
+    /// Compute the overlap of two wave functions acted by complementary operators
+    /// Return a map from state to roots of values
+    /// Computes the overlap of \sum_{p} \sum_{σ} <Ψ| h^+_{pσ} (v) h_{pσ} (t) |Ψ>, where
+    /// h_{pσ} (t) = \sum_{uvw} t_{pw}^{uv} \sum_{τ} w^+_{τ} v_{τ} u_{σ}
+    /// Useful to get the 3-RDM contribution of fully contracted term of two 2-body operators:
+    /// \sum_{puvwxyzστθ} v_{pwxy} t_{pzuv} <Ψ| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ>
+    /// @param roots  a list of roots to be computed
+    /// @param Tbra   the v_{pwxy} integrals
+    /// @param Tket   the t_{pzuv} integrals
+    /// @param p_syms the symmetry of p index
+    /// @return a list of overlap for every root
+    std::vector<double>
+    compute_complementary_H2caa_overlap(const std::vector<size_t>& roots, ambit::Tensor Tbra,
+                                        ambit::Tensor Tket,
+                                        const std::vector<int>& p_syms) override;
+
+    /// Dump MPS to the current working directory
+    void dump_wave_function(const std::string&) override;
 
   private:
     /// SCFInfo object

@@ -1,8 +1,11 @@
-#! Test disk density-fitted integrals with frozen core and virtuals
+#! Test reading the integrals from a FCIDUMP file
 
 import forte
 
 reffci = -112.74446815362198
+
+# we need to pass a molecule to psi4 anyway
+molecule {H}
 
 set forte {
   active_space_solver fci
@@ -11,6 +14,7 @@ set forte {
   restricted_docc     [2 ,0 ,0 ,0]
   active              [2 ,2 ,2 ,2]
   e_convergence       12
+  mcscf_reference    false
 }
 
 energy('forte')

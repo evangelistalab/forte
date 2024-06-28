@@ -4,10 +4,14 @@ import forte
 
 reffci = -1.163012998021681
 
+# we need to pass a molecule to psi4 anyway
+molecule {H}
+
 set forte {
   active_space_solver fci
   int_type            fcidump
   e_convergence       12
+  mcscf_reference    false
 }
 
 energy('forte')
