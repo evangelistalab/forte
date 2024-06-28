@@ -86,9 +86,6 @@ void MCSCF_2STEP::read_options() {
 
     maxiter_ = options_->get_int("MCSCF_MAXITER");
     micro_maxiter_ = options_->get_int("MCSCF_MICRO_MAXITER");
-    micro_miniter_ = options_->get_int("MCSCF_MICRO_MINITER");
-    if (micro_maxiter_ < micro_miniter_)
-        micro_miniter_ = micro_maxiter_;
 
     e_conv_ = options_->get_double("MCSCF_E_CONVERGENCE");
     g_conv_ = options_->get_double("MCSCF_G_CONVERGENCE");
@@ -120,7 +117,6 @@ void MCSCF_2STEP::print_options() {
     std::vector<std::pair<std::string, int>> info_int{
         {"Max number of macro iter.", maxiter_},
         {"Max number of micro iter. for orbitals", micro_maxiter_},
-        {"Min number of micro iter. for orbitals", micro_miniter_},
         {"Max number of micro iter. for CI", mci_maxiter_}};
 
     std::vector<std::pair<std::string, std::string>> info_string;
@@ -258,7 +254,7 @@ double MCSCF_2STEP::compute_energy() {
         double dl_r_conv = 8.0e-5;
 
         // start iterations
-        lbfgs_param->maxiter = micro_miniter_;
+        lbfgs_param->maxiter = micro_maxiter_;
         int bad_count = 0;
         bool skip_de_conv = (ci_type_.find("DMRG") != std::string::npos or
                              ci_type_.find("BLOCK2") != std::string::npos);
@@ -275,7 +271,7 @@ double MCSCF_2STEP::compute_energy() {
             "Delta  Orb. Grad.  Micro");
         psi::outfile->Printf("\n    %s", dash2.c_str());
 
-        for (int macro = 0; macro <= maxiter_; ++macro) {
+        for (int macro = 1; macro <= maxiter_; ++macro) {
             // optimize orbitals
             cas_grad.set_rdms(rdms);
 
@@ -309,7 +305,7 @@ double MCSCF_2STEP::compute_energy() {
                     title += "  DIIS";
                 psi::outfile->Printf("\n\n    %s", title.c_str());
             }
-            psi::outfile->Printf("\n    %4d %20.12f %11.4e%20.12f %11.4e  %10.4e %4d/%c", macro + 1,
+            psi::outfile->Printf("\n    %4d %20.12f %11.4e%20.12f %11.4e  %10.4e %4d/%c", macro,
                                  e_c, de_c, e_o, de_o, g_rms, n_micro, o_conv);
 
             // test convergence
@@ -332,21 +328,11 @@ double MCSCF_2STEP::compute_energy() {
                 break;
             }
 
-            // test history
-            bool reset_diis = false;
-            if (macro > 6 and
-                (de_o > 0.0 or de_c > 0.0 or (g_rms / history[macro - 2].g_rms > 1.0)))
-                ++bad_count;
-            if (bad_count > 5) {
-                reset_diis = true;
-                mci_maxiter_ += 5;
-                as_solver_->set_maxiter(mci_maxiter_);
-                bad_count = 0;
-            }
+            // nail down results for DMRG
             if (ci_type_ == "BLOCK2" or ci_type_ == "DMRG") {
                 if (std::fabs(de_c) < 1.0e-2 or g_rms < 1.0e-3) {
                     options_->set_bool("READ_ACTIVE_WFN_GUESS", true);
-                    mci_maxiter_ = 16;
+                    mci_maxiter_ = 14;
                     // focus on the last bond dimension
                     if (ci_type_ == "BLOCK2") {
                         auto nsweeps = options_->get_int_list("BLOCK2_SWEEP_N_SWEEPS");
@@ -392,6 +378,13 @@ double MCSCF_2STEP::compute_energy() {
             if (do_diis_) {
                 if (macro >= diis_start_) {
                     // reset DIIS if current orbital update unreasonable
+                    bool reset_diis = false;
+                    if (de_o > 0.0 or de_c > 0.0 or (g_rms / history[macro - 2].g_rms > 2.0))
+                        ++bad_count;
+                    if (bad_count > 5) {
+                        reset_diis = true;
+                        bad_count = 0;
+                    }
                     if (reset_diis) {
                         psi::outfile->Printf("   R/");
                         diis_manager.reset_subspace();
