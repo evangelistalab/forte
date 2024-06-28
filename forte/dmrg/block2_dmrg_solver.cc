@@ -584,17 +584,22 @@ Block2DMRGSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& 
                                    jroot, ket_tag);
 
         // compute all rdms
+        int bond_dim = 500;
+        auto sweep_bond_dims = dmrg_options_->get_int_list("BLOCK2_SWEEP_BOND_DIMS");
+        if (sweep_bond_dims.size() != 0)
+            bond_dim = sweep_bond_dims.back();
         auto rdm_algo_type = ((block2::ExpectationAlgorithmTypes::SymbolFree) |
                               (block2::ExpectationAlgorithmTypes::Compressed));
-        if (dmrg_options_->get_bool("BLOCK2_RDM_LOW_MEM_ALG"))
+        if (dmrg_options_->get_bool("BLOCK2_RDM_LOW_MEM_ALG")) {
             rdm_algo_type = ((block2::ExpectationAlgorithmTypes::SymbolFree) |
                              (block2::ExpectationAlgorithmTypes::Compressed) |
                              (block2::ExpectationAlgorithmTypes::LowMem));
-        auto sweep_bond_dims = dmrg_options_->get_int_list("BLOCK2_SWEEP_BOND_DIMS");
-        if (sweep_bond_dims.size() == 0)
-            sweep_bond_dims.push_back(500);
-        std::vector<std::shared_ptr<block2::GTensor<double>>> npdms = impl_->get_npdm(
-            exprs, ket, bra, 0, dmrg_verbose, rdm_algo_type, -1);
+            bond_dim *= 2;
+        } else {
+            bond_dim = -1; // block2 default: exact
+        }
+        std::vector<std::shared_ptr<block2::GTensor<double>>> npdms =
+            impl_->get_npdm(exprs, ket, bra, 0, dmrg_verbose, rdm_algo_type, bond_dim);
 
         // currently no need to add the interface for 4rdm
         assert(max_rdm_level <= 3);
@@ -797,7 +802,8 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
             std::vector<double> noises{0.0};
 
             for (size_t p = 0; p < np; ++p) {
-                psi::outfile->Printf("\n orbital %2zu", p);
+                if (dmrg_verbose > 2)
+                    psi::outfile->Printf("\n orbital %2zu", p);
                 auto bra_expr = impl_->expr_builder();
                 bra_expr->exprs.push_back("((C+D)0+D)1");
                 bra_expr->add_sum_term(Tbra_data.data() + p * na3, na3, tshape, tstride, 1.0e-12,
@@ -822,7 +828,8 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
 
                 auto vacuum = impl_->driver_su2_->vacuum;
                 for (int j = 0; j < bra_left_vacuum.count(); ++j) {
-                    psi::outfile->Printf(" j = %2d", j);
+                    if (dmrg_verbose > 2)
+                        psi::outfile->Printf("  j = %2d", j);
                     auto binfo = std::make_shared<block2::MPSInfo<block2::SU2>>(
                         na1, vacuum, bq, impl_->driver_su2_->ghamil->basis);
                     binfo->tag = ket0->info->tag + "@BRA";
@@ -898,7 +905,8 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                     auto pvalue = expect->solve(false, bra->center == 0);
                     expect->me->remove_partition_files();
 
-                    psi::outfile->Printf("  pvalue = %20.15f", pvalue);
+                    if (dmrg_verbose > 2)
+                        psi::outfile->Printf(" pvalue = %20.15f", pvalue);
                     value += pvalue;
                 }
             }
@@ -909,7 +917,8 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
             auto bond_dim = ket0->info->bond_dim;
 
             for (size_t p = 0; p < np; ++p) {
-                psi::outfile->Printf("\n orbital %zu", p);
+                if (dmrg_verbose > 2)
+                    psi::outfile->Printf("\n orbital %zu", p);
                 for (size_t sigma = 0; sigma != 2; ++sigma) {
                     auto bra_expr = impl_->expr_builder();
                     if (sigma == 0) {
@@ -982,11 +991,9 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
 
                     // auto pvalue = impl_->driver_sz_->expectation(bra, impo, ket, true);
                     auto pvalue = impl_->driver_sz_->expectation(bra, kmpo, ket0, true);
-                    if (sigma == 0) {
-                        psi::outfile->Printf(" alpha = %20.15f", pvalue);
-                    } else {
-                        psi::outfile->Printf(" beta = %20.15f", pvalue);
-                    }
+                    if (dmrg_verbose > 2)
+                        psi::outfile->Printf(" %s = %20.15f", sigma == 0 ? "alpha" : "beta",
+                                             pvalue);
                     value += pvalue;
                 }
             }
