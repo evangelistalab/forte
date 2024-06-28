@@ -35,7 +35,6 @@
 #include "base_classes/state_info.h"
 #include "base_classes/scf_info.h"
 #include "base_classes/forte_options.h"
-#include "block2.hpp"
 
 namespace forte {
 
