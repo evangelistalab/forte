@@ -12,17 +12,6 @@ jobs:
   strategy:
     maxParallel: 4
     matrix:
-      gcc_py310_orb64_dmrg:
-        F_COMPILER: 'gfortran'
-        C_COMPILER: 'gcc'
-        CXX_COMPILER: 'g++'
-        PYTHON_VER: '3.10'
-        BUILD_TYPE: 'RelWithDebInfo'
-        PSI_BUILD_TYPE: 'Debug'
-        MAX_DET_ORB: 64
-        APT_INSTALL: 'gfortran'
-        ENABLE_CHEMPS2: 'ON'
-
       gcc_py39_orb128:
         F_COMPILER: 'gfortran'
         C_COMPILER: 'gcc'
@@ -33,6 +22,31 @@ jobs:
         MAX_DET_ORB: 128
         APT_INSTALL: 'gfortran'
         ENABLE_CHEMPS2: 'OFF'
+        ENABLE_BLOCK2: 'OFF'
+
+      gcc_py310_orb64_dmrg:
+        F_COMPILER: 'gfortran'
+        C_COMPILER: 'gcc'
+        CXX_COMPILER: 'g++'
+        PYTHON_VER: '3.10'
+        BUILD_TYPE: 'RelWithDebInfo'
+        PSI_BUILD_TYPE: 'Debug'
+        MAX_DET_ORB: 64
+        APT_INSTALL: 'gfortran'
+        ENABLE_CHEMPS2: 'ON'
+        ENABLE_BLOCK2: 'OFF'
+
+      gcc_py310_orb64_block2:
+        F_COMPILER: 'gfortran'
+        C_COMPILER: 'gcc'
+        CXX_COMPILER: 'g++'
+        PYTHON_VER: '3.10'
+        BUILD_TYPE: 'RelWithDebInfo'
+        PSI_BUILD_TYPE: 'Debug'
+        MAX_DET_ORB: 64
+        APT_INSTALL: 'gfortran'
+        ENABLE_CHEMPS2: 'OFF'
+        ENABLE_BLOCK2: 'ON'
 
   steps:
   - bash: |
@@ -203,6 +217,22 @@ jobs:
     displayName: 'Build Ambit'
 
   - bash: |
+      BLOCK2_BIN_DIR=$(Build.SourcesDirectory)/build/block2-bin
+      if [[ "${ENABLE_BLOCK2}" != "ON" ]]; then
+        source activate p4env
+        cd build
+        git clone https://github.com/block-hczhai/block2-preview.git
+        mkdir -p block2-preview/build
+        cd block2-preview/build
+        cmake .. -DUSE_MKL=OFF -DBUILD_CLIB=ON \
+          -DLARGE_BOND=ON \
+          -DMPI=OFF \
+          -DCMAKE_INSTALL_PREFIX=${BLOCK2_BIN_DIR}
+        make -j2 install
+      fi
+    displayName: 'Build Block2'
+
+  - bash: |
       source activate p4env
       echo "Conda path: ${CONDA_PREFIX}"
       echo "$(python -V): $(which python)"
@@ -214,6 +244,7 @@ jobs:
         -C$(PSI4BIN_DIR)/share/cmake/psi4/psi4PluginCache.cmake \
         -DCMAKE_PREFIX_PATH=$(PSI4BIN_DIR) \
         -Dambit_DIR=$(AMBIT_BIN_DIR)/share/cmake/ambit \
+        -Dblock2_DIR=${BLOCK2_BIN_DIR}/share/cmake/block2 \
         -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DPython_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
@@ -221,6 +252,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
         -DENABLE_CheMPS2=$ENABLE_CHEMPS2 \
+        -DENABLE_block2=$ENABLE_BLOCK2 \
         -DENABLE_CODECOV=ON \
         -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
         -DEIGEN3_INCLUDE_DIR=$CONDA_PREFIX/include/eigen3 \

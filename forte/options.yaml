@@ -31,7 +31,7 @@ Driver:
     type: str
     default: ""
     choices:
-      ["FCI", "GENCI", "ACI", "ASCI", "PCI", "DETCI", "CAS", "DMRG", "EXTERNAL"]
+      ["FCI", "GENCI", "ACI", "ASCI", "PCI", "DETCI", "CAS", "DMRG", "BLOCK2", "EXTERNAL"]
     help: "Active space solver type"
   CORRELATION_SOLVER:
     type: str
@@ -1280,22 +1280,6 @@ MCSCF:
     type: int
     default: 100
     help: "The maximum number of MCSCF macro iterations"
-  MCSCF_MICRO_MAXITER:
-    type: int
-    default: 40
-    help: "The maximum number of MCSCF micro iterations"
-  MCSCF_MICRO_MINITER:
-    type: int
-    default: 6
-    help: "The minimum number of MCSCF micro iterations"
-  CPSCF_MAXITER:
-    type: int
-    default: 50
-    help: "Max iteration of solving coupled perturbed SCF equation"
-  CPSCF_CONVERGENCE:
-    type: double
-    default: 1e-8
-    help: "Convergence criterion for CP-SCF equation"
   MCSCF_E_CONVERGENCE:
     type: double
     default: 1e-8
@@ -1304,14 +1288,56 @@ MCSCF:
     type: double
     default: 1e-7
     help: "The orbital gradient convergence criterion (RMS of gradient vector)"
-  MCSCF_DEBUG_PRINTING:
-    type: bool
-    default: False
-    help: "Enable debug printing if True"
+  MCSCF_MICRO_MAXITER:
+    type: int
+    default: 6
+    help: "The maximum number of micro iterations (orbital optimization) for a given CI"
+  MCSCF_MCI_MAXITER:
+    type: int
+    default: 12
+    help: "The maximum number of micro CI iterations in every macro iteration"
+  MCSCF_DIIS_MIN_VEC:
+    type: int
+    default: 3
+    help: "Minimum size of DIIS vectors for orbital rotations"
+  MCSCF_DIIS_MAX_VEC:
+    type: int
+    default: 8
+    help: "Maximum size of DIIS vectors for orbital rotations"
+  MCSCF_DIIS_START:
+    type: int
+    default: 15
+    help: "Iteration number to start adding error vectors (< 1 will not do DIIS)"
+  MCSCF_DIIS_FREQ:
+    type: int
+    default: 1
+    help: "How often to do DIIS extrapolation"
   MCSCF_NO_ORBOPT:
     type: bool
     default: False
     help: "No orbital optimization if true"
+  MCSCF_FINAL_ORBITAL:
+    type: str
+    default: "CANONICAL"
+    choices: ["CANONICAL", "NATURAL", "UNSPECIFIED"]
+    help: "Constraints for redundant orbital pairs at the end of macro iteration"
+  MCSCF_MAX_ROTATION:
+    type: double
+    default: 0.2
+    help: "Max value in orbital update vector"
+  MCSCF_ORB_ORTHO_TRANS:
+    type: str
+    default: "CAYLEY"
+    choices: ["CAYLEY", "POWER", "PADE"]
+    help: "Ways to compute the orthogonal transformation U from orbital rotation R"
+  MCSCF_DIE_IF_NOT_CONVERGED:
+    type: bool
+    default: True
+    help: "Stop Forte if MCSCF is not converged"
+  MCSCF_DEBUG_PRINTING:
+    type: bool
+    default: False
+    help: "Enable debug printing if True"
   MCSCF_INTERNAL_ROT:
     type: bool
     default: False
@@ -1320,11 +1346,14 @@ MCSCF:
     type: list
     default: []
     help: "Zero mixing for orbital pairs"
-  MCSCF_FINAL_ORBITAL:
-    type: str
-    default: "CANONICAL"
-    choices: ["CANONICAL", "NATURAL", "UNSPECIFIED"]
-    help: "Constraints for redundant orbital pairs at the end of macro iteration"
+  CPSCF_MAXITER:
+    type: int
+    default: 50
+    help: "Max iteration of solving coupled perturbed SCF equation"
+  CPSCF_CONVERGENCE:
+    type: double
+    default: 1e-8
+    help: "Convergence criterion for CP-SCF equation"
   MCSCF_CI_FREQ:
     type: int
     default: 1
@@ -1353,15 +1382,6 @@ MCSCF:
     type: bool
     default: True
     help: "Use JK builder for restricted docc (EXPERT)?"
-  MCSCF_MAX_ROTATION:
-    type: double
-    default: 0.2
-    help: "Max value in orbital update vector"
-  MCSCF_ORB_ORTHO_TRANS:
-    type: str
-    default: "CAYLEY"
-    choices: ["CAYLEY", "POWER", "PADE"]
-    help: "Ways to compute the orthogonal transformation U from orbital rotation R"
   ORB_ROTATION_ALGORITHM:
     type: str
     default: "DIAGONAL"
@@ -1371,22 +1391,6 @@ MCSCF:
     type: bool
     default: True
     help: "Use DIIS in MCSCF orbital optimization"
-  MCSCF_DIIS_MIN_VEC:
-    type: int
-    default: 3
-    help: "Minimum size of DIIS vectors for orbital rotations"
-  MCSCF_DIIS_MAX_VEC:
-    type: int
-    default: 8
-    help: "Maximum size of DIIS vectors for orbital rotations"
-  MCSCF_DIIS_START:
-    type: int
-    default: 15
-    help: "Iteration number to start adding error vectors (< 1 will not do DIIS)"
-  MCSCF_DIIS_FREQ:
-    type: int
-    default: 1
-    help: "How often to do DIIS extrapolation"
   MCSCF_DIIS_NORM:
     type: double
     default: 1e-3
@@ -1407,10 +1411,6 @@ MCSCF:
     type: int_list
     default: []
     help: "A list of active orbitals to be frozen in the MCSCF optimization (in Pitzer order, zero based). Useful when doing core-excited state computations."
-  MCSCF_DIE_IF_NOT_CONVERGED:
-    type: bool
-    default: True
-    help: "Stop Forte if MCSCF is not converged"
 
 Old:
   NAT_ORBS_PRINT:
@@ -1609,6 +1609,60 @@ DMRG:
     default: False
     help: "Whether or not to print the correlation functions after the DMRG calculation"
 
+BLOCK2:
+  BLOCK2_STACK_MEM:
+    type: double
+    default: 2.0
+    help: "DMRG stack memory (in GB)"
+  BLOCK2_SWEEP_ENERGY_CONV:
+    type: double
+    default: 1E-8
+    help: "DMRG energy convergence threshold"
+  BLOCK2_INITIAL_GUESS:
+    type: double
+    default: -1
+    help: "Shift (0 ~ 1) of occupation number for DMRG initial guess. -1 = random initial guess"
+  BLOCK2_CUTOFF:
+    type: double
+    default: 1E-20
+    help: "Cutoff for MPS bond dimension"
+  BLOCK2_SPIN_ADAPTED:
+    type: bool
+    default: True
+    help: "Whether to use spin-adapted DMRG for restricted integrals"
+  BLOCK2_SINGLET_EMBEDDING:
+    type: bool
+    default: True
+    help: "Whether to use singlet embedding for non-singlet states"
+  BLOCK2_N_TOTAL_SWEEPS:
+    type: int
+    default: 16
+    help: "Max number of DMRG sweeps"
+  BLOCK2_SWEEP_N_SWEEPS:
+    type: int_list
+    default: []
+    help: "Number of sweeps used for one instruction during DMRG sweeps"
+  BLOCK2_SWEEP_BOND_DIMS:
+    type: int_list
+    default: []
+    help: "MPS bond dimension used for one instruction during DMRG sweeps"
+  BLOCK2_SWEEP_NOISES:
+    type: double_list
+    default: []
+    help: "Noise used for one instruction during DMRG sweeps"
+  BLOCK2_SWEEP_DAVIDSON_TOLS:
+    type: double_list
+    default: []
+    help: "The residual tolerances for the Davidson diagonalization used for one instruction during DMRG sweeps"
+  BLOCK2_VERBOSE:
+    type: int
+    default: 2
+    help: "Level of verbosity for DMRG calculations"
+  BLOCK2_RDM_LOW_MEM_ALG:
+    type: bool
+    default: True
+    help: "Whether to use low memory algorithm to compute RDMs"
+
 
 
 DEPRECATED:
@@ -1632,10 +1686,6 @@ DEPRECATED:
     type: deprecated
     default: None
     help: "Replaced by MCSCF_G_CONVERGENCE"
-  CASSCF_DEBUG_PRINTING:
-    type: deprecated
-    default: None
-    help: "Replaced by MCSCF_DEBUG_PRINTING"
   CASSCF_DEBUG_PRINTING:
     type: deprecated
     default: None

@@ -105,10 +105,10 @@ class MCSCF_2STEP {
 
     /// Max number of macro iterations
     int maxiter_;
-    /// Max number of micro iterations
+    /// Max number of micro iterations (orbital optimization) for given RDMs
     int micro_maxiter_;
-    /// Min number of micro iterations
-    int micro_miniter_;
+    /// Max number of micro CI iterations
+    int mci_maxiter_;
 
     /// Optimize orbitals or not
     bool opt_orbs_;
