@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <complex>
 #include <numeric>
 
 #define FMT_HEADER_ONLY
@@ -285,9 +286,10 @@ void sim_trans_antiherm_impl(SparseOperator& O, const SQOperatorString& T_op, sp
                              double screen_threshold) {
     // sanity check to make sure all indices are distinct
     if (T_op.cre().fast_a_xor_b_count(T_op.ann()) == 0) {
-        throw std::runtime_error("sim_trans_antiherm_impl: the operator " + T_op.str() +
-                                 " contains repeated indices.\nThis is not allowed for the "
-                                 "similarity transformation.");
+        // throw std::runtime_error("sim_trans_antiherm_impl: the operator " + T_op.str() +
+        //                          " contains repeated indices.\nThis is not allowed for the "
+        //                          "similarity transformation.");
+        return;
     }
     // sanity check that theta is real
     if (std::abs(std::imag(theta)) > 1.0e-12) {
@@ -493,9 +495,10 @@ void sim_trans_antiherm_impl_grad(SparseOperator& O, const SQOperatorString& T_o
                                   sparse_scalar_t theta, double screen_threshold) {
     // sanity check to make sure all indices are distinct
     if (T_op.cre().fast_a_xor_b_count(T_op.ann()) == 0) {
-        throw std::runtime_error("sim_trans_antiherm_impl: the operator " + T_op.str() +
-                                 " contains repeated indices.\nThis is not allowed for the "
-                                 "similarity transformation.");
+        return;
+        // throw std::runtime_error("sim_trans_antiherm_impl: the operator " + T_op.str() +
+        //                          " contains repeated indices.\nThis is not allowed for the "
+        //                          "similarity transformation.");
     }
     // sanity check that theta is real
     if (std::abs(std::imag(theta)) > 1.0e-12) {
@@ -704,229 +707,37 @@ void sim_trans_antiherm_impl_grad(SparseOperator& O, const SQOperatorString& T_o
     O = T;
 }
 
-void sim_trans_imagherm_impl(SparseOperator& O, const SQOperatorString& T_op, sparse_scalar_t theta,
-                             double screen_threshold) {
-    // sanity check to make sure all indices are distinct
-    if (T_op.cre().fast_a_xor_b_count(T_op.ann()) == 0) {
-        throw std::runtime_error("sim_trans_imagherm_impl: the operator " + T_op.str() +
-                                 " contains repeated indices.\nThis is not allowed for the "
-                                 "similarity transformation.");
-    }
-    // sanity check that theta is real
-    if (std::abs(std::imag(theta)) > 1.0e-12) {
-        throw std::runtime_error("sim_trans_imagherm_impl: the angle theta must be real.");
-    }
-
-    // Td = T^dagger
-    auto Td_op = T_op.adjoint();
-    // TTd = T T^dagger (gives a number operator if there are no repeated indices)
-    auto TTd = T_op * Td_op;
-    // TdT = T^dagger T (gives a number operator if there are no repeated indices)
-    auto TdT = Td_op * T_op;
-
-    SparseOperator T;
-    std::complex<double> imag1 = std::complex<double>(0.0, 1.0);
-    sparse_scalar_t min_i_sin_theta = -imag1 * std::sin(theta);
-    sparse_scalar_t min_sin_theta_2 = -std::pow(std::sin(theta), 2.0);
-    sparse_scalar_t i_sin_theta_cos_theta_minus_1 =
-        imag1 * std::sin(theta) * (std::cos(theta) - 1.0);
-    sparse_scalar_t sin_theta_half_4 = std::pow(std::sin(0.5 * theta), 4.0);
-    sparse_scalar_t cos_theta_minus_1_2 = std::pow(std::cos(theta) - 1.0, 2.0);
-
-    for (const auto& [O_op, O_c] : O.elements()) {
-        const bool do_O_T_commute = do_ops_commute(O_op, T_op);
-        const bool do_O_Td_commute = do_ops_commute(O_op, Td_op);
-        // if both commutators are zero, then we can skip this term
-        if (do_O_T_commute and do_O_Td_commute) {
-            continue;
-        }
-
-        // check which terms survive the screening
-        const auto do_min_i_sin_theta = std::abs(min_i_sin_theta * O_c) > screen_threshold;
-        const auto do_min_sin_theta_2 = std::abs(min_sin_theta_2 * O_c) > screen_threshold;
-        const auto do_i_sin_theta_cos_theta_minus_1 =
-            std::abs(i_sin_theta_cos_theta_minus_1 * O_c) > screen_threshold;
-        const auto do_sin_theta_half_4 = std::abs(2.0 * sin_theta_half_4 * O_c) > screen_threshold;
-        const auto do_cos_theta_minus_1_2 = std::abs(cos_theta_minus_1_2 * O_c) > screen_threshold;
-
-        if (not do_O_T_commute) {
-            // [O, T]
-            auto cOT = commutator_fast(O_op, T_op);
-            for (const auto& [cOT_op, cOT_c] : cOT) {
-                // -i sin(theta) [O, T]
-                if (do_min_i_sin_theta) {
-                    T.add(cOT_op, min_i_sin_theta * cOT_c * O_c);
-                }
-                if (do_min_sin_theta_2) {
-                    // -sin(theta)^2 T [O,T]
-                    auto T_cOT = T_op * cOT_op;
-                    for (const auto& [T_cOT_op, T_cOT_c] : T_cOT) {
-                        T.add(T_cOT_op, -min_sin_theta_2 * T_cOT_c * cOT_c * O_c);
-                    }
-                    // +1/2 sin(theta)^2 [T^dagger, [O,T]]
-                    auto cTdcOT = commutator_fast(Td_op, cOT_op);
-                    for (const auto& [cTdcOT_op, cTdcOT_c] : cTdcOT) {
-                        T.add(cTdcOT_op, 0.5 * min_sin_theta_2 * cTdcOT_c * cOT_c * O_c);
-                    }
-                    // for small angles, we can use the small angle approximation
-                    // sin(theta) = theta, sin(theta)^2 = theta^2, and sin(theta) (cos(theta) -
-                    // 1) = theta^2/2 which guarantees that |sin(theta) (cos(theta) - 1)| <
-                    // |sin(theta)^2|. That's why we can nest this check here.
-                    if (do_i_sin_theta_cos_theta_minus_1) {
-                        auto TdcOT = Td_op * cOT_op;
-                        for (const auto& [TdcOT_op, TdcOT_c] : TdcOT) {
-                            // -sin(theta) (cos(theta) - 1) T^dagger [O,T] T
-                            auto TdcOTT = TdcOT_op * T_op;
-                            for (const auto& [TdcOTT_op, TdcOTT_c] : TdcOTT) {
-                                T.add(TdcOTT_op, -i_sin_theta_cos_theta_minus_1 * TdcOTT_c *
-                                                     TdcOT_c * cOT_c * O_c);
-                            }
-                            // sin(theta) (cos(theta) - 1) T^dagger [O,T] T^dagger
-                            auto TdcOTd = TdcOT_op * Td_op;
-                            for (const auto& [TdcOTTd_op, TdcOTTd_c] : TdcOTd) {
-                                T.add(TdcOTTd_op, i_sin_theta_cos_theta_minus_1 * TdcOTTd_c *
-                                                      TdcOT_c * cOT_c * O_c);
-                            }
-                        }
-                        // -sin(theta) (cos(theta) - 1) T [O,T] T^dagger
-                        for (const auto& [TcOT_op, TcOT_c] : T_cOT) {
-                            auto TcOTTd = TcOT_op * Td_op;
-                            for (const auto& [TcOTTd_op, TcOTTd_c] : TcOTTd) {
-                                T.add(TcOTTd_op, -i_sin_theta_cos_theta_minus_1 * TcOTTd_c *
-                                                     TcOT_c * cOT_c * O_c);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (not do_O_Td_commute) {
-            // [O, T^dagger]
-            auto cOTd = commutator_fast(O_op, Td_op);
-            for (const auto& [cOTd_op, cOTd_c] : cOTd) {
-                // -i sin(theta)[O, T^dagger]
-                if (do_min_i_sin_theta) {
-                    T.add(cOTd_op, min_i_sin_theta * cOTd_c * O_c);
-                }
-                if (do_min_sin_theta_2) {
-                    // -sin(theta)^2 T^dagger [O,T^dagger]
-                    auto TdcOTd = Td_op * cOTd_op;
-                    for (const auto& [TdcOTd_op, TdcOTd_c] : TdcOTd) {
-                        T.add(TdcOTd_op, -min_sin_theta_2 * TdcOTd_c * cOTd_c * O_c);
-                    }
-                    // +1/2 sin(theta)^2 [T, [O,T^dagger]]
-                    auto cTcOTd = commutator_fast(T_op, cOTd_op);
-                    for (const auto& [cTcOTd_op, cTcOTd_c] : cTcOTd) {
-                        T.add(cTcOTd_op, 0.5 * min_sin_theta_2 * cTcOTd_c * cOTd_c * O_c);
-                    }
-                    if (do_i_sin_theta_cos_theta_minus_1) {
-                        auto TcOTd = T_op * cOTd_op;
-                        for (const auto& [TcOTd_op, TcOTd_c] : TcOTd) {
-                            // -sin(theta) (cos(theta) - 1) T [O,T^dagger] T
-                            auto TcOTdT = TcOTd_op * T_op;
-                            for (const auto& [TcOTdT_op, TcOTdT_c] : TcOTdT) {
-                                T.add(TcOTdT_op, -i_sin_theta_cos_theta_minus_1 * TcOTdT_c *
-                                                     TcOTd_c * cOTd_c * O_c);
-                            }
-                            // +sin(theta) (cos(theta) - 1) T [O,T^dagger] T^dagger
-                            auto TcOTdTd = TcOTd_op * Td_op;
-                            for (const auto& [TcOTdTd_op, TcOTdTd_c] : TcOTdTd) {
-                                T.add(TcOTdTd_op, i_sin_theta_cos_theta_minus_1 * TcOTdTd_c *
-                                                      TcOTd_c * cOTd_c * O_c);
-                            }
-                        }
-
-                        for (const auto& [TdcOTd_op, TdcOTd_c] : TdcOTd) {
-                            // +sin(theta) (cos(theta) - 1) T^dagger [O,T^dagger] T
-                            auto TdcOTdT = TdcOTd_op * T_op;
-                            for (const auto& [TdcOTdT_op, TdcOTdT_c] : TdcOTdT) {
-                                T.add(TdcOTdT_op, i_sin_theta_cos_theta_minus_1 * TdcOTdT_c *
-                                                      TdcOTd_c * cOTd_c * O_c);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (do_sin_theta_half_4) {
-            for (const auto& [TdT_op, TdT_c] : TdT) {
-                auto TdTO = TdT_op * O_op;
-                for (const auto& [TdTO_op, TdTO_c] : TdTO) {
-                    // -2 sin(theta/2)^4 T^dagger T O
-                    T.add(TdTO_op, -2.0 * sin_theta_half_4 * TdTO_c * TdT_c * O_c);
-                    if (do_cos_theta_minus_1_2) {
-                        // + (cos(theta) - 1)^2 T^dagger T O T^dagger T
-                        for (const auto& [TdT_op2, TdT_c2] : TdT) {
-                            auto TdTOTdT = TdTO_op * TdT_op2;
-                            for (const auto& [TdTOTdT_op, TdTOTdT_c] : TdTOTdT) {
-                                T.add(TdTOTdT_op, cos_theta_minus_1_2 * TdTOTdT_c * TdT_c2 *
-                                                      TdTO_c * TdT_c * O_c);
-                            }
-                        }
-                        // + (cos(theta) - 1)^2 T^dagger T O T T^dagger
-                        for (const auto& [TTd_op, TTd_c] : TTd) {
-                            auto TdTOTTd = TdTO_op * TTd_op;
-                            for (const auto& [TdTOTTd_op, TdTOTTd_c] : TdTOTTd) {
-                                T.add(TdTOTTd_op, cos_theta_minus_1_2 * TdTOTTd_c * TTd_c * TdTO_c *
-                                                      TdT_c * O_c);
-                            }
-                        }
-                    }
-                }
-                // -2 sin(theta/2)^4 O T^dagger T
-                auto OTdT = O_op * TdT_op;
-                for (const auto& [OTdT_op, OTdT_c] : OTdT) {
-                    T.add(OTdT_op, -2.0 * sin_theta_half_4 * OTdT_c * TdT_c * O_c);
-                }
-            }
-            for (const auto& [TTd_op, TTd_c] : TTd) {
-                // -2 sin(theta/2)^4 T T^dagger O
-                auto TTdO = TTd_op * O_op;
-                for (const auto& [TTdO_op, TTdO_c] : TTdO) {
-                    T.add(TTdO_op, -2.0 * sin_theta_half_4 * TTdO_c * TTd_c * O_c);
-                    if (do_cos_theta_minus_1_2) {
-                        // + (cos(theta) - 1)^2 T T^dagger O T^dagger T
-                        for (const auto& [TdT_op, TdT_c] : TdT) {
-                            auto TTdOTdT = TTdO_op * TdT_op;
-                            for (const auto& [TTdOTdT_op, TTdOTdT_c] : TTdOTdT) {
-                                T.add(TTdOTdT_op, cos_theta_minus_1_2 * TTdOTdT_c * TdT_c * TTdO_c *
-                                                      TTd_c * O_c);
-                            }
-                        }
-                        // + (cos(theta) - 1)^2 T T^dagger O T T^dagger
-                        for (const auto& [TTd_op2, TTd_c2] : TTd) {
-                            auto TTdOTTd = TTdO_op * TTd_op2;
-                            for (const auto& [TTdOTTd_op, TTdOTTd_c] : TTdOTTd) {
-                                T.add(TTdOTTd_op, cos_theta_minus_1_2 * TTdOTTd_c * TTd_c2 *
-                                                      TTdO_c * TTd_c * O_c);
-                            }
-                        }
-                    }
-                }
-                // -2 sin(theta/2)^4 O T T^dagger
-                auto OTTd = O_op * TTd_op;
-                for (const auto& [OTTd_op, OTTd_c] : OTTd) {
-                    T.add(OTTd_op, -2.0 * sin_theta_half_4 * OTTd_c * TTd_c * O_c);
-                }
-            }
-        }
-    }
-    O += T;
-}
-
 void sim_trans_imagherm_impl2(SparseOperator& O, const SQOperatorString& T_op,
                               sparse_scalar_t theta, double screen_threshold) {
     // This function evaluates exp(i theta (T + T^dagger)) O exp(-i theta (T + T^dagger))
-
-    // sanity check to make sure all indices are distinct
-    if (T_op.cre().fast_a_xor_b_count(T_op.ann()) == 0) {
-        throw std::runtime_error("sim_trans_imagherm_impl: the operator " + T_op.str() +
-                                 " contains repeated indices.\nThis is not allowed for the "
-                                 "similarity transformation.");
-    }
     // sanity check that theta is real
     if (std::abs(std::imag(theta)) > 1.0e-12) {
         throw std::runtime_error("sim_trans_imagherm_impl: the angle theta must be real.");
+    }
+
+    // consider the case where the operator is a number operator
+    if (T_op.cre().fast_a_xor_b_count(T_op.ann()) == 0) {
+        SparseOperator T;
+        double two_theta = 2.0 * std::real(theta);
+        sparse_scalar_t four_sin_theta_2 = 4.0 * std::pow(std::sin(theta), 2.0);
+        std::complex<double> exp_phase_min_one = std::polar(1.0, two_theta) - 1.0;
+        std::complex<double> exp_min_phase_min_one = std::polar(1.0, -two_theta) - 1.0;
+        for (const auto& [O_op, O_c] : O.elements()) {
+            auto NO = T_op * O_op;
+            for (const auto& [NO_op, NO_c] : NO) {
+                T.add(NO_op, exp_phase_min_one * NO_c * O_c);
+                auto NON = NO_op * T_op;
+                for (const auto& [NON_op, NON_c] : NON) {
+                    T.add(NON_op, four_sin_theta_2 * NON_c * NO_c * O_c);
+                }
+            }
+            auto ON = O_op * T_op;
+            for (const auto& [ON_op, ON_c] : ON) {
+                T.add(ON_op, exp_min_phase_min_one * ON_c * O_c);
+            }
+        }
+        O += T;
+        return;
     }
 
     // Td = T^dagger
@@ -964,7 +775,7 @@ void sim_trans_imagherm_impl2(SparseOperator& O, const SQOperatorString& T_op,
         // +sin(theta)^2 SOS (all)
         auto OT = O_op * T_op;
         for (const auto& [OT_op, OT_c] : OT) {
-            T.add(OT_op, +min_i_sin_theta * O_c);
+            T.add(OT_op, +min_i_sin_theta * OT_c * O_c);
             auto TOT = T_op * OT_op;
             // +sin(theta)^2 TOT
             for (const auto& [TOT_op, TOT_c] : TOT) {
@@ -978,11 +789,11 @@ void sim_trans_imagherm_impl2(SparseOperator& O, const SQOperatorString& T_op,
         }
         auto TO = T_op * O_op;
         for (const auto& [TO_op, TO_c] : TO) {
-            T.add(TO_op, -min_i_sin_theta * O_c);
+            T.add(TO_op, -min_i_sin_theta * TO_c * O_c);
         }
         auto OTd = O_op * Td_op;
         for (const auto& [OTd_op, OTd_c] : OTd) {
-            T.add(OTd_op, +min_i_sin_theta * O_c);
+            T.add(OTd_op, +min_i_sin_theta * OTd_c * O_c);
             // +sin(theta)^2 TOTd
             auto TOTd = T_op * OTd_op;
             for (const auto& [TOTd_op, TOTd_c] : TOTd) {
@@ -996,14 +807,15 @@ void sim_trans_imagherm_impl2(SparseOperator& O, const SQOperatorString& T_op,
         }
         auto TdO = Td_op * O_op;
         for (const auto& [TdO_op, TdO_c] : TdO) {
-            T.add(TdO_op, -min_i_sin_theta * O_c);
+            T.add(TdO_op, -min_i_sin_theta * TdO_c * O_c);
         }
 
-        // (cos(theta) - 1) {O, SS} (all)
+        // // (cos(theta) - 1) {O, SS} (all)
         for (const auto& [TTd_op, TTd_c] : TTd) {
             auto OTTd = O_op * TTd_op;
             for (const auto& [OTTd_op, OTTd_c] : OTTd) {
-                T.add(OTTd_op, cos_theta_minus_1 * OTTd_c * TTd_c * O_c);
+                // (cos(theta) - 1) OTTd
+                T.add(OTTd_op, cos_theta_minus_1 * OTTd_c * TTd_c * O_c); // OK
                 // + i sin(theta) (cos(theta) - 1) TOTTd
                 auto TOTTd = T_op * OTTd_op;
                 for (const auto& [TOTTd_op, TOTTd_c] : TOTTd) {
@@ -1017,7 +829,7 @@ void sim_trans_imagherm_impl2(SparseOperator& O, const SQOperatorString& T_op,
                 }
                 // + (cos(theta) - 1)^2 TTdOTTd
                 for (const auto& [TTd_op2, TTd_c2] : TTd) {
-                    auto TTdOTTd = TTd_op * OTTd_op;
+                    auto TTdOTTd = TTd_op2 * OTTd_op;
                     for (const auto& [TTdOTTd_op, TTdOTTd_c] : TTdOTTd) {
                         T.add(TTdOTTd_op,
                               cos_theta_minus_1_2 * TTdOTTd_c * TTd_c2 * OTTd_c * TTd_c * O_c);
@@ -1034,6 +846,7 @@ void sim_trans_imagherm_impl2(SparseOperator& O, const SQOperatorString& T_op,
             }
             auto TTdO = TTd_op * O_op;
             for (const auto& [TTdO_op, TTdO_c] : TTdO) {
+                // (cos(theta) - 1) TTdO
                 T.add(TTdO_op, cos_theta_minus_1 * TTdO_c * TTd_c * O_c);
                 // - i sin(theta) (cos(theta) - 1) TTdOT
                 auto TTdOT = TTdO_op * T_op;
@@ -1052,6 +865,7 @@ void sim_trans_imagherm_impl2(SparseOperator& O, const SQOperatorString& T_op,
         for (const auto& [TdT_op, TdT_c] : TdT) {
             auto OTdT = O_op * TdT_op;
             for (const auto& [OTdT_op, OTdT_c] : OTdT) {
+                // (cos(theta) - 1) OTdT
                 T.add(OTdT_op, cos_theta_minus_1 * OTdT_c * TdT_c * O_c);
                 // + i sin(theta) (cos(theta) - 1) TOTdT
                 auto TOTdT = T_op * OTdT_op;
@@ -1083,6 +897,7 @@ void sim_trans_imagherm_impl2(SparseOperator& O, const SQOperatorString& T_op,
             }
             auto TdTO = TdT_op * O_op;
             for (const auto& [TdTO_op, TdTO_c] : TdTO) {
+                // (cos(theta) - 1) OTdT
                 T.add(TdTO_op, cos_theta_minus_1 * TdTO_c * TdT_c * O_c);
                 // - i sin(theta) (cos(theta) - 1) TdTOT
                 auto TdTOT = TdTO_op * T_op;

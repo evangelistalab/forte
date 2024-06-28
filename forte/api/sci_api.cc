@@ -516,8 +516,8 @@ void export_Determinant(py::module& m) {
             sim_trans_fact_antiherm(O, T, reverse, screen_thresh);
             auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> elapsed_seconds = end - start;
-            // std::cout << "similarity_transform (antihermitian) took " << elapsed_seconds.count()
-            //           << "s\n";
+            std::cout << "similarity_transform (antihermitian) took " << elapsed_seconds.count()
+                      << "s\n";
         },
         "O"_a, "T"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12);
 
@@ -543,8 +543,8 @@ void export_Determinant(py::module& m) {
             sim_trans_fact_imagherm(O, T, reverse, screen_thresh);
             auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> elapsed_seconds = end - start;
-            // std::cout << "similarity_transform (antihermitian) took " << elapsed_seconds.count()
-            //           << "s\n";
+            std::cout << "similarity_transform (imagherm) took " << elapsed_seconds.count()
+                      << "s\n";
         },
         "O"_a, "T"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12);
 
