@@ -62,13 +62,14 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
     : method_(method), state_nroots_map_(state_nroots_map), scf_info_(scf_info),
       mo_space_info_(mo_space_info), options_(options), as_ints_(as_ints) {
 
-    // print_options();
-
     print_ = int_to_print_level(options->get_int("PRINT"));
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
     read_initial_guess_ = options->get_bool("READ_ACTIVE_WFN_GUESS");
     gas_diff_only_ = options->get_bool("PRINT_DIFFERENT_GAS_ONLY");
+
+    if (options->get_str("ACTIVE_SPACE_SOLVER") == "BLOCK2")
+        maxiter_ = options_->get_int("BLOCK2_N_TOTAL_SWEEPS");
 
     auto nactv = mo_space_info_->size("ACTIVE");
     Ua_actv_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nactv, nactv});
@@ -143,8 +144,8 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         method->set_r_convergence(r_convergence_);
         method->set_maxiter(maxiter_);
 
+        state_filename_map_[state] = method->wfn_filename();
         if (read_initial_guess_) {
-            state_filename_map_[state] = method->wfn_filename();
             method->set_read_wfn_guess(read_initial_guess_);
         }
 
@@ -626,7 +627,8 @@ std::shared_ptr<RDMs> ActiveSpaceSolver::compute_average_rdms(
 }
 
 std::map<StateInfo, std::vector<double>>
-ActiveSpaceSolver::compute_complementary_H2caa_overlap(ambit::Tensor Tbra, ambit::Tensor Tket) {
+ActiveSpaceSolver::compute_complementary_H2caa_overlap(ambit::Tensor Tbra, ambit::Tensor Tket,
+                                                       const std::vector<int>& p_syms) {
     std::map<StateInfo, std::vector<double>> out;
     for (const auto& state_nroots : state_nroots_map_) {
         const auto& state = state_nroots.first;
@@ -635,7 +637,7 @@ ActiveSpaceSolver::compute_complementary_H2caa_overlap(ambit::Tensor Tbra, ambit
         std::iota(roots.begin(), roots.end(), 0);
 
         const auto method = state_method_map_.at(state);
-        out[state] = method->compute_complementary_H2caa_overlap(roots, Tbra, Tket);
+        out[state] = method->compute_complementary_H2caa_overlap(roots, Tbra, Tket, p_syms);
     }
     return out;
 }

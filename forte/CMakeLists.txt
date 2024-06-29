@@ -18,6 +18,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include(psi4OptionsTools)
 
 option_with_print(ENABLE_CheMPS2 "Enable CheMPS2 solver" OFF)
+option_with_print(ENABLE_block2 "Enable block2 solver" OFF)
 option_with_print(ENABLE_OPENMP "Enable threadsafe linking to OpenMP parallelized programs" ON)
 option_with_print(ENABLE_MPI "Enable MPI parallelization" OFF)
 option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
@@ -44,6 +45,12 @@ if(ENABLE_CheMPS2)
     find_package(CheMPS2 1.8.3 CONFIG REQUIRED)
     add_definitions(-DHAVE_CHEMPS2)
     set(HAVE_CHEMPS2 true)
+endif()
+
+if(ENABLE_block2)
+    find_package(block2 2.0 CONFIG REQUIRED)
+    add_definitions(-DHAVE_BLOCK2)
+    set(HAVE_BLOCK2 true)
 endif()
 
 set(Boost_USE_STATIC_LIBS OFF)
@@ -104,6 +111,7 @@ ci_rdm/ci_rdms.cc
 ci_rdm/ci_rdms_dynamic.cc
 ci_rdm/ci_rdms_sf.cc
 dmrg/dmrgsolver.cc
+dmrg/block2_dmrg_solver.cc
 external/external_active_space_method.cc
 fci/fci_string_address.cc
 fci/fci_solver_initial_guess.cc
@@ -275,6 +283,11 @@ target_link_libraries(_forte PRIVATE ambit::ambit)
 if(TARGET CheMPS2::chemps2)
     target_link_libraries(_forte PRIVATE CheMPS2::chemps2)
     add_definitions(-DHAVE_CHEMPS2)
+endif()
+
+if(TARGET block2::block2)
+    target_link_libraries(_forte PRIVATE block2::block2)
+    add_definitions(-DHAVE_BLOCK2)
 endif()
 
 if(ENABLE_MPI)

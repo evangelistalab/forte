@@ -39,7 +39,6 @@ from forte.modules import (
     OptionsFactory,
     ObjectsFromFCIDUMP,
     ObjectsFromPsi4,
-    ObjectsFromPySCF,
     ActiveSpaceInts,
     ActiveSpaceSolver,
     ActiveSpaceRDMs,
@@ -47,6 +46,12 @@ from forte.modules import (
     MCSCF,
     TDACI,
 )
+
+try:
+    from forte.modules import ObjectsFromPySCF
+except ImportError:
+    pass
+
 from forte.proc.external_active_space_solver import (
     write_external_active_space_file,
     write_external_rdm_file,
