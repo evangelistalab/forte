@@ -50,7 +50,7 @@ jobs:
         make -j4
         make install
 
-    - name: Compile psi4
+    - name: Compile Psi4
       run: |
         cd $HOME        
         git clone https://github.com/psi4/psi4.git
@@ -61,7 +61,7 @@ jobs:
         cd objdir
         make -j4
 
-    - name: Compile forte
+    - name: Compile Forte
       run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib
         export AMBITPATH=$HOME/bin/ambit
@@ -79,11 +79,13 @@ jobs:
           -DPYTHON_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
           -DENABLE_ForteTests=TRUE 
         make -j4
-        export PYTHONPATH=$PYTHONPATH:$HOME/work/forte/forte
         pip list
 
-    - name: Test forte
+    - name: Test Forte
       run: |
+        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
+        export AMBITPATH=$HOME/bin/ambit
+        export PATH=$PATH:$HOME/psi4/objdir/stage/bin
         export OPENBLAS_NUM_THREADS=1
         cd $HOME/work/forte/forte/tests/methods
         python run_forte_tests.py --failed_dump --bw
