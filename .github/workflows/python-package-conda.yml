@@ -66,11 +66,20 @@ jobs:
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib
         export AMBITPATH=$HOME/bin/ambit
         export PATH=$PATH:$HOME/psi4/objdir/stage/bin
+        ambit_dir=$HOME/bin/ambit/share/cmake/ambit/
+        build_type=Release
         cd $HOME/work/forte/forte
-        python setup.py develop
+        cmake_psi4=`psi4 --plugin-compile`
+        $cmake_psi4 \
+          -Dambit_DIR=$ambit_dir \
+          -DCMAKE_BUILD_TYPE=$build_type \
+          -Dblock2_DIR=${BLOCK2_BIN_DIR}/share/cmake/block2 \
+          -DENABLE_block2=ON \
+          -DMAX_DET_ORB=128 \
+          -DPYTHON_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
+          -DENABLE_ForteTests=TRUE 
+        make -j4
         pip list
-        # cd $HOME/work/forte/forte/tests/pytest
-        # pytest
         export OPENBLAS_NUM_THREADS=1
         cd $HOME/work/forte/forte/tests/methods
         python run_forte_tests.py --failed_dump --bw
