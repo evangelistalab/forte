@@ -83,6 +83,8 @@ jobs:
         export OPENBLAS_NUM_THREADS=1
         cd $HOME/work/forte/forte/tests/methods
         python run_forte_tests.py --failed_dump --bw
+        cd $HOME/work/forte/forte/tests/pytest
+        pytest -v
         cd $HOME/work/forte/forte/tests/pytest-methods
         pytest -v
         cd $HOME/work/forte/forte/tests/pytest-block2
