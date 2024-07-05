@@ -26,6 +26,18 @@ jobs:
         auto-activate-base: false
         add-pip-as-python-dependency: true
 
+    - name: Compile block2
+      run: |
+        cd $HOME
+        git clone https://github.com/block-hczhai/block2-preview.git
+        mkdir -p block2-preview/build
+        cd block2-preview/build
+        cmake .. -DUSE_MKL=OFF -DBUILD_CLIB=ON \
+          -DLARGE_BOND=ON \
+          -DMPI=OFF \
+          -DCMAKE_INSTALL_PREFIX=${HOME}/block2-bin
+        make -j2 install
+
     - name: Install ambit
       run: |
         conda info
@@ -48,18 +60,6 @@ jobs:
         cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$HOME/psi4bin -DENABLE_ecpint=ON
         cd objdir
         make -j4
-
-    - name: Compile block2
-      run: |
-        cd $HOME
-        git clone https://github.com/block-hczhai/block2-preview.git
-        mkdir -p block2-preview/build
-        cd block2-preview/build
-        cmake .. -DUSE_MKL=OFF -DBUILD_CLIB=ON \
-          -DLARGE_BOND=ON \
-          -DMPI=OFF \
-          -DCMAKE_INSTALL_PREFIX=${HOME}/block2-bin
-        make -j2 install
 
     - name: Compile forte
       run: |
