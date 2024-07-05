@@ -36,7 +36,7 @@ jobs:
           -DLARGE_BOND=ON \
           -DMPI=OFF \
           -DCMAKE_INSTALL_PREFIX=${HOME}/block2-bin
-        make -j2 install
+        make -j4 install
 
     - name: Install ambit
       run: |
@@ -79,7 +79,10 @@ jobs:
           -DPYTHON_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
           -DENABLE_ForteTests=TRUE 
         make -j4
+        export PYTHONPATH=$PYTHONPATH:$HOME/work/forte/forte
         pip list
+
+    - name: Test forte
         export OPENBLAS_NUM_THREADS=1
         cd $HOME/work/forte/forte/tests/methods
         python run_forte_tests.py --failed_dump --bw
