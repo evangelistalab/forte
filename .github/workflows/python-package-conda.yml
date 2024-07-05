@@ -49,6 +49,18 @@ jobs:
         cd objdir
         make -j4
 
+    - name: Compile block2
+      run: |
+        cd $HOME
+        git clone https://github.com/block-hczhai/block2-preview.git
+        mkdir -p block2-preview/build
+        cd block2-preview/build
+        cmake .. -DUSE_MKL=OFF -DBUILD_CLIB=ON \
+          -DLARGE_BOND=ON \
+          -DMPI=OFF \
+          -DCMAKE_INSTALL_PREFIX=${HOME}/block2-bin
+        make -j2 install
+
     - name: Compile forte
       run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib
