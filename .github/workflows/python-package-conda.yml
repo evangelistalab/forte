@@ -26,6 +26,12 @@ jobs:
         auto-activate-base: false
         add-pip-as-python-dependency: true
 
+    - name: Get cache key
+      id: get-key
+      run: |
+        echo "key=$(git ls-remote https://github.com/psi4/psi4.git refs/heads/master | awk '{print $1}')" >> $GITHUB_OUTPUT
+      shell: bash
+
     - name: Restore cache
       uses: actions/cache/restore@v4
       id: cache-restore
@@ -34,7 +40,7 @@ jobs:
           ${HOME}/block2-bin
           ${HOME}/bin/ambit
           ${HOME}/psi4bin
-        key: ${{ runner.os }}-forte-${{ git ls-remote https://github.com/psi4/psi4.git refs/heads/master | awk '{print $1}' }}
+        key: ${{ runner.os }}-forte-${{ steps.get-key.outputs.key }}
 
     - name: Compile block2
       if: steps.cache-restore.outputs.cache-hit != 'true'
@@ -81,7 +87,7 @@ jobs:
           ${HOME}/block2-bin
           ${HOME}/bin/ambit
           ${HOME}/psi4bin
-        key: ${{ runner.os }}-forte-${{ git ls-remote https://github.com/psi4/psi4.git refs/heads/master | awk '{print $1}' }}
+        key: ${{ runner.os }}-forte-${{ steps.get-key.outputs.key }}
 
     - name: Compile Forte
       run: |
