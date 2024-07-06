@@ -9,17 +9,6 @@ jobs:
       run:
         shell: bash -el {0}   
 
-    steps:
-    - name: Restore cache
-      uses: actions/cache/restore@v4
-      id: cache-restore
-      with:
-        path: |
-          ${HOME}/block2-bin
-          ${HOME}/bin/ambit
-          ${HOME}/psi4bin
-        key: ${{ runner.os }}-forte-${{ git ls-remote https://github.com/psi4/psi4.git refs/heads/master | awk '{print $1}' }}
-
     - name: Checkout code
       uses: actions/checkout@v4
       with:
@@ -35,6 +24,17 @@ jobs:
         python-version: '3.11'
         auto-activate-base: false
         add-pip-as-python-dependency: true
+
+    steps:
+    - name: Restore cache
+      uses: actions/cache/restore@v4
+      id: cache-restore
+      with:
+        path: |
+          ${HOME}/block2-bin
+          ${HOME}/bin/ambit
+          ${HOME}/psi4bin
+        key: ${{ runner.os }}-forte-${{ git ls-remote https://github.com/psi4/psi4.git refs/heads/master | awk '{print $1}' }}
 
     - name: Compile block2
       if: steps.cache-restore.outputs.cache-hit != 'true'
