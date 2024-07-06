@@ -39,7 +39,7 @@ jobs:
         path: |
           ${HOME}/block2-bin
           ${HOME}/block2-preview
-        key: ${{ runner.os }}-forte-${{ steps.get-block2-key.outputs.key }}
+        key: ${{ runner.os }}-block2-${{ steps.get-block2-key.outputs.key }}
 
     - name: Compile block2
       if: steps.cache-restore-block2.outputs.cache-hit != 'true'
@@ -60,7 +60,7 @@ jobs:
         path: |
           ${HOME}/block2-bin
           ${HOME}/block2-preview
-        key: ${{ runner.os }}-forte-${{ steps.get-block2-key.outputs.key }}
+        key: ${{ runner.os }}-block2-${{ steps.get-block2-key.outputs.key }}
 
     - name: Get ambit cache key
       id: get-ambit-key
@@ -74,7 +74,7 @@ jobs:
       with:
         path: |
           ${HOME}/bin/ambit
-        key: ${{ runner.os }}-forte-${{ steps.get-ambit-key.outputs.key }}
+        key: ${{ runner.os }}-ambit-${{ steps.get-ambit-key.outputs.key }}
 
     - name: Install ambit
       if: steps.cache-restore-ambit.outputs.cache-hit != 'true'
@@ -94,7 +94,7 @@ jobs:
       with:
         path: |
           ${HOME}/bin/ambit
-        key: ${{ runner.os }}-forte-${{ steps.get-ambit-key.outputs.key }}
+        key: ${{ runner.os }}-ambit-${{ steps.get-ambit-key.outputs.key }}
     
     - name: Get Psi4 cache key
       id: get-psi4-key
@@ -108,7 +108,7 @@ jobs:
       with:
         path: |
           ${HOME}/psi4bin
-        key: ${{ runner.os }}-forte-${{ steps.get-psi4-key.outputs.key }}
+        key: ${{ runner.os }}-psi4-${{ steps.get-psi4-key.outputs.key }}
       
     - name: Compile Psi4
       if: steps.cache-restore-psi4.outputs.cache-hit != 'true'
@@ -127,7 +127,7 @@ jobs:
       with:
         path: |
           ${HOME}/psi4bin
-        key: ${{ runner.os }}-forte-${{ steps.get-psi4-key.outputs.key }}
+        key: ${{ runner.os }}-psi4-${{ steps.get-psi4-key.outputs.key }}
 
     - name: Compile Forte
       run: |
