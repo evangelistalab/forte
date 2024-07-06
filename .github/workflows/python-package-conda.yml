@@ -10,6 +10,16 @@ jobs:
         shell: bash -el {0}   
 
     steps:
+    - name: Restore cache
+      uses: actions/cache/restore@v4
+      id: cache-restore
+      with:
+        path: |
+          ${HOME}/block2-bin
+          ${HOME}/bin/ambit
+          ${HOME}/psi4bin
+        key: ${{ runner.os }}-forte-${{ git ls-remote https://github.com/psi4/psi4.git refs/heads/master | awk '{print $1}' }}
+
     - name: Checkout code
       uses: actions/checkout@v4
       with:
@@ -27,6 +37,7 @@ jobs:
         add-pip-as-python-dependency: true
 
     - name: Compile block2
+      if: steps.cache-restore.outputs.cache-hit != 'true'
       run: |
         cd $HOME
         git clone https://github.com/block-hczhai/block2-preview.git
@@ -39,6 +50,7 @@ jobs:
         make -j4 install
 
     - name: Install ambit
+      if: steps.cache-restore.outputs.cache-hit != 'true'
       run: |
         conda info
         conda list
@@ -51,6 +63,7 @@ jobs:
         make install
 
     - name: Compile Psi4
+      if: steps.cache-restore.outputs.cache-hit != 'true'
       run: |
         cd $HOME        
         git clone https://github.com/psi4/psi4.git
@@ -60,6 +73,15 @@ jobs:
         cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$HOME/psi4bin -DENABLE_ecpint=ON
         cd objdir
         make -j4
+
+    - name: Cache block2, ambit, and Psi4
+      uses: actions/cache/save@v2
+      with:
+        path: |
+          ${HOME}/block2-bin
+          ${HOME}/bin/ambit
+          ${HOME}/psi4bin
+        key: ${{ runner.os }}-forte-${{ git ls-remote https://github.com/psi4/psi4.git refs/heads/master | awk '{print $1}' }}
 
     - name: Compile Forte
       run: |
