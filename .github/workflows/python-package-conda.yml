@@ -26,24 +26,23 @@ jobs:
         auto-activate-base: false
         add-pip-as-python-dependency: true
 
-    - name: Get cache key
-      id: get-key
+    - name: Get block2 cache key
+      id: get-block2-key
       run: |
-        echo "key=$(git ls-remote https://github.com/psi4/psi4.git refs/heads/master | awk '{print $1}')" >> $GITHUB_OUTPUT
+        echo "key=$(git ls-remote https://github.com/block-hczhai/block2-preview.git refs/heads/master | awk '{print $1}')" >> $GITHUB_OUTPUT
       shell: bash
 
-    - name: Restore cache
+    - name: Restore block2
       uses: actions/cache/restore@v4
-      id: cache-restore
+      id: cache-restore-block2
       with:
         path: |
           ${HOME}/block2-bin
-          ${HOME}/bin/ambit
-          ${HOME}/psi4bin
-        key: ${{ runner.os }}-forte-${{ steps.get-key.outputs.key }}
+          ${HOME}/block2-preview
+        key: ${{ runner.os }}-forte-${{ steps.get-block2-key.outputs.key }}
 
     - name: Compile block2
-      if: steps.cache-restore.outputs.cache-hit != 'true'
+      if: steps.cache-restore-block2.outputs.cache-hit != 'true'
       run: |
         cd $HOME
         git clone https://github.com/block-hczhai/block2-preview.git
@@ -55,8 +54,30 @@ jobs:
           -DCMAKE_INSTALL_PREFIX=${HOME}/block2-bin
         make -j4 install
 
+    - name: Cache block2
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ${HOME}/block2-bin
+          ${HOME}/block2-preview
+        key: ${{ runner.os }}-forte-${{ steps.get-block2-key.outputs.key }}
+
+    - name: Get ambit cache key
+      id: get-ambit-key
+      run: |
+        echo "key=$(git ls-remote https://github.com/jturney/ambit.git refs/heads/master | awk '{print $1}')" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Restore ambit
+      uses: actions/cache/restore@v4
+      id: cache-restore-ambit
+      with:
+        path: |
+          ${HOME}/bin/ambit
+        key: ${{ runner.os }}-forte-${{ steps.get-ambit-key.outputs.key }}
+
     - name: Install ambit
-      if: steps.cache-restore.outputs.cache-hit != 'true'
+      if: steps.cache-restore-ambit.outputs.cache-hit != 'true'
       run: |
         conda info
         conda list
@@ -68,8 +89,29 @@ jobs:
         make -j4
         make install
 
+    - name: Cache ambit
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ${HOME}/bin/ambit
+        key: ${{ runner.os }}-forte-${{ steps.get-ambit-key.outputs.key }}
+    
+    - name: Get Psi4 cache key
+      id: get-psi4-key
+      run: |
+        echo "key=$(git ls-remote https://github.com/psi4/psi4.git refs/heads/master | awk '{print $1}')" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Restore Psi4
+      uses: actions/cache/restore@v4
+      id: cache-restore-psi4
+      with:
+        path: |
+          ${HOME}/psi4bin
+        key: ${{ runner.os }}-forte-${{ steps.get-psi4-key.outputs.key }}
+      
     - name: Compile Psi4
-      if: steps.cache-restore.outputs.cache-hit != 'true'
+      if: steps.cache-restore-psi4.outputs.cache-hit != 'true'
       run: |
         cd $HOME        
         git clone https://github.com/psi4/psi4.git
@@ -79,15 +121,13 @@ jobs:
         cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$HOME/psi4bin -DENABLE_ecpint=ON
         cd objdir
         make -j4
-
-    - name: Cache block2, ambit, and Psi4
+    
+    - name: Cache Psi4
       uses: actions/cache/save@v4
       with:
         path: |
-          ${HOME}/block2-bin
-          ${HOME}/bin/ambit
           ${HOME}/psi4bin
-        key: ${{ runner.os }}-forte-${{ steps.get-key.outputs.key }}
+        key: ${{ runner.os }}-forte-${{ steps.get-psi4-key.outputs.key }}
 
     - name: Compile Forte
       run: |
