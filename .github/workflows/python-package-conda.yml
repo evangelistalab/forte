@@ -37,9 +37,9 @@ jobs:
       id: cache-restore-block2
       with:
         path: |
-          ${HOME}/block2-bin
-          ${HOME}/block2-preview
-        key: ${{ runner.os }}-block2-${{ steps.get-block2-key.outputs.key }}
+          block2-bin
+          block2-preview
+        key: ${{ runner.os }}-${{ runner.arch }}-block2-${{ steps.get-block2-key.outputs.key }}
 
     - name: Compile block2
       if: steps.cache-restore-block2.outputs.cache-hit != 'true'
@@ -58,9 +58,9 @@ jobs:
       uses: actions/cache/save@v4
       with:
         path: |
-          ${HOME}/block2-bin
-          ${HOME}/block2-preview
-        key: ${{ runner.os }}-block2-${{ steps.get-block2-key.outputs.key }}
+          block2-bin
+          block2-preview
+        key: ${{ runner.os }}-${{ runner.arch }}-block2-${{ steps.get-block2-key.outputs.key }}
 
     - name: Get ambit cache key
       id: get-ambit-key
@@ -73,8 +73,8 @@ jobs:
       id: cache-restore-ambit
       with:
         path: |
-          ${HOME}/bin/ambit
-        key: ${{ runner.os }}-ambit-${{ steps.get-ambit-key.outputs.key }}
+          bin/ambit
+        key: ${{ runner.os }}-${{ runner.arch }}-ambit-${{ steps.get-ambit-key.outputs.key }}
 
     - name: Install ambit
       if: steps.cache-restore-ambit.outputs.cache-hit != 'true'
@@ -93,8 +93,8 @@ jobs:
       uses: actions/cache/save@v4
       with:
         path: |
-          ${HOME}/bin/ambit
-        key: ${{ runner.os }}-ambit-${{ steps.get-ambit-key.outputs.key }}
+          bin/ambit
+        key: ${{ runner.os }}-${{ runner.arch }}-ambit-${{ steps.get-ambit-key.outputs.key }}
     
     - name: Get Psi4 cache key
       id: get-psi4-key
@@ -107,8 +107,8 @@ jobs:
       id: cache-restore-psi4
       with:
         path: |
-          ${HOME}/psi4bin
-        key: ${{ runner.os }}-psi4-${{ steps.get-psi4-key.outputs.key }}
+          psi4bin
+        key: ${{ runner.os }}-${{ runner.arch }}-psi4-${{ steps.get-psi4-key.outputs.key }}
       
     - name: Compile Psi4
       if: steps.cache-restore-psi4.outputs.cache-hit != 'true'
@@ -126,8 +126,8 @@ jobs:
       uses: actions/cache/save@v4
       with:
         path: |
-          ${HOME}/psi4bin
-        key: ${{ runner.os }}-psi4-${{ steps.get-psi4-key.outputs.key }}
+          psi4bin
+        key: ${{ runner.os }}-${{ runner.arch }}-psi4-${{ steps.get-psi4-key.outputs.key }}
 
     - name: Compile Forte
       run: |
