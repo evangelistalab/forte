@@ -71,7 +71,7 @@ jobs:
       id: cache-restore-psi4
       with:
         path: |
-          ~/psi4bin
+          ~/psi4
         key: ${{ runner.os }}-${{ runner.arch }}-psi4-${{ steps.get-psi4-key.outputs.key }}
       
     - name: Compile Psi4
@@ -90,7 +90,7 @@ jobs:
       uses: actions/cache/save@v4
       with:
         path: |
-          ~/psi4bin
+          ~/psi4
         key: ${{ runner.os }}-${{ runner.arch }}-psi4-${{ steps.get-psi4-key.outputs.key }}
 
     - name: Get block2 cache key
