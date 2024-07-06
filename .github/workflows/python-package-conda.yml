@@ -26,42 +26,6 @@ jobs:
         auto-activate-base: false
         add-pip-as-python-dependency: true
 
-    - name: Get block2 cache key
-      id: get-block2-key
-      run: |
-        echo "key=$(git ls-remote https://github.com/block-hczhai/block2-preview.git refs/heads/master | awk '{print $1}')" >> $GITHUB_OUTPUT
-      shell: bash
-
-    - name: Restore block2
-      uses: actions/cache/restore@v4
-      id: cache-restore-block2
-      with:
-        path: |
-          block2-bin
-          block2-preview
-        key: ${{ runner.os }}-${{ runner.arch }}-block2-${{ steps.get-block2-key.outputs.key }}
-
-    - name: Compile block2
-      if: steps.cache-restore-block2.outputs.cache-hit != 'true'
-      run: |
-        cd $HOME
-        git clone https://github.com/block-hczhai/block2-preview.git
-        mkdir -p block2-preview/build
-        cd block2-preview/build
-        cmake .. -DUSE_MKL=OFF -DBUILD_CLIB=ON \
-          -DLARGE_BOND=ON \
-          -DMPI=OFF \
-          -DCMAKE_INSTALL_PREFIX=${HOME}/block2-bin
-        make -j4 install
-
-    - name: Cache block2
-      uses: actions/cache/save@v4
-      with:
-        path: |
-          block2-bin
-          block2-preview
-        key: ${{ runner.os }}-${{ runner.arch }}-block2-${{ steps.get-block2-key.outputs.key }}
-
     - name: Get ambit cache key
       id: get-ambit-key
       run: |
@@ -73,7 +37,7 @@ jobs:
       id: cache-restore-ambit
       with:
         path: |
-          bin/ambit
+          ~/bin/ambit
         key: ${{ runner.os }}-${{ runner.arch }}-ambit-${{ steps.get-ambit-key.outputs.key }}
 
     - name: Install ambit
@@ -93,7 +57,7 @@ jobs:
       uses: actions/cache/save@v4
       with:
         path: |
-          bin/ambit
+          ~/bin/ambit
         key: ${{ runner.os }}-${{ runner.arch }}-ambit-${{ steps.get-ambit-key.outputs.key }}
     
     - name: Get Psi4 cache key
@@ -107,7 +71,7 @@ jobs:
       id: cache-restore-psi4
       with:
         path: |
-          psi4bin
+          ~/psi4bin
         key: ${{ runner.os }}-${{ runner.arch }}-psi4-${{ steps.get-psi4-key.outputs.key }}
       
     - name: Compile Psi4
@@ -126,8 +90,44 @@ jobs:
       uses: actions/cache/save@v4
       with:
         path: |
-          psi4bin
+          ~/psi4bin
         key: ${{ runner.os }}-${{ runner.arch }}-psi4-${{ steps.get-psi4-key.outputs.key }}
+
+    - name: Get block2 cache key
+      id: get-block2-key
+      run: |
+        echo "key=$(git ls-remote https://github.com/block-hczhai/block2-preview.git refs/heads/master | awk '{print $1}')" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Restore block2
+      uses: actions/cache/restore@v4
+      id: cache-restore-block2
+      with:
+        path: |
+          ~/block2-bin
+          ~/block2-preview
+        key: ${{ runner.os }}-${{ runner.arch }}-block2-${{ steps.get-block2-key.outputs.key }}
+
+    - name: Compile block2
+      if: steps.cache-restore-block2.outputs.cache-hit != 'true'
+      run: |
+        cd $HOME
+        git clone https://github.com/block-hczhai/block2-preview.git
+        mkdir -p block2-preview/build
+        cd block2-preview/build
+        cmake .. -DUSE_MKL=OFF -DBUILD_CLIB=ON \
+          -DLARGE_BOND=ON \
+          -DMPI=OFF \
+          -DCMAKE_INSTALL_PREFIX=${HOME}/block2-bin
+        make -j4 install
+
+    - name: Cache block2
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/block2-bin
+          ~/block2-preview
+        key: ${{ runner.os }}-${{ runner.arch }}-block2-${{ steps.get-block2-key.outputs.key }}
 
     - name: Compile Forte
       run: |
