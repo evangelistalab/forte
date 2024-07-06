@@ -9,6 +9,7 @@ jobs:
       run:
         shell: bash -el {0}   
 
+    steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
@@ -25,7 +26,6 @@ jobs:
         auto-activate-base: false
         add-pip-as-python-dependency: true
 
-    steps:
     - name: Restore cache
       uses: actions/cache/restore@v4
       id: cache-restore
