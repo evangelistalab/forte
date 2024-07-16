@@ -167,9 +167,11 @@ jobs:
         pytest -v
         cd $HOME/work/forte/forte/tests/pytest-block2
         pytest -v
+    
+    - name: Upload artifacts
       uses: actions/upload-artifact@v4
-        with:
-          name: forte-test-outputs
-          path: |
-            ~/work/forte/forte/tests/methods/*/output.dat
-            ~/work/forte/forte/tests/pytest*/output.dat
+      with:
+        name: forte-test-outputs
+        path: |
+          ~/work/forte/forte/tests/methods/*/output.dat
+          ~/work/forte/forte/tests/pytest*/output.dat
