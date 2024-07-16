@@ -169,6 +169,7 @@ jobs:
         pytest -v
     
     - name: Upload artifacts
+      if: failure()
       uses: actions/upload-artifact@v4
       with:
         name: forte-test-outputs
