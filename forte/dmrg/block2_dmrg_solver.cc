@@ -380,10 +380,13 @@ double Block2DMRGSolver::compute_energy() {
                           state_.str_short()};
         fs::path dir_to{impl_->scratch_};
         if (fs::exists(dir_from)) {
-            psi::outfile->Printf("\n  Copying block2 files to scratch directory");
             for (const auto& file : fs::directory_iterator(dir_from)) {
                 if (file.path().filename().string().find("KET") != std::string::npos and
-                    file.path().filename().string().find(state_.str_short()) != std::string::npos) {
+                    file.path().filename().string().find(state_.str_short()) !=
+                        std::string::npos and
+                    (!fs::exists(dir_to / file.path().filename()))) {
+                    psi::outfile->Printf("\n  Copy %s to scratch directory",
+                                         file.path().filename().c_str());
                     fs::copy_file(file.path(), dir_to / file.path().filename(),
                                   fs::copy_options::overwrite_existing);
                 }
