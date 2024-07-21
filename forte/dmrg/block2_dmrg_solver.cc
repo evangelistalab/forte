@@ -376,23 +376,20 @@ double Block2DMRGSolver::compute_energy() {
     bool read_initial_guess = options_->get_bool("READ_ACTIVE_WFN_GUESS");
 
     if (read_initial_guess) {
-        if (fs::is_empty(impl_->scratch_)) {
-            fs::path dir_from{"block2.o" + std::to_string(mo_space_info_->size("ACTIVE")) + "." +
-                              state_.str_short()};
-            fs::path dir_to{impl_->scratch_};
-            if (fs::exists(dir_from)) {
-                psi::outfile->Printf("\n  Copying block2 files to scratch directory");
-                for (const auto& file : fs::directory_iterator(dir_from)) {
-                    if (file.path().filename().string().find("KET") != std::string::npos and
-                        file.path().filename().string().find(state_.str_short()) !=
-                            std::string::npos) {
-                        fs::copy_file(file.path(), dir_to / file.path().filename(),
-                                      fs::copy_options::overwrite_existing);
-                    }
+        fs::path dir_from{"block2.o" + std::to_string(mo_space_info_->size("ACTIVE")) + "." +
+                          state_.str_short()};
+        fs::path dir_to{impl_->scratch_};
+        if (fs::exists(dir_from)) {
+            psi::outfile->Printf("\n  Copying block2 files to scratch directory");
+            for (const auto& file : fs::directory_iterator(dir_from)) {
+                if (file.path().filename().string().find("KET") != std::string::npos and
+                    file.path().filename().string().find(state_.str_short()) != std::string::npos) {
+                    fs::copy_file(file.path(), dir_to / file.path().filename(),
+                                  fs::copy_options::overwrite_existing);
                 }
-            } else {
-                read_initial_guess = false;
             }
+        } else {
+            read_initial_guess = false;
         }
     }
 
