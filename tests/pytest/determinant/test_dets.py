@@ -271,7 +271,7 @@ def test_det_slater_sign():
 
     if forte.Determinant.norb() >= 64:
         print("Testing determinant Slater sign functions")
-        d = det("2222222222222222222222222222222222222222222222222222222222222222")
+        d = det("2"*128)
         for i in range(128):
             assert d.slater_sign(i) == (-1) ** (i)
         for i in range(128):
