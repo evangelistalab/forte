@@ -267,7 +267,7 @@ def prepare_forte_objects(
     }
 
 
-def prepare_ints_rdms(wfn, mo_spaces, rdm_level=3, rdm_type=forte.RDMsType.spin_dependent):
+def prepare_ints_rdms(wfn, mo_spaces, rdm_level=3, rdm_type=forte.RDMsType.spin_dependent, mix_inactive=False, mix_active=False):
     """
     Preparation step for DSRG: compute a CAS and its RDMs.
     :param wfn: reference wave function from psi4
@@ -306,7 +306,7 @@ def prepare_ints_rdms(wfn, mo_spaces, rdm_level=3, rdm_type=forte.RDMsType.spin_
     rdms = as_solver.compute_average_rdms(state_weights_map, rdm_level, rdm_type)
 
     # semicanonicalize orbitals
-    semi = forte.SemiCanonical(mo_space_info, ints, forte.forte_options)
+    semi = forte.SemiCanonical(mo_space_info, ints, forte.forte_options, mix_inactive, mix_active)
     semi.semicanonicalize(rdms, rdm_level)
 
     return {"reference_energy": Eref, "mo_space_info": mo_space_info, "ints": ints, "rdms": rdms}
