@@ -333,6 +333,7 @@ double MCSCF_2STEP::compute_energy() {
                 if (std::fabs(de_c) < 1.0e-2 or g_rms < 1.0e-3) {
                     options_->set_bool("READ_ACTIVE_WFN_GUESS", true);
                     mci_maxiter_ = 14;
+                    as_solver_->set_maxiter(mci_maxiter_);
                     // focus on the last bond dimension
                     if (ci_type_ == "BLOCK2") {
                         auto nsweeps = options_->get_int_list("BLOCK2_SWEEP_N_SWEEPS");

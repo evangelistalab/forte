@@ -206,7 +206,7 @@ struct Block2ScratchManager {
         // TODO may cause problem for MPI
         const std::vector<std::string> file_name_patterns = std::vector<std::string>{
             ".NPDM.FRAG.", ".MPS.",         ".MPS.INFO.", ".MMPS.", ".MMPS.INFO.",
-            ".MMPS-WFN.",  "-mps_info.bin", "@TMP.",      "@TMP-"};
+            ".MMPS-WFN.",  "-mps_info.bin", "@TMP.",      "@TMP-",  "DSRG-"};
         for (auto& path : scratch_folders)
             if (block2::Parsing::path_exists(path)) {
                 for (const auto& file : fs::directory_iterator(path))
