@@ -44,7 +44,7 @@ active              [1,0,1,1,0,1,1,1]
 dsrg_s              0.5
 dsrg_fno            true
 dsrg_fno_po         95.0
-dsrg_fno_dsrg_s     0.5
+dsrg_fno_pt2_s      0.5
 mcscf_reference     false
 }
 Eforte, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)

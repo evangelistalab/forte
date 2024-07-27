@@ -1014,7 +1014,7 @@ DSRG:
     help: "PT2 correction to the discarded FNOs"
   DSRG_FNO_PT2_S:
     type: double
-    default: 0.5
+    default: 1.5
     help: "The DSRG flow parameter for generating FNOs and PT2 correction"
   DSRG_FNO_CUTOFF:
     type: double
