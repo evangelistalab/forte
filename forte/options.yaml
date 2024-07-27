@@ -352,10 +352,24 @@ Active_Space_Solver:
     type: bool
     default: false
     help: "Read CI wave function of ActiveSpaceSolver from disk."
+  MULTIPOLE_MOMENT_LEVEL:
+    type: int
+    default: 1
+    help: Permanent dipole (= 1) and quadrupole (= 2) moments of ActiveSpaceSolver"
   TRANSITION_DIPOLES:
     type: bool
     default: false
     help: "Compute the transition dipole moments and oscillator strengths."
+  TRANSITION_DIPOLES_ALL:
+    type: bool
+    default: False
+    help: >
+      "Compute the transition dipole moments for all state pairs. "
+      "By default, only transitions from the ground state is computed."
+  DO_ACTIVE_NTO:
+    type: bool
+    default: False
+    help: "Build natural transition orbitals and save to disk"
   PRINT_DIFFERENT_GAS_ONLY:
     type: bool
     default: false
@@ -990,6 +1004,34 @@ DSRG:
     type: double
     default: 1.0e-12
     help: "The threshold for terminating the recursive single commutator approximation"
+  DSRG_FNO:
+    type: bool
+    default: False
+    help: "Perform frozen natural orbital based on DSRG-MRPT2"
+  DSRG_FNO_PT2_CORRECTION:
+    type: bool
+    default: True
+    help: "PT2 correction to the discarded FNOs"
+  DSRG_FNO_PT2_S:
+    type: double
+    default: 1.5
+    help: "The DSRG flow parameter for generating FNOs and PT2 correction"
+  DSRG_FNO_CUTOFF:
+    type: double
+    default: 1.0e-5
+    help: "The occupation cutoff used to discard FNOs"
+  DSRG_FNO_PV:
+    type: double
+    default: 100.0
+    help: >
+      "Percentage of virtual orbitals kept unfrozen. "
+      "If not 100.0, it takes priority over direct cutoff."
+  DSRG_FNO_PO:
+    type: double
+    default: 100.0
+    help: >
+      "Percentage of cumulative virtual occupancy kept unfrozen. "
+      "If not 100.0, it takes priority over all other selection schemes."
   T_ALGORITHM:
     type: str
     default: "DSRG"

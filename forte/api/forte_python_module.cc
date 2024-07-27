@@ -59,8 +59,8 @@
 #include "mrdsrg-helper/run_dsrg.h"
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
 #include "mrdsrg-spin-adapted/sadsrg.h"
+#include "mrdsrg-spin-adapted/sa_mrpt2.h"
 #include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
-#include "integrals/one_body_integrals.h"
 #include "sci/tdci.h"
 #include "genci/ci_occupation.h"
 
@@ -116,10 +116,8 @@ void export_ActiveSpaceSolver(py::module& m) {
              "Set the active space integrals manually")
         .def("set_Uactv", &ActiveSpaceSolver::set_Uactv,
              "Set unitary matrices for changing orbital basis in RDMs when computing dipoles")
-        .def("compute_dipole_moment", &ActiveSpaceSolver::compute_dipole_moment,
-             "Compute transition dipole moment")
-        .def("compute_quadrupole_moment", &ActiveSpaceSolver::compute_quadrupole_moment,
-             "Compute transition quadrupole moment")
+        .def("compute_multipole_moment", &ActiveSpaceSolver::compute_multipole_moment,
+             "Compute dipole or quadrupole moment")
         .def("compute_fosc_same_orbs", &ActiveSpaceSolver::compute_fosc_same_orbs,
              "Compute the oscillator strength assuming using same orbitals")
         .def("state_ci_wfn_map", &ActiveSpaceSolver::state_ci_wfn_map,
@@ -330,17 +328,6 @@ PYBIND11_MODULE(_forte, m) {
         .def("set_ci_vectors", &DynamicCorrelationSolver::set_ci_vectors,
              "Set the CI eigenvectors for DSRG-MRPT2 analytic gradients");
 
-    // export ActiveMultipoleIntegrals
-    py::class_<ActiveMultipoleIntegrals, std::shared_ptr<ActiveMultipoleIntegrals>>(
-        m, "ActiveMultipoleIntegrals")
-        .def("compute_electronic_dipole", &ActiveMultipoleIntegrals::compute_electronic_dipole)
-        .def("compute_electronic_quadrupole",
-             &ActiveMultipoleIntegrals::compute_electronic_quadrupole)
-        .def("nuclear_dipole", &ActiveMultipoleIntegrals::nuclear_dipole)
-        .def("nuclear_quadrupole", &ActiveMultipoleIntegrals::nuclear_quadrupole)
-        .def("set_dipole_name", &ActiveMultipoleIntegrals::set_dp_name)
-        .def("set_quadrupole_name", &ActiveMultipoleIntegrals::set_qp_name);
-
     // export MASTER_DSRG
     py::class_<MASTER_DSRG>(m, "MASTER_DSRG")
         .def("compute_energy", &MASTER_DSRG::compute_energy, "Compute the DSRG energy")
@@ -383,7 +370,16 @@ PYBIND11_MODULE(_forte, m) {
         .def("set_read_cwd_amps", &SADSRG::set_read_amps_cwd,
              "Set if reading amplitudes in the current directory or not")
         .def("converged", &SADSRG::converged, "Return if amplitudes are converged or not")
-        .def("clean_checkpoints", &SADSRG::clean_checkpoints, "Delete amplitudes checkpoint files");
+        .def("clean_checkpoints", &SADSRG::clean_checkpoints, "Delete amplitudes checkpoint files")
+        .def("epsilon", &SADSRG::epsilon,
+             "A vector of semicanonical orbital energies in Pitzer order");
+
+    // export spin-adapted DSRG-MRPT2
+    py::class_<SA_MRPT2, SADSRG>(m, "SA_MRPT2")
+        .def(
+            py::init<std::shared_ptr<RDMs>, std::shared_ptr<SCFInfo>, std::shared_ptr<ForteOptions>,
+                     std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
+        .def("build_fno", &SA_MRPT2::build_fno, "Build DSRG-MRPT2 frozen natural orbitals");
 
     // export MRDSRG_SO
     py::class_<MRDSRG_SO>(m, "MRDSRG_SO")

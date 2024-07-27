@@ -124,9 +124,8 @@ computation on two electronic states of different symmetries. We still
 consider methylene, and average the lowest :math:`^3B_1` and
 :math:`^1A_1` states. To begin, we use ROHF orbitals optimized for the
 lowest :math:`^3B_1`. However, the final orbitals will optimize the
-average energy :raw-latex:`\begin{equation}
-E_\mathrm{avg} = \frac{1}{2} \left(E_{^3B_1} + E_{^1A_1}\right).
-\end{equation}` We use the same active space of the previous example,
+average energy :math:`E_\mathrm{avg} = \frac{1}{2} \left(E_{^3B_1} + E_{^1A_1}\right)`.
+We use the same active space of the previous example,
 but here to specify the state, we set the ``AVG_STATE`` option:
 
 .. code:: python

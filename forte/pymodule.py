@@ -28,7 +28,6 @@
 #
 
 import time
-import os
 
 import psi4
 import psi4.driver.p4util as p4util
@@ -60,6 +59,7 @@ from forte.proc.external_active_space_solver import (
     make_hamiltonian,
 )
 from forte.proc.dsrg import ProcedureDSRG
+from forte.proc.orbital_helpers import dump_orbitals
 
 
 def forte_driver(data: ForteData):
@@ -110,8 +110,8 @@ def forte_driver(data: ForteData):
         forte.perform_spin_analysis(data.rdms, options, mo_space_info, as_ints)
 
     # solver for dynamical correlation from DSRG
-    correlation_solver_type = options.get_str("CORRELATION_SOLVER")
-    if correlation_solver_type != "NONE":
+    correlation_solver_type = options.get_str('CORRELATION_SOLVER')
+    if correlation_solver_type != 'NONE':
         dsrg_proc = ProcedureDSRG(data.active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
         return_en = dsrg_proc.compute_energy()
         dsrg_proc.print_summary()
