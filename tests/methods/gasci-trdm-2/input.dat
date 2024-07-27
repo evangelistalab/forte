@@ -13,7 +13,6 @@ set {
   df_basis_mp2        cc-pvdz-jkfit
   ints_tolerance      0.0
 }
-Ezero, wfn = energy('scf', return_wfn=True)
 
 set forte {
   int_type              df
@@ -27,8 +26,10 @@ set forte {
   transition_dipoles    true
   e_convergence         8
   r_convergence         7
+  mcscf_reference      false
 }
-energy('forte', ref_wfn = wfn)
+
+energy('forte')
 
 refvals = [
     ("ENERGY ROOT 0 1A1"              ,    -112.723013183898),

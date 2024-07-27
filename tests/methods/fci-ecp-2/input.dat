@@ -25,6 +25,7 @@ set forte {
   active_space_solver fci
   restricted_docc  [4,0,1,1]
   active           [2,0,2,2]
+  mcscf_reference false
 }
 
 e = energy('forte')

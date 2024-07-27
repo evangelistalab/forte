@@ -204,6 +204,13 @@ class ForteOptions {
     void add_double_array(const std::string& label, const std::string& description = "");
 
     /**
+     * @brief Add a deprecated option
+     * @param label Option label
+     * @param description Description of the option
+     */
+    void add_deprecated(const std::string& label, const std::string& msg = "");
+
+    /**
      * @brief Get a boolean option
      * @param label Option label
      */

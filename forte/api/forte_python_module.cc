@@ -54,8 +54,7 @@
 
 #include "forte.h"
 
-#include "casscf/casscf.h"
-#include "casscf/mcscf_2step.h"
+#include "mcscf/mcscf_2step.h"
 #include "fci/fci_solver.h"
 #include "mrdsrg-helper/run_dsrg.h"
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
@@ -131,12 +130,6 @@ void export_ActiveSpaceSolver(py::module& m) {
 
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");
-}
-
-void export_CASSCF(py::module& m) {
-    py::class_<CASSCF>(m, "CASSCF")
-        .def("compute_energy", &CASSCF::compute_energy, "Compute the CASSCF energy")
-        .def("compute_gradient", &CASSCF::compute_gradient, "Compute the CASSCF gradient");
 }
 
 void export_MCSCF_2STEP(py::module& m) {
@@ -225,8 +218,8 @@ PYBIND11_MODULE(_forte, m) {
     m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
           "Make a DSRG pointer (spin-adapted implementation)");
 
-    m.def("make_casscf", &make_casscf, "Make a CASSCF object");
     m.def("make_mcscf_two_step", &make_mcscf_two_step, "Make a 2-step MCSCF object");
+    m.def("make_mcscf", &make_mcscf_two_step, "Make a 2-step MCSCF object");
     m.def("test_lbfgs_rosenbrock", &test_lbfgs_rosenbrock, "Test L-BFGS on Rosenbrock function");
 
     m.def(
@@ -286,14 +279,11 @@ PYBIND11_MODULE(_forte, m) {
         .value("Debug", PrintLevel::Debug)
         .export_values();
 
-    //     py::class_<AdaptiveCI, std::shared_ptr<AdaptiveCI>>(m, "ACI");
-
     export_ForteOptions(m);
 
     export_ActiveSpaceMethod(m);
     export_ActiveSpaceSolver(m);
 
-    export_CASSCF(m);
     export_MCSCF_2STEP(m);
     export_ForteIntegrals(m);
 

@@ -191,8 +191,8 @@ void FCIVector::zero() {
 void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info,
                                        std::shared_ptr<RDMs> rdms) {
     print_h2("Natural Orbitals");
-    psi::Dimension active_dim = mo_space_info->dimension("ACTIVE");
-    auto nfdocc = mo_space_info->size("FROZEN_DOCC");
+    const auto active_dim = mo_space_info->dimension("ACTIVE");
+    const auto idocc_pi = mo_space_info->dimension("INACTIVE_DOCC");
 
     auto G1 = rdms->SF_G1();
     auto& G1_data = G1.data();
@@ -217,7 +217,8 @@ void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_inf
     std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
     for (int h = 0; h < nirrep_; h++) {
         for (int u = 0; u < active_dim[h]; u++) {
-            auto irrep_occ = std::make_pair(OCC->get(h, u), std::make_pair(h, u + 1));
+            auto index = u + idocc_pi[h] + 1;
+            auto irrep_occ = std::make_pair(OCC->get(h, u), std::make_pair(h, index));
             vec_irrep_occupation.push_back(irrep_occ);
         }
     }
@@ -227,7 +228,7 @@ void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_inf
     size_t count = 0;
     outfile->Printf("\n    ");
     for (auto vec : vec_irrep_occupation) {
-        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second + nfdocc,
+        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second,
                         mo_space_info->irrep_label(vec.second.first).c_str(), vec.first);
         if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
             outfile->Printf("\n    ");

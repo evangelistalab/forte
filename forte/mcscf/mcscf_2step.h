@@ -37,7 +37,7 @@
 #include "base_classes/scf_info.h"
 #include "base_classes/state_info.h"
 #include "integrals/integrals.h"
-#include "casscf/casscf_orb_grad.h"
+#include "mcscf/mcscf_orb_grad.h"
 
 namespace forte {
 
@@ -54,7 +54,8 @@ class MCSCF_2STEP {
      * Implementation notes:
      *   See J. Chem. Phys. 142, 224103 (2015) and Theor. Chem. Acc. 97, 88-95 (1997)
      */
-    MCSCF_2STEP(const std::map<StateInfo, std::vector<double>>& state_weights_map,
+    MCSCF_2STEP(std::shared_ptr<ActiveSpaceSolver> as_solver,
+                const std::map<StateInfo, std::vector<double>>& state_weights_map,
                 std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
                 std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteIntegrals> ints);
 
@@ -62,6 +63,9 @@ class MCSCF_2STEP {
     double compute_energy();
 
   private:
+    /// The ActiveSpaceSolver object
+    std::shared_ptr<ActiveSpaceSolver> as_solver_;
+
     /// The list of states to computed. Passed to the ActiveSpaceSolver
     std::map<StateInfo, std::vector<double>> state_weights_map_;
 
@@ -101,12 +105,10 @@ class MCSCF_2STEP {
 
     /// Max number of macro iterations
     int maxiter_;
-    /// Max number of Davidson iterations
-    int dl_maxiter_;
-    /// Max number of micro iterations
+    /// Max number of micro iterations (orbital optimization) for given RDMs
     int micro_maxiter_;
-    /// Min number of micro iterations
-    int micro_miniter_;
+    /// Max number of micro CI iterations
+    int mci_maxiter_;
 
     /// Optimize orbitals or not
     bool opt_orbs_;
@@ -155,8 +157,8 @@ class MCSCF_2STEP {
     bool is_single_reference();
 
     /// Class to store iteration data
-    struct CASSCF_HISTORY {
-        CASSCF_HISTORY(double ec, double eo, double g, int n)
+    struct MCSCF_HISTORY {
+        MCSCF_HISTORY(double ec, double eo, double g, int n)
             : e_c(ec), e_o(eo), g_rms(g), n_micro(n) {}
         double e_c;   // energy from CI
         double e_o;   // energy after orbital optimization
@@ -165,14 +167,15 @@ class MCSCF_2STEP {
     };
 
     /// Test energy history and return if the energies are converging or not
-    bool test_history(const std::vector<CASSCF_HISTORY>& history, const int& n_samples);
+    bool test_history(const std::vector<MCSCF_HISTORY>& history, const int& n_samples);
 
     /// Print iteration information
-    void print_macro_iteration(const std::vector<CASSCF_HISTORY>& history);
+    void print_macro_iteration(const std::vector<MCSCF_HISTORY>& history);
 };
 
 std::unique_ptr<MCSCF_2STEP>
-make_mcscf_two_step(const std::map<StateInfo, std::vector<double>>& state_weight_map,
+make_mcscf_two_step(std::shared_ptr<ActiveSpaceSolver> as_solver,
+                    const std::map<StateInfo, std::vector<double>>& state_weight_map,
                     std::shared_ptr<SCFInfo> ref_wfn, std::shared_ptr<ForteOptions> options,
                     std::shared_ptr<MOSpaceInfo> mo_space_info,
                     std::shared_ptr<ForteIntegrals> ints);

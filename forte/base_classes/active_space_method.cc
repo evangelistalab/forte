@@ -43,7 +43,6 @@
 #include "integrals/one_body_integrals.h"
 #include "fci/fci_solver.h"
 #include "genci/genci_solver.h"
-#include "casscf/casscf.h"
 #include "sci/aci.h"
 #include "sci/asci.h"
 #include "sci/detci.h"
@@ -54,6 +53,10 @@
 #include "dmrg/dmrgsolver.h"
 #endif
 
+#ifdef HAVE_BLOCK2
+#include "dmrg/block2_dmrg_solver.h"
+#endif
+
 namespace forte {
 
 ActiveSpaceMethod::ActiveSpaceMethod(StateInfo state, size_t nroot,
@@ -61,7 +64,6 @@ ActiveSpaceMethod::ActiveSpaceMethod(StateInfo state, size_t nroot,
                                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : state_(state), nroot_(nroot), mo_space_info_(mo_space_info), as_ints_(as_ints) {
     active_mo_ = as_ints_->active_mo();
-    core_mo_ = as_ints_->restricted_docc_mo();
 }
 
 void ActiveSpaceMethod::set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
@@ -157,6 +159,13 @@ std::shared_ptr<ActiveSpaceMethod> make_active_space_method(
             std::make_unique<DMRGSolver>(state, nroot, scf_info, options, mo_space_info, as_ints);
 #else
         throw std::runtime_error("DMRG is not available! Please compile with ENABLE_CHEMPS2=ON.");
+#endif
+    } else if (type == "BLOCK2") {
+#ifdef HAVE_BLOCK2
+        method = std::make_unique<Block2DMRGSolver>(state, nroot, scf_info, options, mo_space_info,
+                                                    as_ints);
+#else
+        throw std::runtime_error("BLOCK2 is not available! Please compile with ENABLE_BLOCK2=ON.");
 #endif
     } else {
         std::string msg = "make_active_space_method: type = " + type + " was not recognized";

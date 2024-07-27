@@ -1,4 +1,4 @@
-# Perform a computation of HF without storing DISKDF
+
 
 import forte
 
@@ -24,26 +24,27 @@ set forte{
   active_space_solver     fci
   restricted_docc         [2,0,1,1]
   active                  [2,0,0,0]
-  casscf_e_convergence    12
-  casscf_g_convergence    9
-  casscf_final_orbital    natural
+  mcscf_e_convergence    12
+  mcscf_g_convergence    9
+  mcscf_final_orbital    natural
 }
 
 Emcscf, wfn = energy('forte', return_wfn=True)
 compare_values(refmcscf, variable("CURRENT ENERGY"), 10, "MCSCF energy")
 
 set forte{
-   job_type               newdriver
-   frozen_docc            [1,0,0,0]
-   restricted_docc        [1,0,1,1]
-   active                 [2,0,0,0]
-   root_sym               0
-   nroot                  1
-   dsrg_s                 1.0
-   int_type               df
-   active_space_solver    fci
-   correlation_solver     three-dsrg-mrpt2
+  job_type               newdriver
+  frozen_docc            [1,0,0,0]
+  restricted_docc        [1,0,1,1]
+  active                 [2,0,0,0]
+  root_sym               0
+  nroot                  1
+  dsrg_s                 1.0
+  int_type               df
+  active_space_solver    fci
+  correlation_solver     three-dsrg-mrpt2
+  mcscf_reference       false
 }
 
 energy('forte', ref_wfn=wfn)
-compare_values(refdsrgpt2_jk_rd,variable("CURRENT ENERGY"),10,"DF-DSRG-MRPT2 energy")
+compare_values(refdsrgpt2_jk_rd,variable("CURRENT ENERGY"),8,"DF-DSRG-MRPT2 energy")

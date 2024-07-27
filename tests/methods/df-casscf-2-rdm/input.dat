@@ -31,10 +31,10 @@ set forte {
   active               [4,0,2,2]
   restricted_docc      [2,0,0,0]
   active_space_solver  detci
-  casscf_g_convergence 10
-  casscf_e_convergence 10
-  casscf_diis_start    2
-  casscf_final_orbital natural
+  mcscf_g_convergence 10
+  mcscf_e_convergence 10
+  mcscf_diis_start    2
+  mcscf_final_orbital natural
   e_convergence        10
   r_convergence        8
   d_convergence        10

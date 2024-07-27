@@ -24,9 +24,9 @@ set forte{
     frozen_docc             [ 1 , 0 , 0 , 0 ]
     active                  [ 3 , 0 , 4 , 2 ]
     job_type                FCI
-    casscf_reference        true
-    casscf_iterations       1
-    casscf_debug_printing   true
+    mcscf_reference        true
+    mcscf_iterations       1
+    mcscf_debug_printing   true
  }
 
 energy('scf')

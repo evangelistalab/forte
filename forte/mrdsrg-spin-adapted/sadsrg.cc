@@ -36,6 +36,7 @@
 #include "psi4/libpsio/psio.hpp"
 
 #include "integrals/active_space_integrals.h"
+#include "integrals/one_body_integrals.h"
 
 #include "forte-def.h"
 #include "helpers/helpers.h"

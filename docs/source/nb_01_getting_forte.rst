@@ -1,8 +1,30 @@
-Compiling and running Forte
-===========================
+Getting Forte
+=============
 
-Download and compilation of Forte
----------------------------------
+Installing Forte from conda
+---------------------------
+
+The easiest way to get Forte is by downloading `compiled
+binaries <https://anaconda.org/conda-forge/forte/files>`__ from conda.
+These are currently available for x86 Mac and Linux. The recommended way
+to do so is by creating a new ``forte`` environment
+
+.. code:: bash
+
+   >conda create -n forte forte -c conda-forge
+
+Once installed, you should be able to import Forte from python:
+
+.. code:: python
+
+   import forte
+
+If you get an error related to libpugixml
+(``ImportError: libpugixml.so.1``) you will need to install pugixml via
+the command ``conda install conda-forge::pugixml``
+
+Compiling Forte
+---------------
 
 Prior to the compilation of Forte you must first check to make sure you
 have the following:

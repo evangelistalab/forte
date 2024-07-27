@@ -48,6 +48,7 @@ set forte{
   avg_state           [[0,1,3], [3,1,1]]
   transition_dipoles  true
   transition_dipoles_all true
+  mcscf_reference    false
 }
 e, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 

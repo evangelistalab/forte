@@ -43,7 +43,6 @@ class BlockedTensor;
 #include "base_classes/rdms.h"
 #include "helpers/printing.h"
 
-#include "integrals/one_body_integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
 
 namespace forte {
@@ -54,6 +53,7 @@ class ForteIntegrals;
 class ForteOptions;
 class MOSpaceInfo;
 class SCFInfo;
+class ActiveMultipoleIntegrals;
 
 /**
  * @class ActiveSpaceSolver
@@ -155,11 +155,12 @@ class ActiveSpaceSolver {
     /// Compute the overlap of two wave functions acted by complementary operators
     /// Return a map from state to roots of values
     /// Computes the overlap <Ψ(N-1)|Ψ'(N-1)>, where the (N-1)-electron wave function is given by
-    /// Ψ(N-1) = h_{pσ} (t) |Ψ (N)> = \sum_{uvw} t^{uv}_{pw} \sum_{σ1} w^+_{σ1} v_{σ1} u_{σ} |Ψ(N)>.
+    /// Ψ(N-1) = h_{pσ} (t) |Ψ (N)> = \sum_{uvw} t_{pw}^{uv} \sum_{σ1} w^+_{σ1} v_{σ1} u_{σ} |Ψ(N)>.
     /// Useful to get the 3-RDM contribution of fully contracted term of two 2-body operators:
-    /// \sum_{puvwxyzστθ} v_{pwxy} t_{uvpz} <Ψ(N)| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ(N)>
+    /// \sum_{puvwxyzστθ} v_{pwxy} t_{pzuv} <Ψ(N)| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ(N)>
     std::map<StateInfo, std::vector<double>>
-    compute_complementary_H2caa_overlap(ambit::Tensor Tbra, ambit::Tensor Tket);
+    compute_complementary_H2caa_overlap(ambit::Tensor Tbra, ambit::Tensor Tket,
+                                        const std::vector<int>& p_syms);
 
     /// Print a summary of the computation information
     void print_options();
@@ -291,7 +292,7 @@ class ActiveSpaceSolver {
     /// Pairs of state info and the contracted CI eigen vectors
     std::map<StateInfo, std::shared_ptr<psi::Matrix>>
         state_contracted_evecs_map_; // TODO move outside?
-};                                   // namespace forte
+}; // namespace forte
 
 /**
  * @brief Make an active space solver object.

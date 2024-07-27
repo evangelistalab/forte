@@ -956,9 +956,9 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
 
     enum class NOS_SELECT { CUTOFF, PV, PO };
     auto nos_selection = NOS_SELECT::CUTOFF;
-    if (pv > 1.0e-15)
+    if (1.0 - pv > 1.0e-15)
         nos_selection = NOS_SELECT::PV;
-    if (po > 1.0e-15)
+    if (1.0 - po > 1.0e-15)
         nos_selection = NOS_SELECT::PO;
 
     if (nos_selection != NOS_SELECT::CUTOFF) {

@@ -8,6 +8,10 @@ from .graph_visualizer import GraphVisualizer
 from .options_factory import OptionsFactory
 from .objects_factory_fcidump import ObjectsFromFCIDUMP
 from .objects_factory_psi4 import ObjectsFromPsi4
+try:
+    from .objects_factory_pyscf import ObjectsFromPySCF
+except ImportError:
+    pass
 from .mock import HF, FCI, Ints, Ints2, Localizer
 from .objects_util_psi4 import ObjectsUtilPsi4
 from .molecule_factory import MoleculeFactory

@@ -5,7 +5,7 @@ endif ()
 cmake_policy(SET CMP0048 NEW)  # project_VERSION* variables populated from project(... VERSION x.x.x) string
 
 project(forte
-        VERSION 0.3.0
+        VERSION 0.4.0
         LANGUAGES CXX C)
 set(forte_AUTHORS      "Francesco A. Evangelista and Group")
 set(forte_DESCRIPTION  "Quantum Chemistry Methods for Strongly Correlated Electrons plugin to Psi4")
@@ -18,6 +18,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include(psi4OptionsTools)
 
 option_with_print(ENABLE_CheMPS2 "Enable CheMPS2 solver" OFF)
+option_with_print(ENABLE_block2 "Enable block2 solver" OFF)
 option_with_print(ENABLE_OPENMP "Enable threadsafe linking to OpenMP parallelized programs" ON)
 option_with_print(ENABLE_MPI "Enable MPI parallelization" OFF)
 option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
@@ -44,6 +45,12 @@ if(ENABLE_CheMPS2)
     find_package(CheMPS2 1.8.3 CONFIG REQUIRED)
     add_definitions(-DHAVE_CHEMPS2)
     set(HAVE_CHEMPS2 true)
+endif()
+
+if(ENABLE_block2)
+    find_package(block2 2.0 CONFIG REQUIRED)
+    add_definitions(-DHAVE_BLOCK2)
+    set(HAVE_BLOCK2 true)
 endif()
 
 set(Boost_USE_STATIC_LIBS OFF)
@@ -95,17 +102,16 @@ base_classes/orbitals.cc
 base_classes/rdms.cc
 base_classes/scf_info.cc
 base_classes/state_info.cc
-casscf/casscf.cc
-casscf/casscf_gradient.cc
-casscf/casscf_orb_grad.cc
-casscf/casscf_orb_grad_deriv.cc
-casscf/cpscf.cc
-casscf/mcscf_2step.cc
+mcscf/mcscf_orb_grad.cc
+mcscf/mcscf_orb_grad_deriv.cc
+mcscf/cpscf.cc
+mcscf/mcscf_2step.cc
 ci_ex_states/excited_state_solver.cc
 ci_rdm/ci_rdms.cc
 ci_rdm/ci_rdms_dynamic.cc
 ci_rdm/ci_rdms_sf.cc
 dmrg/dmrgsolver.cc
+dmrg/block2_dmrg_solver.cc
 external/external_active_space_method.cc
 fci/fci_string_address.cc
 fci/fci_solver_initial_guess.cc
@@ -275,6 +281,11 @@ target_link_libraries(_forte PRIVATE ambit::ambit)
 if(TARGET CheMPS2::chemps2)
     target_link_libraries(_forte PRIVATE CheMPS2::chemps2)
     add_definitions(-DHAVE_CHEMPS2)
+endif()
+
+if(TARGET block2::block2)
+    target_link_libraries(_forte PRIVATE block2::block2)
+    add_definitions(-DHAVE_BLOCK2)
 endif()
 
 if(ENABLE_MPI)

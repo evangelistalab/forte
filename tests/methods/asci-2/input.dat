@@ -37,6 +37,7 @@ set forte {
   asci_e_convergence 1e-5
   sci_project_out_spin_contaminants false
   spin_project_full false
+  mcscf_reference false
 }
 
 Escf, scf_wfn = energy('scf', return_wfn=True)
