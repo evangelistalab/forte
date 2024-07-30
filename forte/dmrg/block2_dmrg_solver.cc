@@ -764,6 +764,15 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
         static_cast<size_t>(dmrg_options_->get_double("BLOCK2_STACK_MEM") * 1024 * 1024 * 1024);
     impl_->reset_stack_memory(stack_mem);
 
+    // read bond dimention
+    int bond_dim = 500;
+    auto sweep_bond_dims = dmrg_options_->get_int_list("BLOCK2_SWEEP_BOND_DIMS");
+    if (sweep_bond_dims.size() != 0)
+        bond_dim = sweep_bond_dims.back();
+    std::vector<block2::ubond_t> ket0_bond_dims(1, bond_dim);
+    std::vector<block2::ubond_t> bra_bond_dims(1, 2 * bond_dim);
+    std::vector<double> noises{0.0};
+
     // system initialization
     bool singlet_embedding = dmrg_options_->get_bool("BLOCK2_SINGLET_EMBEDDING");
     auto actv_irreps = mo_space_info_->symmetry("ACTIVE");
@@ -774,12 +783,6 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
     impl_->initialize_system(n_sites, n_elec, spin, pg_irrep, actv_irreps, singlet_embedding);
 
     int dmrg_verbose = dmrg_options_->get_int("BLOCK2_VERBOSE");
-
-    auto expr_id = impl_->expr_builder();
-    expr_id->exprs.push_back("");
-    expr_id->indices.push_back({});
-    expr_id->data.push_back({1.0});
-    expr_id->adjust_order();
 
     for (size_t ir = 0; ir < nroots; ++ir) {
         double value = 0.0;
@@ -792,20 +795,10 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                                     ket_tag);
 
         if (impl_->is_spin_adapted_) {
-            auto impo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
-                impl_->get_mpo(expr_id, dmrg_verbose));
-
             auto ket0 = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
-            int bond_dim = 500;
-            auto sweep_bond_dims = dmrg_options_->get_int_list("BLOCK2_SWEEP_BOND_DIMS");
-            if (sweep_bond_dims.size() != 0)
-                bond_dim = sweep_bond_dims.back();
-            std::vector<block2::ubond_t> bra_bond_dims(1, 2 * bond_dim);
-            std::vector<block2::ubond_t> ket_bond_dims(1, 2 * bond_dim);
-            std::vector<double> noises{0.0};
 
             for (size_t p = 0; p < np; ++p) {
-                if (dmrg_verbose > 2)
+                if (print_ > PrintLevel::Default)
                     psi::outfile->Printf("\n orbital %2zu", p);
 
                 auto bra_expr = impl_->expr_builder();
@@ -831,132 +824,62 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
 
                 auto kmpo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
                     impl_->get_mpo(ket_expr, dmrg_verbose));
-                auto kq = kmpo->op->q_label + ket0->info->target;
-                auto ket_left_vacuum = ket0->info->left_dims_fci[0]->quanta[0] + kmpo->left_vacuum;
 
                 auto vacuum = impl_->driver_su2_->vacuum;
+
                 for (int j = 0; j < bra_left_vacuum.count(); ++j) {
-                    if (dmrg_verbose > 2)
+                    if (print_ > PrintLevel::Default)
                         psi::outfile->Printf("  j = %2d", j);
 
-                    // // auto bra = impl_->driver_su2_->load_mps(tag);
-                    // auto binfo = std::make_shared<block2::MPSInfo<block2::SU2>>(
-                    //     na1, vacuum, bq, impl_->driver_su2_->ghamil->basis);
-                    // binfo->tag =
-                    //     ket0->info->tag + "@BRA." + std::to_string(p) + "." + std::to_string(j);
-                    // binfo->set_bond_dimension_fci(bra_left_vacuum[j], vacuum);
-                    // binfo->set_bond_dimension(bond_dim);
-                    // binfo->bond_dim = bond_dim;
+                    // auto bra = impl_->driver_su2_->load_mps(tag);
+                    auto binfo = std::make_shared<block2::MPSInfo<block2::SU2>>(
+                        na1, vacuum, bq, impl_->driver_su2_->ghamil->basis);
+                    binfo->tag =
+                        ket0->info->tag + "@BRA." + std::to_string(p) + "." + std::to_string(j);
+                    binfo->set_bond_dimension_fci(bra_left_vacuum[j], vacuum);
+                    binfo->set_bond_dimension(bond_dim);
+                    binfo->bond_dim = bond_dim;
 
-                    // if (binfo->get_max_bond_dimension() == 0)
-                    //     continue;
+                    if (binfo->get_max_bond_dimension() == 0)
+                        continue;
 
-                    // auto bra = std::make_shared<block2::MPS<block2::SU2, double>>(na1,
-                    // ket0->center, ket0->dot);
-                    // bra->initialize(binfo);
-                    // bra->random_canonicalize();
-                    // bra->tensors[bra->center]->normalize();
-                    // bra->save_mutable();
-                    // binfo->save_mutable();
-                    // bra->save_data();
-
-                    // auto bref = ket0->deep_copy("DSRG-BRA@TMP");
-                    // auto bme =
-                    //     std::make_shared<block2::MovingEnvironment<block2::SU2, double, double>>(
-                    //         bmpo, bra, bref, "DSRG-CPS1");
-                    // bme->delayed_contraction = block2::OpNamesSet::normal_ops();
-                    // bme->cached_contraction = true;
-                    // bme->init_environments(true);
-
-                    // auto bcps = std::make_shared<block2::Linear<block2::SU2, double, double>>(
-                    //     bme, bra_bond_dims, ket_bond_dims, noises);
-                    // bcps->iprint = 2;
-                    // bcps->solve(10, bra->center == 0, 1.0e-6);
-                    // if (bra->center != 0)
-                    //     bcps->solve(1, false);
-
-                    auto kinfo = std::make_shared<block2::MPSInfo<block2::SU2>>(
-                        na1, vacuum, kq, impl_->driver_su2_->ghamil->basis);
-                    kinfo->tag =
-                        ket0->info->tag + "@KET." + std::to_string(p) + "." + std::to_string(j);
-                    kinfo->set_bond_dimension_fci(ket_left_vacuum[j], vacuum);
-                    kinfo->set_bond_dimension(bond_dim);
-                    kinfo->bond_dim = bond_dim;
-
-                    auto ket = std::make_shared<block2::MPS<block2::SU2, double>>(na1, ket0->center,
+                    auto bra = std::make_shared<block2::MPS<block2::SU2, double>>(na1, ket0->center,
                                                                                   ket0->dot);
-                    ket->initialize(kinfo);
-                    ket->random_canonicalize();
-                    ket->tensors[ket->center]->normalize();
-                    ket->save_mutable();
-                    kinfo->save_mutable();
-                    ket->save_data();
+                    bra->initialize(binfo);
+                    bra->random_canonicalize();
+                    bra->tensors[bra->center]->normalize();
+                    bra->save_mutable();
+                    binfo->save_mutable();
+                    bra->save_data();
 
-                    auto kref = ket0->deep_copy("DSRG-KET@TMP");
-                    auto kme =
+                    auto bref = ket0->deep_copy("DSRG-BRA@TMP");
+                    auto bme =
                         std::make_shared<block2::MovingEnvironment<block2::SU2, double, double>>(
-                            kmpo, ket, kref, "DSRG-CPS2");
-                    kme->delayed_contraction = block2::OpNamesSet::normal_ops();
-                    kme->cached_contraction = true;
-                    kme->init_environments(true);
+                            bmpo, bra, bref, "DSRG-CPS1");
+                    bme->delayed_contraction = block2::OpNamesSet::normal_ops();
+                    bme->cached_contraction = true;
+                    bme->init_environments(true);
 
-                    auto kcps = std::make_shared<block2::Linear<block2::SU2, double, double>>(
-                        kme, bra_bond_dims, ket_bond_dims, noises);
-                    kcps->iprint = 2;
-                    kcps->solve(10, ket->center == 0, 1.0e-6);
-                    if (ket->center != ket0->center)
-                        kcps->solve(1, ket0->center != 0);
-                    // align, impl_-> driver
-                    // if ()
-                    // solve(1)
-                    // print ket->center, ket->canonical_form
-                    // ket->deep_copy()
+                    auto bcps = std::make_shared<block2::Linear<block2::SU2, double, double>>(
+                        bme, bra_bond_dims, ket0_bond_dims, noises);
+                    bcps->iprint = 2;
+                    bcps->solve(10, bra->center == 0, 1.0e-6);
+                    if (bra->center != ket0->center)
+                        bcps->solve(1, ket0->center != 0);
 
-                    // auto xme =
-                    //     std::make_shared<block2::MovingEnvironment<block2::SU2, double, double>>(
-                    //         impo, bra, ket, "DSRG-CPS-EX");
-                    // xme->delayed_contraction = block2::OpNamesSet::normal_ops();
-                    // xme->cached_contraction = true;
-                    // xme->init_environments(true);
+                    auto pvalue =
+                        impl_->driver_su2_->expectation(bra, kmpo, ket0, true, 2 * bond_dim);
 
-                    // auto expect = std::make_shared<block2::Expect<block2::SU2, double, double>>(
-                    //     xme, bra->info->bond_dim, ket->info->bond_dim);
-                    // auto pvalue = expect->solve(false, bra->center == 0);
-                    // expect->me->remove_partition_files();
-
-                    // auto pvalue = impl_->driver_su2_->expectation(bra, impo, ket, true);
-
-                    // std::cout << "\nket0 vacuum " << ket0->info->vacuum << ", ket0 target "
-                    //           << ket0->info->target << ", canonical form " << ket0->canonical_form;
-                    // std::cout << "\nket vacuum " << ket->info->vacuum << ", ket target "
-                    //           << ket->info->target << ", canonical form " << ket->canonical_form;
-
-                    auto pvalue = impl_->driver_su2_->expectation(ket, bmpo, ket0, true);
-
-                    if (dmrg_verbose > 2)
+                    if (print_ > PrintLevel::Default)
                         psi::outfile->Printf(" pvalue = %20.15f", pvalue);
                     value += pvalue;
-
-                    // std::cout << "bra vacuum " << bra->info->vacuum << ", bra target "
-                    //           << bra->info->target << ", canonical form " << bra->canonical_form;
-                    // std::cout << "ket vacuum " << ket0->info->vacuum << ", ket target "
-                    //           << ket0->info->target << ", canonical form " <<
-                    //           ket0->canonical_form;
-                    // pvalue = impl_->driver_su2_->expectation(bra, kmpo, ket0, true);
-                    // vacuum
-                    // target
-                    // canonical_form
-                    psi::outfile->Printf(" pvalue = %20.15f", pvalue);
                 }
             }
         } else {
-            auto impo = std::static_pointer_cast<block2::MPO<block2::SZ, double>>(
-                impl_->get_mpo(expr_id, dmrg_verbose));
             auto ket0 = std::static_pointer_cast<block2::MPS<block2::SZ, double>>(ket);
-            auto bond_dim = ket0->info->bond_dim;
 
             for (size_t p = 0; p < np; ++p) {
-                if (dmrg_verbose > 2)
+                if (print_ > PrintLevel::Default)
                     psi::outfile->Printf("\n orbital %zu", p);
                 for (size_t sigma = 0; sigma != 2; ++sigma) {
                     auto bra_expr = impl_->expr_builder();
@@ -987,12 +910,8 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                     bme->cached_contraction = true;
                     bme->init_environments(true);
 
-                    std::vector<block2::ubond_t> bra_bond_dims{2 * bond_dim};
-                    std::vector<block2::ubond_t> ket_bond_dims{bond_dim};
-                    std::vector<double> noises{0.0};
-
                     auto bcps = std::make_shared<block2::Linear<block2::SZ, double, double>>(
-                        bme, bra_bond_dims, ket_bond_dims, noises);
+                        bme, bra_bond_dims, ket0_bond_dims, noises);
                     bcps->solve(10, true, 1.0e-6);
 
                     auto ket_expr = impl_->expr_builder();
@@ -1011,26 +930,10 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
 
                     auto kmpo = std::static_pointer_cast<block2::MPO<block2::SZ, double>>(
                         impl_->get_mpo(ket_expr, dmrg_verbose));
-                    // auto kq = kmpo->op->q_label + ket0->info->target;
-                    // std::string ktag = "KET." + std::to_string(p);
-                    // ktag += (sigma == 0 ? ".A" : ".B");
-                    // auto ket =
-                    //     impl_->driver_sz_->get_random_mps(ktag, bond_dim, ket0->center, 2, kq);
 
-                    // auto kme = make_shared<block2::MovingEnvironment<block2::SZ, double,
-                    // double>>(
-                    //     kmpo, ket, ket0, "MULT");
-                    // kme->delayed_contraction = block2::OpNamesSet::normal_ops();
-                    // kme->cached_contraction = true;
-                    // kme->init_environments(true);
-
-                    // auto kcps = std::make_shared<block2::Linear<block2::SZ, double, double>>(
-                    //     kme, bra_bond_dims, ket_bond_dims, noises);
-                    // auto knorm = kcps->solve(10, true, 1.0e-6);
-
-                    // auto pvalue = impl_->driver_sz_->expectation(bra, impo, ket, true);
-                    auto pvalue = impl_->driver_sz_->expectation(bra, kmpo, ket0, true);
-                    if (dmrg_verbose > 2)
+                    auto pvalue =
+                        impl_->driver_sz_->expectation(bra, kmpo, ket0, true, 2 * bond_dim);
+                    if (print_ > PrintLevel::Default)
                         psi::outfile->Printf(" %s = %20.15f", sigma == 0 ? "alpha" : "beta",
                                              pvalue);
                     value += pvalue;
