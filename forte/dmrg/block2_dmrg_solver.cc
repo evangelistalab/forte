@@ -804,6 +804,12 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
             for (size_t p = 0; p < np; ++p) {
                 if (dmrg_verbose > 2)
                     psi::outfile->Printf("\n orbital %2zu", p);
+                if (fabs(*std::max_element(Tbra_data.data() + p * na3,
+                                           Tbra_data.data() + p * na3 + na3)) < 1.0e-15 or
+                    fabs(*std::max_element(Tket_data.data() + p * na3,
+                                           Tket_data.data() + p * na3 + na3)) < 1.0e-15)
+                    continue;
+
                 auto bra_expr = impl_->expr_builder();
                 bra_expr->exprs.push_back("((C+D)0+D)1");
                 bra_expr->add_sum_term(Tbra_data.data() + p * na3, na3, tshape, tstride, 1.0e-12,
@@ -861,7 +867,7 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                     auto bcps = std::make_shared<block2::Linear<block2::SU2, double, double>>(
                         bme, bra_bond_dims, ket_bond_dims, noises);
                     bcps->iprint = 2;
-                    auto bnorm = bcps->solve(10, true, 1.0e-6);
+                    auto bnorm = bcps->solve(10, bra->center == 0, 1.0e-6);
 
                     auto kinfo = std::make_shared<block2::MPSInfo<block2::SU2>>(
                         na1, vacuum, kq, impl_->driver_su2_->ghamil->basis);
@@ -891,7 +897,7 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                     auto kcps = std::make_shared<block2::Linear<block2::SU2, double, double>>(
                         kme, bra_bond_dims, ket_bond_dims, noises);
                     kcps->iprint = 2;
-                    auto knorm = kcps->solve(10, true, 1.0e-6);
+                    auto knorm = kcps->solve(10, ket->center == 0, 1.0e-6);
 
                     auto xme =
                         std::make_shared<block2::MovingEnvironment<block2::SU2, double, double>>(
