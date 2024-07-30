@@ -92,6 +92,8 @@ class SQOperatorString {
     Determinant& cre_mod();
     /// @return a Determinant object that represents the annihilation operators
     Determinant& ann_mod();
+    /// @return a op_tuple_t that represents the operator
+    op_tuple_t op_tuple() const;
     /// @return true if this operator is a number operator (i.e. it contains no creation or
     /// annihilation  operators)
     bool is_number() const;
@@ -108,6 +110,8 @@ class SQOperatorString {
     std::string str() const;
     /// @return a latex representation of this operator
     std::string latex() const;
+    /// @return a compact latex representation of this operator
+    std::string latex_compact() const;
     /// @return a sq_operator that is the adjoint of this operator
     SQOperatorString adjoint() const;
 

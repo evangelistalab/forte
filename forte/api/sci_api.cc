@@ -292,6 +292,11 @@ void export_Determinant(py::module& m) {
         .def("count", &SQOperatorString::count)
         .def("__str__", &SQOperatorString::str)
         .def("__repr___", &SQOperatorString::str)
+        .def("latex", &SQOperatorString::latex)
+        .def("latex_compact", &SQOperatorString::latex_compact)
+        .def("is_number", &SQOperatorString::is_number)
+        .def("is_nilpotent", &SQOperatorString::is_nilpotent)
+        .def("op_tuple", &SQOperatorString::op_tuple)
         .def("__eq__", &SQOperatorString::operator==)
         .def("__lt__", &SQOperatorString::operator<);
 
@@ -499,12 +504,7 @@ void export_Determinant(py::module& m) {
         "sim_trans_fact_exc",
         [](SparseOperator& O, const SparseOperatorList& T, bool reverse, double screen_thresh) {
             // time this call and print to std::cout
-            auto start = std::chrono::high_resolution_clock::now();
             sim_trans_fact_op(O, T, reverse, screen_thresh);
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double> elapsed_seconds = end - start;
-            std::cout << "similarity_transform (excitation) took " << elapsed_seconds.count()
-                      << "s\n";
         },
         "O"_a, "T"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12);
 
@@ -512,39 +512,20 @@ void export_Determinant(py::module& m) {
         "sim_trans_fact_antiherm",
         [](SparseOperator& O, const SparseOperatorList& T, bool reverse, double screen_thresh) {
             // time this call and print to std::cout
-            auto start = std::chrono::high_resolution_clock::now();
             sim_trans_fact_antiherm(O, T, reverse, screen_thresh);
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double> elapsed_seconds = end - start;
-            std::cout << "similarity_transform (antihermitian) took " << elapsed_seconds.count()
-                      << "s\n";
         },
         "O"_a, "T"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12);
 
     m.def(
         "sim_trans_fact_antiherm_grad",
         [](SparseOperator& O, const SparseOperatorList& T, size_t n, bool reverse,
-           double screen_thresh) {
-            // time this call and print to std::cout
-            auto start = std::chrono::high_resolution_clock::now();
-            sim_trans_fact_antiherm_grad(O, T, n, reverse, screen_thresh);
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double> elapsed_seconds = end - start;
-            // std::cout << "similarity_transform (antihermitian) took " << elapsed_seconds.count()
-            //           << "s\n";
-        },
+           double screen_thresh) { sim_trans_fact_antiherm_grad(O, T, n, reverse, screen_thresh); },
         "O"_a, "T"_a, "n"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12);
 
     m.def(
         "sim_trans_fact_imagherm",
         [](SparseOperator& O, const SparseOperatorList& T, bool reverse, double screen_thresh) {
-            // time this call and print to std::cout
-            auto start = std::chrono::high_resolution_clock::now();
             sim_trans_fact_imagherm(O, T, reverse, screen_thresh);
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double> elapsed_seconds = end - start;
-            std::cout << "similarity_transform (imagherm) took " << elapsed_seconds.count()
-                      << "s\n";
         },
         "O"_a, "T"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12);
 

@@ -930,8 +930,6 @@ std::vector<std::string> SparseOperatorList::str() const {
             continue;
         v.push_back(format_term_in_sum(c, sqop.str()));
     }
-    // sort v to guarantee a consistent order
-    std::sort(v.begin(), v.end());
     return v;
 }
 

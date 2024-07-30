@@ -112,8 +112,30 @@ std::string SQOperatorString::str() const {
         terms.push_back(std::to_string(p) + "a-");
     }
     std::string s = "[" + join(terms, " ") + "]";
-
     return s;
+}
+
+op_tuple_t SQOperatorString::op_tuple() const {
+    auto acre = cre().get_alfa_occ(cre().norb());
+    auto bcre = cre().get_beta_occ(cre().norb());
+    auto aann = ann().get_alfa_occ(ann().norb());
+    auto bann = ann().get_beta_occ(ann().norb());
+    std::reverse(aann.begin(), aann.end());
+    std::reverse(bann.begin(), bann.end());
+    op_tuple_t terms;
+    for (auto p : acre) {
+        terms.push_back(std::make_tuple(true, true, p));
+    }
+    for (auto p : bcre) {
+        terms.push_back(std::make_tuple(true, false, p));
+    }
+    for (auto p : bann) {
+        terms.push_back(std::make_tuple(false, false, p));
+    }
+    for (auto p : aann) {
+        terms.push_back(std::make_tuple(false, true, p));
+    }
+    return terms;
 }
 
 // implement the << operator for SQOperatorString
@@ -144,6 +166,34 @@ std::string SQOperatorString::latex() const {
         s += "\\hat{a}_{" + std::to_string(p) + " \\alpha}";
     }
 
+    return s;
+}
+
+std::string SQOperatorString::latex_compact() const {
+    auto acre = cre().get_alfa_occ(cre().norb());
+    auto bcre = cre().get_beta_occ(cre().norb());
+    auto aann = ann().get_alfa_occ(ann().norb());
+    auto bann = ann().get_beta_occ(ann().norb());
+    std::string s;
+    s += "\\hat{a}^{";
+    std::vector<std::string> terms;
+    for (auto p : acre) {
+        terms.push_back(std::to_string(p) + "_{\\alpha}");
+    }
+    for (auto p : bcre) {
+        terms.push_back(std::to_string(p) + "_{\\beta}");
+    }
+    s += join(terms, " ");
+    s += "}_{";
+    terms.clear();
+    for (auto p : aann) {
+        terms.push_back(std::to_string(p) + "_{\\alpha}");
+    }
+    for (auto p : bann) {
+        terms.push_back(std::to_string(p) + "_{\\beta}");
+    }
+    s += join(terms, " ");
+    s += "}";
     return s;
 }
 
