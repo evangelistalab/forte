@@ -863,7 +863,7 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                     auto bcps = std::make_shared<block2::Linear<block2::SU2, double, double>>(
                         bme, bra_bond_dims, ket0_bond_dims, noises);
                     bcps->iprint = 2;
-                    bcps->solve(10, bra->center == 0, 1.0e-6);
+                    bcps->solve(maxiter_, bra->center == 0, 1.0e-6);
                     if (bra->center != ket0->center)
                         bcps->solve(1, ket0->center != 0);
 
@@ -912,7 +912,7 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
 
                     auto bcps = std::make_shared<block2::Linear<block2::SZ, double, double>>(
                         bme, bra_bond_dims, ket0_bond_dims, noises);
-                    bcps->solve(10, true, 1.0e-6);
+                    bcps->solve(maxiter_, true, 1.0e-6);
 
                     auto ket_expr = impl_->expr_builder();
                     if (sigma == 0) {

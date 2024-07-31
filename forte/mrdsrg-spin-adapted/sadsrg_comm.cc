@@ -218,7 +218,7 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
             Tket = ambit::Tensor::build(tensor_type_, "Tket", Tbra.dims());
             Tket("ewuv") = T2.block("aava")("xyez") * Ua("wz") * Ua("ux") * Ua("vy");
             auto E3v_map = as_solver_->compute_complementary_H2caa_overlap(
-                Tbra, Tket, mo_space_info_->symmetry("RESTRICTED_UOCC"));
+                Tket, Tbra, mo_space_info_->symmetry("RESTRICTED_UOCC"));
             timer_v.stop();
 
             timer timer_c("DSRG [H2, T2] D3C direct");
@@ -227,7 +227,7 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
             Tbra = ambit::Tensor::build(tensor_type_, "Tbra", Tket.dims());
             Tbra("mwuv") = H2.block("aaca")("xymz") * Ua("wz") * Ua("ux") * Ua("vy");
             auto E3c_map = as_solver_->compute_complementary_H2caa_overlap(
-                Tbra, Tket, mo_space_info_->symmetry("RESTRICTED_DOCC"));
+                Tket, Tbra, mo_space_info_->symmetry("RESTRICTED_DOCC"));
             timer_c.stop();
 
             // - 2-RDM contributions
