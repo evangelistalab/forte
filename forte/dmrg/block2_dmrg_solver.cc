@@ -895,6 +895,8 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                     bra_expr->add_sum_term(Tbra_data.data() + p * na3, na3, tshape, tstride,
                                            1.0e-12, 1.0, actv_irreps, {}, p_syms[p]);
                     bra_expr = bra_expr->adjust_order();
+                    if (bra_expr->exprs.size() == 0)
+                        continue;
 
                     auto bmpo = std::static_pointer_cast<block2::MPO<block2::SZ, double>>(
                         impl_->get_mpo(bra_expr, dmrg_verbose));
@@ -930,6 +932,8 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
 
                     auto kmpo = std::static_pointer_cast<block2::MPO<block2::SZ, double>>(
                         impl_->get_mpo(ket_expr, dmrg_verbose));
+                    if (ket_expr->exprs.size() == 0)
+                        continue;
 
                     auto pvalue =
                         impl_->driver_sz_->expectation(bra, kmpo, ket0, true, 2 * bond_dim);
