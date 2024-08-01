@@ -359,6 +359,7 @@ mrdsrg-ldsrg2-spin-integrated:
    short:
       - mrdsrg-ldsrg2-1
    medium:
+      - mrdsrg-ldsrg2-2
       - mrdsrg-ldsrg2-qc-2
    long:
       - mrdsrg-ldsrg2-qc-1
