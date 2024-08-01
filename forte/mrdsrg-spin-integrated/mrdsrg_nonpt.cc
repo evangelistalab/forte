@@ -80,7 +80,6 @@ void MRDSRG::compute_hbar() {
     bool converged = false;
     int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
     double ct_threshold = foptions_->get_double("DSRG_RSC_THRESHOLD");
-    std::string dsrg_op = foptions_->get_str("DSRG_TRANS_TYPE");
 
     // compute Hbar recursively
     for (int n = 1; n <= maxn; ++n) {
@@ -171,7 +170,7 @@ void MRDSRG::compute_hbar() {
         }
 
         // [H, A] = [H, T] + [H, T]^dagger
-        if (dsrg_op == "UNITARY") {
+        if (dsrg_trans_type_ == "UNITARY") {
             C0 *= 2.0;
             O1_["pq"] = C1_["pq"];
             O1_["PQ"] = C1_["PQ"];
@@ -243,7 +242,6 @@ void MRDSRG::compute_hbar_sequential() {
     bool converged = false;
     int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
     double ct_threshold = foptions_->get_double("DSRG_RSC_THRESHOLD");
-    std::string dsrg_op = foptions_->get_str("DSRG_TRANS_TYPE");
 
     // compute Hbar recursively
     for (int n = 1; n <= maxn; ++n) {
@@ -277,7 +275,7 @@ void MRDSRG::compute_hbar_sequential() {
         }
 
         // [H, A] = [H, T] + [H, T]^dagger
-        if (dsrg_op == "UNITARY") {
+        if (dsrg_trans_type_ == "UNITARY") {
             C0 *= 2.0;
             O1_["pq"] = C1_["pq"];
             O1_["PQ"] = C1_["PQ"];
@@ -366,7 +364,7 @@ void MRDSRG::compute_hbar_sequential() {
         }
 
         // [H, A] = [H, T] + [H, T]^dagger
-        if (dsrg_op == "UNITARY") {
+        if (dsrg_trans_type_ == "UNITARY") {
             C0 *= 2.0;
             O1_["pq"] = C1_["pq"];
             O1_["PQ"] = C1_["PQ"];
@@ -832,8 +830,6 @@ double MRDSRG::compute_energy_ldsrg2() {
 }
 
 void MRDSRG::compute_hbar_qc() {
-    std::string dsrg_op = foptions_->get_str("DSRG_TRANS_TYPE");
-
     // initialize Hbar with bare H
     Hbar0_ = 0.0;
     Hbar1_["ia"] = F_["ia"];
@@ -850,7 +846,7 @@ void MRDSRG::compute_hbar_qc() {
     H2_T2_C1(V_, T2_, 0.5, S1);
 
     BlockedTensor temp;
-    if (dsrg_op == "UNITARY") {
+    if (dsrg_trans_type_ == "UNITARY") {
         temp = BTF_->build(tensor_type_, "temp", spin_cases({"gg"}), true);
         temp["pq"] = S1["pq"];
         temp["PQ"] = S1["PQ"];
@@ -870,7 +866,7 @@ void MRDSRG::compute_hbar_qc() {
     H1_T2_C2(S1, T2_, 1.0, Hbar2_);
 
     //   Step 2: [S1, T]_{ij}^{ab}
-    if (dsrg_op == "UNITARY") {
+    if (dsrg_trans_type_ == "UNITARY") {
         temp = BTF_->build(tensor_type_, "temp", spin_cases({"ph"}), true);
         H1_T1_C1(S1, T1_, 1.0, temp);
         H1_T2_C1(S1, T2_, 1.0, temp);
@@ -918,7 +914,7 @@ void MRDSRG::compute_hbar_qc() {
         H2_T2_C2(V_, T2_, 0.5, S2);
 
         // 0.5 * [H, T]^+
-        if (dsrg_op == "UNITARY") {
+        if (dsrg_trans_type_ == "UNITARY") {
             if (spin == 0) {
                 tensor_add_HC_aa(S2);
             } else if (spin == 1) {
@@ -941,7 +937,7 @@ void MRDSRG::compute_hbar_qc() {
         H2_T2_C2(S2, T2_, 1.0, Hbar2_);
 
         //   Step 2: [S2, T]_{ij}^{ab}
-        if (dsrg_op == "UNITARY") {
+        if (dsrg_trans_type_ == "UNITARY") {
             temp = BTF_->build(tensor_type_, "temp", spin_cases({"ph"}), true);
             H2_T1_C1(S2, T1_, 1.0, temp);
             H2_T2_C1(S2, T2_, 1.0, temp);

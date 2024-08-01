@@ -77,6 +77,8 @@ void SA_MRDSRG::read_options() {
 
     restart_amps_ = foptions_->get_bool("DSRG_RESTART_AMPS");
     t1_guess_ = foptions_->get_str("DSRG_T1_AMPS_GUESS");
+
+    dsrg_trans_type_ = foptions_->get_str("DSRG_TRANS_TYPE");
 }
 
 void SA_MRDSRG::startup() {

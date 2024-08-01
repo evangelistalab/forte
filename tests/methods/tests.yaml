@@ -377,6 +377,7 @@ mrdsrg-spin-adapted:
       - mrdsrg-spin-adapted-1
       - mrdsrg-spin-adapted-3
       - mrdsrg-spin-adapted-7
+      - mrdsrg-spin-adapted-8
    medium:
       - mrdsrg-spin-adapted-2
       - mrdsrg-spin-adapted-4
