@@ -202,6 +202,12 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
             timer t("DSRG [H2, T2] L3");
             E3 += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * L3_("xyzuwv");
             E3 -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * L3_("xyzuwv");
+
+            double E3v =
+                H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_->SF_G3()("xyzuwv");
+            double E3c =
+                H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_->SF_G3()("xyzuwv");
+            outfile->Printf("\n E3c (D3) = %20.15f, E3v (D3) = %20.15f", E3c, E3v);
         } else {
             // direct algorithm for 3RDM: Alex's trick JCTC 16, 6343–6357 (2020)
             // t_{uvez} v_{ewxy} D_{xyzuwv} = - t_{uvez} v_{ezxy} D_{uvxy}
@@ -230,6 +236,17 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
                 Tket, Tbra, mo_space_info_->symmetry("RESTRICTED_DOCC"));
             timer_c.stop();
 
+            for (const auto& state_weights : state_to_weights_) {
+                const auto& state = state_weights.first;
+                const auto& weights = state_weights.second;
+                for (size_t i = 0, nroots = weights.size(); i < nroots; ++i) {
+                    if (weights[i] < 1.0e-15)
+                        continue;
+                    outfile->Printf("\n E3c (mix) = %20.15f, E3v (mix) = %20.15f", E3c_map[state][i],
+                                    E3v_map[state][i]);
+                }
+            }
+
             // - 2-RDM contributions
             auto G2 = ambit::BlockedTensor::build(ambit::CoreTensor, "G2", {"aaaa"});
             G2.block("aaaa")("pqrs") = rdms_->SF_G2()("pqrs");
@@ -248,6 +265,7 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
                     E3c -= weights[i] * E3c_map[state][i];
                 }
             }
+            outfile->Printf("\n E3c (D3) = %20.15f, E3v (D3) = %20.15f", E3c, E3v);
 
             // => spin-free 1- and 2-cumulant contributions <=
 
