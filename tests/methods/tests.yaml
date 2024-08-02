@@ -336,6 +336,11 @@ mrdsrg_so:
       - mrdsrg_so-1
    long:
       - mrdsrg_so-2
+mrdsrg_so_nh:
+   short:
+      - mrdsrg_so_nh-1
+   long:
+      - mrdsrg_so_nh-2
 mrdsrg-ldsrg2-df-spin-integrated:
    short:
       - mrdsrg-ldsrg2-qc-df-2
@@ -359,10 +364,12 @@ mrdsrg-ldsrg2-spin-integrated:
    short:
       - mrdsrg-ldsrg2-1
    medium:
-      - mrdsrg-ldsrg2-2
       - mrdsrg-ldsrg2-qc-2
    long:
       - mrdsrg-ldsrg2-qc-1
+mrdsrg-ldsrg2-spin-integrated-nh:
+   short:
+      - mrdsrg-ldsrg2-nh-1
 mrdsrg-pt2:
    short:
       - mrdsrg-pt2-2
@@ -377,11 +384,13 @@ mrdsrg-spin-adapted:
       - mrdsrg-spin-adapted-1
       - mrdsrg-spin-adapted-3
       - mrdsrg-spin-adapted-7
-      - mrdsrg-spin-adapted-8
    medium:
       - mrdsrg-spin-adapted-2
       - mrdsrg-spin-adapted-4
       - mrdsrg-spin-adapted-5
+mrdsrg-spin-adapted-nh:
+   short:
+      - mrdsrg-spin-adapted-nh-1
 mrdsrg-spin-adapted-pt2:
    short:
       - mrdsrg-spin-adapted-pt2-1
