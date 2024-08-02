@@ -27,4 +27,4 @@ set forte{
 }
 
 energy('forte')
-compare_values(refudsrg, variable("UNRELAXED ENERGY"), 8, "MRDSRG unrelaxed energy")
+compare_values(refudsrg, variable("UNRELAXED ENERGY"), 8, "Non-Hermitian MRDSRG unrelaxed energy")

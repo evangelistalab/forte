@@ -79,6 +79,12 @@ void SA_MRDSRG::read_options() {
     t1_guess_ = foptions_->get_str("DSRG_T1_AMPS_GUESS");
 
     dsrg_trans_type_ = foptions_->get_str("DSRG_TRANS_TYPE");
+    if (dsrg_trans_type_ != "UNITARY" && corrlv_string_ == "LDSRG2_QC") {
+        outfile->Printf("\n  Warning: DSRG_TRANS_TYPE option %s is not supported with CORR_LEVEL LDSRG2_QC.",
+                        dsrg_trans_type_.c_str());
+        outfile->Printf("\n  Changed DSRG_TRANS_TYPE option to UNITARY");
+        dsrg_trans_type_ = "UNITARY";
+    }
 }
 
 void SA_MRDSRG::startup() {
