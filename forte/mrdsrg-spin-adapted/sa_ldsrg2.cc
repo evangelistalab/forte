@@ -457,14 +457,12 @@ void SA_MRDSRG::compute_hbar_sequential() {
             outfile->Printf("\n    %s\n", dash.c_str());
         }
 
-        if (dsrg_trans_type_ == "UNITARY") {
-            // [H, A] = [H, T] + [H, T]^dagger
-            C0 *= 2.0;
-            O1_["pq"] = C1_["pq"];
-            C1_["pq"] += O1_["qp"];
-            O2_["pqrs"] = C2_["pqrs"];
-            C2_["pqrs"] += O2_["rspq"];
-        }
+        // [H, A] = [H, T] + [H, T]^dagger
+        C0 *= 2.0;
+        O1_["pq"] = C1_["pq"];
+        C1_["pq"] += O1_["qp"];
+        O2_["pqrs"] = C2_["pqrs"];
+        C2_["pqrs"] += O2_["rspq"];
 
         // Hbar += C
         Hbar0_ += C0;

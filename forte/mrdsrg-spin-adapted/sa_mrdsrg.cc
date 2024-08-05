@@ -80,8 +80,13 @@ void SA_MRDSRG::read_options() {
 
     dsrg_trans_type_ = foptions_->get_str("DSRG_TRANS_TYPE");
     if (dsrg_trans_type_ != "UNITARY" && corrlv_string_ == "LDSRG2_QC") {
-        outfile->Printf("\n  Warning: DSRG_TRANS_TYPE option %s is not supported with CORR_LEVEL LDSRG2_QC.",
-                        dsrg_trans_type_.c_str());
+        outfile->Printf("\n  Warning: DSRG_TRANS_TYPE option %s is not supported with CORR_LEVEL LDSRG2_QC.");
+        outfile->Printf("\n  Changed DSRG_TRANS_TYPE option to UNITARY");
+        dsrg_trans_type_ = "UNITARY";
+    }
+    
+    if (dsrg_trans_type_ != "UNITARY" && sequential_Hbar_) {
+        outfile->Printf("\n  Warning: DSRG_TRANS_TYPE option %s is not supported with DSRG_HBAR_SEQ.");
         outfile->Printf("\n  Changed DSRG_TRANS_TYPE option to UNITARY");
         dsrg_trans_type_ = "UNITARY";
     }
