@@ -26,7 +26,7 @@ jobs:
         environment-file: environment.yml
         channels: conda-forge
         show-channel-urls: true
-        python-version: '3.10'
+        python-version: '3.11'
         auto-activate-base: false
         add-pip-as-python-dependency: true
 
@@ -100,7 +100,7 @@ jobs:
     - name: Compile block2
       run: |
         cd $HOME
-        git clone https://github.com/block-hczhai/block2-preview.git
+        git clone -b p0.5.3rc14 https://github.com/block-hczhai/block2-preview.git
         mkdir -p block2-preview/build
         cd block2-preview/build
         cmake .. -DUSE_MKL=OFF -DBUILD_CLIB=ON \
