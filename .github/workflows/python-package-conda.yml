@@ -175,4 +175,6 @@ jobs:
         name: forte-test-outputs
         path: |
           ~/work/forte/forte/tests/methods/*/output.dat
+          ~/work/forte/forte/tests/methods/*/output.log
           ~/work/forte/forte/tests/pytest*/output.dat
+          ~/work/forte/forte/tests/pytest*/output.log
