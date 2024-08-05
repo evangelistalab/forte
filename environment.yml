@@ -1,7 +1,7 @@
 name: forte
 
 dependencies:
-    - python=3.11
+    - python=3.10
     - pip
     - pybind11
     - cxx-compiler
