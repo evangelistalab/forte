@@ -218,10 +218,10 @@ jobs:
 
   - bash: |
       BLOCK2_BIN_DIR=$(Build.SourcesDirectory)/build/block2-bin
-      if [[ "${ENABLE_BLOCK2}" != "ON" ]]; then
+      if [[ "${ENABLE_BLOCK2}" != "OFF" ]]; then
         source activate p4env
         cd build
-        git clone https://github.com/block-hczhai/block2-preview.git
+        git clone -b p0.5.3rc14 https://github.com/block-hczhai/block2-preview.git
         mkdir -p block2-preview/build
         cd block2-preview/build
         cmake .. -DUSE_MKL=OFF -DBUILD_CLIB=ON \
