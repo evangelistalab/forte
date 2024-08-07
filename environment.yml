@@ -27,4 +27,3 @@ dependencies:
     - conda-forge::optking
     - conda-forge::pyscf
     - conda-forge::libecpint
-    - conda-forge::openblas

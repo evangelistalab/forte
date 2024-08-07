@@ -114,6 +114,8 @@ jobs:
 
     - name: Compile block2
       if: steps.cache-restore-block2.outputs.cache-hit != 'true'
+      env: 
+        BLAS_ROOT: $
       run: |
         cd $HOME
         git clone https://github.com/block-hczhai/block2-preview.git
@@ -159,6 +161,17 @@ jobs:
         export AMBITPATH=$HOME/bin/ambit
         export PATH=$PATH:$HOME/psi4/objdir/stage/bin
         export OPENBLAS_NUM_THREADS=1
+        lscpu
+        export CPUTYPE=$(lscpu | grep 'Vendor ID' | awk '{print $3}')
+        echo $CPUTYPE
+        if [ "$CPUTYPE" = "AuthenticAMD" ]; then
+          echo "int mkl_serv_intel_cpu_true() { return 1; }" > fixcpu.c
+          gcc -shared -fPIC -o libfixcpu.so fixcpu.c
+        fi
+        export CPUTYPE=$(lscpu | grep 'Vendor ID' | awk '{print $3}')
+        if [ "$CPUTYPE" = "AuthenticAMD" ]; then
+          export LD_PRELOAD=$PWD/libfixcpu.so
+        fi
         cd $HOME/work/forte/forte/tests/methods
         python run_forte_tests.py --failed_dump --bw
         cd $HOME/work/forte/forte/tests/pytest
