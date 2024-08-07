@@ -146,7 +146,7 @@ df-dsrg-mrpt2:
    unused:
       - df-dsrg-mrpt2-testccvv
 dmrg-dsrg-mrpt2:
-   unused:
+   short:
       - dmrg-dsrg-mrpt2-1
 dsrg-mrpt2_spin_adapted:
    short:

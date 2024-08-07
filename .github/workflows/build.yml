@@ -165,6 +165,8 @@ jobs:
         pytest -v
         cd $HOME/work/forte/forte/tests/pytest-methods
         pytest -v
+        cd $HOME/work/forte/forte/tests/pytest-block2
+        pytest -v
     
     - name: Upload artifacts
       if: failure()
