@@ -1051,6 +1051,7 @@ DSRG:
   DSRG_TRANS_TYPE:
     type: str
     default: "UNITARY"
+    choices: ["UNITARY", "CC"]
     help: "DSRG transformation type"
   SMART_DSRG_S:
     type: str

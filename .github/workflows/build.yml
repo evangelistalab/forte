@@ -121,7 +121,7 @@ jobs:
         git clone https://github.com/block-hczhai/block2-preview.git
         mkdir -p block2-preview/build
         cd block2-preview/build
-        cmake .. -DUSE_MKL=OFF -DBUILD_CLIB=ON \
+        cmake .. -DBUILD_CLIB=ON \
           -DLARGE_BOND=ON \
           -DMPI=OFF \
           -DCMAKE_INSTALL_PREFIX=${HOME}/block2-bin
