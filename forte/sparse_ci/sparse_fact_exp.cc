@@ -41,7 +41,7 @@ SparseState SparseFactExp::apply_op(const SparseOperatorList& sop, const SparseS
     SparseState result(state);
 
     // temporary space to store new elements
-    Buffer<std::pair<Determinant, double>> new_terms;
+    Buffer<std::pair<Determinant, sparse_scalar_t>> new_terms;
 
     Determinant new_det;
     for (size_t m = 0, nterms = sop.size(); m < nterms; m++) {
@@ -56,7 +56,7 @@ SparseState SparseFactExp::apply_op(const SparseOperatorList& sop, const SparseS
         }
         const Determinant ucre = sqop.cre() - sqop.ann();
         const Determinant sign_mask = compute_sign_mask(sqop.ann(), sqop.cre());
-        const double t = (inverse ? -1.0 : 1.0) * coefficient;
+        const sparse_scalar_t t = (inverse ? -1.0 : 1.0) * coefficient;
         const auto screen_thresh_div_t = screen_thresh_ / std::abs(t);
         // loop over all determinants
         for (const auto& [det, c] : result) {
@@ -85,7 +85,7 @@ SparseState SparseFactExp::apply_antiherm(const SparseOperatorList& sop, const S
 
     // initialize a state object
     SparseState result(state);
-    Buffer<std::pair<Determinant, double>> new_terms;
+    Buffer<std::pair<Determinant, sparse_scalar_t>> new_terms;
 
     Determinant new_det;
     for (size_t m = 0, nterms = sop.size(); m < nterms; m++) {
@@ -102,14 +102,14 @@ SparseState SparseFactExp::apply_antiherm(const SparseOperatorList& sop, const S
         const Determinant ucre = sqop.cre() - sqop.ann();
         const Determinant uann = sqop.ann() - sqop.cre();
         const Determinant sign_mask = compute_sign_mask(sqop.ann(), sqop.cre());
-        const double t = (inverse ? -1.0 : 1.0) * coefficient;
+        const auto t = (inverse ? -1.0 : 1.0) * coefficient;
         const auto screen_thresh_div_t = screen_thresh_ / std::abs(t);
         // loop over all determinants
         for (const auto& [det, c] : result) {
             // do not apply this operator to this determinant if we expect the new determinant
             // to have an amplitude less than screen_thresh
             // (here we use the approximation sin(x) ~ x, for x small)
-            if (std::fabs(c) > screen_thresh_div_t) {
+            if (std::abs(c) > screen_thresh_div_t) {
                 if (det.fast_can_apply_operator(sqop.ann(), ucre)) {
                     const auto theta = t * faster_apply_operator_to_det(det, new_det, sqop.cre(),
                                                                         sqop.ann(), sign_mask);

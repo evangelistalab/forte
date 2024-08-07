@@ -13,18 +13,18 @@ def test_sparse_operator():
     sop = forte.SparseOperator()
     sop.add("[]", 2.3)
     sop.add("[0a+ 0b+ 0b- 0a-]")
-    to_str = sop.str()
-    assert to_str == ["+ 2.3", "+ [ 0a+ 0b+ 0b- 0a- ]"]
+    to_str = sorted(sop.str())
+    assert to_str == sorted(["(2.3 + 0i) * []", "(1 + 0i) * [0a+ 0b+ 0b- 0a-]"])
     to_latex = sop.latex()
     assert (
         to_latex
-        == r"+2.300000\; +\;\hat{a}_{0 \alpha}^\dagger\hat{a}_{0 \beta}^\dagger\hat{a}_{0 \beta}\hat{a}_{0 \alpha}"
+        == r"(2.300000 + 0.000000 i)\; +\;\hat{a}_{0 \alpha}^\dagger\hat{a}_{0 \beta}^\dagger\hat{a}_{0 \beta}\hat{a}_{0 \alpha}"
     )
 
     sop = forte.SparseOperator()
     sop.add("[1a+ 1b+ 0b- 0a-]", 1.0)
     to_str = sop.str()
-    assert to_str == ["+ [ 1a+ 1b+ 0b- 0a- ]"]
+    assert to_str == ["(1 + 0i) * [1a+ 1b+ 0b- 0a-]"]
     to_latex = sop.latex()
     assert to_latex == r"+\;\hat{a}_{1 \alpha}^\dagger\hat{a}_{1 \beta}^\dagger\hat{a}_{0 \beta}\hat{a}_{0 \alpha}"
 

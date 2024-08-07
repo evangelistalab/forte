@@ -92,28 +92,50 @@ bool SQOperatorString::operator<(const SQOperatorString& other) const {
 SQOperatorString SQOperatorString::adjoint() const { return SQOperatorString(ann(), cre()); }
 
 std::string SQOperatorString::str() const {
-    std::string s = "[ ";
     auto acre = cre().get_alfa_occ(cre().norb());
     auto bcre = cre().get_beta_occ(cre().norb());
     auto aann = ann().get_alfa_occ(ann().norb());
     auto bann = ann().get_beta_occ(ann().norb());
     std::reverse(aann.begin(), aann.end());
     std::reverse(bann.begin(), bann.end());
+    std::vector<std::string> terms;
     for (auto p : acre) {
-        s += std::to_string(p) + "a+ ";
+        terms.push_back(std::to_string(p) + "a+");
     }
     for (auto p : bcre) {
-        s += std::to_string(p) + "b+ ";
+        terms.push_back(std::to_string(p) + "b+");
     }
     for (auto p : bann) {
-        s += std::to_string(p) + "b- ";
+        terms.push_back(std::to_string(p) + "b-");
     }
     for (auto p : aann) {
-        s += std::to_string(p) + "a- ";
+        terms.push_back(std::to_string(p) + "a-");
     }
-    s += "]";
-
+    std::string s = "[" + join(terms, " ") + "]";
     return s;
+}
+
+op_tuple_t SQOperatorString::op_tuple() const {
+    auto acre = cre().get_alfa_occ(cre().norb());
+    auto bcre = cre().get_beta_occ(cre().norb());
+    auto aann = ann().get_alfa_occ(ann().norb());
+    auto bann = ann().get_beta_occ(ann().norb());
+    std::reverse(aann.begin(), aann.end());
+    std::reverse(bann.begin(), bann.end());
+    op_tuple_t terms;
+    for (auto p : acre) {
+        terms.push_back(std::make_tuple(true, true, p));
+    }
+    for (auto p : bcre) {
+        terms.push_back(std::make_tuple(true, false, p));
+    }
+    for (auto p : bann) {
+        terms.push_back(std::make_tuple(false, false, p));
+    }
+    for (auto p : aann) {
+        terms.push_back(std::make_tuple(false, true, p));
+    }
+    return terms;
 }
 
 // implement the << operator for SQOperatorString
@@ -144,6 +166,34 @@ std::string SQOperatorString::latex() const {
         s += "\\hat{a}_{" + std::to_string(p) + " \\alpha}";
     }
 
+    return s;
+}
+
+std::string SQOperatorString::latex_compact() const {
+    auto acre = cre().get_alfa_occ(cre().norb());
+    auto bcre = cre().get_beta_occ(cre().norb());
+    auto aann = ann().get_alfa_occ(ann().norb());
+    auto bann = ann().get_beta_occ(ann().norb());
+    std::string s;
+    s += "\\hat{a}^{";
+    std::vector<std::string> terms;
+    for (auto p : acre) {
+        terms.push_back(std::to_string(p) + "_{\\alpha}");
+    }
+    for (auto p : bcre) {
+        terms.push_back(std::to_string(p) + "_{\\beta}");
+    }
+    s += join(terms, " ");
+    s += "}_{";
+    terms.clear();
+    for (auto p : aann) {
+        terms.push_back(std::to_string(p) + "_{\\alpha}");
+    }
+    for (auto p : bann) {
+        terms.push_back(std::to_string(p) + "_{\\beta}");
+    }
+    s += join(terms, " ");
+    s += "}";
     return s;
 }
 
@@ -466,8 +516,8 @@ std::vector<std::pair<SQOperatorString, double>> commutator(const SQOperatorStri
 #define debug_print(x) ; // std::cout << #x << ": " << x << std::endl;
 
 void SQOperatorProductComputer::product(
-    const SQOperatorString& lhs, const SQOperatorString& rhs, double factor,
-    std::function<void(const SQOperatorString&, const double)> func) {
+    const SQOperatorString& lhs, const SQOperatorString& rhs, sparse_scalar_t factor,
+    std::function<void(const SQOperatorString&, const sparse_scalar_t)> func) {
 
     // apologies to those who read this code, it's meant to be fast, not readable.
 
@@ -612,8 +662,8 @@ void SQOperatorProductComputer::product(
 }
 
 void SQOperatorProductComputer::commutator(
-    const SQOperatorString& lhs, const SQOperatorString& rhs, double factor,
-    std::function<void(const SQOperatorString&, const double)> func) {
+    const SQOperatorString& lhs, const SQOperatorString& rhs, sparse_scalar_t factor,
+    std::function<void(const SQOperatorString&, const sparse_scalar_t)> func) {
     product(lhs, rhs, factor, func);
     product(rhs, lhs, -factor, func);
 }

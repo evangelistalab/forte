@@ -347,7 +347,7 @@ def solve_cc_equations(
         residual_norm = 0.0
         for l in range(selected_op.size()):
             t[l] -= residual[op_pool[l]] / denominators[op_pool[l]]
-            residual_norm += residual[op_pool[l]] ** 2
+            residual_norm += abs(residual[op_pool[l]]) ** 2
 
         residual_norm = math.sqrt(residual_norm)
 
@@ -356,7 +356,7 @@ def solve_cc_equations(
         delta_e_micro = e - old_e_micro
 
         print(
-            f"    {micro_iter:4d} {e:20.12f}   {delta_e_micro:+6e}   {residual_norm:+6e}   {time.time() - micro_start:8.3f}",
+            f"    {micro_iter:4d} {e.real:20.12f}   {delta_e_micro.real:+6e}   {residual_norm:+6e}   {time.time() - micro_start:8.3f}",
             flush=True,
         )
 

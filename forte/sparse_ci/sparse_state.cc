@@ -71,14 +71,15 @@ SparseState apply_operator_impl(bool is_antihermitian, const SparseOperator& sop
         throw std::invalid_argument("apply_operator_impl:screen_thresh must be non-negative");
     }
     // make a copy of the state
-    std::vector<std::pair<double, Determinant>> state_sorted;
+    std::vector<std::pair<sparse_scalar_t, Determinant>> state_sorted;
     state_sorted.reserve(state.size());
     std::transform(state.begin(), state.end(), std::back_inserter(state_sorted),
                    [](const auto& pair) { return std::make_pair(pair.second, pair.first); });
 
-    // Sorting the vector based on the decreasing absolute value of the double
+    // Sorting the vector based on the decreasing absolute value of the sparse_scalar_t
     std::sort(state_sorted.begin(), state_sorted.end(),
-              [](const std::pair<double, Determinant>& a, const std::pair<double, Determinant>& b) {
+              [](const std::pair<sparse_scalar_t, Determinant>& a,
+                 const std::pair<sparse_scalar_t, Determinant>& b) {
                   return std::abs(a.first) > std::abs(b.first);
               });
 
@@ -86,15 +87,15 @@ SparseState apply_operator_impl(bool is_antihermitian, const SparseOperator& sop
     auto max_c = state_sorted.size() > 0 ? std::abs(state_sorted[0].first) : 0.0;
 
     // make a copy of the operator and sort it according to decreasing values of |t|
-    std::vector<std::pair<double, SQOperatorString>> op_sorted;
+    std::vector<std::pair<sparse_scalar_t, SQOperatorString>> op_sorted;
     for (const auto& [sqop, t] : sop.elements()) {
         if (std::abs(t * max_c) > screen_thresh)
             op_sorted.push_back(std::make_pair(t, sqop));
     }
-    // Sorting the vector based on the decreasing absolute value of the double
+    // Sorting the vector based on the decreasing absolute value of the sparse_scalar_t
     std::sort(op_sorted.begin(), op_sorted.end(),
-              [](const std::pair<double, SQOperatorString>& a,
-                 const std::pair<double, SQOperatorString>& b) {
+              [](const std::pair<sparse_scalar_t, SQOperatorString>& a,
+                 const std::pair<sparse_scalar_t, SQOperatorString>& b) {
                   return std::abs(a.first) > std::abs(b.first);
               });
 
@@ -143,20 +144,20 @@ SparseState apply_operator_impl(bool is_antihermitian, const SparseOperator& sop
     return new_terms;
 }
 
-std::vector<double> get_projection(const SparseOperatorList& sop, const SparseState& ref,
-                                   const SparseState& state) {
+std::vector<sparse_scalar_t> get_projection(const SparseOperatorList& sop, const SparseState& ref,
+                                            const SparseState& state) {
     local_timer t;
-    std::vector<double> proj(sop.size(), 0.0);
+    std::vector<sparse_scalar_t> proj(sop.size(), 0.0);
 
     Determinant d;
 
     // loop over all the operators
     for (size_t n = 0; const auto& [sqop, coefficient] : sop.elements()) {
-        double value = 0.0;
+        sparse_scalar_t value = 0.0;
         // apply the operator op_n
         for (const auto& [det, c] : ref) {
             d = det;
-            const double sign = apply_operator_to_det(d, sqop);
+            const auto sign = apply_operator_to_det(d, sqop);
             if (sign != 0.0) {
                 auto search = state.find(d);
                 if (search != state.end()) {
@@ -173,14 +174,14 @@ std::vector<double> get_projection(const SparseOperatorList& sop, const SparseSt
 SparseState apply_number_projector(int na, int nb, const SparseState& state) {
     SparseState new_state;
     for (const auto& [det, c] : state) {
-        if ((det.count_alfa() == na) and (det.count_beta() == nb) and (std::fabs(c) > 1.0e-12)) {
+        if ((det.count_alfa() == na) and (det.count_beta() == nb) and (std::abs(c) > 1.0e-12)) {
             new_state[det] = c;
         }
     }
     return new_state;
 }
 
-double overlap(const SparseState& left_state, const SparseState& right_state) {
+sparse_scalar_t overlap(const SparseState& left_state, const SparseState& right_state) {
     return left_state.dot(right_state);
 }
 

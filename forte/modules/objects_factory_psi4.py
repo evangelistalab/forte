@@ -117,7 +117,7 @@ def prepare_psi4_ref_wfn(options, **kwargs):
 
     # create a MOSpaceInfo object
     nmopi = ref_wfn.nmopi()
-    if kwargs.get("mo_spaces") is None:
+    if kwargs.get("mo_spaces", None) is None:
         mo_space_info = make_mo_space_info(nmopi, point_group, options)
     else:
         mo_space_info = make_mo_space_info_from_map(nmopi, point_group, kwargs.get("mo_spaces"), [])

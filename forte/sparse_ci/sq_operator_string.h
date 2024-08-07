@@ -32,6 +32,7 @@
 #include <functional>
 #include <vector>
 
+#include "sparse_ci/sparse.h"
 #include "sparse_ci/determinant.h"
 
 namespace forte {
@@ -91,6 +92,8 @@ class SQOperatorString {
     Determinant& cre_mod();
     /// @return a Determinant object that represents the annihilation operators
     Determinant& ann_mod();
+    /// @return a op_tuple_t that represents the operator
+    op_tuple_t op_tuple() const;
     /// @return true if this operator is a number operator (i.e. it contains no creation or
     /// annihilation  operators)
     bool is_number() const;
@@ -107,6 +110,8 @@ class SQOperatorString {
     std::string str() const;
     /// @return a latex representation of this operator
     std::string latex() const;
+    /// @return a compact latex representation of this operator
+    std::string latex_compact() const;
     /// @return a sq_operator that is the adjoint of this operator
     SQOperatorString adjoint() const;
 
@@ -128,10 +133,11 @@ class SQOperatorString {
 class SQOperatorProductComputer {
   public:
     SQOperatorProductComputer() = default;
-    void product(const SQOperatorString& lhs, const SQOperatorString& rhs, double factor,
-                 std::function<void(const SQOperatorString&, const double)> func);
-    void commutator(const SQOperatorString& lhs, const SQOperatorString& rhs, double factor,
-                    std::function<void(const SQOperatorString&, const double)> func);
+    void product(const SQOperatorString& lhs, const SQOperatorString& rhs, sparse_scalar_t factor,
+                 std::function<void(const SQOperatorString&, const sparse_scalar_t)> func);
+    void commutator(const SQOperatorString& lhs, const SQOperatorString& rhs,
+                    sparse_scalar_t factor,
+                    std::function<void(const SQOperatorString&, const sparse_scalar_t)> func);
 
   private:
     constexpr static size_t max_contracted_ops_ = 32;
@@ -142,7 +148,7 @@ class SQOperatorProductComputer {
     Determinant ucon_rhs_cre_;
     Determinant con_rhs_cre_;
     Determinant ucon_rhs_ann_;
-    double phase_;
+    sparse_scalar_t phase_;
     std::vector<short> set_bits_ = std::vector<short>(max_contracted_ops_, 0);
     std::bitset<max_contracted_ops_> sign_;
 };

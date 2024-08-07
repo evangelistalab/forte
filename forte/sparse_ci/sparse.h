@@ -28,14 +28,15 @@
 
 #pragma once
 
-#include <vector>
-
-#include "sparse_ci/sparse.h"
-#include "sparse_ci/determinant.h"
+#include <complex>
 
 namespace forte {
+using sparse_scalar_t = std::complex<double>;
 
-void new_product2(SparseOperator& result, SQOperatorString lhs, SQOperatorString rhs,
-                  sparse_scalar_t factor);
+// // For double
+// double to_double(const double& input) { return input; }
+
+// For std::complex<double>
+template <typename T> double to_double(const T& input) { return std::real(input); }
 
 } // namespace forte

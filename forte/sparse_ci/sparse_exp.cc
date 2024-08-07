@@ -78,7 +78,7 @@ SparseState SparseExp::apply_exp_operator(OperatorType op_type, const SparseOper
         double inf_norm = 0.0;
         exp_state += new_terms;
         for (const auto& [det, c] : new_terms) {
-            norm += std::pow(c, 2.0);
+            norm += std::pow(std::abs(c), 2.0);
             inf_norm = std::max(inf_norm, std::abs(c));
         }
         norm = std::sqrt(norm);

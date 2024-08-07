@@ -32,16 +32,17 @@
 #include "helpers/combinatorial.h"
 #include "helpers/string_algorithms.h"
 
+#include "sparse_ci/sparse.h"
 #include "sparse_ci/sq_operator_string.h"
 #include "sparse_ci/sparse_operator.h"
 
 namespace forte {
 
 void generate_wick_contractions2(SQOperatorString& lhs, SQOperatorString& rhs,
-                                 SparseOperator& result, const double sign);
+                                 SparseOperator& result, const sparse_scalar_t sign);
 
 void process_cre2(SQOperatorString& lhs, SQOperatorString& rhs, SparseOperator& result,
-                  const double sign) {
+                  const sparse_scalar_t sign) {
     //    Left   |   Right
     // cre | ann | cre | ann |
     //  ^     ^     ^
@@ -78,7 +79,7 @@ void process_cre2(SQOperatorString& lhs, SQOperatorString& rhs, SparseOperator& 
 }
 
 void process_ann2(SQOperatorString& lhs, SQOperatorString& rhs, SparseOperator& result,
-                  const double sign) {
+                  const sparse_scalar_t sign) {
     // Here we assume that the operators are in the canonical form
     // and that the right alpha and beta creation have been alredy removed
     //    Left   |   Right
@@ -104,7 +105,7 @@ void process_ann2(SQOperatorString& lhs, SQOperatorString& rhs, SparseOperator& 
 }
 
 void generate_wick_contractions2(SQOperatorString& lhs, SQOperatorString& rhs,
-                                 SparseOperator& result, double sign) {
+                                 SparseOperator& result, sparse_scalar_t sign) {
     // if there are no operators on the right then we return
     if (rhs.count() == 0) {
         result.add(lhs, sign);
@@ -118,7 +119,7 @@ void generate_wick_contractions2(SQOperatorString& lhs, SQOperatorString& rhs,
 }
 
 void new_product2(SparseOperator& result, SQOperatorString lhs, SQOperatorString rhs,
-                  double factor) {
+                  sparse_scalar_t factor) {
     generate_wick_contractions2(lhs, rhs, result, factor);
 }
 } // namespace forte
