@@ -64,6 +64,9 @@ class ProcedureDSRG:
         self.relax_ref = options.get_str("RELAX_REF")
         if self.relax_ref == "NONE" and self.do_multi_state:
             self.relax_ref = "ONCE"
+        if self.relax_ref != "NONE" and options.get_str("DSRG_TRANS_TYPE") != "UNITARY":
+            psi4.core.print_out("\n  DSRG relaxation only supports UNITARY transformation. Setting RELAX_REF to NONE.")
+            self.relax_ref = "NONE"
 
         self.max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
         if options.get_str("DSRG_3RDM_ALGORITHM") == "DIRECT":

@@ -858,6 +858,17 @@ File format and content should match those with ``DSRG_DUMP_AMPS``.
 * Type: Boolean
 * Default: False
 
+**DSRG_TRANS_TYPE**
+
+The type of transformation used in the MRDSRG ansatz.
+The default ``UNITARY`` transformation uses :math:`\bar{H}=e^{-\hat{A}}\hat{H}e^{\hat{A}}` while the ``CC`` transformation uses :math:`\bar{H}=e^{-\hat{T}}\hat{H}e^{\hat{T}}`.
+The ``CC`` transformation type is available for all MRDSRG methods using the linearlized commutator approximation.
+The ``CC`` transformation type is unavailable for the sequentially transformed Hamiltonian.
+
+* Type: string
+* Options: UNITARY, CC
+* Default: UNITARY
+
 
 Density Fitted (DF) and Cholesky Decomposition (CD) Implementations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
