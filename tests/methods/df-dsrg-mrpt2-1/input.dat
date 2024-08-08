@@ -3,7 +3,7 @@
 import forte
 
 refmcscf    = -15.569761360884
-refdsrgpt2 =  -15.613389000040760
+refdsrgpt2 =  -15.539711535204
 
 molecule {
   0 1
