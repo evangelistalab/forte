@@ -31,9 +31,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thursday, 08 August 2024 04:46PM
+    Psi4 started on: Friday, 09 August 2024 05:26PM
 
-    Process ID: 37805
+    Process ID: 83105
     Host:       Brian-Zs-MBA.local
     PSIDATADIR: /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4
     Memory:     500.0 MiB
@@ -44,7 +44,7 @@
 --------------------------------------------------------------------------
 import forte
 
-refmcscf   =  -226.57507276 # lower energy solution used since v0.4.0
+refmcscf   =  -226.57507656 # lower energy solution used since v0.4.0
 
 molecule mbenzyne{
 0 1
@@ -64,6 +64,7 @@ units bohr
 set globals{
    basis                   sto-3g
    scf_type                pk
+   guess                   sap
 }
 
 set forte {
@@ -106,7 +107,7 @@ Scratch directory: /tmp/
     Solid Harmonics ordering:            Gaussian
 
 *** tstart() called on Brian-Zs-MBA.local
-*** at Thu Aug  8 16:46:54 2024
+*** at Fri Aug  9 17:26:56 2024
 
    => Loading Basis Set <=
 
@@ -163,7 +164,7 @@ Scratch directory: /tmp/
   DIIS enabled.
   MOM disabled.
   Fractional occupation disabled.
-  Guess Type is SAD.
+  Guess Type is SAP.
   Energy threshold   = 1.00e-08
   Density threshold  = 1.00e-08
   Integral threshold = 1.00e-12
@@ -212,38 +213,56 @@ Scratch directory: /tmp/
 
   ==> Pre-Iterations <==
 
-  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+  SCF Guess: Superposition of Atomic Potentials (doi:10.1021/acs.jctc.8b01089).
 
-   -------------------------
-    Irrep   Nso     Nmo    
-   -------------------------
-     Ag         8       8 
-     B1g        6       6 
-     B2g        1       1 
-     B3g        2       2 
-     Au         1       1 
-     B1u        2       2 
-     B2u        8       8 
-     B3u        6       6 
-   -------------------------
-    Total      34      34
-   -------------------------
+  ==> SAP guess <==
+
+   => Molecular Quadrature <=
+
+    Radial Scheme          =       TREUTLER
+    Pruning Scheme         =           NONE
+    Nuclear Scheme         =       TREUTLER
+
+    Blocking Scheme        =         OCTREE
+    BS radius alpha        =              1
+    Pruning alpha          =              1
+    Radial Points          =             75
+    Spherical Points       =            302
+    Total Points           =         209556
+    Total Blocks           =           1624
+    Max Points             =            256
+    Max Functions          =             34
+    Weights Tolerance      =       1.00E-15
+
+   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------
+     Ag         8       8       5       5       5       0
+     B1g        6       6       3       3       3       0
+     B2g        1       1       1       1       1       0
+     B3g        2       2       1       1       1       0
+     Au         1       1       0       0       0       0
+     B1u        2       2       1       1       1       0
+     B2u        8       8       5       5       5       0
+     B3u        6       6       4       4       4       0
+   -------------------------------------------------------
+    Total      34      34      20      20      20       0
+   -------------------------------------------------------
 
   ==> Iterations <==
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter SAD:  -208.18206101362904   -2.08182e+02   0.00000e+00 
-   @RHF iter   1:  -224.73739850722663   -1.65553e+01   8.91422e-02 ADIIS/DIIS
-   @RHF iter   2:  -226.27215243901202   -1.53475e+00   1.31737e-02 ADIIS/DIIS
-   @RHF iter   3:  -226.29306019699376   -2.09078e-02   3.25949e-03 ADIIS/DIIS
-   @RHF iter   4:  -226.29463987324073   -1.57968e-03   6.81306e-04 ADIIS/DIIS
-   @RHF iter   5:  -226.29474261931935   -1.02746e-04   8.30556e-05 DIIS
-   @RHF iter   6:  -226.29474510514871   -2.48583e-06   1.22617e-05 DIIS
-   @RHF iter   7:  -226.29474516377098   -5.86223e-08   1.91656e-06 DIIS
-   @RHF iter   8:  -226.29474516499937   -1.22839e-09   2.43414e-07 DIIS
-   @RHF iter   9:  -226.29474516502057   -2.12026e-11   4.28767e-08 DIIS
-   @RHF iter  10:  -226.29474516502106   -4.83169e-13   8.80128e-09 DIIS
+   @RHF iter   1:  -225.62617880109343   -2.25626e+02   7.16748e-02 ADIIS/DIIS
+   @RHF iter   2:  -226.30964573037917   -6.83467e-01   2.89564e-02 ADIIS/DIIS
+   @RHF iter   3:  -226.40047743963771   -9.08317e-02   8.07046e-03 ADIIS/DIIS
+   @RHF iter   4:  -226.40869764588456   -8.22021e-03   6.90307e-04 ADIIS/DIIS
+   @RHF iter   5:  -226.40878208003815   -8.44342e-05   8.40369e-05 DIIS
+   @RHF iter   6:  -226.40878435870803   -2.27867e-06   1.39179e-05 DIIS
+   @RHF iter   7:  -226.40878443413595   -7.54279e-08   2.96895e-06 DIIS
+   @RHF iter   8:  -226.40878443805684   -3.92089e-09   6.15839e-07 DIIS
+   @RHF iter   9:  -226.40878443819037   -1.33525e-10   5.48730e-08 DIIS
+   @RHF iter  10:  -226.40878443819125   -8.81073e-13   8.83562e-09 DIIS
   Energy and wave function converged.
 
 
@@ -254,36 +273,36 @@ Scratch directory: /tmp/
 
     Doubly Occupied:                                                      
 
-       1B3u  -11.046858     1Ag   -11.046754     1B2u  -11.046683  
-       1B1g  -11.046642     2B2u  -11.026615     2Ag   -11.026574  
-       3Ag    -1.110582     2B3u   -0.964986     3B2u   -0.946305  
-       2B1g   -0.781962     4Ag    -0.739626     5Ag    -0.591422  
-       4B2u   -0.585276     3B3u   -0.574685     4B3u   -0.540643  
-       1B1u   -0.475058     3B1g   -0.463385     1B3g   -0.302433  
-       1B2g   -0.286477     6Ag    -0.122779  
+       1B3u  -11.044810     1B2u  -11.044737     1Ag   -11.044708  
+       1B1g  -11.044706     2B2u  -10.990237     2Ag   -10.990019  
+       3Ag    -1.095706     2B3u   -0.964592     3B2u   -0.933321  
+       2B1g   -0.776391     4Ag    -0.736246     5Ag    -0.594177  
+       4B2u   -0.593042     3B3u   -0.566528     4B3u   -0.520023  
+       1B1u   -0.462711     3B1g   -0.461303     1B2g   -0.291032  
+       1B3g   -0.277104     5B2u   -0.174037  
 
     Virtual:                                                              
 
-       5B2u    0.008266     1Au     0.238860     2B1u    0.287025  
-       2B3g    0.504403     7Ag     0.638577     5B3u    0.660445  
-       6B2u    0.679803     4B1g    0.731688     7B2u    0.825043  
-       8Ag     0.842830     5B1g    0.853535     6B3u    0.946662  
-       6B1g    1.115879     8B2u    1.121368  
+       6Ag     0.073951     1Au     0.233811     2B1u    0.312077  
+       2B3g    0.514873     7Ag     0.636236     5B3u    0.657247  
+       6B2u    0.678829     4B1g    0.719156     7B2u    0.826567  
+       5B1g    0.845743     8Ag     0.861682     6B3u    0.972319  
+       6B1g    1.136092     8B2u    1.136477  
 
     Final Occupation by Irrep:
              Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
-    DOCC [     6,    3,    1,    1,    0,    1,    4,    4 ]
-    NA   [     6,    3,    1,    1,    0,    1,    4,    4 ]
-    NB   [     6,    3,    1,    1,    0,    1,    4,    4 ]
+    DOCC [     5,    3,    1,    1,    0,    1,    5,    4 ]
+    NA   [     5,    3,    1,    1,    0,    1,    5,    4 ]
+    NB   [     5,    3,    1,    1,    0,    1,    5,    4 ]
 
-  @RHF Final Energy:  -226.29474516502106
+  @RHF Final Energy:  -226.40878443819125
 
    => Energetics <=
 
     Nuclear Repulsion Energy =            186.0226403251805607
-    One-Electron Energy =                -675.1832810299709990
-    Two-Electron Energy =                 262.8658955397694399
-    Total Energy =                       -226.2947451650210269
+    One-Electron Energy =                -675.6519887539457159
+    Two-Electron Energy =                 263.2205639905739076
+    Total Energy =                       -226.4087844381912760
 
 Computation Completed
 
@@ -307,13 +326,13 @@ Properties computed using the SCF density matrix
 
  ------------------------------------------------------------------------------------
 
-*** tstop() called on Brian-Zs-MBA.local at Thu Aug  8 16:46:55 2024
+*** tstop() called on Brian-Zs-MBA.local at Fri Aug  9 17:26:57 2024
 Module time:
-	user time   =       0.38 seconds =       0.01 minutes
+	user time   =       0.58 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.38 seconds =       0.01 minutes
+	user time   =       0.58 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 
@@ -410,15 +429,15 @@ Total time:
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.01277492 s
+  Integral transformation done. 0.01287050 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.029869 GB
-  Timing for conventional integral transformation:            0.077 s.
-  Frozen-core energy        -287.155405043646624 a.u.
-  Timing for frozen one-body operator:                        0.000 s.
+  Timing for conventional integral transformation:            0.075 s.
+  Frozen-core energy        -287.155048708757647 a.u.
+  Timing for frozen one-body operator:                        0.001 s.
   Resorting integrals after freezing core.
   Timing for freezing core and virtual orbitals:              0.004 s.
-  Timing for computing conventional integrals:                0.082 s.
+  Timing for computing conventional integrals:                0.079 s.
 
           -----------------------------------------------------------
                   Multi-Configurational Self Consistent Field
@@ -492,7 +511,7 @@ Total time:
 
     Spin    Root           Energy        <S^2>    Status
   -------------------------------------------------------
-   singlet    0     -513.714010635694  +0.000000  added
+   singlet    0     -513.701494523253  +0.000000  added
   -------------------------------------------------------
 
   ==> Davidson-Liu Solver <==
@@ -513,28 +532,28 @@ Total time:
   Davidson-Liu solver: adding 1 guess vectors
   Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
   ---------------------------------------------------------------------------------
-       0     -226.558605592048      226.558605592048        0.000000000000      1
-       1     -226.558605592048        0.000000000000        0.000000000000      2
+       0     -226.546445814495      226.546445814495        0.000000000000      1
+       1     -226.546445814495        0.000000000000        0.000000000000      2
   ---------------------------------------------------------------------------------
 
   ==> Root No. 0 <==
 
-    0 2     -0.78660379
-    2 0      0.61745808
+    0 2      0.81001731
+    2 0     -0.58640596
 
-    Total Energy:    -226.558605592048, <S^2>: 0.000000
-    Time for FCI:       0.001189625000
+    Total Energy:    -226.546445814495, <S^2>: 0.000000
+    Time for FCI:       0.003753500000
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)    Ag     0     -226.558605592048   0.000000
+       1  (  0)    Ag     0     -226.546445814495   0.000000
     --------------------------------------------------------
 
   ==> Natural Orbitals <==
 
-        5B2u    1.237491      6Ag     0.762509  
+        5B2u    1.312256      6Ag     0.687744  
 
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
@@ -548,21 +567,21 @@ Total time:
 
   ==> Natural Orbitals <==
 
-        5B2u    1.237491      6Ag     0.762509  
+        5B2u    1.312256      6Ag     0.687744  
 
 
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
-         0AG   -20.13575969    -0.00000000     0.00000000   -24.71251745     0.00000000   -24.86981763
+         0AG   -21.15069463     0.00000000     0.00000000   -24.13023051     0.00000000   -24.88638757
     --------------------------------------------------------------------------------------------------
      Nuclear   191.59571101     0.00000000     0.00000000   143.07497966     0.00000000     0.00000000
     --------------------------------------------------------------------------------------------------
 
   ==> Natural Orbitals <==
 
-        5B2u    1.237491      6Ag     0.762509  
+        5B2u    1.312256      6Ag     0.687744  
 
 
   ==> MCSCF Iterations <==
@@ -571,11 +590,12 @@ Total time:
            ------------------------------  ------------------------------
     Iter.        Total Energy       Delta        Total Energy       Delta  Orb. Grad.  Micro
     ----------------------------------------------------------------------------------------
-       1    -226.558605592048 -2.2656e+02   -226.574920279881 -2.2657e+02  4.1045e-02    6/N
-       2    -226.575051663207 -1.6446e-02   -226.575069856035 -1.4958e-04  8.5400e-05    6/N <- added 1 random vector
-       3    -226.575072358256 -2.0695e-05   -226.575072704833 -2.8488e-06  2.1928e-06    6/N
-       4    -226.575072752726 -3.9447e-07   -226.575072759358 -5.4525e-08  3.0878e-07    6/N
-       5    -226.575072760275 -7.5491e-09   -226.575072760402 -1.0439e-09  4.2557e-08    5/Y
+       1    -226.546445814495 -2.2655e+02   -226.573664112297 -2.2657e+02  4.7045e-02    6/N
+       2    -226.574879949794 -2.8434e-02   -226.575049709813 -1.3856e-03  8.2063e-05    6/N
+       3    -226.575072837677 -1.9289e-04   -226.575076042929 -2.6333e-05  6.4450e-06    6/N
+       4    -226.575076485183 -3.6475e-06   -226.575076546424 -5.0349e-07  8.7250e-07    6/N
+       5    -226.575076554890 -6.9707e-08   -226.575076556063 -9.6388e-09  1.1954e-07    6/N
+       6    -226.575076556225 -1.3345e-09   -226.575076556247 -1.8440e-10  1.5825e-08    4/Y
     ----------------------------------------------------------------------------------------
 
   A miracle has come to pass: MCSCF iterations have converged!
@@ -615,7 +635,7 @@ Total time:
 
     Spin    Root           Energy        <S^2>    Status
   -------------------------------------------------------
-   singlet    0     -513.730477804066  +0.000000  added
+   singlet    0     -513.730125265008  +0.000000  added
   -------------------------------------------------------
 
   ==> Davidson-Liu Solver <==
@@ -636,27 +656,27 @@ Total time:
   Davidson-Liu solver: adding 1 guess vectors
   Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
   ---------------------------------------------------------------------------------
-       0     -226.575072760420        0.000000000144        0.000000000000      1
+       0     -226.575076556250        0.000000000025        0.000000000000      1
   ---------------------------------------------------------------------------------
 
   ==> Root No. 0 <==
 
-    0 2     -0.77474883
-    2 0      0.63226913
+    0 2     -0.77476767
+    2 0      0.63224605
 
-    Total Energy:    -226.575072760420, <S^2>: -0.000000
-    Time for FCI:       0.000221083000
+    Total Energy:    -226.575076556250, <S^2>: 0.000000
+    Time for FCI:       0.000155958000
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)    Ag     0     -226.575072760420  -0.000000
+       1  (  0)    Ag     0     -226.575076556250   0.000000
     --------------------------------------------------------
 
   ==> Natural Orbitals <==
 
-        5B2u    1.200471      6Ag     0.799529  
+        5B2u    1.200530      6Ag     0.799470  
 
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
@@ -670,21 +690,21 @@ Total time:
 
   ==> Natural Orbitals <==
 
-        5B2u    1.200471      6Ag     0.799529  
+        5B2u    1.200530      6Ag     0.799470  
 
 
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
-         0AG   -20.21286472    -0.00000000     0.00000000   -24.69061433     0.00000000   -24.86883252
+         0AG   -21.41803002     0.00000000     0.00000000   -23.99905915     0.00000000   -24.88077298
     --------------------------------------------------------------------------------------------------
      Nuclear   191.59571101     0.00000000     0.00000000   143.07497966     0.00000000     0.00000000
     --------------------------------------------------------------------------------------------------
 
   ==> Natural Orbitals <==
 
-        5B2u    1.200471      6Ag     0.799529  
+        5B2u    1.200530      6Ag     0.799470  
 
   Canonicalizing final MCSCF orbitals
 
@@ -700,15 +720,15 @@ Total time:
 
     Off-Diag. Elements       Max           2-Norm
     ------------------------------------------------
-    FROZEN_DOCC          0.0001223047   0.0002179038
+    FROZEN_DOCC          0.0001634087   0.0002775163
     GAS1                 0.0000000000   0.0000000000
-    RESTRICTED_DOCC      0.0111274893   0.0285902904
-    RESTRICTED_UOCC      0.0096225396   0.0229534912
+    RESTRICTED_DOCC      0.0076499358   0.0207745769
+    RESTRICTED_UOCC      0.0062331483   0.0162690564
     ------------------------------------------------
 
     Canonicalization test failed
 
-  Timing for orbital canonicalization:                        0.000 s.
+  Timing for orbital canonicalization:                        0.001 s.
   Integrals are about to be updated.
   Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
 	Sorting File: SO Ints (nn|nn) nbuckets = 1
@@ -719,15 +739,15 @@ Total time:
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.01052217 s
+  Integral transformation done. 0.01031887 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.029869 GB
   Timing for conventional integral transformation:            0.068 s.
-  Frozen-core energy        -287.155405043646624 a.u.
+  Frozen-core energy        -287.155048708757647 a.u.
   Timing for frozen one-body operator:                        0.000 s.
   Resorting integrals after freezing core.
   Timing for freezing core and virtual orbitals:              0.002 s.
-  Integrals update took     0.071 s.
+  Integrals update took     0.070 s.
 
   The integrals are not consistent with the orbitals. Re-transforming them.
 
@@ -765,7 +785,7 @@ Total time:
 
     Spin    Root           Energy        <S^2>    Status
   -------------------------------------------------------
-   singlet    0     -513.730477804066  +0.000000  added
+   singlet    0     -513.730125265008  +0.000000  added
   -------------------------------------------------------
 
   ==> Davidson-Liu Solver <==
@@ -786,59 +806,59 @@ Total time:
   Davidson-Liu solver: adding 1 guess vectors
   Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
   ---------------------------------------------------------------------------------
-       0     -226.575072760420      226.575072760420        0.000000000000      1
-       1     -226.575072760420        0.000000000000        0.000000000000      2
+       0     -226.575076556250      226.575076556250        0.000000000000      1
+       1     -226.575076556250        0.000000000000        0.000000000000      2
   ---------------------------------------------------------------------------------
 
   ==> Root No. 0 <==
 
-    0 2      0.77474883
-    2 0     -0.63226913
+    0 2      0.77476767
+    2 0     -0.63224605
 
-    Total Energy:    -226.575072760420, <S^2>: 0.000000
-    Time for FCI:       0.000243416000
+    Total Energy:    -226.575076556250, <S^2>: -0.000000
+    Time for FCI:       0.000216125000
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)    Ag     0     -226.575072760420   0.000000
+       1  (  0)    Ag     0     -226.575076556250  -0.000000
     --------------------------------------------------------
 
   ==> Natural Orbitals <==
 
-        5B2u    1.200471      6Ag     0.799529  
+        5B2u    1.200530      6Ag     0.799470  
 
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
-         0AG    -0.00000000     0.00000000     0.00000000     0.00000000
+         0AG     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
 
   ==> Natural Orbitals <==
 
-        5B2u    1.200471      6Ag     0.799529  
+        5B2u    1.200530      6Ag     0.799470  
 
 
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
-         0AG   -21.29882047     0.00000000     0.00000000   -23.62424041     0.00000000   -24.82495093
+         0AG   -21.30041489     0.00000000     0.00000000   -23.62434773     0.00000000   -24.82494293
     --------------------------------------------------------------------------------------------------
      Nuclear   191.59571101     0.00000000     0.00000000   143.07497966     0.00000000     0.00000000
     --------------------------------------------------------------------------------------------------
 
-  Time to prepare integrals:        0.679 seconds
-  Time to run job          :        0.226 seconds
-  Total                    :        0.905 seconds
+  Time to prepare integrals:        0.867 seconds
+  Time to run job          :        0.250 seconds
+  Total                    :        1.117 seconds
     CASSCF energy.........................................................................PASSED
 
-    Psi4 stopped on: Thursday, 08 August 2024 04:46PM
-    Psi4 wall time for execution: 0:00:01.37
+    Psi4 stopped on: Friday, 09 August 2024 05:26PM
+    Psi4 wall time for execution: 0:00:01.63
 
 *** Psi4 exiting successfully. Buy a developer a beer!
