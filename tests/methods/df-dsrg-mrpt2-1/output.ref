@@ -31,9 +31,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Friday, 09 August 2024 10:04AM
+    Psi4 started on: Friday, 09 August 2024 05:28PM
 
-    Process ID: 45424
+    Process ID: 83303
     Host:       Brian-Zs-MBA.local
     PSIDATADIR: /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4
     Memory:     500.0 MiB
@@ -46,7 +46,7 @@
 #! Generated using commit GITCOMMIT
 import forte
 
-refdsrgpt2 =  -15.613389000026
+refdsrgpt2 =  -15.61338900002254
 
 molecule {
   0 1
@@ -60,7 +60,7 @@ molecule {
 set globals{
    reference      rhf
    scf_type       pk
-   guess      core
+   guess          sap
    d_convergence  8
    e_convergence  12
    df_basis_mp2   cc-pvdz-ri
@@ -141,15 +141,15 @@ Scratch directory: /tmp/
     Solid Harmonics ordering:            Gaussian
 
 *** tstart() called on Brian-Zs-MBA.local
-*** at Fri Aug  9 10:04:38 2024
+*** at Fri Aug  9 17:28:06 2024
 
    => Loading Basis Set <=
 
-    Name: ANONYMOUS8AC0F682
+    Name: ANONYMOUSD8C22282
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1   entry BE         line     5 inputblock anonymous8ac0f682 
-    atoms 2-3 entry H          line    25 inputblock anonymous8ac0f682 
+    atoms 1   entry BE         line     5 inputblock anonymousd8c22282 
+    atoms 2-3 entry H          line    25 inputblock anonymousd8c22282 
 
 
          ---------------------------------------------------------
@@ -191,15 +191,15 @@ Scratch directory: /tmp/
   DIIS enabled.
   MOM disabled.
   Fractional occupation disabled.
-  Guess Type is CORE.
+  Guess Type is SAP.
   Energy threshold   = 1.00e-12
   Density threshold  = 1.00e-08
   Integral threshold = 1.00e-12
 
   ==> Primary Basis <==
 
-  Basis Set: ANONYMOUS8AC0F682
-    Blend: ANONYMOUS8AC0F682
+  Basis Set: ANONYMOUSD8C22282
+    Blend: ANONYMOUSD8C22282
     Number of shells: 9
     Number of basis functions: 13
     Number of Cartesian functions: 13
@@ -240,7 +240,26 @@ Scratch directory: /tmp/
 
   ==> Pre-Iterations <==
 
-  SCF Guess: Core (One-Electron) Hamiltonian.
+  SCF Guess: Superposition of Atomic Potentials (doi:10.1021/acs.jctc.8b01089).
+
+  ==> SAP guess <==
+
+   => Molecular Quadrature <=
+
+    Radial Scheme          =       TREUTLER
+    Pruning Scheme         =           NONE
+    Nuclear Scheme         =       TREUTLER
+
+    Blocking Scheme        =         OCTREE
+    BS radius alpha        =              1
+    Pruning alpha          =              1
+    Radial Points          =             75
+    Spherical Points       =            302
+    Total Points           =          65835
+    Total Blocks           =            552
+    Max Points             =            256
+    Max Functions          =             13
+    Weights Tolerance      =       1.00E-15
 
    -------------------------------------------------------
     Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
@@ -257,16 +276,15 @@ Scratch directory: /tmp/
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   1:   -15.09054613979691   -1.50905e+01   1.14795e-01 ADIIS
-   @RHF iter   2:   -15.55154719060558   -4.61001e-01   1.21938e-02 ADIIS/DIIS
-   @RHF iter   3:   -15.56243661694003   -1.08894e-02   2.22249e-03 ADIIS/DIIS
-   @RHF iter   4:   -15.56284809578405   -4.11479e-04   4.83333e-04 ADIIS/DIIS
-   @RHF iter   5:   -15.56287190317558   -2.38074e-05   6.83377e-05 DIIS
-   @RHF iter   6:   -15.56287237043227   -4.67257e-07   5.41653e-06 DIIS
-   @RHF iter   7:   -15.56287237598424   -5.55197e-09   1.81236e-06 DIIS
-   @RHF iter   8:   -15.56287237681094   -8.26706e-10   3.14662e-07 DIIS
-   @RHF iter   9:   -15.56287237683226   -2.13163e-11   2.35562e-08 DIIS
-   @RHF iter  10:   -15.56287237683233   -6.75016e-14   6.37443e-10 DIIS
+   @RHF iter   1:   -15.44156640842341   -1.54416e+01   4.35716e-02 ADIIS/DIIS
+   @RHF iter   2:   -15.56134294399923   -1.19777e-01   4.29315e-03 ADIIS/DIIS
+   @RHF iter   3:   -15.56274653619093   -1.40359e-03   1.07453e-03 ADIIS/DIIS
+   @RHF iter   4:   -15.56286930453129   -1.22768e-04   1.81595e-04 ADIIS/DIIS
+   @RHF iter   5:   -15.56287229815121   -2.99362e-06   1.94224e-05 DIIS
+   @RHF iter   6:   -15.56287236920301   -7.10518e-08   5.52829e-06 DIIS
+   @RHF iter   7:   -15.56287237661181   -7.40880e-09   9.48780e-07 DIIS
+   @RHF iter   8:   -15.56287237683133   -2.19520e-10   9.02362e-08 DIIS
+   @RHF iter   9:   -15.56287237683232   -9.92983e-13   4.56779e-09 DIIS
   Energy and wave function converged.
 
 
@@ -292,14 +310,14 @@ Scratch directory: /tmp/
     NA   [     2,    0,    0,    1 ]
     NB   [     2,    0,    0,    1 ]
 
-  @RHF Final Energy:   -15.56287237683233
+  @RHF Final Energy:   -15.56287237683232
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              3.1564876590630520
-    One-Electron Energy =                 -26.4504019927852383
-    Two-Electron Energy =                   7.7310419568898583
-    Total Energy =                        -15.5628723768323276
+    One-Electron Energy =                 -26.4504020131196853
+    Two-Electron Energy =                   7.7310419772243115
+    Total Energy =                        -15.5628723768323205
 
 Computation Completed
 
@@ -323,13 +341,13 @@ Properties computed using the SCF density matrix
 
  ------------------------------------------------------------------------------------
 
-*** tstop() called on Brian-Zs-MBA.local at Fri Aug  9 10:04:38 2024
+*** tstop() called on Brian-Zs-MBA.local at Fri Aug  9 17:28:06 2024
 Module time:
-	user time   =       0.06 seconds =       0.00 minutes
+	user time   =       0.10 seconds =       0.00 minutes
 	system time =       0.01 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.06 seconds =       0.00 minutes
+	user time   =       0.10 seconds =       0.00 minutes
 	system time =       0.01 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 
@@ -374,8 +392,8 @@ Total time:
 
   ==> Primary Basis Set Summary <==
 
-  Basis Set: ANONYMOUS8AC0F682
-    Blend: ANONYMOUS8AC0F682
+  Basis Set: ANONYMOUSD8C22282
+    Blend: ANONYMOUSD8C22282
     Number of shells: 9
     Number of basis functions: 13
     Number of Cartesian functions: 13
@@ -462,15 +480,15 @@ Total time:
 
   Performing full diagonalization of the H matrix
 
-  Done diagonalizing Hamiltonian, 5.450e-05 seconds.
+  Done diagonalizing Hamiltonian, 7.539e-04 seconds.
 
   ==> Computing 1 Coupling Lists <==
 
   (N-1) a lists size counts
       Size      Count
          1          2
-        α          1.042e-05 seconds
-        β          8.209e-06 seconds
+        α          1.842e-05 seconds
+        β          3.708e-06 seconds
   Time spent building 1-rdm: 8.750e-07 seconds
 
   ==> Computing 1 Coupling Lists <==
@@ -478,42 +496,42 @@ Total time:
   (N-1) a lists size counts
       Size      Count
          1          2
-        α          9.708e-06 seconds
-        β          2.000e-06 seconds
-  Time spent building 1-rdm: 2.166e-06 seconds
+        α          8.333e-06 seconds
+        β          2.083e-06 seconds
+  Time spent building 1-rdm: 2.250e-06 seconds
 
   ==> Computing 1 Coupling Lists <==
 
   (N-1) a lists size counts
       Size      Count
          1          2
-        α          7.541e-06 seconds
+        α          7.500e-06 seconds
         β          2.125e-06 seconds
-  Time spent building 1-rdm: 1.167e-06 seconds
+  Time spent building 1-rdm: 1.125e-06 seconds
 
   ==> Computing 2 Coupling Lists <==
 
   (N-2) aa lists size counts
       Size      Count
-        αα         5.250e-06 seconds
+        αα         5.625e-06 seconds
   (N-2) ab lists size counts
       Size      Count
          2          1
-        αβ         1.025e-05 seconds
-        ββ         1.208e-06 seconds
-  Time spent building 2-rdm: 1.708e-06 seconds
+        αβ         1.183e-05 seconds
+        ββ         1.292e-06 seconds
+  Time spent building 2-rdm: 1.666e-06 seconds
 
   ==> Computing 3 Coupling Lists <==
 
   (N-3) aaa lists size counts
       Size      Count
-        ααα        6.334e-06 seconds
+        ααα        7.583e-06 seconds
   (N-3) aab lists size counts
       Size      Count
-        ααβ        6.666e-06 seconds
-        αββ        1.958e-06 seconds
-        βββ        1.958e-06 seconds
-  Time spent building 3-rdm: 2.500e-06 seconds
+        ααβ        6.833e-06 seconds
+        αββ        2.042e-06 seconds
+        βββ        1.875e-06 seconds
+  Time spent building 3-rdm: 3.416e-06 seconds
 
   ==> Semicanonicalize Orbitals <==
 
@@ -528,8 +546,8 @@ Total time:
     Off-Diag. Elements       Max           2-Norm
     ------------------------------------------------
     GAS1                 0.0000000000   0.0000000000
-    RESTRICTED_DOCC      0.0000881196   0.0001246199
-    RESTRICTED_UOCC      0.0006575446   0.0016376928
+    RESTRICTED_DOCC      0.0000881196   0.0001246200
+    RESTRICTED_UOCC      0.0006575447   0.0016376929
     ------------------------------------------------
 
     Canonicalization test failed
@@ -555,8 +573,8 @@ Total time:
 
 
 
-  Integrals update took     0.007 s.
-  Timing for orbital canonicalization:                        0.008 s.
+  Integrals update took     0.006 s.
+  Timing for orbital canonicalization:                        0.007 s.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -609,38 +627,38 @@ Total time:
 
   ==> Computing DSRG-MRPT2 Energy <==
 
-  Reference Energy = -15.565633469487963
-    Computing T2                             ...... Done. Timing        0.000455 s
-    Renormalizing V                          ...... Done. Timing        0.000178 s
-    Computing T1                             ...... Done. Timing        0.000779 s
-    Renormalizing F                          ...... Done. Timing        0.001021 s
-    Computing <[F, T1]>                      ...... Done. Timing        0.000324 s
-    Computing <[F, T2]>                      ...... Done. Timing        0.000885 s
-    Computing <[V, T1]>                      ...... Done. Timing        0.000961 s
-    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.001404 s
-    Computing <V, T2]> 4PP                   ...... Done. Timing        0.001382 s
-    Computing [V, T2] 4PH                    ...... Done. Timing        0.005872 s
-    Computing [V, T2] λ3                     ...... Done. Timing        0.003092 s
-    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.005203 s
-    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.000383 s
+  Reference Energy = -15.565633469483654
+    Computing T2                             ...... Done. Timing        0.000479 s
+    Renormalizing V                          ...... Done. Timing        0.000194 s
+    Computing T1                             ...... Done. Timing        0.000824 s
+    Renormalizing F                          ...... Done. Timing        0.001026 s
+    Computing <[F, T1]>                      ...... Done. Timing        0.000786 s
+    Computing <[F, T2]>                      ...... Done. Timing        0.000990 s
+    Computing <[V, T1]>                      ...... Done. Timing        0.001200 s
+    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.001436 s
+    Computing <V, T2]> 4PP                   ...... Done. Timing        0.001428 s
+    Computing [V, T2] 4PH                    ...... Done. Timing        0.006160 s
+    Computing [V, T2] λ3                     ...... Done. Timing        0.003180 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.005489 s
+    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.001024 s
   Eccvv: -0.0241169583
 
   ==> DSRG-MRPT2 (DF/CD) Energy Summary <==
 
-    E0 (reference)                 =    -15.565633469487963
-    <[F, T1]>                      =     -0.000005436576879
-    <[F, T2]>                      =     -0.000001289387341
-    <[V, T1]>                      =      0.000004009843788
-    <[V, T2]> C_4 (C_2)^2 HH       =      0.000392414881917
-    <[V, T2]> C_4 (C_2)^2 PP       =      0.000766528384786
-    <[V, T2]> C_4 (C_2)^2 PH       =     -0.001593703866287
-    <[V, T2]> C_6 C_2              =      0.000140161111150
-    <[V, T2]> (C_2)^4              =     -0.047458214929643
-    <[V, T2]>                      =     -0.047752814418077
-    DSRG-MRPT2 correlation energy  =     -0.047755530538511
-    DSRG-MRPT2 total energy        =    -15.613389000026475
-    max(T1)                        =      0.000425821051504
-    ||T1||                         =      0.001158511335630
+    E0 (reference)                 =    -15.565633469483654
+    <[F, T1]>                      =     -0.000005436577688
+    <[F, T2]>                      =     -0.000001289388308
+    <[V, T1]>                      =      0.000004009843087
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.000392414881443
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.000766528383286
+    <[V, T2]> C_4 (C_2)^2 PH       =     -0.001593703862738
+    <[V, T2]> C_6 C_2              =      0.000140161111199
+    <[V, T2]> (C_2)^4              =     -0.047458214929167
+    <[V, T2]>                      =     -0.047752814415976
+    DSRG-MRPT2 correlation energy  =     -0.047755530538886
+    DSRG-MRPT2 total energy        =    -15.613389000022540
+    max(T1)                        =      0.000425821055025
+    ||T1||                         =      0.001158511530013
   =>** After self.dsrg_solver.compute_energy() **<=
 
   Semicanonical orbitals must be used!
@@ -650,18 +668,18 @@ Total time:
 
            [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]  
     -----------------------------------------------------
-    -> C0       0.000       0.001       0.001       0.014
+    -> C0       0.001       0.001       0.001       0.016
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
 
 
-  Time to prepare integrals:        0.106 seconds
-  Time to run job          :        0.037 seconds
-  Total                    :        0.143 seconds
+  Time to prepare integrals:        0.166 seconds
+  Time to run job          :        0.045 seconds
+  Total                    :        0.211 seconds
     DSRG-MRPT2 energy.....................................................................PASSED
 
-    Psi4 stopped on: Friday, 09 August 2024 10:04AM
-    Psi4 wall time for execution: 0:00:00.59
+    Psi4 stopped on: Friday, 09 August 2024 05:28PM
+    Psi4 wall time for execution: 0:00:00.73
 
 *** Psi4 exiting successfully. Buy a developer a beer!
