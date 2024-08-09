@@ -2,8 +2,7 @@
 #! Generated using commit GITCOMMIT
 import forte
 
-refmcscf    = -15.569761360884
-refdsrgpt2 =  -15.539711535204
+refdsrgpt2 =  -15.613389000026
 
 molecule {
   0 1
@@ -17,6 +16,7 @@ molecule {
 set globals{
    reference      rhf
    scf_type       pk
+   guess      core
    d_convergence  8
    e_convergence  12
    df_basis_mp2   cc-pvdz-ri
