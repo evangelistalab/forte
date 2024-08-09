@@ -4,8 +4,8 @@ import forte
 
 gsaci = -112.7959612732 #TEST
 gsacipt2 = -112.7969443124 #TEST
-exaci = -92.6912453842 #TEST
-exacipt2 = -92.6922386459 #TEST
+exaci = -92.69124538244 #TEST
+exacipt2 = -92.69223864414 #TEST
 
 molecule CO{
 0 1
