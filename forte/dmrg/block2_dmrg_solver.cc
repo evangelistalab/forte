@@ -804,7 +804,7 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                 auto bra_expr = impl_->expr_builder();
                 bra_expr->exprs.push_back("((C+D)0+D)1");
                 bra_expr->add_sum_term(Tbra_data.data() + p * na3, na3, tshape, tstride, 1.0e-12,
-                                       2.0);
+                                       2.0, actv_irreps, {}, p_syms[p]);
                 bra_expr = bra_expr->adjust_order();
                 if (bra_expr->exprs.size() == 0)
                     continue;
@@ -817,7 +817,7 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                 auto ket_expr = impl_->expr_builder();
                 ket_expr->exprs.push_back("((C+D)0+D)1");
                 ket_expr->add_sum_term(Tket_data.data() + p * na3, na3, tshape, tstride, 1.0e-12,
-                                       2.0);
+                                       2.0, actv_irreps, {}, p_syms[p]);
                 ket_expr = ket_expr->adjust_order();
                 if (ket_expr->exprs.size() == 0)
                     continue;
@@ -863,7 +863,7 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                     auto bcps = std::make_shared<block2::Linear<block2::SU2, double, double>>(
                         bme, bra_bond_dims, ket0_bond_dims, noises);
                     bcps->iprint = 2;
-                    bcps->solve(maxiter_, bra->center == 0, 1.0e-6);
+                    bcps->solve(maxiter_, bra->center == 0, 1.0e-8);
                     if (bra->center != ket0->center)
                         bcps->solve(1, ket0->center != 0);
 
@@ -914,7 +914,7 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
 
                     auto bcps = std::make_shared<block2::Linear<block2::SZ, double, double>>(
                         bme, bra_bond_dims, ket0_bond_dims, noises);
-                    bcps->solve(maxiter_, true, 1.0e-6);
+                    bcps->solve(maxiter_, true, 1.0e-8);
 
                     auto ket_expr = impl_->expr_builder();
                     if (sigma == 0) {
