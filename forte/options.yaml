@@ -72,7 +72,7 @@ Driver:
   ORBITAL_TYPE:
     type: str
     default: "CANONICAL"
-    choices: ["CANONICAL", "LOCAL", "MP2NO", "MRPT2NO"]
+    choices: ["CANONICAL", "LOCAL", "CHOLESKY_ACTIVE", "MP2NO", "MRPT2NO"]
     help: "Type of orbitals to use"
   MINAO_BASIS:
     type: str

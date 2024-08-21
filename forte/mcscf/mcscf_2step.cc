@@ -330,48 +330,50 @@ double MCSCF_2STEP::compute_energy() {
 
             // nail down results for DMRG
             if (ci_type_ == "BLOCK2" or ci_type_ == "DMRG") {
-                if (std::fabs(de_c) < 1.0e-2 or g_rms < 1.0e-3) {
+                if (std::fabs(de_c) < 1.0e-3 or g_rms < 1.0e-3) {
                     options_->set_bool("READ_ACTIVE_WFN_GUESS", true);
-                    mci_maxiter_ = 14;
-                    as_solver_->set_maxiter(mci_maxiter_);
-                    // focus on the last bond dimension
-                    if (ci_type_ == "BLOCK2") {
-                        auto nsweeps = options_->get_int_list("BLOCK2_SWEEP_N_SWEEPS");
-                        auto bond_dims = options_->get_int_list("BLOCK2_SWEEP_BOND_DIMS");
-                        auto noises = options_->get_double_list("BLOCK2_SWEEP_NOISES");
-                        auto dltols = options_->get_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS");
-                        if (bond_dims.size() == 0) {
-                            options_->set_int_list("BLOCK2_SWEEP_BOND_DIMS", {500});
-                            options_->set_int_list("BLOCK2_SWEEP_N_SWEEPS", {10});
-                            options_->set_double_list("BLOCK2_SWEEP_NOISES", {0.0});
-                            options_->set_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS", {1.0e-8});
-                        } else {
-                            auto bond_dim = bond_dims.back();
-                            options_->set_int_list("BLOCK2_SWEEP_BOND_DIMS",
-                                                   {bond_dim, bond_dim, bond_dim});
-                            options_->set_int_list("BLOCK2_SWEEP_N_SWEEPS", {4, 4, 6});
-                            options_->set_double_list("BLOCK2_SWEEP_NOISES", {1.0e-6, 1.0e-7, 0.0});
-                            options_->set_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS",
-                                                      {1.0e-7, 1.0e-8, 1.0e-9});
-                        }
-                    } else {
-                        auto nsweeps = options_->get_int_list("DMRG_SWEEP_MAX_SWEEPS");
-                        auto bond_dims = options_->get_int_list("DMRG_SWEEP_STATES");
-                        auto noises = options_->get_double_list("DMRG_SWEEP_NOISE_PREFAC");
-                        auto dltols = options_->get_double_list("DMRG_SWEEP_DVDSON_RTOL");
-                        auto etols = options_->get_double_list("DMRG_SWEEP_ENERGY_CONV");
-                        auto bond_dim = bond_dims.back();
-                        options_->set_int_list("DMRG_SWEEP_MAX_SWEEPS",
-                                               {bond_dim, bond_dim, bond_dim});
-                        options_->set_int_list("DMRG_SWEEP_MAX_SWEEPS", {4, 4, 6});
-                        options_->set_double_list("DMRG_SWEEP_NOISE_PREFAC", {1.0e-2, 5.0e-3, 0.0});
-                        options_->set_double_list("DMRG_SWEEP_DVDSON_RTOL",
-                                                  {1.0e-5, 1.0e-6, 1.0e-7});
-                        options_->set_double_list("DMRG_SWEEP_ENERGY_CONV",
-                                                  {1.0e-6, 1.0e-7, 1.0e-8});
-                    }
-                } else {
-                    as_solver_->set_maxiter(++mci_maxiter_);
+                    //     mci_maxiter_ = 14;
+                    //     as_solver_->set_maxiter(mci_maxiter_);
+                    //     // focus on the last bond dimension
+                    //     if (ci_type_ == "BLOCK2") {
+                    //         auto nsweeps = options_->get_int_list("BLOCK2_SWEEP_N_SWEEPS");
+                    //         auto bond_dims = options_->get_int_list("BLOCK2_SWEEP_BOND_DIMS");
+                    //         auto noises = options_->get_double_list("BLOCK2_SWEEP_NOISES");
+                    //         auto dltols =
+                    //         options_->get_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS"); if
+                    //         (bond_dims.size() == 0) {
+                    //             options_->set_int_list("BLOCK2_SWEEP_BOND_DIMS", {500});
+                    //             options_->set_int_list("BLOCK2_SWEEP_N_SWEEPS", {10});
+                    //             options_->set_double_list("BLOCK2_SWEEP_NOISES", {0.0});
+                    //             options_->set_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS",
+                    //             {1.0e-8});
+                    //         } else {
+                    //             auto bond_dim = bond_dims.back();
+                    //             options_->set_int_list("BLOCK2_SWEEP_BOND_DIMS",
+                    //                                    {bond_dim, bond_dim, bond_dim});
+                    //             options_->set_int_list("BLOCK2_SWEEP_N_SWEEPS", {4, 4, 6});
+                    //             options_->set_double_list("BLOCK2_SWEEP_NOISES", {1.0e-6, 1.0e-7,
+                    //             0.0}); options_->set_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS",
+                    //                                       {1.0e-7, 1.0e-8, 1.0e-9});
+                    //         }
+                    //     } else {
+                    //         auto nsweeps = options_->get_int_list("DMRG_SWEEP_MAX_SWEEPS");
+                    //         auto bond_dims = options_->get_int_list("DMRG_SWEEP_STATES");
+                    //         auto noises = options_->get_double_list("DMRG_SWEEP_NOISE_PREFAC");
+                    //         auto dltols = options_->get_double_list("DMRG_SWEEP_DVDSON_RTOL");
+                    //         auto etols = options_->get_double_list("DMRG_SWEEP_ENERGY_CONV");
+                    //         auto bond_dim = bond_dims.back();
+                    //         options_->set_int_list("DMRG_SWEEP_MAX_SWEEPS",
+                    //                                {bond_dim, bond_dim, bond_dim});
+                    //         options_->set_int_list("DMRG_SWEEP_MAX_SWEEPS", {4, 4, 6});
+                    //         options_->set_double_list("DMRG_SWEEP_NOISE_PREFAC", {1.0e-2, 5.0e-3,
+                    //         0.0}); options_->set_double_list("DMRG_SWEEP_DVDSON_RTOL",
+                    //                                   {1.0e-5, 1.0e-6, 1.0e-7});
+                    //         options_->set_double_list("DMRG_SWEEP_ENERGY_CONV",
+                    //                                   {1.0e-6, 1.0e-7, 1.0e-8});
+                    //     }
+                    // } else {
+                    //     as_solver_->set_maxiter(++mci_maxiter_);
                 }
             }
 
@@ -419,6 +421,27 @@ double MCSCF_2STEP::compute_energy() {
             e_c = diagonalize_hamiltonian(as_solver_, fci_ints,
                                           {print_level, dl_e_conv, dl_r_conv, false});
             rdms = as_solver_->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
+
+            // if (options_->get_str("ORBITAL_TYPE") == "LOCAL" and
+            //     (ci_type_ == "BLOCK2" or ci_type_ == "DMRG")) {
+            //     auto Ua = cas_grad.localize_orbitals();
+
+            //     auto na = mo_space_info_->size("ACTIVE");
+            //     auto relative_mos = mo_space_info_->relative_mo("ACTIVE");
+            //     auto Ut = ambit::Tensor::build(ambit::CoreTensor, "Ut", {na, na});
+            //     auto& Ut_data = Ut.data();
+            //     for (size_t p = 0; p < na; ++p) {
+            //         const auto& [hp, np] = relative_mos[p];
+            //         for (size_t q = 0; q < na; ++q) {
+            //             const auto& [hq, nq] = relative_mos[q];
+            //             if (hp != hq)
+            //                 continue;
+            //             Ut_data[p * na + q] = Ua->get(hp, np, nq);
+            //         }
+            //     }
+
+            //     rdms->rotate(Ut, Ut);
+            // }
         }
 
         diis_manager.reset_subspace();

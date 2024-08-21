@@ -96,6 +96,8 @@ class MCSCF_ORB_GRAD {
     /// Compute nuclear gradient
     void compute_nuclear_gradient();
 
+    // /// Localize orbitals
+    // std::shared_ptr<psi::Matrix> localize_orbitals();
   private:
     /// The Forte options
     std::shared_ptr<ForteOptions> options_;
