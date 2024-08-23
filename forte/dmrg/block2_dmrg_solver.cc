@@ -882,7 +882,7 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                     bcps->iprint = 2;
                     bcps->noise_type = block2::NoiseTypes::ReducedPerturbative;
                     bcps->eq_type = block2::EquationTypes::PerturbativeCompression;
-                    bcps->solve(maxiter_, bra->center == 0, 1.0e-8);
+                    bcps->solve(2 * maxiter_, bra->center == 0, 1.0e-8);
                     if (bra->center != ket0->center)
                         bcps->solve(1, ket0->center != 0);
 
