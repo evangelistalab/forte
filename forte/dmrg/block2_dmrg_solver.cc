@@ -774,6 +774,7 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
     std::vector<double> noises{0.0};
 
     // system initialization
+    auto integral_cutoff = 1.0e-14;
     bool singlet_embedding = dmrg_options_->get_bool("BLOCK2_SINGLET_EMBEDDING");
     auto actv_irreps = mo_space_info_->symmetry("ACTIVE");
     int n_sites = static_cast<int>(mo_space_info_->size("ACTIVE"));
@@ -797,14 +798,25 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
         if (impl_->is_spin_adapted_) {
             auto ket0 = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
 
+            auto xexpr = impl_->expr_builder();
+            xexpr->exprs.push_back("(C+D)0");
+            xexpr->add_sum_term(as_ints_->oei_a_vector().data(), as_ints_->oei_a_vector().size(),
+                                std::vector<int>{n_sites, n_sites},
+                                std::vector<size_t>{(size_t)n_sites, 1}, integral_cutoff, sqrt(2.0),
+                                actv_irreps);
+            xexpr->adjust_order();
+
+            auto xmpo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
+                impl_->get_mpo(xexpr, dmrg_verbose));
+
             for (size_t p = 0; p < np; ++p) {
                 if (print_ > PrintLevel::Default)
                     psi::outfile->Printf("\n orbital %2zu", p);
 
                 auto bra_expr = impl_->expr_builder();
                 bra_expr->exprs.push_back("((C+D)0+D)1");
-                bra_expr->add_sum_term(Tbra_data.data() + p * na3, na3, tshape, tstride, 1.0e-12,
-                                       2.0, actv_irreps, {}, p_syms[p]);
+                bra_expr->add_sum_term(Tbra_data.data() + p * na3, na3, tshape, tstride,
+                                       integral_cutoff, 2.0, actv_irreps, {}, p_syms[p]);
                 bra_expr = bra_expr->adjust_order();
                 if (bra_expr->exprs.size() == 0)
                     continue;
@@ -816,8 +828,8 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
 
                 auto ket_expr = impl_->expr_builder();
                 ket_expr->exprs.push_back("((C+D)0+D)1");
-                ket_expr->add_sum_term(Tket_data.data() + p * na3, na3, tshape, tstride, 1.0e-12,
-                                       2.0, actv_irreps, {}, p_syms[p]);
+                ket_expr->add_sum_term(Tket_data.data() + p * na3, na3, tshape, tstride,
+                                       integral_cutoff, 2.0, actv_irreps, {}, p_syms[p]);
                 ket_expr = ket_expr->adjust_order();
                 if (ket_expr->exprs.size() == 0)
                     continue;
@@ -852,6 +864,11 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                     binfo->save_mutable();
                     bra->save_data();
 
+                    auto xme =
+                        std::make_shared<block2::MovingEnvironment<block2::SU2, double, double>>(
+                            xmpo, bra, bra, "DSRG-PERT");
+                    xme->init_environments(dmrg_verbose >= 2);
+
                     auto bref = ket0->deep_copy("DSRG-BRA@TMP");
                     auto bme =
                         std::make_shared<block2::MovingEnvironment<block2::SU2, double, double>>(
@@ -861,8 +878,10 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                     bme->init_environments(true);
 
                     auto bcps = std::make_shared<block2::Linear<block2::SU2, double, double>>(
-                        bme, bra_bond_dims, ket0_bond_dims, noises);
+                        xme, bme, bra_bond_dims, ket0_bond_dims, noises);
                     bcps->iprint = 2;
+                    bcps->noise_type = block2::NoiseTypes::ReducedPerturbative;
+                    bcps->eq_type = block2::EquationTypes::PerturbativeCompression;
                     bcps->solve(maxiter_, bra->center == 0, 1.0e-8);
                     if (bra->center != ket0->center)
                         bcps->solve(1, ket0->center != 0);
@@ -925,9 +944,9 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                         ket_expr->exprs.push_back("CDD");
                     }
                     ket_expr->add_sum_term(Tket_data.data() + p * na3, na3, tshape, tstride,
-                                           1.0e-12, 1.0, actv_irreps, {}, p_syms[p]);
+                                           integral_cutoff, 1.0, actv_irreps, {}, p_syms[p]);
                     ket_expr->add_sum_term(Tket_data.data() + p * na3, na3, tshape, tstride,
-                                           1.0e-12, 1.0, actv_irreps, {}, p_syms[p]);
+                                           integral_cutoff, 1.0, actv_irreps, {}, p_syms[p]);
                     ket_expr = ket_expr->adjust_order();
 
                     auto kmpo = std::static_pointer_cast<block2::MPO<block2::SZ, double>>(
