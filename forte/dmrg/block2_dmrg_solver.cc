@@ -797,6 +797,7 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
 
         if (impl_->is_spin_adapted_) {
             auto ket0 = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
+            psi::outfile->Printf("\n ket0 max bond dimension: %zu", ket0->info->get_max_bond_dimension());
 
             auto xexpr = impl_->expr_builder();
             xexpr->exprs.push_back("(C+D)0");
@@ -804,7 +805,7 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                                 std::vector<int>{n_sites, n_sites},
                                 std::vector<size_t>{(size_t)n_sites, 1}, integral_cutoff, sqrt(2.0),
                                 actv_irreps);
-            xexpr->adjust_order();
+            xexpr = xexpr->adjust_order();
 
             auto xmpo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
                 impl_->get_mpo(xexpr, dmrg_verbose));
@@ -849,8 +850,8 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                     binfo->tag =
                         ket0->info->tag + "@BRA." + std::to_string(p) + "." + std::to_string(j);
                     binfo->set_bond_dimension_fci(bra_left_vacuum[j], vacuum);
-                    binfo->set_bond_dimension(bond_dim);
-                    binfo->bond_dim = bond_dim;
+                    binfo->set_bond_dimension(ket0->info->get_max_bond_dimension());
+                    binfo->bond_dim = ket0->info->get_max_bond_dimension();
 
                     if (binfo->get_max_bond_dimension() == 0)
                         continue;
