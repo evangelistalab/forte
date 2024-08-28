@@ -998,6 +998,10 @@ DSRG:
     type: double
     default: 1.0e-3
     help: "The upper threshold for the adaptive termination of the recursive single commutator approximation"
+  DSRG_ADAPTIVE_RSC_DELTA_E_START:
+    type: double
+    default: 5.0e-5
+    help: "The energy difference for the adaptive RSC to kick in"
   T_ALGORITHM:
     type: str
     default: "DSRG"

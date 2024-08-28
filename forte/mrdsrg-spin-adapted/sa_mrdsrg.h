@@ -105,6 +105,7 @@ class SA_MRDSRG : public SADSRG {
     double rsc_conv_;
     bool rsc_conv_adapt_;
     double rsc_conv_adapt_threshold_;
+    double rsc_conv_adapt_delta_e_;
 
     /// DSRG transformation type
     std::string dsrg_trans_type_;
@@ -159,9 +160,9 @@ class SA_MRDSRG : public SADSRG {
     void update_t1();
 
     /// Compute DSRG-transformed Hamiltonian
-    void compute_hbar(double& rsc_conv);
+    int compute_hbar(double& rsc_conv);
     /// Compute DSRG-transformed Hamiltonian Hbar sequentially
-    void compute_hbar_sequential(double& rsc_conv);
+    int compute_hbar_sequential(double& rsc_conv);
     /// Compute DSRG-transformed Hamiltonian truncated to 2-nested commutator
     void compute_hbar_qc();
 
