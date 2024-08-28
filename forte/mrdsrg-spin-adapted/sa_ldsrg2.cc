@@ -96,7 +96,7 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
         double rsc_conv = rsc_conv_adapt_ ? get_adaptive_rsc_conv(cycle, Edelta) : rsc_conv_;
         local_timer t_hbar;
         timer hbar("Compute Hbar");
-        int ncomm = 2;
+        int ncomm = 2; // default for QC is 2 nested commutators
         if (corrlv_string_ == "LDSRG2_QC") {
             compute_hbar_qc();
         } else {
@@ -753,7 +753,9 @@ void SA_MRDSRG::compute_mbar_ldsrg2(const ambit::BlockedTensor& M, int max_level
 }
 
 double SA_MRDSRG::get_adaptive_rsc_conv(const int& iter, const double& deltaE){
+    // A (log)-ReLU-like kick in for adaptive RSC conv to kick in
     if (iter == 1 || std::fabs(deltaE) >= rsc_conv_adapt_delta_e_) {return rsc_conv_adapt_threshold_;}
+    // Linear interpolation between the upper and lower threshold exponents
     double x = (std::log10(std::fabs(deltaE)) - std::log10(rsc_conv_adapt_delta_e_)) / (std::log10(e_conv_) - std::log10(rsc_conv_adapt_delta_e_));
     double exponent = std::log10(rsc_conv_adapt_threshold_) + x * (std::log10(rsc_conv_) - std::log10(rsc_conv_adapt_threshold_));
     double threshold = std::pow(10.0, exponent);
