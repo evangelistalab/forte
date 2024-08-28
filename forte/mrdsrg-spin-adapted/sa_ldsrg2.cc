@@ -87,24 +87,26 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
 
     // start iteration
     for (int cycle = 1; cycle <= maxiter_; ++cycle) {
+        double Edelta = 0.0;
         // use DT2_ as an intermediate used for compute Hbar
         DT2_["ijab"] = 2.0 * T2_["ijab"];
         DT2_["ijab"] -= T2_["ijba"];
 
         // compute Hbar
+        double rsc_conv = rsc_conv_adapt_ ? get_adaptive_rsc_conv(cycle, Edelta) : rsc_conv_;
         local_timer t_hbar;
         timer hbar("Compute Hbar");
         if (corrlv_string_ == "LDSRG2_QC") {
             compute_hbar_qc();
         } else {
             if (sequential_Hbar_) {
-                compute_hbar_sequential();
+                compute_hbar_sequential(rsc_conv);
             } else {
-                compute_hbar();
+                compute_hbar(rsc_conv);
             }
         }
         hbar.stop();
-        double Edelta = Hbar0_ - Ecorr;
+        Edelta = Hbar0_ - Ecorr;
         Ecorr = Hbar0_;
         double time_hbar = t_hbar.get();
 
@@ -195,7 +197,7 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
     return Ecorr;
 }
 
-void SA_MRDSRG::compute_hbar() {
+void SA_MRDSRG::compute_hbar(double& rsc_conv) {
     if (print_ > 3) {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
@@ -296,7 +298,7 @@ void SA_MRDSRG::compute_hbar() {
             outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
                             C1_.norm(0), C2_.norm(0));
         }
-        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < rsc_conv_) {
+        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < rsc_conv) {
             converged = true;
             break;
         }
@@ -308,7 +310,7 @@ void SA_MRDSRG::compute_hbar() {
     }
 }
 
-void SA_MRDSRG::compute_hbar_sequential() {
+void SA_MRDSRG::compute_hbar_sequential(double& rsc_conv) {
     if (print_ > 3) {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
@@ -480,7 +482,7 @@ void SA_MRDSRG::compute_hbar_sequential() {
             outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
                             C1_.norm(0), C2_.norm(0));
         }
-        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < rsc_conv_) {
+        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < rsc_conv) {
             converged = true;
             break;
         }

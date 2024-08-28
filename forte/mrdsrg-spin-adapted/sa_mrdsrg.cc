@@ -70,6 +70,8 @@ void SA_MRDSRG::read_options() {
 
     rsc_ncomm_ = foptions_->get_int("DSRG_RSC_NCOMM");
     rsc_conv_ = foptions_->get_double("DSRG_RSC_THRESHOLD");
+    rsc_conv_adapt_ = foptions_->get_bool("DSRG_ADAPTIVE_RSC");
+    rsc_conv_adapt_threshold_ = foptions_->get_double("DSRG_ADAPTIVE_RSC_THRESHOLD");
 
     maxiter_ = foptions_->get_int("DSRG_MAXITER");
     e_conv_ = foptions_->get_double("E_CONVERGENCE");
@@ -249,6 +251,15 @@ double SA_MRDSRG::compute_energy() {
     //    }
 
     return Etotal;
+}
+
+double SA_MRDSRG::get_adaptive_rsc_conv(const int& iter, const double& deltaE){
+    if (iter == 1) {return rsc_conv_adapt_threshold_;}
+    double x = std::log10(std::fabs(deltaE)) / std::log10(e_conv_);
+    if (x < 0.0) {x = 0.0;}
+    double exponent = std::log10(rsc_conv_adapt_threshold_) + x * (std::log10(rsc_conv_) - std::log10(rsc_conv_adapt_threshold_));
+    double threshold = std::pow(10.0, exponent);
+    return threshold;
 }
 
 double SA_MRDSRG::Hbar_od_norm(const int& n, const std::vector<std::string>& blocks) {

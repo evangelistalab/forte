@@ -990,6 +990,14 @@ DSRG:
     type: double
     default: 1.0e-12
     help: "The threshold for terminating the recursive single commutator approximation"
+  DSRG_ADAPTIVE_RSC:
+    type: bool
+    default: False
+    help: "Make the threshold adaptive for terminating the recursive single commutator approximation"
+  DSRG_ADAPTIVE_RSC_THRESHOLD:
+    type: double
+    default: 1.0e-3
+    help: "The upper threshold for the adaptive termination of the recursive single commutator approximation"
   T_ALGORITHM:
     type: str
     default: "DSRG"
