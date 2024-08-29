@@ -73,8 +73,10 @@ class ProcedureDSRG:
             if as_type == "BLOCK2" and self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
                 self.max_rdm_level = 2
             else:
-                psi4.core.print_out("\n  DSRG 3RDM direct algorithm only available for BLOCK2/SA-MRDSRG")
-                psi4.core.print_out("\n  Set DSRG_3RDM_ALGORITHM to 'EXPLICIT' (default)")
+                psi4.core.print_out(
+                    "\n  DSRG 3RDM direct algorithm only available for BLOCK2/SA-MRDSRG")
+                psi4.core.print_out(
+                    "\n  Set DSRG_3RDM_ALGORITHM to 'EXPLICIT' (default)")
                 options.set_str("DSRG_3RDM_ALGORITHM", "EXPLICIT")
 
         self.relax_convergence = float("inf")
@@ -169,6 +171,27 @@ class ProcedureDSRG:
             self.semi.semicanonicalize(self.rdms)
         self.Ua, self.Ub = self.semi.Ua_t(), self.semi.Ub_t()
 
+        # if self.options.get_bool('FULL_HBAR'):
+        #     L1a = self.rdms.L1a()
+        #     L1b = self.rdms.L1b()
+        #     L2aa = self.rdms.L2aa()
+        #     L2ab = self.rdms.L2ab()
+        #     L2bb = self.rdms.L2bb()
+        #     L3aaa = self.rdms.L3aaa()
+        #     L3aab = self.rdms.L3aab()
+        #     L3abb = self.rdms.L3abb()
+        #     L3bbb = self.rdms.L3bbb()
+
+        #     np.save("L1a", L1a)
+        #     np.save("L1b", L1b)
+        #     np.save("L2aa", L2aa)
+        #     np.save("L2ab", L2ab)
+        #     np.save("L2bb", L2bb)
+        #     np.save("L3aaa", L3aaa)
+        #     np.save("L3aab", L3aab)
+        #     np.save("L3abb", L3abb)
+        #     np.save("L3bbb", L3bbb)
+
     def make_dsrg_solver(self):
         """Make a DSRG solver."""
         args = (self.rdms, self.scf_info, self.options,
@@ -235,6 +258,9 @@ class ProcedureDSRG:
 
         # Spit out energy if reference relaxation not implemented
         if not self.Heff_implemented:
+            self.relax_maxiter = 0
+
+        if self.options.get_bool('FULL_HBAR'):
             self.relax_maxiter = 0
 
         # Reference relaxation procedure
@@ -398,6 +424,14 @@ class ProcedureDSRG:
             np.savez('save_eta1', **eta_1_dict)
             np.savez('save_lambda2', **lambda2_dict)
             np.savez('save_lambda3', **lambda3_dict)
+
+            # self.rdms = self.active_space_solver.compute_average_rdms(
+            #         self.state_weights_map, self.max_rdm_level, self.rdm_type
+            #     )
+            # self.rdms.rotate(self.Ua, self.Ub)
+            # gamma1_aa =self.rdms.g1a()
+            # np.save("gamma1_aa", gamma1_aa)
+
         ################
 
         self.dsrg_cleanup()
