@@ -290,15 +290,25 @@ void export_Determinant(py::module& m) {
         .def("ann", &SQOperatorString::ann)
         .def("str", &SQOperatorString::str)
         .def("count", &SQOperatorString::count)
+        .def("number_component", &SQOperatorString::number_component)
+        .def("non_number_component", &SQOperatorString::non_number_component)
         .def("__str__", &SQOperatorString::str)
         .def("__repr___", &SQOperatorString::str)
         .def("latex", &SQOperatorString::latex)
         .def("latex_compact", &SQOperatorString::latex_compact)
-        .def("is_number", &SQOperatorString::is_number)
+        .def("is_identity", &SQOperatorString::is_identity)
         .def("is_nilpotent", &SQOperatorString::is_nilpotent)
         .def("op_tuple", &SQOperatorString::op_tuple)
         .def("__eq__", &SQOperatorString::operator==)
         .def("__lt__", &SQOperatorString::operator<);
+
+    py::enum_<CommutatorType>(m, "CommutatorType")
+        .value("commute", CommutatorType::Commute)
+        .value("anticommute", CommutatorType::AntiCommute)
+        .value("may_not_commute", CommutatorType::MayNotCommute);
+
+    m.def("commutator_type", &commutator_type, "lhs"_a, "rhs"_a,
+          "Get the commutator type of two operator strings");
 
     m.def(
         "sqop",
@@ -541,8 +551,10 @@ void export_Determinant(py::module& m) {
         .def("size", &SparseState::size)
         .def("norm", &SparseState::norm, "p"_a = 2,
              "Compute the p-norm of the vector (default p = 2, p = -1 for infinity norm)")
+        .def("add", &SparseState::add)
         .def("__iadd__", &SparseState::operator+=, "Add a SparseState to this SparseState")
         .def("__isub__", &SparseState::operator-=, "Subtract a SparseState from this SparseState")
+        .def("__imul__", &SparseState::operator*=, "Multiply this SparseState by a scalar")
         .def("__len__", &SparseState::size)
         .def("__eq__", &SparseState::operator==)
         .def("__repr__", [](const SparseState& v) { return v.str(); })

@@ -64,6 +64,9 @@ namespace forte {
  */
 using op_tuple_t = std::vector<std::tuple<bool, bool, int>>;
 
+// A class enum to encode if two operators commute, anti-commute or do not commute
+enum class CommutatorType { Commute, AntiCommute, MayNotCommute };
+
 /**
  * @brief A class to represent a second quantized operator.
  *
@@ -94,11 +97,14 @@ class SQOperatorString {
     Determinant& ann_mod();
     /// @return a op_tuple_t that represents the operator
     op_tuple_t op_tuple() const;
-    /// @return true if this operator is a number operator (i.e. it contains no creation or
-    /// annihilation  operators)
-    bool is_number() const;
+    /// @return the number component of this operator
+    SQOperatorString number_component() const;
+    /// @return the non-number component of this operator
+    SQOperatorString non_number_component() const;
+    /// @return true if this operator is the identity (no creation/annihilation  operators)
+    bool is_identity() const;
     /// @return true if this operator is such that op^2 = 0.
-    /// Numbers and number operators are not nilpotent.
+    /// The identity and number operators are not nilpotent.
     bool is_nilpotent() const;
     /// @return the number of creation + annihilation operators in this operator
     int count() const;
@@ -181,6 +187,8 @@ double fast_apply_operator_to_det(DeterminantImpl<N>& d, const SQOperatorString&
 }
 
 bool do_ops_commute(const SQOperatorString& lhs, const SQOperatorString& rhs);
+
+CommutatorType commutator_type(const SQOperatorString& lhs, const SQOperatorString& rhs);
 
 std::vector<std::pair<SQOperatorString, double>> commutator_fast(const SQOperatorString& lhs,
                                                                  const SQOperatorString& rhs);

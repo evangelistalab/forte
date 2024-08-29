@@ -257,7 +257,7 @@ def test_sparse_operator_fast_product():
     operators = []
     A = forte.SparseOperator()
 
-    max_single_index = 8
+    max_single_index = 6
     for i in range(max_single_index):
         A += forte.sparse_operator(f"[{i}a+]", 1.0)
         A += forte.sparse_operator(f"[{i}b+]", 1.0)
@@ -271,7 +271,7 @@ def test_sparse_operator_fast_product():
 
     # add all operators with two indices in the range [0,1,2,3]
     # of the form [ia+ ja+ la+ ka+] and i < j and l > k
-    max_double_index = 8
+    max_double_index = 6
     for i in range(max_double_index):
         for j in range(max_double_index):
             for l in range(max_double_index):

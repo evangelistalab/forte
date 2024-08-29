@@ -69,11 +69,20 @@ Determinant& SQOperatorString::cre_mod() { return cre_; }
 
 Determinant& SQOperatorString::ann_mod() { return ann_; }
 
-bool SQOperatorString::is_number() const { return (cre().count() == 0) and (ann().count() == 0); }
+bool SQOperatorString::is_identity() const { return (cre().count() == 0) and (ann().count() == 0); }
 
 bool SQOperatorString::is_nilpotent() const {
-    // here we test that op != op^dagger, otherwise op - op^dagger = 0
+    // here we test that op != op^dagger
     return (cre() != ann());
+}
+
+SQOperatorString SQOperatorString::number_component() const {
+    const Determinant number = this->cre() & this->ann();
+    return SQOperatorString(number, number);
+}
+
+SQOperatorString SQOperatorString::non_number_component() const {
+    return SQOperatorString(this->cre() - this->ann(), this->ann() - this->cre());
 }
 
 int SQOperatorString::count() const { return cre().count_all() + ann().count_all(); }
@@ -400,6 +409,27 @@ std::vector<std::pair<SQOperatorString, double>> operator*(const SQOperatorStrin
     std::vector<std::pair<SQOperatorString, double>> result;
     generate_wick_contractions(lhs, rhs, result, 1.0);
     return result;
+}
+
+CommutatorType commutator_type(const SQOperatorString& lhs, const SQOperatorString& rhs) {
+    // Find the number of operators in common between the two operator strings
+    const auto common_l_ann_r_cre = lhs.ann().fast_a_and_b_count(rhs.cre());
+    const auto common_l_cre_r_cre = lhs.cre().fast_a_and_b_count(rhs.cre());
+    const auto common_l_ann_r_ann = lhs.ann().fast_a_and_b_count(rhs.ann());
+    const auto common_l_cre_r_ann = lhs.cre().fast_a_and_b_count(rhs.ann());
+    // if there are no indices in common
+    if (common_l_cre_r_cre == 0 and common_l_ann_r_ann == 0 and common_l_ann_r_cre == 0 and
+        common_l_cre_r_ann == 0) {
+        const auto nl = lhs.count();
+        const auto nr = rhs.count();
+        // even number of operator permutations
+        if ((nl * nr) % 2 == 0) {
+            return CommutatorType::Commute;
+        }
+        // odd number of operator permutations
+        return CommutatorType::AntiCommute;
+    }
+    return CommutatorType::MayNotCommute;
 }
 
 bool do_ops_commute(const SQOperatorString& lhs, const SQOperatorString& rhs) {

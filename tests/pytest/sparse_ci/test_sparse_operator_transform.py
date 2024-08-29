@@ -53,8 +53,8 @@ def compute_st_nilpotent(O, unormA, theta):
 
 
 def run_test_sparse_operator_transform(type, O, A, theta):
-    # print(O)
-    # print(A)
+    print(f"\n{O = }")
+    print(f"{A = }")
 
     sqop, a = A(0)
     A2 = forte.SparseOperator()
@@ -72,6 +72,11 @@ def run_test_sparse_operator_transform(type, O, A, theta):
 
     python_error = (C_python - C_taylor).norm()
     forte_error = (O - C_taylor).norm()
+    if forte_error > 1e-10:
+        print("O: ", O)
+        print("A: ", A)
+        print("C_taylor: ", C_taylor)
+        print("C_python: ", C_python)
     # print("Error for python: ", python_error)
     # print("Error for c++:    ", forte_error)
     assert abs(python_error) < 1e-10
