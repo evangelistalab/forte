@@ -1,0 +1,30 @@
+import forte
+
+refudsrg = -1.013664923670226
+
+molecule {
+  0 1
+  H
+  H 1 1.5
+}
+
+set globals{
+  basis                   3-21g
+}
+
+set forte{
+  mcscf_reference         true
+  active_space_solver     fci
+  correlation_solver      mrdsrg_so
+  corr_level              ldsrg2
+  restricted_docc         [1,0,0,0,0,0,0,0]
+  active                  [1,0,0,0,0,1,0,0]
+  dsrg_s                  0.5
+  e_convergence           10
+  mcscf_g_convergence     8
+  mcscf_e_convergence     12  
+  dsrg_trans_type         cc
+}
+
+energy('forte')
+compare_values(refudsrg, variable("UNRELAXED ENERGY"), 8, "Non-Hermitian MRDSRG unrelaxed energy")

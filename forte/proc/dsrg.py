@@ -64,15 +64,18 @@ class ProcedureDSRG:
         self.relax_ref = options.get_str("RELAX_REF")
         if self.relax_ref == "NONE" and self.do_multi_state:
             self.relax_ref = "ONCE"
+        if self.relax_ref != "NONE" and options.get_str("DSRG_TRANS_TYPE") != "UNITARY":
+            psi4.core.print_out("\n  DSRG relaxation only supports UNITARY transformation. Setting RELAX_REF to NONE.")
+            self.relax_ref = "NONE"
 
         self.max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
         if options.get_str("DSRG_3RDM_ALGORITHM") == "DIRECT":
             as_type = options.get_str("ACTIVE_SPACE_SOLVER")
-            if as_type == "CAS" and self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
+            if as_type == "BLOCK2" and self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
                 self.max_rdm_level = 2
             else:
-                psi4.core.print_out(f"\n  DSRG 3RDM direct algorithm only available for CAS/SA-MRDSRG")
-                psi4.core.print_out(f"\n  Set DSRG_3RDM_ALGORITHM to 'EXPLICIT' (default)")
+                psi4.core.print_out("\n  DSRG 3RDM direct algorithm only available for BLOCK2/SA-MRDSRG")
+                psi4.core.print_out("\n  Set DSRG_3RDM_ALGORITHM to 'EXPLICIT' (default)")
                 options.set_str("DSRG_3RDM_ALGORITHM", "EXPLICIT")
 
         self.relax_convergence = float("inf")
@@ -273,6 +276,8 @@ class ProcedureDSRG:
             # pass to the active space solver the unitary transformation between the original basis
             # and the current semi-canonical basis
             self.active_space_solver.set_Uactv(self.Ua, self.Ub)
+            if self.options.get_str("ACTIVE_SPACE_SOLVER") == "BLOCK2":
+                self.options.set_bool("READ_ACTIVE_WFN_GUESS", True)
             state_energies_list = self.active_space_solver.compute_energy()
 
             if self.Meff_implemented:

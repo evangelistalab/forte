@@ -215,17 +215,19 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
             timer timer_v("DSRG [H2, T2] D3V direct");
             Tbra = H2.block("vaaa").clone();
             Tbra("ewuv") = H2.block("vaaa")("ezxy") * Ua("wz") * Ua("ux") * Ua("vy");
-            Tket = T2.block("aava").clone();
-            Tket("uvew") = T2.block("aava")("xyez") * Ua("wz") * Ua("ux") * Ua("vy");
-            auto E3v_map = as_solver_->compute_complementary_H2caa_overlap(Tbra, Tket);
+            Tket = ambit::Tensor::build(tensor_type_, "Tket", Tbra.dims());
+            Tket("ewuv") = T2.block("aava")("xyez") * Ua("wz") * Ua("ux") * Ua("vy");
+            auto E3v_map = as_solver_->compute_complementary_H2caa_overlap(
+                Tbra, Tket, mo_space_info_->symmetry("RESTRICTED_UOCC"));
             timer_v.stop();
 
             timer timer_c("DSRG [H2, T2] D3C direct");
-            Tbra = T2.block("caaa").clone();
-            Tbra("mwuv") = T2.block("caaa")("mzxy") * Ua("wz") * Ua("ux") * Ua("vy");
-            Tket = H2.block("aaca").clone();
-            Tket("uvmw") = H2.block("aaca")("xymz") * Ua("wz") * Ua("ux") * Ua("vy");
-            auto E3c_map = as_solver_->compute_complementary_H2caa_overlap(Tbra, Tket);
+            Tket = T2.block("caaa").clone();
+            Tket("mwuv") = T2.block("caaa")("mzxy") * Ua("wz") * Ua("ux") * Ua("vy");
+            Tbra = ambit::Tensor::build(tensor_type_, "Tbra", Tket.dims());
+            Tbra("mwuv") = H2.block("aaca")("xymz") * Ua("wz") * Ua("ux") * Ua("vy");
+            auto E3c_map = as_solver_->compute_complementary_H2caa_overlap(
+                Tbra, Tket, mo_space_info_->symmetry("RESTRICTED_DOCC"));
             timer_c.stop();
 
             // - 2-RDM contributions

@@ -206,12 +206,12 @@ double FCISolver::compute_energy() {
     if (dl_solver_ == nullptr) {
         dl_solver_ = std::make_shared<DavidsonLiuSolver>(basis_size, nroot_, collapse_per_root_,
                                                          subspace_per_root_);
-        dl_solver_->set_e_convergence(e_convergence_);
-        dl_solver_->set_r_convergence(r_convergence_);
-        dl_solver_->set_print_level(print_);
-        dl_solver_->set_maxiter(maxiter_davidson_);
         first_run = true;
     }
+    dl_solver_->set_e_convergence(e_convergence_);
+    dl_solver_->set_r_convergence(r_convergence_);
+    dl_solver_->set_print_level(print_);
+    dl_solver_->set_maxiter(maxiter_davidson_);
 
     // determine the number of guess vectors
     const size_t num_guess_states = std::min(guess_per_root_ * nroot_, basis_size);

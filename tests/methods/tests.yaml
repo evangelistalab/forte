@@ -145,6 +145,9 @@ df-dsrg-mrpt2:
       - diskdf-dsrg-mrpt2-threading1
    unused:
       - df-dsrg-mrpt2-testccvv
+dmrg-dsrg-mrpt2:
+   short:
+      - dmrg-dsrg-mrpt2-1
 dsrg-mrpt2_spin_adapted:
    short:
       - dsrg-mrpt2_spin_adapted-1
@@ -333,6 +336,11 @@ mrdsrg_so:
       - mrdsrg_so-1
    long:
       - mrdsrg_so-2
+mrdsrg_so_nh:
+   short:
+      - mrdsrg_so_nh-1
+   long:
+      - mrdsrg_so_nh-2
 mrdsrg-ldsrg2-df-spin-integrated:
    short:
       - mrdsrg-ldsrg2-qc-df-2
@@ -359,6 +367,9 @@ mrdsrg-ldsrg2-spin-integrated:
       - mrdsrg-ldsrg2-qc-2
    long:
       - mrdsrg-ldsrg2-qc-1
+mrdsrg-ldsrg2-spin-integrated-nh:
+   short:
+      - mrdsrg-ldsrg2-nh-1
 mrdsrg-pt2:
    short:
       - mrdsrg-pt2-2
@@ -377,6 +388,9 @@ mrdsrg-spin-adapted:
       - mrdsrg-spin-adapted-2
       - mrdsrg-spin-adapted-4
       - mrdsrg-spin-adapted-5
+mrdsrg-spin-adapted-nh:
+   short:
+      - mrdsrg-spin-adapted-nh-1
 mrdsrg-spin-adapted-pt2:
    short:
       - mrdsrg-spin-adapted-pt2-1
@@ -415,7 +429,9 @@ srg:
 tdci:
    short:
       - tdci-1
-
 x2c:
    short:
       - x2c-1
+pyscf:
+   short:
+      - pyscf_interface

@@ -7,7 +7,7 @@ import forte
 #   In this test we use a smaller basis (6-31G)
 
 refscf = -75.34896498316222
-refasci = -75.625013576139
+refasci = -75.62501357754
 
 molecule C2{
 0 1

@@ -104,6 +104,9 @@ class SA_MRDSRG : public SADSRG {
     /// Convergenve threshold for Hbar in recursive single commutator algorithm
     double rsc_conv_;
 
+    /// DSRG transformation type
+    std::string dsrg_trans_type_;
+
     /// One-electron integral
     ambit::BlockedTensor H_;
     /// Two-electron integral

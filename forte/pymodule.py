@@ -46,6 +46,12 @@ from forte.modules import (
     MCSCF,
     TDACI,
 )
+
+try:
+    from forte.modules import ObjectsFromPySCF
+except ImportError:
+    pass
+
 from forte.proc.external_active_space_solver import (
     write_external_active_space_file,
     write_external_rdm_file,
@@ -161,6 +167,9 @@ def energy_forte(name, **kwargs):
     # Prepare Forte objects
     if "FCIDUMP" in data.options.get_str("INT_TYPE"):
         data = ObjectsFromFCIDUMP(options=kwargs).run(data)
+    elif data.options.get_str("INT_TYPE") == "PYSCF":
+        data = ObjectsFromPySCF(kwargs.get("pyscf_obj"), options=kwargs).run(data)
+        #data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER")).run(data)
     else:
         data = ObjectsFromPsi4(**kwargs).run(data)
 

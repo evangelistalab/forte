@@ -37,6 +37,7 @@
 #include "helpers/helpers.h"
 #include "helpers/string_algorithms.h"
 
+#include <pybind11/stl.h>
 using namespace pybind11::literals;
 
 namespace forte {
