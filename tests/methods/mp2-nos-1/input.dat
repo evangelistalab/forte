@@ -1,5 +1,5 @@
 # Test RMP2 natural orbitals
-mp2_corr_ref = -1.80286362
+mp2_corr_ref = -1.802862266979274
 
 import forte
 memory 4 gb
@@ -36,6 +36,7 @@ scf_type df
 basis def2-svp
 maxiter 100
 docc [40,7]
+e_convergence 12
 d_convergence 6
 }
 

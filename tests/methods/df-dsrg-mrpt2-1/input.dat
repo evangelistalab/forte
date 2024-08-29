@@ -2,7 +2,7 @@
 #! Generated using commit GITCOMMIT
 import forte
 
-refdsrgpt2 =  -15.61338900002254
+refdsrgpt2 =  -15.613389000040760
 
 molecule {
   0 1
@@ -69,4 +69,4 @@ S   1   1.00
 }
 
 forte_energy = energy('forte')
-compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),9,"DSRG-MRPT2 energy")

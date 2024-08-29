@@ -31,9 +31,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Friday, 09 August 2024 05:28PM
+    Psi4 started on: Thursday, 29 August 2024 09:56AM
 
-    Process ID: 83303
+    Process ID: 1232
     Host:       Brian-Zs-MBA.local
     PSIDATADIR: /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4
     Memory:     500.0 MiB
@@ -46,7 +46,7 @@
 #! Generated using commit GITCOMMIT
 import forte
 
-refdsrgpt2 =  -15.61338900002254
+refdsrgpt2 =  -15.613389000040760
 
 molecule {
   0 1
@@ -113,8 +113,7 @@ S   1   1.00
 }
 
 forte_energy = energy('forte')
-compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
---------------------------------------------------------------------------
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),9,"DSRG-MRPT2 energy")--------------------------------------------------------------------------
 
 Scratch directory: /tmp/
 
@@ -122,7 +121,7 @@ Scratch directory: /tmp/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: main - git commit: 757934d4
+    git branch: adpative-rsc - git commit: 9cf22643
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -141,15 +140,15 @@ Scratch directory: /tmp/
     Solid Harmonics ordering:            Gaussian
 
 *** tstart() called on Brian-Zs-MBA.local
-*** at Fri Aug  9 17:28:06 2024
+*** at Thu Aug 29 09:56:48 2024
 
    => Loading Basis Set <=
 
-    Name: ANONYMOUSD8C22282
+    Name: ANONYMOUS8E074051
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1   entry BE         line     5 inputblock anonymousd8c22282 
-    atoms 2-3 entry H          line    25 inputblock anonymousd8c22282 
+    atoms 1   entry BE         line     5 inputblock anonymous8e074051 
+    atoms 2-3 entry H          line    25 inputblock anonymous8e074051 
 
 
          ---------------------------------------------------------
@@ -198,8 +197,8 @@ Scratch directory: /tmp/
 
   ==> Primary Basis <==
 
-  Basis Set: ANONYMOUSD8C22282
-    Blend: ANONYMOUSD8C22282
+  Basis Set: ANONYMOUS8E074051
+    Blend: ANONYMOUS8E074051
     Number of shells: 9
     Number of basis functions: 13
     Number of Cartesian functions: 13
@@ -341,7 +340,7 @@ Properties computed using the SCF density matrix
 
  ------------------------------------------------------------------------------------
 
-*** tstop() called on Brian-Zs-MBA.local at Fri Aug  9 17:28:06 2024
+*** tstop() called on Brian-Zs-MBA.local at Thu Aug 29 09:56:48 2024
 Module time:
 	user time   =       0.10 seconds =       0.00 minutes
 	system time =       0.01 seconds =       0.00 minutes
@@ -392,8 +391,8 @@ Total time:
 
   ==> Primary Basis Set Summary <==
 
-  Basis Set: ANONYMOUSD8C22282
-    Blend: ANONYMOUSD8C22282
+  Basis Set: ANONYMOUS8E074051
+    Blend: ANONYMOUS8E074051
     Number of shells: 9
     Number of basis functions: 13
     Number of Cartesian functions: 13
@@ -480,14 +479,14 @@ Total time:
 
   Performing full diagonalization of the H matrix
 
-  Done diagonalizing Hamiltonian, 7.539e-04 seconds.
+  Done diagonalizing Hamiltonian, 9.873e-04 seconds.
 
   ==> Computing 1 Coupling Lists <==
 
   (N-1) a lists size counts
       Size      Count
          1          2
-        α          1.842e-05 seconds
+        α          4.267e-05 seconds
         β          3.708e-06 seconds
   Time spent building 1-rdm: 8.750e-07 seconds
 
@@ -496,42 +495,42 @@ Total time:
   (N-1) a lists size counts
       Size      Count
          1          2
-        α          8.333e-06 seconds
-        β          2.083e-06 seconds
-  Time spent building 1-rdm: 2.250e-06 seconds
+        α          7.542e-06 seconds
+        β          2.125e-06 seconds
+  Time spent building 1-rdm: 2.166e-06 seconds
 
   ==> Computing 1 Coupling Lists <==
 
   (N-1) a lists size counts
       Size      Count
          1          2
-        α          7.500e-06 seconds
-        β          2.125e-06 seconds
-  Time spent building 1-rdm: 1.125e-06 seconds
+        α          7.542e-06 seconds
+        β          2.042e-06 seconds
+  Time spent building 1-rdm: 1.250e-06 seconds
 
   ==> Computing 2 Coupling Lists <==
 
   (N-2) aa lists size counts
       Size      Count
-        αα         5.625e-06 seconds
+        αα         1.441e-04 seconds
   (N-2) ab lists size counts
       Size      Count
          2          1
-        αβ         1.183e-05 seconds
-        ββ         1.292e-06 seconds
-  Time spent building 2-rdm: 1.666e-06 seconds
+        αβ         9.250e-06 seconds
+        ββ         1.959e-06 seconds
+  Time spent building 2-rdm: 1.584e-06 seconds
 
   ==> Computing 3 Coupling Lists <==
 
   (N-3) aaa lists size counts
       Size      Count
-        ααα        7.583e-06 seconds
+        ααα        8.250e-06 seconds
   (N-3) aab lists size counts
       Size      Count
-        ααβ        6.833e-06 seconds
-        αββ        2.042e-06 seconds
-        βββ        1.875e-06 seconds
-  Time spent building 3-rdm: 3.416e-06 seconds
+        ααβ        6.709e-06 seconds
+        αββ        2.625e-06 seconds
+        βββ        1.750e-06 seconds
+  Time spent building 3-rdm: 7.854e-05 seconds
 
   ==> Semicanonicalize Orbitals <==
 
@@ -628,19 +627,19 @@ Total time:
   ==> Computing DSRG-MRPT2 Energy <==
 
   Reference Energy = -15.565633469483654
-    Computing T2                             ...... Done. Timing        0.000479 s
-    Renormalizing V                          ...... Done. Timing        0.000194 s
-    Computing T1                             ...... Done. Timing        0.000824 s
-    Renormalizing F                          ...... Done. Timing        0.001026 s
-    Computing <[F, T1]>                      ...... Done. Timing        0.000786 s
-    Computing <[F, T2]>                      ...... Done. Timing        0.000990 s
-    Computing <[V, T1]>                      ...... Done. Timing        0.001200 s
-    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.001436 s
-    Computing <V, T2]> 4PP                   ...... Done. Timing        0.001428 s
-    Computing [V, T2] 4PH                    ...... Done. Timing        0.006160 s
-    Computing [V, T2] λ3                     ...... Done. Timing        0.003180 s
-    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.005489 s
-    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.001024 s
+    Computing T2                             ...... Done. Timing        0.000633 s
+    Renormalizing V                          ...... Done. Timing        0.000189 s
+    Computing T1                             ...... Done. Timing        0.001080 s
+    Renormalizing F                          ...... Done. Timing        0.001172 s
+    Computing <[F, T1]>                      ...... Done. Timing        0.000574 s
+    Computing <[F, T2]>                      ...... Done. Timing        0.001596 s
+    Computing <[V, T1]>                      ...... Done. Timing        0.001099 s
+    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.001533 s
+    Computing <V, T2]> 4PP                   ...... Done. Timing        0.001575 s
+    Computing [V, T2] 4PH                    ...... Done. Timing        0.006324 s
+    Computing [V, T2] λ3                     ...... Done. Timing        0.003307 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.005805 s
+    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.001480 s
   Eccvv: -0.0241169583
 
   ==> DSRG-MRPT2 (DF/CD) Energy Summary <==
@@ -668,18 +667,18 @@ Total time:
 
            [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]  
     -----------------------------------------------------
-    -> C0       0.001       0.001       0.001       0.016
+    -> C0       0.001       0.002       0.001       0.017
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
 
 
-  Time to prepare integrals:        0.166 seconds
-  Time to run job          :        0.045 seconds
-  Total                    :        0.211 seconds
+  Time to prepare integrals:        0.180 seconds
+  Time to run job          :        0.054 seconds
+  Total                    :        0.234 seconds
     DSRG-MRPT2 energy.....................................................................PASSED
 
-    Psi4 stopped on: Friday, 09 August 2024 05:28PM
-    Psi4 wall time for execution: 0:00:00.73
+    Psi4 stopped on: Thursday, 29 August 2024 09:56AM
+    Psi4 wall time for execution: 0:00:00.98
 
 *** Psi4 exiting successfully. Buy a developer a beer!
