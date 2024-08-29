@@ -46,7 +46,7 @@ using namespace psi;
 
 namespace forte {
 
-void MRDSRG::compute_hbar() {
+void MRDSRG::compute_hbar(double& rsc_conv) {
     if (print_ > 3) {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
@@ -79,7 +79,6 @@ void MRDSRG::compute_hbar() {
     // iteration variables
     bool converged = false;
     int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = foptions_->get_double("DSRG_RSC_THRESHOLD");
 
     // compute Hbar recursively
     for (int n = 1; n <= maxn; ++n) {
@@ -206,7 +205,7 @@ void MRDSRG::compute_hbar() {
             outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
                             C1_.norm(0), C2_.norm(0));
         }
-        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
+        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < rsc_conv) {
             converged = true;
             break;
         }
@@ -217,7 +216,7 @@ void MRDSRG::compute_hbar() {
     }
 }
 
-void MRDSRG::compute_hbar_sequential() {
+void MRDSRG::compute_hbar_sequential(double& rsc_conv) {
     if (print_ > 3) {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
@@ -241,7 +240,6 @@ void MRDSRG::compute_hbar_sequential() {
     // iteration variables
     bool converged = false;
     int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = foptions_->get_double("DSRG_RSC_THRESHOLD");
 
     // compute Hbar recursively
     for (int n = 1; n <= maxn; ++n) {
@@ -311,7 +309,7 @@ void MRDSRG::compute_hbar_sequential() {
             outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
                             C1_.norm(0), C2_.norm(0));
         }
-        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
+        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < rsc_conv) {
             converged = true;
             break;
         }
@@ -399,7 +397,7 @@ void MRDSRG::compute_hbar_sequential() {
         if (print_ > 3) {
             outfile->Printf("\n  n = %3d, C1norm = %20.15f, C2norm = %20.15f", n, norm_C1, norm_C2);
         }
-        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
+        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < rsc_conv) {
             converged = true;
             break;
         }
@@ -410,7 +408,7 @@ void MRDSRG::compute_hbar_sequential() {
     }
 }
 
-void MRDSRG::compute_hbar_sequential_rotation() {
+void MRDSRG::compute_hbar_sequential_rotation(double& rsc_conv) {
     if (print_ > 3) {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
@@ -549,7 +547,6 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     // iteration variables
     bool converged = false;
     int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = foptions_->get_double("DSRG_RSC_THRESHOLD");
 
     timer comm("Hbar T2 commutator");
 
@@ -654,7 +651,7 @@ void MRDSRG::compute_hbar_sequential_rotation() {
             outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
                             C1_.norm(0), C2_.norm(0));
         }
-        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
+        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < rsc_conv) {
             converged = true;
             break;
         }
@@ -727,6 +724,10 @@ double MRDSRG::compute_energy_ldsrg2() {
     int maxiter = foptions_->get_int("DSRG_MAXITER");
     double e_conv = foptions_->get_double("E_CONVERGENCE");
     double r_conv = foptions_->get_double("R_CONVERGENCE");
+    double rsc_thres = foptions_->get_double("DSRG_RSC_THRESHOLD");
+    bool rsc_adapt = foptions_->get_bool("DSRG_ADAPTIVE_RSC");
+    double rsc_adapt_thres = foptions_->get_double("DSRG_ADAPTIVE_RSC_THRESHOLD");
+    double rsc_adapt_delta_e = foptions_->get_double("DSRG_ADAPTIVE_RSC_DELTA_E_START");
     converged_ = false;
     Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"gg"}));
     O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"gg"}));
@@ -740,17 +741,21 @@ double MRDSRG::compute_energy_ldsrg2() {
     }
 
     // start iteration
+    double Edelta = 0.0;
     for (int cycle = 1; cycle <= maxiter; ++cycle) {
         // compute Hbar
         local_timer t_hbar;
         timer hbar("Compute Hbar");
+        double rsc_conv = rsc_adapt ? get_adaptive_rsc_conv(cycle, Edelta, 
+                                      rsc_thres, rsc_adapt_thres, rsc_adapt_delta_e, e_conv)
+                                    : rsc_thres;
         if (sequential_Hbar_) {
-            compute_hbar_sequential_rotation();
+            compute_hbar_sequential_rotation(rsc_conv);
         } else {
-            compute_hbar();
+            compute_hbar(rsc_conv);
         }
         hbar.stop();
-        double Edelta = Hbar0_ - Ecorr;
+        Edelta = Hbar0_ - Ecorr;
         Ecorr = Hbar0_;
         double time_hbar = t_hbar.get();
 
@@ -1245,6 +1250,17 @@ void MRDSRG::tensor_add_HC_ab(BlockedTensor& H2) {
         H2.block(block)("pqrs") += H2.block(block_hc)("rspq");
         H2.block(block_hc)("rspq") = H2.block(block)("pqrs");
     }
+}
+
+double MRDSRG::get_adaptive_rsc_conv(const int& iter, const double& deltaE, const double& rsc_conv, 
+                                     const double& rsc_conv_adapt, const double& rsc_conv_adapt_delta_e, const double& e_conv){
+    // A (log)-ReLU-like kick in for adaptive RSC conv to kick in
+    if (iter == 1 || std::fabs(deltaE) >= rsc_conv_adapt_delta_e) {return rsc_conv_adapt;}
+    // Linear interpolation between the upper and lower threshold exponents
+    double x = (std::log10(std::fabs(deltaE)) - std::log10(rsc_conv_adapt_delta_e)) / (std::log10(e_conv) - std::log10(rsc_conv_adapt_delta_e));
+    double exponent = std::log10(rsc_conv_adapt) + x * (std::log10(rsc_conv) - std::log10(rsc_conv_adapt));
+    double threshold = std::pow(10.0, exponent);
+    return threshold;
 }
 
 } // namespace forte

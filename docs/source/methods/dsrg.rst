@@ -489,21 +489,21 @@ The threshold of considering the BCH expansion converged based on the recursive 
 * Type: double
 * Default: 1.0e-12
 
-**DSRG_RSC_ADAPTIVE**
+**DSRG_ADAPTIVE_RSC**
 
 Whether to use an adaptive threshold for the recursive single commutator approximation.
 
 * Type: boolean
 * Default: false
 
-**DSRG_RSC_ADAPTIVE_THRESHOLD**
+**DSRG_ADAPTIVE_RSC_THRESHOLD**
 
 The upper threshold for the adaptive recursive single commutator approximation.
 
 * Type: double
 * Default: 1.0e-3
 
-**DSRG_RSC_ADAPTIVE_DELTA_E_START**
+**DSRG_ADAPTIVE_RSC_DELTA_E_START**
 
 The energy difference for the adaptive recursive single commutator approximation to kick in.
 
