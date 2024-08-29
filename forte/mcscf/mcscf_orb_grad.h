@@ -37,6 +37,7 @@
 #include "psi4/libdiis/diismanager.h"
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
+#include "psi4/lib3index/dfhelper.h"
 
 #include "ambit/blocked_tensor.h"
 
@@ -59,8 +60,8 @@ class MCSCF_ORB_GRAD {
      *   See J. Chem. Phys. 142, 224103 (2015) and Theor. Chem. Acc. 97, 88-95 (1997)
      */
     MCSCF_ORB_GRAD(std::shared_ptr<ForteOptions> options,
-                    std::shared_ptr<MOSpaceInfo> mo_space_info,
-                    std::shared_ptr<ForteIntegrals> ints, bool freeze_core);
+                   std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
+                   bool freeze_core);
 
     /// Evaluate the energy and orbital gradient
     double evaluate(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> g,
@@ -123,6 +124,13 @@ class MCSCF_ORB_GRAD {
 
     /// The JK object of Psi4
     std::shared_ptr<psi::JK> JK_;
+
+    /// The DFHelper object of Psi4
+    std::shared_ptr<psi::DFHelper> df_helper_;
+
+    /// Algorithm for computing (pu|xy) integrals
+    enum TEIALG { JK, DF };
+    TEIALG tei_alg_ = JK;
 
     // => MO spaces related <=
 
@@ -257,7 +265,8 @@ class MCSCF_ORB_GRAD {
     void build_mo_integrals();
 
     /// Build two-electron integrals
-    void build_tei_from_ao();
+    void build_tei_jk();
+    void build_tei_df();
 
     /// Fill two-electron integrals for custom integrals
     void fill_tei_custom(ambit::BlockedTensor V);
