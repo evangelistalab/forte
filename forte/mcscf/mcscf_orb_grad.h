@@ -313,6 +313,8 @@ class MCSCF_ORB_GRAD {
     void dump_tpdm_iwl();
     /// Dump the Hartree-Fock MO 2-RDM to file using IWL
     void dump_tpdm_iwl_hf();
+    /// Dump 2-RDM to file for DF-MCSCF
+    void dump_tpdm_df();
 
     /// Are there any frozen orbitals?
     bool is_frozen_orbs_;
