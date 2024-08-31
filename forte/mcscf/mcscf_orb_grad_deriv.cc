@@ -82,7 +82,7 @@ void MCSCF_ORB_GRAD::compute_nuclear_gradient() {
     // back-transform 1-RDM
     compute_opdm_ao();
 
-    if (TEIALG::DF) {
+    if (tei_alg_ == TEIALG::DF) {
         dump_tpdm_df();
     } else {
         // dump 2-RDM to disk
@@ -102,6 +102,7 @@ void MCSCF_ORB_GRAD::compute_nuclear_gradient() {
         transform->set_print(debug_print_ ? 5 : print_);
         transform->backtransform_density();
     }
+    psi::outfile->Printf("\n\n");
 }
 
 void MCSCF_ORB_GRAD::JK_build(std::shared_ptr<psi::Matrix> Cl, std::shared_ptr<psi::Matrix> Cr) {
@@ -350,7 +351,7 @@ SharedMatrix MCSCF_ORB_GRAD::contract_RB_Z(std::shared_ptr<psi::Matrix> Z,
 }
 
 void MCSCF_ORB_GRAD::compute_Lagrangian() {
-    psi::outfile->Printf("\n    Computing AO Lagrangian ...");
+    psi::outfile->Printf("\n    Computing AO Lagrangian ......");
     auto W = std::make_shared<psi::Matrix>();
 
     if (not is_frozen_orbs_) {
@@ -417,7 +418,7 @@ void MCSCF_ORB_GRAD::compute_Lagrangian() {
 }
 
 void MCSCF_ORB_GRAD::compute_opdm_ao() {
-    psi::outfile->Printf("\n    Computing AO OPDM .........");
+    psi::outfile->Printf("\n    Computing AO OPDM ............");
     auto D1a = std::make_shared<psi::Matrix>("D1a", nmopi_, nmopi_);
 
     // inactive docc part
@@ -457,12 +458,16 @@ void MCSCF_ORB_GRAD::compute_opdm_ao() {
 }
 
 void MCSCF_ORB_GRAD::dump_tpdm_df() {
+    psi::outfile->Printf("\n    Dumping DF AO TPDM to disk ...");
     auto naux = df_helper_->get_naux();
-    std::vector<size_t> aux_mos(naux);
-    std::iota(aux_mos.begin(), aux_mos.end(), 0);
-    BlockedTensor::add_mo_space("L", "g", aux_mos, NoSpin);
 
-    // DFHelper to get (P|Q)^{-1} (Q|pq) integrals in MO basis
+    // grab (P|Q)^{-1/2}
+    auto bs_aux = ints_->wfn()->get_basisset("DF_BASIS_SCF");
+    auto metric = std::make_shared<FittingMetric>(bs_aux, true);
+    metric->form_eig_inverse(options_->get_double("DF_FITTING_CONDITION"));
+    auto Jm12 = metric->get_metric();
+
+    // DFHelper to get B^{P}_{pq} = (P|Q)^{-1/2} (Q|pq) integrals in MO basis
     auto C_nosym = ints_->Ca_SO2AO(C_);
 
     auto Cactv = std::make_shared<psi::Matrix>("Cactv", nso_, nactv_);
@@ -477,7 +482,6 @@ void MCSCF_ORB_GRAD::dump_tpdm_df() {
         Cdocc->set_column(0, i, C_nosym->get_column(0, docc_mos[i]));
     }
 
-    df_helper_->set_metric_pow(-1);
     df_helper_->add_space("DOCC", Cdocc);
     df_helper_->add_space("ACTV", Cactv);
     df_helper_->add_transformation("A", "DOCC", "DOCC", "Qpq");
@@ -485,42 +489,44 @@ void MCSCF_ORB_GRAD::dump_tpdm_df() {
     df_helper_->add_transformation("C", "ACTV", "ACTV", "Qpq");
     df_helper_->transform();
 
-    // put [(P|Q)^{-1} (Q|pq)] into ambit form
+    // compute C^{P}_{pq} = (P|Q)^{-1/2} B^{Q}_{pq} integrals in ambit form
+    // notes on C_DGEMM
+    // LDA = transA ? rowA : colA; LDB = transB ? rowB : colB; LDC = colC;
     auto A = df_helper_->get_tensor("A");
     auto C3oo = ambit::Tensor::build(CoreTensor, "C3oo", {naux, ndocc, ndocc});
-    C_DCOPY(naux * ndocc * ndocc, A->get_pointer(), 1, C3oo.data().data(), 1);
+    C_DGEMM('N', 'N', naux, ndocc * ndocc, naux, 1.0, Jm12->get_pointer(), naux, A->get_pointer(),
+            ndocc * ndocc, 0.0, C3oo.data().data(), ndocc * ndocc);
 
     A = df_helper_->get_tensor("B");
     auto C3oa = ambit::Tensor::build(CoreTensor, "C3oa", {naux, ndocc, nactv_});
-    C_DCOPY(naux * ndocc * nactv_, A->get_pointer(), 1, C3oa.data().data(), 1);
+    C_DGEMM('N', 'N', naux, ndocc * nactv_, naux, 1.0, Jm12->get_pointer(), naux, A->get_pointer(),
+            ndocc * nactv_, 0.0, C3oa.data().data(), ndocc * nactv_);
 
     A = df_helper_->get_tensor("C");
     auto C3aa = ambit::Tensor::build(CoreTensor, "C3aa", {naux, nactv_, nactv_});
-    C_DCOPY(naux * nactv_ * nactv_, A->get_pointer(), 1, C3aa.data().data(), 1);
+    C_DGEMM('N', 'N', naux, nactv_ * nactv_, naux, 1.0, Jm12->get_pointer(), naux, A->get_pointer(),
+            nactv_ * nactv_, 0.0, C3aa.data().data(), nactv_ * nactv_);
+
+    df_helper_->clear_all();
 
     auto Ioo = ambit::Tensor::build(CoreTensor, "Ioo", {ndocc, ndocc});
     for (size_t i = 0; i < ndocc; ++i) {
         Ioo.data()[i * ndocc + i] = 1.0;
     }
 
-    // 2-RDM 3-index
+    // symmetrized 3-index 2-RDM
     auto D3oo = ambit::Tensor::build(CoreTensor, "D3oo", {naux, ndocc, ndocc});
     D3oo("Qmn") += 2.0 * C3oo("Qij") * Ioo("ij") * Ioo("mn");
     D3oo("Qmn") -= C3oo("Qnm");
-    D3oo("Qmn") += 2.0 * C3aa("Quv") * D1_.block("aa")("uv") * Ioo("mn");
+    D3oo("Qmn") += C3aa("Quv") * D1_.block("aa")("uv") * Ioo("mn");
 
     auto D3oa = ambit::Tensor::build(CoreTensor, "D3oa", {naux, ndocc, nactv_});
-    D3oa("Qmu") -= C3oa("Qmv") * D1_.block("aa")("uv");
+    D3oa("Qmu") -= 0.5 * C3oa("Qmv") * D1_.block("aa")("uv");
 
-    auto D3aa = ambit::Tensor::build(CoreTensor, "D3oa", {naux, nactv_, nactv_});
-    D3aa("Quv") += 2.0 * C3oo("Qmn") * Ioo("mn") * D1_.block("aa")("uv");
+    auto D3aa = ambit::Tensor::build(CoreTensor, "D3aa", {naux, nactv_, nactv_});
+    D3aa("Quv") += C3oo("Qmn") * Ioo("mn") * D1_.block("aa")("uv");
     D3aa("Quv") += 0.5 * C3aa("Qxy") * D2_.block("aaaa")("uvxy");
 
-    // D3oo.print();
-    D3oa.print();
-    // D3aa.print();
-
-    auto nhole = ndocc + nactv_;
     auto d3 = std::make_shared<psi::Matrix>("d3xss", naux, nso_ * nso_);
     auto d3_so = std::make_shared<psi::Matrix>("d3_so", nso_, nso_);
     auto oo = std::make_shared<psi::Matrix>("d3_mo oo", ndocc, ndocc);
@@ -530,74 +536,48 @@ void MCSCF_ORB_GRAD::dump_tpdm_df() {
     auto aa = std::make_shared<psi::Matrix>("d3_mo aa", nactv_, nactv_);
     auto aa_half = std::make_shared<psi::Matrix>("aa half trans", nso_, nactv_);
 
+    // back-transform to AO basis
     for (size_t Q = 0; Q < naux; ++Q) {
         d3_so->zero();
 
-        // notes on C_DGEMM
-        // LDA = transA ? rowA : colA; LDB = transB ? rowB : colB; LDC = colC;
-
+        // oo block
         C_DCOPY(ndocc * ndocc, D3oo.data().data() + Q * ndocc * ndocc, 1, oo->get_pointer(), 1);
         C_DGEMM('N', 'N', nso_, ndocc, ndocc, 1.0, Cdocc->get_pointer(), ndocc, oo->get_pointer(),
                 ndocc, 0.0, oo_half->get_pointer(), ndocc);
         C_DGEMM('N', 'T', nso_, nso_, ndocc, 1.0, oo_half->get_pointer(), ndocc,
                 Cdocc->get_pointer(), ndocc, 1.0, d3_so->get_pointer(), nso_);
 
-        // auto T = psi::linalg::triplet(Cdocc, oo, Cdocc, false, false, true);
-        // auto X = T->clone();
-        // T->subtract(d3_so);
-        // outfile->Printf("\n Q = %zu, oo diff = %20.15f", Q, T->rms());
-
+        // oa block
         C_DCOPY(ndocc * nactv_, D3oa.data().data() + Q * ndocc * nactv_, 1, oa->get_pointer(), 1);
         C_DGEMM('N', 'N', nso_, nactv_, ndocc, 1.0, Cdocc->get_pointer(), ndocc, oa->get_pointer(),
                 nactv_, 0.0, oa_half->get_pointer(), nactv_);
         C_DGEMM('N', 'T', nso_, nso_, nactv_, 1.0, oa_half->get_pointer(), nactv_,
                 Cactv->get_pointer(), nactv_, 1.0, d3_so->get_pointer(), nso_);
 
-        // T = psi::linalg::triplet(Cdocc, oa, Cactv, false, false, true);
-        // X->add(T);
-
-        // T = X->clone();
-        // T->subtract(d3_so);
-        // outfile->Printf("\n Q = %zu, oa diff = %20.15f", Q, T->rms());
-
-        // T = psi::linalg::triplet(Cactv, oa, Cdocc, false, true, true);
-        // X->add(T);
-
-        matrix_transpose_in_place(oa_half->get_pointer(), nso_,
-                                  nactv_); // oa_half is now nactv_ x nso_
+        // ao block
+        matrix_transpose_in_place(oa_half->get_pointer(), nso_, nactv_);
+        // oa_half is now nactv_ x nso_ after transposition
         C_DGEMM('N', 'N', nso_, nso_, nactv_, 1.0, Cactv->get_pointer(), nactv_,
                 oa_half->get_pointer(), nso_, 1.0, d3_so->get_pointer(), nso_);
 
-        // T = X->clone();
-        // T->subtract(d3_so);
-        // outfile->Printf("\n Q = %zu, ao diff = %20.15f", Q, T->rms());
-
+        // aa block
         C_DCOPY(nactv_ * nactv_, D3aa.data().data() + Q * nactv_ * nactv_, 1, aa->get_pointer(), 1);
         C_DGEMM('N', 'N', nso_, nactv_, nactv_, 1.0, Cactv->get_pointer(), nactv_,
                 aa->get_pointer(), nactv_, 0.0, aa_half->get_pointer(), nactv_);
         C_DGEMM('N', 'T', nso_, nso_, nactv_, 1.0, aa_half->get_pointer(), nactv_,
                 Cactv->get_pointer(), nactv_, 1.0, d3_so->get_pointer(), nso_);
 
-        // T = psi::linalg::triplet(Cactv, aa, Cactv, false, false, true);
-        // X->add(T);
-        // X->subtract(d3_so);
-        // outfile->Printf("\n Q = %zu, aa diff = %20.15f", Q, X->rms());
-        // if (Q == 0)
-        //     d3_so->print();
-
         C_DCOPY(nso_ * nso_, d3_so->get_pointer(), 1, d3->get_pointer() + Q * nso_ * nso_, 1);
     }
-    d3->print();
-    d3->scale(2.0);
-    // exit(1);
 
+    d3->scale(2.0);
     d3->set_name("3-Center Reference Density");
     d3->save(_default_psio_lib_, PSIF_AO_TPDM, Matrix::SaveType::ThreeIndexLowerTriangle);
     d3->zero();
     d3->set_name("3-Center Correlation Density");
     d3->save(_default_psio_lib_, PSIF_AO_TPDM, Matrix::SaveType::ThreeIndexLowerTriangle);
 
-    // 2-RDM 2-index
+    // 2-index 2-RDM
     auto D2xx = ambit::Tensor::build(CoreTensor, "D2xx", {naux, naux});
     D2xx("RQ") += C3oo("Rmn") * D3oo("Qmn");
     D2xx("RQ") += 2.0 * C3oa("Rmu") * D3oa("Qmu");
@@ -605,7 +585,6 @@ void MCSCF_ORB_GRAD::dump_tpdm_df() {
 
     auto d2 = std::make_shared<psi::Matrix>("d2xx", naux, naux);
     C_DCOPY(naux * naux, D2xx.data().data(), 1, d2->get_pointer(), 1);
-    d2->print();
 
     d2->set_name("Metric Reference Density");
     d2->save(_default_psio_lib_, PSIF_AO_TPDM, Matrix::SaveType::LowerTriangle);
@@ -613,21 +592,11 @@ void MCSCF_ORB_GRAD::dump_tpdm_df() {
     d2->set_name("Metric Correlation Density");
     d2->save(_default_psio_lib_, PSIF_AO_TPDM, Matrix::SaveType::LowerTriangle);
 
-    // // grab (P|Q)^{-1/2}
-    // auto Jm12 = ambit::BlockedTensor::build(CoreTensor, "Jm12", {"LL"});
-    // auto bs_aux = ints_->wfn()->get_basisset("DF_BASIS_SCF");
-    // auto metric = std::make_shared<FittingMetric>(bs_aux, true);
-    // metric->form_eig_inverse(options_->get_double("DF_FITTING_CONDITION"));
-    // auto J = metric->get_metric();
-    // Jm12.block("LL").iterate(
-    //     [&](const std::vector<size_t>& i, double& value) { value = J->get(i[0], i[1]); });
-
-    df_helper_->set_metric_pow(-0.5);
-    df_helper_->clear_all();
+    psi::outfile->Printf(" Done.");
 }
 
 void MCSCF_ORB_GRAD::dump_tpdm_iwl() {
-    psi::outfile->Printf("\n    Dumping MO TPDM to disk ...");
+    psi::outfile->Printf("\n    Dumping MO TPDM to disk ......");
     auto psio = _default_psio_lib_;
     IWL d2(psio.get(), PSIF_FORTE_MO_TPDM, 1.0e-15, 0, 0);
     std::string name = "outfile";
