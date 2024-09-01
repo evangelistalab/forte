@@ -61,8 +61,8 @@ namespace forte {
 
 MCSCF_ORB_GRAD::MCSCF_ORB_GRAD(std::shared_ptr<ForteOptions> options,
                                std::shared_ptr<MOSpaceInfo> mo_space_info,
-                               std::shared_ptr<ForteIntegrals> ints, bool freeze_core)
-    : options_(options), mo_space_info_(mo_space_info), ints_(ints), freeze_core_(freeze_core) {
+                               std::shared_ptr<ForteIntegrals> ints, bool ignore_frozen)
+    : options_(options), mo_space_info_(mo_space_info), ints_(ints), ignore_frozen_(ignore_frozen) {
     startup();
 }
 
@@ -114,61 +114,48 @@ void MCSCF_ORB_GRAD::startup() {
 }
 
 void MCSCF_ORB_GRAD::setup_mos() {
+    label_to_mos_.clear();
+    label_to_cmos_.clear();
 
     nirrep_ = mo_space_info_->nirrep();
 
     nsopi_ = ints_->nsopi();
     nmopi_ = mo_space_info_->dimension("ALL");
-
-    if (freeze_core_) {
-        ncmopi_ = mo_space_info_->dimension("CORRELATED");
-    } else {
-        ncmopi_ =
-            mo_space_info_->dimension("FROZEN_DOCC") + mo_space_info_->dimension("CORRELATED");
-    }
-
     ndoccpi_ = mo_space_info_->dimension("INACTIVE_DOCC");
-    nfrzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
-
-    if (freeze_core_) {
-        nfrzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
-        core_mos_ = mo_space_info_->absolute_mo("RESTRICTED_DOCC");
-    } else {
-        nfrzcpi_ = psi::Dimension(nirrep_);
-        core_mos_ = mo_space_info_->absolute_mo("INACTIVE_DOCC");
-    }
-
     nactvpi_ = mo_space_info_->dimension("ACTIVE");
     actv_mos_ = mo_space_info_->absolute_mo("ACTIVE");
+
+    if (ignore_frozen_) {
+        ncmopi_ = mo_space_info_->dimension("ALL");
+        nfrzvpi_ = psi::Dimension(nirrep_);
+        nfrzcpi_ = psi::Dimension(nirrep_);
+        core_mos_ = mo_space_info_->absolute_mo("INACTIVE_DOCC");
+        label_to_mos_["f"] = std::vector<size_t>();
+        label_to_mos_["u"] = std::vector<size_t>();
+        label_to_mos_["v"] = mo_space_info_->absolute_mo("INACTIVE_UOCC");
+        label_to_cmos_["c"] = mo_space_info_->corr_absolute_mo("INACTIVE_DOCC");
+        label_to_cmos_["v"] = mo_space_info_->corr_absolute_mo("INACTIVE_UOCC");
+    } else {
+        ncmopi_ = mo_space_info_->dimension("CORRELATED");
+        nfrzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
+        nfrzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
+        core_mos_ = mo_space_info_->absolute_mo("RESTRICTED_DOCC");
+        label_to_mos_["f"] = mo_space_info_->absolute_mo("FROZEN_DOCC");
+        label_to_mos_["u"] = mo_space_info_->absolute_mo("FROZEN_UOCC");
+        label_to_mos_["v"] = mo_space_info_->absolute_mo("RESTRICTED_UOCC");
+        label_to_cmos_["c"] = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+        label_to_cmos_["v"] = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
+    }
+
+    label_to_mos_["c"] = core_mos_;
+    label_to_mos_["a"] = actv_mos_;
+    label_to_cmos_["a"] = mo_space_info_->corr_absolute_mo("ACTIVE");
 
     nso_ = nsopi_.sum();
     nmo_ = nmopi_.sum();
     ncmo_ = ncmopi_.sum();
     nactv_ = nactvpi_.sum();
     nfrzc_ = nfrzcpi_.sum();
-
-    label_to_mos_.clear();
-
-    if (freeze_core_) {
-        label_to_mos_["f"] = mo_space_info_->absolute_mo("FROZEN_DOCC");
-    } else {
-        label_to_mos_["f"] = std::vector<size_t>();
-    }
-    label_to_mos_["c"] = core_mos_;
-    label_to_mos_["a"] = actv_mos_;
-    label_to_mos_["v"] = mo_space_info_->absolute_mo("RESTRICTED_UOCC");
-    label_to_mos_["u"] = mo_space_info_->absolute_mo("FROZEN_UOCC");
-
-    label_to_cmos_.clear();
-    if (freeze_core_) {
-        label_to_cmos_["c"] = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
-        label_to_cmos_["a"] = mo_space_info_->corr_absolute_mo("ACTIVE");
-        label_to_cmos_["v"] = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
-    } else {
-        label_to_cmos_["c"] = mo_space_info_->absolute_mo("INACTIVE_DOCC");
-        label_to_cmos_["a"] = mo_space_info_->absolute_mo("ACTIVE");
-        label_to_cmos_["v"] = mo_space_info_->absolute_mo("RESTRICTED_UOCC");
-    }
 
     // in Pitzer ordering
     mos_rel_.resize(nmo_);

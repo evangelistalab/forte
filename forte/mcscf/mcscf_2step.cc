@@ -168,8 +168,8 @@ double MCSCF_2STEP::compute_energy() {
     };
 
     // prepare for orbital gradients
-    const bool freeze_core = options_->get_bool("MCSCF_FREEZE_CORE");
-    MCSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_, freeze_core);
+    const bool ignore_frozen = options_->get_bool("MCSCF_IGNORE_FROZEN_ORBS");
+    MCSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_, ignore_frozen);
     auto nrot = cas_grad.nrot();
     auto dG = std::make_shared<psi::Vector>("dG", nrot);
 
@@ -446,9 +446,7 @@ double MCSCF_2STEP::compute_energy() {
 
             // if we do not freeze the core, we need to set the inactive_mix flag to make sure
             // the core orbitals are canonicalized together with the active orbitals
-            if (not freeze_core) {
-                inactive_mix = true;
-            }
+            inactive_mix = ignore_frozen;
 
             psi::outfile->Printf("\n  Canonicalizing final MCSCF orbitals");
             SemiCanonical semi(mo_space_info_, ints_, options_, inactive_mix, active_mix);

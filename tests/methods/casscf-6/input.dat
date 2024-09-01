@@ -20,7 +20,7 @@ set forte{
    frozen_docc             [1,0,0,0]
    restricted_docc         [1,0,1,1]
    active                  [2,0,0,0]
-   mcscf_freeze_core       true
+   mcscf_ignore_frozen_orbs false
 }
 
 energy('forte')

@@ -61,7 +61,7 @@ class MCSCF_ORB_GRAD {
      */
     MCSCF_ORB_GRAD(std::shared_ptr<ForteOptions> options,
                    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
-                   bool freeze_core);
+                   bool ignore_frozen);
 
     /// Evaluate the energy and orbital gradient
     double evaluate(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> g,
@@ -163,8 +163,8 @@ class MCSCF_ORB_GRAD {
     /// The number of frozen-core orbitals
     size_t nfrzc_;
 
-    /// Freeze core or not
-    bool freeze_core_ = false;
+    /// Ignore frozen orbitals in the input
+    bool ignore_frozen_ = true;
 
     /// List of core MOs (Absolute)
     std::vector<size_t> core_mos_;
@@ -313,8 +313,11 @@ class MCSCF_ORB_GRAD {
     void dump_tpdm_iwl();
     /// Dump the Hartree-Fock MO 2-RDM to file using IWL
     void dump_tpdm_iwl_hf();
-    /// Dump 2-RDM to file for DF-MCSCF
+    /// Dump AO 2-RDM to file for DF-MCSCF
     void dump_tpdm_df();
+    /// Dump the Hartree-Fock AO 2-RDM to file for DF-MCSCF
+    void dump_tpdm_df_hf(std::shared_ptr<psi::Matrix> Jm12, std::shared_ptr<psi::Matrix> d3,
+                         std::shared_ptr<psi::Matrix> d2);
 
     /// Are there any frozen orbitals?
     bool is_frozen_orbs_;

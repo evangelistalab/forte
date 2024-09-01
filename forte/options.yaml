@@ -1363,10 +1363,10 @@ MCSCF:
     type: bool
     default: True
     help: "Run a FCI followed by MCSCF computation?"
-  MCSCF_FREEZE_CORE:
+  MCSCF_IGNORE_FROZEN_ORBS:
     type: bool
-    default: False
-    help: "Freeze core orbitals in MCSCF?"
+    default: True
+    help: "Ignore frozen orbitals in the input file for MCSCF or not"
   MCSCF_MULTIPLICITY:
     type: int
     default: 0

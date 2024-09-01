@@ -55,7 +55,7 @@ void MCSCF_ORB_GRAD::compute_nuclear_gradient() {
     Am_ = std::make_shared<psi::Matrix>("A (MCSCF)", nmopi_, nmopi_);
     fill_A_matrix_data(A_);
 
-    is_frozen_orbs_ = nfrzc_ or mo_space_info_->size("FROZEN_UOCC");
+    is_frozen_orbs_ = nfrzc_ or label_to_mos_["u"].size();
 
     if (is_frozen_orbs_) {
         // see J. Chem. Phys. 94, 6708-6715 (1991)
@@ -166,17 +166,24 @@ void MCSCF_ORB_GRAD::setup_grad_frozen() {
     hf_ndoccpi_ = ints_->wfn()->doccpi();
     hf_nuoccpi_ = nmopi_ - ints_->wfn()->doccpi();
 
+    std::vector<size_t> adocc_mos, auocc_mos;
     hf_docc_mos_.clear();
     hf_uocc_mos_.clear();
     for (int h = 0, offset = 0; h < nirrep_; ++h) {
         for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
             hf_docc_mos_.push_back(i + offset);
+            if (i >= nfrzcpi_[h])
+                adocc_mos.push_back(i + offset);
         }
         for (int a = 0; a < hf_nuoccpi_[h]; ++a) {
             hf_uocc_mos_.push_back(a + hf_ndoccpi_[h] + offset);
+            if (a < (hf_nuoccpi_[h] - nfrzvpi_[h]))
+                auocc_mos.push_back(a + hf_ndoccpi_[h] + offset);
         }
         offset += nmopi_[h];
     }
+    label_to_mos_["m"] = adocc_mos;
+    label_to_mos_["e"] = auocc_mos;
 
     // build HF Fock matrix, assuming MCSCF initial orbitals are from HF
     auto Cdocc = C_subset("C_DOCC", C0_, psi::Dimension(nirrep_), hf_ndoccpi_);
@@ -514,7 +521,7 @@ void MCSCF_ORB_GRAD::dump_tpdm_df() {
         Ioo.data()[i * ndocc + i] = 1.0;
     }
 
-    // symmetrized 3-index 2-RDM
+    // symmetrized 3-index 2-RDM [(pq|Q) contribution]
     auto D3oo = ambit::Tensor::build(CoreTensor, "D3oo", {naux, ndocc, ndocc});
     D3oo("Qmn") += 2.0 * C3oo("Qij") * Ioo("ij") * Ioo("mn");
     D3oo("Qmn") -= C3oo("Qnm");
@@ -536,7 +543,7 @@ void MCSCF_ORB_GRAD::dump_tpdm_df() {
     auto aa = std::make_shared<psi::Matrix>("d3_mo aa", nactv_, nactv_);
     auto aa_half = std::make_shared<psi::Matrix>("aa half trans", nso_, nactv_);
 
-    // back-transform to AO basis
+    // back-transform 3-index 2-RDM to AO basis
     for (size_t Q = 0; Q < naux; ++Q) {
         d3_so->zero();
 
@@ -570,13 +577,6 @@ void MCSCF_ORB_GRAD::dump_tpdm_df() {
         C_DCOPY(nso_ * nso_, d3_so->get_pointer(), 1, d3->get_pointer() + Q * nso_ * nso_, 1);
     }
 
-    d3->scale(2.0);
-    d3->set_name("3-Center Reference Density");
-    d3->save(_default_psio_lib_, PSIF_AO_TPDM, Matrix::SaveType::ThreeIndexLowerTriangle);
-    d3->zero();
-    d3->set_name("3-Center Correlation Density");
-    d3->save(_default_psio_lib_, PSIF_AO_TPDM, Matrix::SaveType::ThreeIndexLowerTriangle);
-
     // 2-index 2-RDM
     auto D2xx = ambit::Tensor::build(CoreTensor, "D2xx", {naux, naux});
     D2xx("RQ") += C3oo("Rmn") * D3oo("Qmn");
@@ -586,6 +586,18 @@ void MCSCF_ORB_GRAD::dump_tpdm_df() {
     auto d2 = std::make_shared<psi::Matrix>("d2xx", naux, naux);
     C_DCOPY(naux * naux, D2xx.data().data(), 1, d2->get_pointer(), 1);
 
+    // contributions from frozen orbitals
+    if (is_frozen_orbs_)
+        dump_tpdm_df_hf(Jm12, d3, d2);
+
+    // dump to psio
+    d3->scale(2.0); // consider (Q|pq) contribution
+    d3->set_name("3-Center Reference Density");
+    d3->save(_default_psio_lib_, PSIF_AO_TPDM, Matrix::SaveType::ThreeIndexLowerTriangle);
+    d3->zero();
+    d3->set_name("3-Center Correlation Density");
+    d3->save(_default_psio_lib_, PSIF_AO_TPDM, Matrix::SaveType::ThreeIndexLowerTriangle);
+
     d2->set_name("Metric Reference Density");
     d2->save(_default_psio_lib_, PSIF_AO_TPDM, Matrix::SaveType::LowerTriangle);
     d2->zero();
@@ -593,6 +605,45 @@ void MCSCF_ORB_GRAD::dump_tpdm_df() {
     d2->save(_default_psio_lib_, PSIF_AO_TPDM, Matrix::SaveType::LowerTriangle);
 
     psi::outfile->Printf(" Done.");
+}
+
+void MCSCF_ORB_GRAD::dump_tpdm_df_hf(std::shared_ptr<psi::Matrix> Jm12,
+                                     std::shared_ptr<psi::Matrix> d3,
+                                     std::shared_ptr<psi::Matrix> d2) {
+    /**
+     * Implementation notes
+     * contribution to total Lagrangian: z_{pq} * [2 * (pq|ii) - (pi|iq)]
+     * D3^{Q}_{ii} <- 2 * z_{pq} * C3^{Q}_{pq}
+     * D3^{Q}_{pq} <- 2 * z_{pq} * C3^{Q}_{ii}
+     * D3^{Q}_{pi} <- -z_{pq} * C3^{Q}_{iq}
+     * D3^{Q}_{iq} <- -z_{pq} * C3^{Q}_{pi}
+     *
+     * nonzero pq blocks: "f,c", "v,u", "c,v"
+     */
+
+    // Z matrix without symmetry blocks
+    auto Z = std::make_shared<psi::Matrix>("Z C1", nmo_, nmo_);
+    for (size_t p = 0; p < nmo_; ++p) {
+        auto [hp, ip] = mos_rel_[p];
+        for (size_t q = p + 1; q < nmo_; ++q) {
+            auto [hq, iq] = mos_rel_[q];
+            if (hp != hq)
+                continue;
+            Z->set(p, q, Z_->get(hp, ip, iq));
+            Z->set(q, p, Z_->get(hp, iq, ip));
+        }
+    }
+
+    // HF orbital coefficients
+    auto C_nosym = ints_->Ca_SO2AO(C0_);
+
+    // compute C^{P}_{pq} = (P|Q)^{-1/2} B^{Q}_{pq} integrals in ambit form
+    std::map<std::string, std::shared_ptr<psi::Matrix>> C3index;
+
+    for (std::string pq : {"fm", "eu", "me"}) {
+        auto p_mos = label_to_mos_[pq.substr(0, 1)];
+        auto q_mos = label_to_mos_[pq.substr(1, 1)];
+    }
 }
 
 void MCSCF_ORB_GRAD::dump_tpdm_iwl() {
