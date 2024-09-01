@@ -620,6 +620,7 @@ void MCSCF_ORB_GRAD::dump_tpdm_df_hf(std::shared_ptr<psi::Matrix> Jm12,
      *
      * nonzero pq blocks: "f,c", "v,u", "c,v"
      */
+    auto naux = df_helper_->get_naux();
 
     // Z matrix without symmetry blocks
     auto Z = std::make_shared<psi::Matrix>("Z C1", nmo_, nmo_);
@@ -634,15 +635,137 @@ void MCSCF_ORB_GRAD::dump_tpdm_df_hf(std::shared_ptr<psi::Matrix> Jm12,
         }
     }
 
-    // HF orbital coefficients
+    // HF orbital coefficients without symmetry
     auto C_nosym = ints_->Ca_SO2AO(C0_);
+    auto Csub = [&](const std::vector<size_t>& p_mos) {
+        auto np = p_mos.size();
+        auto Cp = std::make_shared<psi::Matrix>("Cp", nso_, np);
+        for (size_t p = 0; p < np; ++p) {
+            Cp->set_column(0, p, C_nosym->get_column(0, p_mos[p]));
+        }
+        return Cp;
+    };
 
     // compute C^{P}_{pq} = (P|Q)^{-1/2} B^{Q}_{pq} integrals in ambit form
-    std::map<std::string, std::shared_ptr<psi::Matrix>> C3index;
+    std::map<std::string, std::shared_ptr<psi::Matrix>> C3ints;
+    std::vector<double> C3Q(naux); // sum_{i} C^{Q}_{ii}
 
-    for (std::string pq : {"fm", "eu", "me"}) {
+    // DFHelper to get B^{P}_{pq} = (P|Q)^{-1/2} (Q|pq) integrals in MO basis
+    auto C3ints_helper = [&](const std::vector<size_t>& p_mos, const std::vector<size_t>& q_mos) {
+        auto Cp = Csub(p_mos);
+        auto Cq = Csub(q_mos);
+        df_helper_->add_space("p", Cp);
+        df_helper_->add_space("q", Cq);
+        df_helper_->add_transformation("B", "p", "q", "Qpq");
+        df_helper_->transform();
+        auto C3 = psi::linalg::doublet(Jm12, df_helper_->get_tensor("B"));
+        df_helper_->clear_all();
+        return C3;
+    };
+
+    // 3-index 2-RDMs
+    std::map<std::string, std::shared_ptr<psi::Matrix>> D3map;
+
+    auto i_mos = label_to_mos_["m"];
+    auto ni = i_mos.size();
+
+    for (std::string pq : {"mf", "eu", "me"}) {
         auto p_mos = label_to_mos_[pq.substr(0, 1)];
         auto q_mos = label_to_mos_[pq.substr(1, 1)];
+        auto np = p_mos.size();
+        auto nq = q_mos.size();
+        if (np == 0 or nq == 0)
+            continue;
+
+        std::string ip = "m" + pq.substr(0, 1);
+        std::string iq = "m" + pq.substr(1, 1);
+        auto pq_stride = np * nq;
+        auto ip_stride = ni * np;
+        auto iq_stride = ni * nq;
+
+        // prepare C3ints and D3
+        for (std::string block : {pq, std::string("mm"), ip, iq}) {
+            if (C3ints.find(block) == C3ints.end()) {
+                auto mos1 = label_to_mos_[block.substr(0, 1)];
+                auto mos2 = label_to_mos_[block.substr(1, 1)];
+                C3ints[block] = C3ints_helper(mos1, mos2);
+                D3map[block] =
+                    std::make_shared<psi::Matrix>("D3" + block, naux, mos1.size() * mos2.size());
+                if (block == "mm") {
+                    for (size_t Q = 0; Q < naux; ++Q) {
+                        for (size_t i = 0; i < ni; ++i) {
+                            C3Q[Q] += C3ints["mm"]->get(Q, i * ni + i);
+                        }
+                    }
+                }
+            }
+        }
+
+        // prepare Z_{pq}
+        auto z = std::make_shared<psi::Matrix>("z_pq", np, nq);
+        for (size_t p = 0; p < np; ++p) {
+            for (size_t q = 0; q < nq; ++q) {
+                z->set(p, q, Z->get(p_mos[p], q_mos[q]));
+            }
+        }
+        double* z_ptr = z->get_pointer();
+
+        for (size_t Q = 0; Q < naux; ++Q) {
+            auto gii = C_DDOT(np * nq, z_ptr, 1, C3ints[pq]->get_pointer() + Q * pq_stride, 1);
+            for (size_t i = 0; i < ni; ++i) {
+                D3map["mm"]->add(i, i, 2 * gii);
+            }
+
+            C_DAXPY(np * nq, 2 * C3Q[Q], z_ptr, 1, D3map[pq]->get_pointer() + Q * pq_stride, 1);
+
+            C_DGEMM('N', 'N', ni, nq, np, -1.0, C3ints[ip]->get_pointer() + Q * ip_stride, np,
+                    z_ptr, nq, 1.0, D3map[iq]->get_pointer() + Q * iq_stride, nq);
+
+            C_DGEMM('N', 'N', ni, np, nq, -1.0, C3ints[iq]->get_pointer() + Q * iq_stride, nq,
+                    z_ptr, np, 1.0, D3map[ip]->get_pointer() + Q * ip_stride, np);
+        }
+    }
+
+    // 2-index 2-RDM
+    for (const auto& kv : D3map) {
+        auto [block, D3] = kv;
+        outfile->Printf("\n D3 block %s", block.c_str());
+        auto C3 = C3ints[block];
+        double factor = (block.substr(0, 1) == block.substr(1, 1) ? 1.0 : 2.0);
+        auto k = C3->ncol();
+        C_DGEMM('N', 'T', naux, naux, k, factor, C3->get_pointer(), k, D3->get_pointer(), k, 1.0,
+                d2->get_pointer(), naux);
+    }
+
+    // back-transform 3-index 2-RDM to AO basis
+    for (const auto& kv : D3map) {
+        auto [block, D3] = kv;
+        auto bp = block.substr(0, 1);
+        auto bq = block.substr(1, 1);
+        auto p_mos = label_to_mos_[bp];
+        auto q_mos = label_to_mos_[bq];
+        auto np = p_mos.size();
+        auto nq = q_mos.size();
+        auto pq_stride = np * nq;
+        auto ss_stride = nso_ * nso_;
+
+        auto Cp = Csub(p_mos);
+        auto Cq = Csub(q_mos);
+        auto half_trans = std::make_shared<psi::Matrix>(block + "half trans", nso_, nq);
+
+        for (size_t Q = 0; Q < naux; ++Q) {
+            C_DGEMM('N', 'N', nso_, nq, np, 1.0, Cp->get_pointer(), np,
+                    D3->get_pointer() + Q * pq_stride, nq, 0.0, half_trans->get_pointer(), nq);
+            C_DGEMM('N', 'T', nso_, nso_, nq, 1.0, half_trans->get_pointer(), nq, Cq->get_pointer(),
+                    nq, 1.0, d3->get_pointer() + Q * ss_stride, nso_);
+
+            if (bp != bq) {
+                matrix_transpose_in_place(half_trans->get_pointer(), nso_, nq);
+                C_DGEMM('N', 'N', nso_, nso_, nq, 1.0, Cq->get_pointer(), nq,
+                        half_trans->get_pointer(), nso_, 1.0, d3->get_pointer() + Q * ss_stride,
+                        nso_);
+            }
+        }
     }
 }
 
