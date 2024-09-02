@@ -183,7 +183,6 @@ mrdsrg-helper/dsrg_time.cc
 mrdsrg-helper/dsrg_transformed.cc
 mrdsrg-helper/run_dsrg.cc
 mrdsrg-so/mrdsrg_so.cc
-mrdsrg-so/so-mrdsrg.cc
 mrdsrg-spin-adapted/dsrg_mrpt.cc
 mrdsrg-spin-adapted/dsrg_mrpt_2nd.cc
 mrdsrg-spin-adapted/dsrg_mrpt_amp.cc

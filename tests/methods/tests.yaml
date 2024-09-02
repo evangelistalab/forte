@@ -334,13 +334,9 @@ mr-dsrg-pt2:
 mrdsrg_so:
    short:
       - mrdsrg_so-1
-   long:
-      - mrdsrg_so-2
 mrdsrg_so_nh:
    short:
       - mrdsrg_so_nh-1
-   long:
-      - mrdsrg_so_nh-2
 mrdsrg-ldsrg2-df-spin-integrated:
    short:
       - mrdsrg-ldsrg2-qc-df-2
