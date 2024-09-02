@@ -20,6 +20,7 @@ units bohr
 set globals{
    basis                   sto-3g
    scf_type                pk
+   guess                   sap
 }
 
 set forte {
