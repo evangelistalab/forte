@@ -45,7 +45,6 @@ Driver:
         "SA-MRDSRG",
         "DSRG_MRPT",
         "MRDSRG_SO",
-        "SOMRDSRG",
       ]
     help: "Dynamical correlation solver type"
   CALC_TYPE:
