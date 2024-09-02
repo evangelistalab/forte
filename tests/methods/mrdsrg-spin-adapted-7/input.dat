@@ -114,6 +114,7 @@ set forte {
   dsrg_s         1.5
   dsrg_nivo      true
   dsrg_read_amps true
+  dsrg_adaptive_rsc false
 }
 Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 
