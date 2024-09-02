@@ -76,7 +76,7 @@ std::unique_ptr<MASTER_DSRG> make_dsrg_method(std::shared_ptr<RDMs> rdms,
                                               std::shared_ptr<ForteIntegrals> ints,
                                               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-std::unique_ptr<MRDSRG_SO> make_dsrg_so_y(std::shared_ptr<RDMs> rdms,
+std::unique_ptr<MRDSRG_SO> make_dsrg_so(std::shared_ptr<RDMs> rdms,
                                           std::shared_ptr<SCFInfo> scf_info,
                                           std::shared_ptr<ForteOptions> options,
                                           std::shared_ptr<ForteIntegrals> ints,

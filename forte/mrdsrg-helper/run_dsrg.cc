@@ -80,7 +80,7 @@ std::unique_ptr<SADSRG> make_sadsrg_method(std::shared_ptr<RDMs> rdms,
     return dsrg_method;
 }
 
-std::unique_ptr<MRDSRG_SO> make_dsrg_so_y(std::shared_ptr<RDMs> rdms,
+std::unique_ptr<MRDSRG_SO> make_dsrg_so(std::shared_ptr<RDMs> rdms,
                                           std::shared_ptr<SCFInfo> scf_info,
                                           std::shared_ptr<ForteOptions> options,
                                           std::shared_ptr<ForteIntegrals> ints,

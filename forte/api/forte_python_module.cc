@@ -215,7 +215,7 @@ PYBIND11_MODULE(_forte, m) {
           "Make a DSRG method (spin-integrated implementation)");
     m.def("make_sadsrg_method", &make_sadsrg_method,
           "Make a DSRG method (spin-adapted implementation)");
-    m.def("make_dsrg_so_y", &make_dsrg_so_y, "Make a DSRG pointer (spin-orbital implementation)");
+    m.def("make_dsrg_so", &make_dsrg_so, "Make a DSRG pointer (spin-orbital implementation)");
     m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
           "Make a DSRG pointer (spin-adapted implementation)");
 

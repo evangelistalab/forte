@@ -175,7 +175,7 @@ class ProcedureDSRG:
             self.Heff_implemented = True
             self.Meff_implemented = True
         elif self.solver_type in ["MRDSRG_SO", "MRDSRG-SO"]:
-            self.dsrg_solver = forte.make_dsrg_so_y(*args)
+            self.dsrg_solver = forte.make_dsrg_so(*args)
         elif self.solver_type in ["DSRG_MRPT", "DSRG-MRPT"]:
             self.dsrg_solver = forte.make_dsrg_spin_adapted(*args)
         else:
