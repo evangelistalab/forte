@@ -122,6 +122,7 @@ jobs:
         mkdir -p block2-preview/build
         cd block2-preview/build
         cmake .. -DBUILD_CLIB=ON \
+          -DCMAKE_BUILD_TYPE=Release \
           -DLARGE_BOND=ON \
           -DMPI=OFF \
           -DCMAKE_INSTALL_PREFIX=${HOME}/block2-bin
