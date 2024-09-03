@@ -70,6 +70,9 @@ void SA_MRDSRG::read_options() {
 
     rsc_ncomm_ = foptions_->get_int("DSRG_RSC_NCOMM");
     rsc_conv_ = foptions_->get_double("DSRG_RSC_THRESHOLD");
+    rsc_conv_adapt_ = foptions_->get_bool("DSRG_ADAPTIVE_RSC");
+    rsc_conv_adapt_threshold_ = foptions_->get_double("DSRG_ADAPTIVE_RSC_THRESHOLD");
+    rsc_conv_adapt_delta_e_ = foptions_->get_double("DSRG_ADAPTIVE_RSC_DELTA_E_START");
 
     maxiter_ = foptions_->get_int("DSRG_MAXITER");
     e_conv_ = foptions_->get_double("E_CONVERGENCE");
@@ -135,13 +138,16 @@ void SA_MRDSRG::print_options() {
                              {"Energy convergence threshold", e_conv_},
                              {"Residual convergence threshold", r_conv_},
                              {"Recursive single commutator threshold", rsc_conv_},
+                             {"Adaptive RSC threshold", rsc_conv_adapt_threshold_},
+                             {"Adaptive RSC delta E", rsc_conv_adapt_delta_e_},
                              {"Taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
                              {"Intruder amplitudes threshold", intruder_tamp_}});
     printer.add_bool_data({{"Restart amplitudes", restart_amps_},
                            {"Sequential DSRG transformation", sequential_Hbar_},
                            {"Omit blocks of >= 3 virtual indices", nivo_},
                            {"Read amplitudes from current dir", read_amps_cwd_},
-                           {"Write amplitudes to current dir", dump_amps_cwd_}});
+                           {"Write amplitudes to current dir", dump_amps_cwd_},
+                           {"Use adaptive RSC threshold", rsc_conv_adapt_}});
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"Correlation level", corrlv_string_},
