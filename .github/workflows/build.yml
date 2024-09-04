@@ -157,6 +157,7 @@ jobs:
         pip list
 
     - name: Run Forte methods tests
+      if: always()  
       run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
         export AMBITPATH=$HOME/bin/ambit
@@ -166,6 +167,7 @@ jobs:
         python run_forte_tests.py --failed_dump --bw
 
     - name: Run Forte block2 test
+      if: always()
       run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
         export AMBITPATH=$HOME/bin/ambit
@@ -186,6 +188,7 @@ jobs:
         python run_forte_tests.py --failed_dump --bw
 
     - name: Run Forte pytest tests
+      if: always()
       run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
         export AMBITPATH=$HOME/bin/ambit
@@ -195,6 +198,7 @@ jobs:
         pytest -v
 
     - name: Run Forte pytest methods tests
+      if: always()
       run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
         export AMBITPATH=$HOME/bin/ambit
@@ -204,6 +208,7 @@ jobs:
         pytest -v
 
     - name: Run Forte pytest block2 test
+      if: always()
       run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
         export AMBITPATH=$HOME/bin/ambit
