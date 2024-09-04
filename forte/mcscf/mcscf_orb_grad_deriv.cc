@@ -665,6 +665,8 @@ void MCSCF_ORB_GRAD::dump_tpdm_df_hf(std::shared_ptr<psi::Matrix> Jm12,
         auto q_mos = label_to_mos_[block.substr(2, 1)];
         auto np = p_mos.size();
         auto nq = q_mos.size();
+        if (np == 0 or nq == 0)
+            continue;
         auto Cp = Csub(p_mos);
         auto Cq = Csub(q_mos);
         df_helper_->add_space("p", Cp);
@@ -715,6 +717,8 @@ void MCSCF_ORB_GRAD::dump_tpdm_df_hf(std::shared_ptr<psi::Matrix> Jm12,
         auto np = label_to_mos_[bp].size();
         auto nq = label_to_mos_[bq].size();
         auto npq = np * nq;
+        if (npq == 0)
+            continue;
 
         auto Cp = Csub(label_to_mos_[bp]);
         auto Cq = (bp == bq ? Cp : Csub(label_to_mos_[bq]));
@@ -739,7 +743,10 @@ void MCSCF_ORB_GRAD::dump_tpdm_df_hf(std::shared_ptr<psi::Matrix> Jm12,
     // 2-index 2-RDM
     auto d2ptr = d2->get_pointer();
     for (const std::string& block : D3.block_labels()) {
-        double* D3ptr = D3.block(block).data().data();
+        auto D3sub = D3.block(block);
+        if (D3sub.numel() == 0)
+            continue;
+        double* D3ptr = D3sub.data().data();
         double* C3ptr = C3.block(block).data().data();
         auto factor = (block.substr(1, 1) == block.substr(2, 1) ? 1.0 : 2.0);
         auto k = C3.block(block).dim(1) * C3.block(block).dim(2);
