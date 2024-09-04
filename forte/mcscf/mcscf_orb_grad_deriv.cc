@@ -185,6 +185,12 @@ void MCSCF_ORB_GRAD::setup_grad_frozen() {
     label_to_mos_["m"] = adocc_mos;
     label_to_mos_["e"] = auocc_mos;
 
+    BlockedTensor::add_mo_space("m", "m,n", adocc_mos, NoSpin);
+    BlockedTensor::add_mo_space("e", "e,f", auocc_mos, NoSpin);
+    BlockedTensor::add_composite_mo_space("O", "k,l", {"f", "m"});
+    BlockedTensor::add_composite_mo_space("V", "c,d", {"e", "u"});
+    BlockedTensor::add_composite_mo_space("H", "g,h", {"f", "m", "e", "u"});
+
     // build HF Fock matrix, assuming MCSCF initial orbitals are from HF
     auto Cdocc = C_subset("C_DOCC", C0_, psi::Dimension(nirrep_), hf_ndoccpi_);
 
@@ -613,160 +619,562 @@ void MCSCF_ORB_GRAD::dump_tpdm_df_hf(std::shared_ptr<psi::Matrix> Jm12,
     /**
      * Implementation notes
      * contribution to total Lagrangian: z_{pq} * [2 * (pq|ii) - (pi|iq)]
-     * D3^{Q}_{ii} <- 2 * z_{pq} * C3^{Q}_{pq}
-     * D3^{Q}_{pq} <- 2 * z_{pq} * C3^{Q}_{ii}
-     * D3^{Q}_{pi} <- -z_{pq} * C3^{Q}_{iq}
-     * D3^{Q}_{iq} <- -z_{pq} * C3^{Q}_{pi}
+     * D3^{Q}_{ii} <- z_{pq} * C3^{Q}_{pq}           term 1
+     * D3^{Q}_{pq} <- z_{pq} * C3^{Q}_{ii}           term 2
+     * D3^{Q}_{pi} <- -0.5 * z_{pq} * C3^{Q}_{iq}    term 3
+     * D3^{Q}_{iq} <- -0.5 * z_{pq} * C3^{Q}_{pi}    term 4
+     * will be scaled by 2 at the end of dump_tpdm_df()
      *
-     * nonzero pq blocks: "f,c", "v,u", "c,v"
+     * D2^{PQ} = z_{pq} * ( 2 * C^{P}_{pq} * C^{Q}_{ii} - C^{P}_{pi} * C^{Q}_{iq} )
      */
     auto naux = df_helper_->get_naux();
+    std::vector<size_t> aux_mos(naux);
+    std::iota(aux_mos.begin(), aux_mos.end(), 0);
+    BlockedTensor::add_mo_space("L", "K,L", aux_mos, NoSpin);
 
-    // Z matrix without symmetry blocks
-    auto Z = std::make_shared<psi::Matrix>("Z C1", nmo_, nmo_);
-    for (size_t p = 0; p < nmo_; ++p) {
-        auto [hp, ip] = mos_rel_[p];
-        for (size_t q = p + 1; q < nmo_; ++q) {
-            auto [hq, iq] = mos_rel_[q];
-            if (hp != hq)
-                continue;
-            Z->set(p, q, Z_->get(hp, ip, iq));
-            Z->set(q, p, Z_->get(hp, iq, ip));
-        }
-    }
+    auto nf = label_to_mos_["f"].size();
+    auto nm = label_to_mos_["m"].size();
+    auto nso2 = nso_ * nso_;
 
     // HF orbital coefficients without symmetry
     auto C_nosym = ints_->Ca_SO2AO(C0_);
     auto Csub = [&](const std::vector<size_t>& p_mos) {
         auto np = p_mos.size();
-        auto Cp = std::make_shared<psi::Matrix>("Cp", nso_, np);
+        auto Cp = std::make_shared<psi::Matrix>("Csub", nso_, np);
         for (size_t p = 0; p < np; ++p) {
             Cp->set_column(0, p, C_nosym->get_column(0, p_mos[p]));
         }
         return Cp;
     };
 
-    // compute C^{P}_{pq} = (P|Q)^{-1/2} B^{Q}_{pq} integrals in ambit form
-    std::map<std::string, std::shared_ptr<psi::Matrix>> C3ints;
-    std::vector<double> C3Q(naux); // sum_{i} C^{Q}_{ii}
+    ///////////////////////////////////////////////////////////////
 
-    // DFHelper to get B^{P}_{pq} = (P|Q)^{-1/2} (Q|pq) integrals in MO basis
-    auto C3ints_helper = [&](const std::vector<size_t>& p_mos, const std::vector<size_t>& q_mos) {
+    auto nd = hf_docc_mos_.size();
+    auto no = nd - nfrzc_;
+    auto Zt = ambit::Tensor::build(CoreTensor, "Zt", {nmo_, nmo_});
+    Zt.iterate([&](const std::vector<size_t>& i, double& value) {
+        auto [hp, ip] = mos_rel_[i[0]];
+        auto [hq, iq] = mos_rel_[i[1]];
+        if (hp == hq) {
+            value = Z_->get(hp, ip, iq);
+        }
+    });
+
+    auto It = ambit::Tensor::build(CoreTensor, "I", {nd, nd});
+    It.iterate([&](const std::vector<size_t>& i, double& value) {
+        if (i[0] == i[1])
+            value = 1.0;
+    });
+
+    auto Cdocc = Csub(hf_docc_mos_);
+    df_helper_->add_space("ALL", C_nosym);
+    df_helper_->add_space("DOCC", Cdocc);
+    df_helper_->add_transformation("A", "ALL", "ALL", "Qpq");
+    df_helper_->add_transformation("B", "DOCC", "ALL", "Qpq");
+    df_helper_->add_transformation("C", "DOCC", "DOCC", "Qpq");
+    df_helper_->transform();
+
+    auto A = df_helper_->get_tensor("A");
+    auto C3pq = ambit::Tensor::build(CoreTensor, "C3pq", {naux, nmo_, nmo_});
+    C_DGEMM('N', 'N', naux, nmo_ * nmo_, naux, 1.0, Jm12->get_pointer(), naux, A->get_pointer(),
+            nmo_ * nmo_, 0.0, C3pq.data().data(), nmo_ * nmo_);
+
+    A = df_helper_->get_tensor("B");
+    auto C3ip = ambit::Tensor::build(CoreTensor, "C3ip", {naux, nd, nmo_});
+    C_DGEMM('N', 'N', naux, nd * nmo_, naux, 1.0, Jm12->get_pointer(), naux, A->get_pointer(),
+            nd * nmo_, 0.0, C3ip.data().data(), nd * nmo_);
+
+    A = df_helper_->get_tensor("C");
+    auto C3ij = ambit::Tensor::build(CoreTensor, "C3ij", {naux, nd, nd});
+    C_DGEMM('N', 'N', naux, nd * nd, naux, 1.0, Jm12->get_pointer(), naux, A->get_pointer(),
+            nd * nd, 0.0, C3ij.data().data(), nd * nd);
+
+    df_helper_->clear_all();
+
+    auto D3pq = ambit::Tensor::build(CoreTensor, "D3pq", {naux, nmo_, nmo_});
+    auto D3ip = ambit::Tensor::build(CoreTensor, "D3ip", {naux, nd, nmo_});
+    auto D3pi = ambit::Tensor::build(CoreTensor, "D3pi", {naux, nmo_, nd});
+    auto D3ij = ambit::Tensor::build(CoreTensor, "D3ij", {naux, nd, nd});
+    D3ij("Qij") += C3pq("Qpq") * Zt("pq") * It("ij");
+    D3pq("Qpq") += Zt("pq") * C3ij("Qij") * It("ij");
+    D3ip("Qiq") -= 0.5 * C3ip("Qip") * Zt("pq");
+    D3pi("Qpi") -= 0.5 * C3ip("Qiq") * Zt("pq");
+
+    auto D3pq_copy = D3pq.clone();
+    for (size_t Q = 0; Q < naux; ++Q) {
+        for (size_t i = 0; i < nd; ++i) {
+            size_t ni = hf_docc_mos_[i];
+            for (size_t j = 0; j < nd; ++j) {
+                size_t nj = hf_docc_mos_[j];
+                D3pq_copy.data()[Q * nmo_ * nmo_ + ni * nmo_ + nj] +=
+                    D3ij.data()[Q * nd * nd + i * nd + j];
+            }
+            for (size_t p = 0; p < nmo_; ++p) {
+                D3pq_copy.data()[Q * nmo_ * nmo_ + ni * nmo_ + p] +=
+                    D3ip.data()[Q * nd * nmo_ + i * nmo_ + p];
+                D3pq_copy.data()[Q * nmo_ * nmo_ + p * nmo_ + ni] +=
+                    D3pi.data()[Q * nd * nmo_ + p * nd + i];
+            }
+        }
+    }
+    // D3pq_copy.print();
+
+    auto D2RS_tmp = ambit::Tensor::build(CoreTensor, "D2RS tmp", {naux, naux});
+    D2RS_tmp("RS") += 2.0 * Zt("pq") * C3pq("Rpq") * C3ij("Sij") * It("ij");
+    D2RS_tmp("RS") -= Zt("pq") * C3ip("Rip") * C3ip("Siq");
+    auto D2RS = ambit::Tensor::build(CoreTensor, "D2RS", {naux, naux});
+    D2RS("RS") += 0.5 * D2RS_tmp("RS");
+    D2RS("RS") += 0.5 * D2RS_tmp("SR");
+
+    // D2RS("RS") = D2RS_tmp("RS");
+
+    // D2RS.print();
+
+    auto Ct = ambit::Tensor::build(CoreTensor, "Ct", {nso_, nmo_});
+    Ct.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = C_nosym->get(i[0], i[1]); });
+    auto Cd = ambit::Tensor::build(CoreTensor, "Ct", {nso_, nd});
+    Cd.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = Cdocc->get(i[0], i[1]); });
+
+    auto D3ao = ambit::Tensor::build(CoreTensor, "D3ao", {naux, nso_, nso_});
+    D3ao("QMN") += D3ij("Qij") * Cd("Mi") * Cd("Nj");
+    D3ao("QMN") += D3pq("Qpq") * Ct("Mp") * Ct("Nq");
+    D3ao("QMN") += D3ip("Qip") * Cd("Mi") * Ct("Np");
+    D3ao("QMN") += D3ip("Qip") * Cd("Ni") * Ct("Mp");
+
+    auto D3ao_copy = D3ao.clone();
+    D3ao_copy("QMN") = D3pq_copy("Qpq") * Ct("Mp") * Ct("Nq");
+    D3ao_copy("QMN") -= D3ao("QMN");
+    psi::outfile->Printf("\n QMN DIFF = %20.15f", D3ao_copy.norm());
+
+    // D3ao.print();
+
+    auto d2tmp = std::make_shared<psi::Matrix>("d2tmp", naux, naux);
+    C_DCOPY(naux * naux, D2RS.data().data(), 1, d2tmp->get_pointer(), 1);
+    auto d3tmp = std::make_shared<psi::Matrix>("d3tmp", naux, nso_ * nso_);
+    C_DCOPY(naux * nso_ * nso_, D3ao.data().data(), 1, d3tmp->get_pointer(), 1);
+
+    // d2->add(d2tmp);
+    // d3->add(d3tmp);
+
+    ///////////////////////////////////////////////////////////////
+
+    // Z matrix without symmetry
+    auto Z = ambit::BlockedTensor::build(CoreTensor, "Z", {"fm", "OV", "eu"});
+    for (const std::string& block : Z.block_labels()) {
+        const auto& p_mos = label_to_mos_[block.substr(0, 1)];
+        const auto& q_mos = label_to_mos_[block.substr(1, 1)];
+        Z.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            auto [hp, ip] = mos_rel_[p_mos[i[0]]];
+            auto [hq, iq] = mos_rel_[q_mos[i[1]]];
+            if (hp == hq)
+                value = Z_->get(hp, ip, iq);
+        });
+    }
+    // auto Zsub = [&](const std::vector<size_t>& p_mos, const std::vector<size_t>& q_mos) {
+    //     auto np = p_mos.size();
+    //     auto nq = q_mos.size();
+    //     auto Z = ambit::Tensor::build(CoreTensor, "Zsub", {np, nq});
+    //     Z.iterate([&](const std::vector<size_t>& i, double& value) {
+    //         auto [hp, ip] = mos_rel_[p_mos[i[0]]];
+    //         auto [hq, iq] = mos_rel_[q_mos[i[1]]];
+    //         if (hp == hq)
+    //             value = Z_->get(hp, ip, iq);
+    //     });
+    //     return Z;
+    // };
+
+    // 3-index integrals C^{P}_{pq} = (P|Q)^{-1/2} B^{Q}_{pq}
+    auto C3 = ambit::BlockedTensor::build(CoreTensor, "C3", {"LOH", "Leu"});
+    for (const std::string& block : C3.block_labels()) {
+        auto p_mos = label_to_mos_[block.substr(1, 1)];
+        auto q_mos = label_to_mos_[block.substr(2, 1)];
+        auto np = p_mos.size();
+        auto nq = q_mos.size();
         auto Cp = Csub(p_mos);
         auto Cq = Csub(q_mos);
         df_helper_->add_space("p", Cp);
         df_helper_->add_space("q", Cq);
         df_helper_->add_transformation("B", "p", "q", "Qpq");
         df_helper_->transform();
-        auto C3 = psi::linalg::doublet(Jm12, df_helper_->get_tensor("B"));
+        auto B = df_helper_->get_tensor("B");
+        double* C3ptr = C3.block(block).data().data();
+        C_DGEMM('N', 'N', naux, np * nq, naux, 1.0, Jm12->get_pointer(), naux, B->get_pointer(),
+                np * nq, 0.0, C3ptr, np * nq);
         df_helper_->clear_all();
-        return C3;
-    };
+    }
 
-    // 3-index 2-RDMs
-    std::map<std::string, std::shared_ptr<psi::Matrix>> D3map;
+    // identity matrix
+    auto I = ambit::BlockedTensor::build(CoreTensor, "I", {"OO"});
+    I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        if (i[0] == i[1])
+            value = 1.0;
+    });
 
-    auto i_mos = label_to_mos_["m"];
-    auto ni = i_mos.size();
+    // 3-index 2-RDM
+    auto D3 = ambit::BlockedTensor::build(CoreTensor, "D3", {"LfH", "Lmm", "LmV", "Leu"});
 
-    for (std::string pq : {"mf", "eu", "me"}) {
-        auto p_mos = label_to_mos_[pq.substr(0, 1)];
-        auto q_mos = label_to_mos_[pq.substr(1, 1)];
-        auto np = p_mos.size();
-        auto nq = q_mos.size();
-        if (np == 0 or nq == 0)
-            continue;
+    D3["Lkl"] += 2.0 * Z["gh"] * C3["Lgh"] * I["kl"];
+    D3["Lgh"] += Z["gh"] * C3["Lkl"] * I["kl"];
 
-        std::string ip = "m" + pq.substr(0, 1);
-        std::string iq = "m" + pq.substr(1, 1);
-        auto pq_stride = np * nq;
-        auto ip_stride = ni * np;
-        auto iq_stride = ni * nq;
+    // Z occ/vir contribution
+    D3["Lkl"] -= 0.5 * C3["Llc"] * Z["kc"];
+    D3["Llk"] -= 0.5 * C3["Llc"] * Z["kc"];
 
-        // prepare C3ints and D3
-        for (std::string block : {pq, std::string("mm"), ip, iq}) {
-            if (C3ints.find(block) == C3ints.end()) {
-                auto mos1 = label_to_mos_[block.substr(0, 1)];
-                auto mos2 = label_to_mos_[block.substr(1, 1)];
-                C3ints[block] = C3ints_helper(mos1, mos2);
-                D3map[block] =
-                    std::make_shared<psi::Matrix>("D3" + block, naux, mos1.size() * mos2.size());
-                if (block == "mm") {
-                    for (size_t Q = 0; Q < naux; ++Q) {
-                        for (size_t i = 0; i < ni; ++i) {
-                            C3Q[Q] += C3ints["mm"]->get(Q, i * ni + i);
-                        }
-                    }
-                }
-            }
-        }
+    D3["Lkc"] -= 0.5 * C3["Lkl"] * Z["lc"];
 
-        // prepare Z_{pq}
-        auto z = std::make_shared<psi::Matrix>("z_pq", np, nq);
-        for (size_t p = 0; p < np; ++p) {
-            for (size_t q = 0; q < nq; ++q) {
-                z->set(p, q, Z->get(p_mos[p], q_mos[q]));
-            }
-        }
-        double* z_ptr = z->get_pointer();
+    // Z frozen-core/active occ contribution
+    D3["LIk"] -= 0.5 * C3["Lkm"] * Z["Im"];
+    D3["Lmk"] -= 0.5 * C3["LIk"] * Z["Im"];
+    D3["LkI"] -= 0.5 * C3["Lkm"] * Z["Im"];
+    D3["Lkm"] -= 0.5 * C3["LIk"] * Z["Im"];
+
+    // Z active vir/frozen-vir contribution
+    D3["LkA"] -= 0.5 * C3["Lke"] * Z["eA"];
+    D3["Lke"] -= 0.5 * C3["LkA"] * Z["eA"];
+
+    // D3["Lkh"] -= 0.5 * C3["Lkg"] * Z["gh"];
+    // D3["Lkh"] -= 0.5 * C3["LIk"] * Z["Ih"];
+    // D3["Lgk"] -= 0.5 * C3["Lkh"] * Z["gh"];
+    // D3ip("Qiq") -= 0.5 * C3ip("Qip") * Zt("pq");
+    // D3pi("Qpi") -= 0.5 * C3ip("Qiq") * Zt("pq");
+
+    // D3.print();
+
+    // back-transform 3-index 2-RDMs
+    auto d3ptr = d3->get_pointer();
+    for (const std::string& block : D3.block_labels()) {
+        auto bp = block.substr(1, 1);
+        auto bq = block.substr(2, 1);
+        auto np = label_to_mos_[bp].size();
+        auto nq = label_to_mos_[bq].size();
+        auto npq = np * nq;
+
+        auto Cp = Csub(label_to_mos_[bp]);
+        auto Cq = (bp == bq ? Cp : Csub(label_to_mos_[bq]));
+        auto half_trans = std::make_shared<psi::Matrix>("half trans " + block, nso_, nq);
+        double* D3_ptr = D3.block(block).data().data();
+        double* Cp_ptr = Cp->get_pointer();
+        double* Cq_ptr = Cq->get_pointer();
+        double* ht_ptr = half_trans->get_pointer();
 
         for (size_t Q = 0; Q < naux; ++Q) {
-            auto gii = C_DDOT(np * nq, z_ptr, 1, C3ints[pq]->get_pointer() + Q * pq_stride, 1);
-            for (size_t i = 0; i < ni; ++i) {
-                D3map["mm"]->add(i, i, 2 * gii);
+            C_DGEMM('N', 'N', nso_, nq, np, 1.0, Cp_ptr, np, D3_ptr + Q * npq, nq, 0.0, ht_ptr, nq);
+            C_DGEMM('N', 'T', nso_, nso_, nq, 1.0, ht_ptr, nq, Cq_ptr, nq, 1.0, d3ptr + Q * nso2,
+                    nso_);
+            if (bp != bq) {
+                matrix_transpose_in_place(ht_ptr, nso_, nq);
+                C_DGEMM('N', 'N', nso_, nso_, nq, 1.0, Cq_ptr, nq, ht_ptr, nso_, 1.0,
+                        d3ptr + Q * nso2, nso_);
             }
-
-            C_DAXPY(np * nq, 2 * C3Q[Q], z_ptr, 1, D3map[pq]->get_pointer() + Q * pq_stride, 1);
-
-            C_DGEMM('N', 'N', ni, nq, np, -1.0, C3ints[ip]->get_pointer() + Q * ip_stride, np,
-                    z_ptr, nq, 1.0, D3map[iq]->get_pointer() + Q * iq_stride, nq);
-
-            C_DGEMM('N', 'N', ni, np, nq, -1.0, C3ints[iq]->get_pointer() + Q * iq_stride, nq,
-                    z_ptr, np, 1.0, D3map[ip]->get_pointer() + Q * ip_stride, np);
         }
     }
 
     // 2-index 2-RDM
-    for (const auto& kv : D3map) {
-        auto [block, D3] = kv;
-        outfile->Printf("\n D3 block %s", block.c_str());
-        auto C3 = C3ints[block];
-        double factor = (block.substr(0, 1) == block.substr(1, 1) ? 1.0 : 2.0);
-        auto k = C3->ncol();
-        C_DGEMM('N', 'T', naux, naux, k, factor, C3->get_pointer(), k, D3->get_pointer(), k, 1.0,
-                d2->get_pointer(), naux);
+    auto d2ptr = d2->get_pointer();
+    for (const std::string& block : D3.block_labels()) {
+        double* D3ptr = D3.block(block).data().data();
+        double* C3ptr = C3.block(block).data().data();
+        auto factor = (block.substr(1, 1) == block.substr(2, 1) ? 1.0 : 2.0);
+        auto k = C3.block(block).dim(1) * C3.block(block).dim(2);
+        C_DGEMM('N', 'T', naux, naux, k, factor, C3ptr, k, D3ptr, k, 1.0, d2ptr, naux);
     }
 
-    // back-transform 3-index 2-RDM to AO basis
-    for (const auto& kv : D3map) {
-        auto [block, D3] = kv;
-        auto bp = block.substr(0, 1);
-        auto bq = block.substr(1, 1);
-        auto p_mos = label_to_mos_[bp];
-        auto q_mos = label_to_mos_[bq];
-        auto np = p_mos.size();
-        auto nq = q_mos.size();
-        auto pq_stride = np * nq;
-        auto ss_stride = nso_ * nso_;
+    // // C^{P}_{pq} = (P|Q)^{-1/2} B^{Q}_{pq} integrals in ambit form
+    // auto C3ints_helper = [&](const std::vector<size_t>& p_mos, const std::vector<size_t>& q_mos)
+    // {
+    //     auto Cp = Csub(p_mos);
+    //     auto Cq = Csub(q_mos);
+    //     df_helper_->add_space("p", Cp);
+    //     df_helper_->add_space("q", Cq);
+    //     df_helper_->add_transformation("B", "p", "q", "Qpq");
+    //     df_helper_->transform();
+    //     // auto C3 = psi::linalg::doublet(Jm12, df_helper_->get_tensor("B"));
+    //     auto np = p_mos.size();
+    //     auto nq = q_mos.size();
+    //     auto C3 = ambit::Tensor::build(CoreTensor, "C3sub", {naux, np, nq});
+    //     auto B = df_helper_->get_tensor("B");
+    //     C_DGEMM('N', 'N', naux, np * nq, naux, 1.0, Jm12->get_pointer(), naux, B->get_pointer(),
+    //             np * nq, 0.0, C3.data().data(), np * nq);
+    //     df_helper_->clear_all();
+    //     return C3;
+    // };
 
-        auto Cp = Csub(p_mos);
-        auto Cq = Csub(q_mos);
-        auto half_trans = std::make_shared<psi::Matrix>(block + "half trans", nso_, nq);
+    // // precompute sum_{i} C^{Q}_{ii}
+    // auto C3oo = C3ints_helper(hf_docc_mos_, hf_docc_mos_);
+    // auto C3Q = ambit::Tensor::build(CoreTensor, "C3Q", {naux});
+    // auto Ioo = ambit::Tensor::build(CoreTensor, "Ioo", {nd, nd});
+    // for (size_t i = 0; i < nd; ++i) {
+    //     Ioo.data()[i * nd + i] = 1.0;
+    // }
+    // C3Q("Q") = C3oo("Qij") * Ioo("ij");
 
-        for (size_t Q = 0; Q < naux; ++Q) {
-            C_DGEMM('N', 'N', nso_, nq, np, 1.0, Cp->get_pointer(), np,
-                    D3->get_pointer() + Q * pq_stride, nq, 0.0, half_trans->get_pointer(), nq);
-            C_DGEMM('N', 'T', nso_, nso_, nq, 1.0, half_trans->get_pointer(), nq, Cq->get_pointer(),
-                    nq, 1.0, d3->get_pointer() + Q * ss_stride, nso_);
+    // // intermediate of sum_{pq} C^{Q}_{pq} Z_{pq}
+    // auto D3Q = ambit::Tensor::build(CoreTensor, "D3Q", {naux});
 
-            if (bp != bq) {
-                matrix_transpose_in_place(half_trans->get_pointer(), nso_, nq);
-                C_DGEMM('N', 'N', nso_, nso_, nq, 1.0, Cq->get_pointer(), nq,
-                        half_trans->get_pointer(), nso_, 1.0, d3->get_pointer() + Q * ss_stride,
-                        nso_);
-            }
-        }
-    }
+    // // 3-index 2-RDMs from Z occupied - virtual block
+    // auto Zov = Zsub(hf_docc_mos_, hf_uocc_mos_);
+    // auto C3ov = C3ints_helper(hf_docc_mos_, hf_uocc_mos_);
+    // auto D3oo = ambit::Tensor::build(CoreTensor, "D3oo", C3oo.dims());
+    // auto D3ov = ambit::Tensor::build(CoreTensor, "D3ov", C3ov.dims());
+    // D3Q("Q") += 2.0 * C3ov("Qia") * Zov("ia");
+    // D3ov("Qia") += C3Q("Q") * Zov("ia");
+    // D3oo("Qji") -= 0.5 * C3ov("Qib") * Zov("jb");
+    // D3oo("Qij") -= 0.5 * C3ov("Qib") * Zov("jb");
+    // D3ov("Qib") -= 0.5 * C3oo("Qij") * Zov("jb");
+
+    // // 3-index 2-RDMs from Z frozen docc - active docc block
+    // auto Zfm = Zsub(label_to_mos_["f"], label_to_mos_["m"]);
+    // auto C3fm = C3ints_helper(label_to_mos_["f"], label_to_mos_["m"]);
+    // auto D3fm = ambit::Tensor::build(CoreTensor, "D3fm", C3fm.dims());
+    // D3Q("Q") += 2.0 * C3fm("QIk") * Zfm("Ik");
+    // D3fm("QIk") += C3Q("Q") * Zfm("QIk");
+
+    // auto Zue = Zsub(label_to_mos_["u"], label_to_mos_["e"]); // frozen uocc - active uocc
+
+    // D3oo("Qij") += 2.0 * C3ov("Qkb") * Zov("kb") * Ioo("ij");
+
+    // // 3-index 2-RDMs
+    // // std::map<std::string, std::shared_ptr<psi::Matrix>> D3map;
+    // std::map<std::string, ambit::Tensor> D3map;
+
+    // // compute C^{P}_{pq} = (P|Q)^{-1/2} B^{Q}_{pq} integrals in ambit form
+    // // std::map<std::string, std::shared_ptr<psi::Matrix>> C3ints;
+    // std::map<std::string, ambit::Tensor> C3ints;
+
+    // for (const std::string& block : {"ff", "fm", "fe", "fu", "mm", "me", "mu", "eu"}) {
+    //     auto p_mos = label_to_mos_[block.substr(0, 1)];
+    //     auto q_mos = label_to_mos_[block.substr(1, 1)];
+    //     auto np = p_mos.size();
+    //     auto nq = q_mos.size();
+    //     if (np == 0 or nq == 0)
+    //         continue;
+
+    //     C3ints[block] = C3ints_helper(p_mos, q_mos);
+    //     C3ints[block].set_name("C3" + block);
+    //     // D3map[block] = std::make_shared<psi::Matrix>("D3" + block, naux, np * nq);
+    //     D3map[block] = ambit::Tensor::build(CoreTensor, "D3" + block, {naux, np, nq});
+    // }
+
+    // // precompute sum_{i} C^{Q}_{ii}
+    // // std::vector<double> C3Q(naux, 0.0);
+    // // for (const std::string& block : {"f", "m"}) {
+    // //     const auto& C3 = C3ints[block + block];
+    // //     for (size_t Q = 0; Q < naux; ++Q) {
+    // //         for (size_t i = 0, size = label_to_mos_[block].size(); i < size; ++i) {
+    // //             C3Q[Q] += C3->get(i, i);
+    // //         }
+    // //     }
+    // // }
+
+    // // compute 3-index 2-RDMs
+    // // for terms 1 and 2, we loop over upper triangle blocks of Z
+    // // for terms 3 and 4, we loop over upper triangle blocks of D3
+
+    // // precompute sum_{i} C^{Q}_{ii}
+    // auto C3Q = ambit::Tensor::build(CoreTensor, "C3Q", {naux});
+    // for (const std::string& block : {"f", "m"}) {
+    //     const auto& C3 = C3ints[block + block];
+    //     auto I = ambit::Tensor::build(CoreTensor, "I" + block + block, {C3.dim(1), C3.dim(2)});
+    //     I.iterate([&](const std::vector<size_t>& i, double& value) {
+    //         if (i[0] == i[1])
+    //             value = 1.0;
+    //     });
+    //     C3Q("Q") += C3("Qij") * I("ij");
+    // }
+
+    // // DOCC diagonal contribution of 3-index 2-RDMs
+    // auto D3Q = ambit::Tensor::build(CoreTensor, "D3Q", {naux});
+
+    // // loop over nonzero Z blocks, upper triangle
+    // for (const std::string& block : {"fm", "fe", "fu", "me", "mu", "eu"}) {
+    //     auto bp = block.substr(0, 1);
+    //     auto bq = block.substr(1, 1);
+    //     auto np = label_to_mos_[bp].size();
+    //     auto nq = label_to_mos_[bq].size();
+    //     if (np == 0 or nq == 0)
+    //         continue;
+
+    //     // auto npq = np * nq;
+    //     // auto bfp = "f" + bp, bmp = "m" + bp, bpm = bp + "m";
+    //     // auto bfq = "f" + bq, bmq = "m" + bq;
+    //     // auto nfp = nf * np, nmp = nm * np;
+    //     // auto nfq = nf * nq, nmq = nm * nq;
+
+    //     auto Zpq = Zsub(label_to_mos_[bp], label_to_mos_[bq]);
+
+    //     // D3^{Q}_{ii} <- C3^{Q}_{pq} * ( z_{pq} + z_{qp} ) for p < q
+    //     D3Q("Q") += 2.0 * C3ints[block]("Qpq") * Zpq("pq");
+
+    //     // D3^{Q}_{pq} <- z_{pq} * C3^{Q}_{ii}
+    //     D3map[block]("Qpq") += Zpq("pq") * C3Q("Q");
+
+    //     // // D3^{Q}_{iq} <- -0.5 * C3^{Q}_{ip} * ( z_{pq} + z_{qp} ) for p < q
+    //     // D3map[bfq]("Qiq") -= 0.5 * C3ints[bfp]("Qip") * Zpq("pq");
+    //     // D3map[bfp]("Qip") -= (bp == "f" ? 1 : 0.5) * C3ints[bfq]("Qiq") * Zpq("pq");
+
+    //     // // special case for frozen-core i index ("mf", "ef", "uf" blocks are not available)
+    //     // if (bp == "f") {
+    //     //     D3map[bmq]("Qiq") -= 0.5 * C3ints[bpm]("Qpi") * Zpq("pq");
+    //     //     D3map[bpm]("Qpi") -= 0.5 * C3ints[bmq]("Qiq") * Zpq("pq");
+
+    //     // } else {
+    //     //     D3map[bmq]("Qiq") -= 0.5 * C3ints[bmp]("Qip") * Zpq("pq");
+    //     //     D3map[bmp]("Qip") -= 0.5 * C3ints[bmq]("Qiq") * Zpq("pq");
+    //     // }
+
+    //     // // D3^{Q}_{pi} <- -0.5 * C3^{Q}_{iq} * ( z_{pq} + z_{qp} ) for p < q
+    // }
+    // for (const std::string& block : {"f", "m"}) {
+    //     const auto& D3 = D3map[block + block];
+    //     auto I = ambit::Tensor::build(CoreTensor, "I" + block + block, {D3.dim(1), D3.dim(2)});
+    //     I.iterate([&](const std::vector<size_t>& i, double& value) {
+    //         if (i[0] == i[1])
+    //             value = 1.0;
+    //     });
+    //     D3("Qij") += D3Q("Q") * I("ij");
+    // }
+
+    // for (const std::string& block : {"ff", "fm", "fe", "fu", "mm", "me", "mu"}) {
+    //     if (D3map.find(block) == D3map.end())
+    //         continue;
+    //     auto bi = block.substr(0, 1);
+    //     auto bq = block.substr(1, 1);
+
+    //     auto factor = (bi == bq ? 1.0 : 0.5);
+
+    //     for (const std::string& bp : {"f", "m", "e", "u"}) {
+    //         auto bip = bi + bp;
+    //         std::string ip = "ip";
+    //         if (C3ints.find(bip) == C3ints.end()) {
+    //             bip = bp + bi;
+    //             ip = "pi";
+    //         }
+    //         D3map[block]("Qiq") -= factor * C3ints[bip]("Q" + ip) * Zblocks[bp + bq]("pq");
+    //     }
+
+    //     if (block == "fm") {
+    //         for (const std::string& bp : {"f", "m", "e", "u"}) {
+    //             auto bqp = bq + bp;
+    //             std::string qp = "qp";
+    //             if (C3ints.find(bqp) == C3ints.end()) {
+    //                 bqp = bp + bq;
+    //                 qp = "pq";
+    //             }
+    //             D3map[block]("Qiq") -= 0.5 * C3ints[bqp]("Q" + qp) * Zblocks[bp + bi]("pi");
+    //         }
+    //     }
+    // }
+
+    // for (const auto& pair : D3map) {
+    //     const auto& [block, D3] = pair;
+    //     D3.print();
+    // }
+
+    // // back-transform 3-index 2-RDMs
+    // auto d3_tmp = std::make_shared<psi::Matrix>("d3_tmp", naux, nso_ * nso_);
+    // double* d3ptr = d3_tmp->get_pointer();
+    // for (auto& block_matrix : D3map) {
+    //     auto& [block, D3] = block_matrix;
+    //     auto bp = block.substr(0, 1);
+    //     auto bq = block.substr(1, 1);
+    //     auto np = label_to_mos_[bp].size();
+    //     auto nq = label_to_mos_[bq].size();
+    //     auto npq = np * nq;
+
+    //     auto Cp = Csub(label_to_mos_[bp]);
+    //     auto Cq = (bp == bq ? Cp : Csub(label_to_mos_[bq]));
+    //     auto half_trans = std::make_shared<psi::Matrix>("half trans " + block, nso_, nq);
+    //     double* D3_ptr = D3.data().data();
+    //     double* Cp_ptr = Cp->get_pointer();
+    //     double* Cq_ptr = Cq->get_pointer();
+    //     double* ht_ptr = half_trans->get_pointer();
+
+    //     for (size_t Q = 0; Q < naux; ++Q) {
+    //         C_DGEMM('N', 'N', nso_, nq, np, 1.0, Cp_ptr, np, D3_ptr + Q * npq, nq, 0.0, ht_ptr,
+    //         nq); C_DGEMM('N', 'T', nso_, nso_, nq, 1.0, ht_ptr, nq, Cq_ptr, nq, 1.0, d3ptr + Q *
+    //         nso2,
+    //                 nso_);
+    //         if (bp != bq) {
+    //             matrix_transpose_in_place(ht_ptr, nso_, nq);
+    //             C_DGEMM('N', 'N', nso_, nso_, nq, 1.0, Cq_ptr, nq, ht_ptr, nso_, 1.0,
+    //                     d3ptr + Q * nso2, nso_);
+    //         }
+    //     }
+    // }
+
+    // d3_tmp->subtract(d3tmp);
+    // d3_tmp->print();
+    // psi::outfile->Printf("\n D3 diff = %20.15f", d3_tmp->rms());
+
+    // for (std::string pq : {"mf", "eu", "me"}) {
+    //     auto p_mos = label_to_mos_[pq.substr(0, 1)];
+    //     auto q_mos = label_to_mos_[pq.substr(1, 1)];
+    //     auto np = p_mos.size();
+    //     auto nq = q_mos.size();
+    //     if (np == 0 or nq == 0)
+    //         continue;
+
+    //     std::string ip = "i" + pq.substr(0, 1);
+    //     std::string iq = "i" + pq.substr(1, 1);
+    //     auto pq_stride = np * nq;
+    //     auto ip_stride = ni * np;
+    //     auto iq_stride = ni * nq;
+
+    //     // prepare C3ints and D3
+    //     for (std::string block : {pq, std::string("ii"), ip, iq}) {
+    //         if (C3ints.find(block) == C3ints.end()) {
+    //             auto mos1 = label_to_mos_[block.substr(0, 1)];
+    //             auto mos2 = label_to_mos_[block.substr(1, 1)];
+    //             C3ints[block] = C3ints_helper(mos1, mos2);
+    //             D3map[block] =
+    //                 std::make_shared<psi::Matrix>("D3" + block, naux, mos1.size() * mos2.size());
+    //             if (block == "ii") {
+    //                 for (size_t Q = 0; Q < naux; ++Q) {
+    //                     for (size_t i = 0; i < ni; ++i) {
+    //                         C3Q[Q] += C3ints["ii"]->get(Q, i * ni + i);
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     // prepare Z_{pq}
+    //     auto z = std::make_shared<psi::Matrix>("z_pq", np, nq);
+    //     for (size_t p = 0; p < np; ++p) {
+    //         for (size_t q = 0; q < nq; ++q) {
+    //             z->set(p, q, Z->get(p_mos[p], q_mos[q]));
+    //         }
+    //     }
+    //     double* z_ptr = z->get_pointer();
+
+    //     for (size_t Q = 0; Q < naux; ++Q) {
+    //         auto gii = C_DDOT(np * nq, z_ptr, 1, C3ints[pq]->get_pointer() + Q * pq_stride, 1);
+    //         for (size_t i = 0; i < ni; ++i) {
+    //             D3map["ii"]->add(i, i, gii);
+    //         }
+
+    //         C_DAXPY(np * nq, C3Q[Q], z_ptr, 1, D3map[pq]->get_pointer() + Q * pq_stride, 1);
+
+    //         C_DGEMM('N', 'N', ni, nq, np, -0.5, C3ints[ip]->get_pointer() + Q * ip_stride, np,
+    //                 z_ptr, nq, 1.0, D3map[iq]->get_pointer() + Q * iq_stride, nq);
+
+    //         C_DGEMM('N', 'N', ni, np, nq, -0.5, C3ints[iq]->get_pointer() + Q * iq_stride, nq,
+    //                 z_ptr, np, 1.0, D3map[ip]->get_pointer() + Q * ip_stride, np);
+    //     }
+    // }
+
+    // // 2-index 2-RDM
+    // for (const auto& kv : D3map) {
+    //     auto [block, D3] = kv;
+    //     outfile->Printf("\n D3 block %s", block.c_str());
+    //     auto C3 = C3ints[block];
+    //     double factor = (block.substr(0, 1) == block.substr(1, 1) ? 1.0 : 2.0);
+    //     auto k = C3->ncol();
+    //     C_DGEMM('N', 'T', naux, naux, k, factor, C3->get_pointer(), k, D3->get_pointer(), k, 1.0,
+    //             d2->get_pointer(), naux);
+    // }
 }
 
 void MCSCF_ORB_GRAD::dump_tpdm_iwl() {
