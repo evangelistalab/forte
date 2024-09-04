@@ -156,7 +156,16 @@ jobs:
         make -j4
         pip list
 
-    - name: Test Forte
+    - name: Run Forte methods tests
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
+        export AMBITPATH=$HOME/bin/ambit
+        export PATH=$PATH:$HOME/psi4/objdir/stage/bin
+        export OPENBLAS_NUM_THREADS=1
+        cd $HOME/work/forte/forte/tests/methods
+        python run_forte_tests.py --failed_dump --bw
+
+    - name: Run Forte block2 test
       run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
         export AMBITPATH=$HOME/bin/ambit
@@ -173,12 +182,44 @@ jobs:
         if [ "$CPUTYPE" = "AuthenticAMD" ]; then
           export LD_PRELOAD=$PWD/libfixcpu.so
         fi
-        cd $HOME/work/forte/forte/tests/methods
+        cd $HOME/work/forte/forte/tests/block2
         python run_forte_tests.py --failed_dump --bw
+
+    - name: Run Forte pytest tests
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
+        export AMBITPATH=$HOME/bin/ambit
+        export PATH=$PATH:$HOME/psi4/objdir/stage/bin
+        export OPENBLAS_NUM_THREADS=1
         cd $HOME/work/forte/forte/tests/pytest
         pytest -v
+
+    - name: Run Forte pytest methods tests
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
+        export AMBITPATH=$HOME/bin/ambit
+        export PATH=$PATH:$HOME/psi4/objdir/stage/bin
+        export OPENBLAS_NUM_THREADS=1
         cd $HOME/work/forte/forte/tests/pytest-methods
         pytest -v
+
+    - name: Run Forte pytest block2 test
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
+        export AMBITPATH=$HOME/bin/ambit
+        export PATH=$PATH:$HOME/psi4/objdir/stage/bin
+        export OPENBLAS_NUM_THREADS=1
+        lscpu
+        export CPUTYPE=$(lscpu | grep 'Vendor ID' | awk '{print $3}')
+        echo $CPUTYPE
+        if [ "$CPUTYPE" = "AuthenticAMD" ]; then
+          echo "int mkl_serv_intel_cpu_true() { return 1; }" > fixcpu.c
+          gcc -shared -fPIC -o libfixcpu.so fixcpu.c
+        fi
+        export CPUTYPE=$(lscpu | grep 'Vendor ID' | awk '{print $3}')
+        if [ "$CPUTYPE" = "AuthenticAMD" ]; then
+          export LD_PRELOAD=$PWD/libfixcpu.so
+        fi
         cd $HOME/work/forte/forte/tests/pytest-block2
         pytest -v
     
