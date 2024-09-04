@@ -77,6 +77,7 @@ casscf:
       - casscf-gradient-1
       - casscf-gradient-3
       - casscf-opt-3
+      - df-casscf-gradient-1
    medium:
       - casscf-1
       - casscf-2
@@ -86,6 +87,7 @@ casscf:
       - casscf-6
       - casscf-9
       - casscf-gradient-2
+      - df-casscf-gradient-2
       - casscf-opt-1
       # - casscf-opt-2
       - sa-casscf-1

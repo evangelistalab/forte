@@ -560,8 +560,9 @@ void MCSCF_ORB_GRAD::dump_tpdm_df() {
     auto d3_so_ptr = d3_so->get_pointer();
 
     // back-transform 3-index 2-RDM to AO basis
-    // oo block
+    auto nso2 = nso_ * nso_;
     if (ndocc) {
+        auto noo = ndocc * ndocc;
         auto oo = std::make_shared<psi::Matrix>("d3_mo oo", ndocc, ndocc);
         auto oo_half = std::make_shared<psi::Matrix>("oo half trans", nso_, ndocc);
         auto oo_ptr = oo->get_pointer();
@@ -570,19 +571,17 @@ void MCSCF_ORB_GRAD::dump_tpdm_df() {
         auto D3oo_ptr = D3oo.data().data();
 
         for (size_t Q = 0; Q < naux; ++Q) {
-            d3_so->zero();
-
             // oo block
-            C_DCOPY(ndocc * ndocc, D3oo_ptr + Q * ndocc * ndocc, 1, oo_ptr, 1);
+            C_DCOPY(noo, D3oo_ptr + Q * noo, 1, oo_ptr, 1);
             C_DGEMM('N', 'N', nso_, ndocc, ndocc, 1.0, Cdocc_ptr, ndocc, oo_ptr, ndocc, 0.0,
                     oo_half_ptr, ndocc);
-            C_DGEMM('N', 'T', nso_, nso_, ndocc, 1.0, oo_half_ptr, ndocc, Cdocc_ptr, ndocc, 1.0,
+            C_DGEMM('N', 'T', nso_, nso_, ndocc, 1.0, oo_half_ptr, ndocc, Cdocc_ptr, ndocc, 0.0,
                     d3_so_ptr, nso_);
-
-            C_DCOPY(nso_ * nso_, d3_so_ptr, 1, d3_ptr + Q * nso_ * nso_, 1);
+            C_DAXPY(nso2, 1.0, d3_so_ptr, 1, d3_ptr + Q * nso2, 1);
         }
     }
     if (ndocc and nactv_) {
+        auto noa = ndocc * nactv_;
         auto oa = std::make_shared<psi::Matrix>("d3_mo oa", ndocc, nactv_);
         auto oa_half = std::make_shared<psi::Matrix>("oa half trans", nso_, nactv_);
         auto oa_ptr = oa->get_pointer();
@@ -592,13 +591,11 @@ void MCSCF_ORB_GRAD::dump_tpdm_df() {
         auto D3oa_ptr = D3oa.data().data();
 
         for (size_t Q = 0; Q < naux; ++Q) {
-            d3_so->zero();
-
             // oa block
-            C_DCOPY(ndocc * nactv_, D3oa_ptr + Q * ndocc * nactv_, 1, oa_ptr, 1);
+            C_DCOPY(noa, D3oa_ptr + Q * noa, 1, oa_ptr, 1);
             C_DGEMM('N', 'N', nso_, nactv_, ndocc, 1.0, Cdocc_ptr, ndocc, oa_ptr, nactv_, 0.0,
                     oa_half_ptr, nactv_);
-            C_DGEMM('N', 'T', nso_, nso_, nactv_, 1.0, oa_half_ptr, nactv_, Cactv_ptr, nactv_, 1.0,
+            C_DGEMM('N', 'T', nso_, nso_, nactv_, 1.0, oa_half_ptr, nactv_, Cactv_ptr, nactv_, 0.0,
                     d3_so_ptr, nso_);
 
             // ao block
@@ -607,10 +604,11 @@ void MCSCF_ORB_GRAD::dump_tpdm_df() {
             C_DGEMM('N', 'N', nso_, nso_, nactv_, 1.0, Cactv_ptr, nactv_, oa_half_ptr, nso_, 1.0,
                     d3_so_ptr, nso_);
 
-            C_DCOPY(nso_ * nso_, d3_so_ptr, 1, d3_ptr + Q * nso_ * nso_, 1);
+            C_DAXPY(nso2, 1.0, d3_so_ptr, 1, d3_ptr + Q * nso2, 1);
         }
     }
     if (nactv_) {
+        auto naa = nactv_ * nactv_;
         auto aa = std::make_shared<psi::Matrix>("d3_mo aa", nactv_, nactv_);
         auto aa_half = std::make_shared<psi::Matrix>("aa half trans", nso_, nactv_);
         auto aa_ptr = aa->get_pointer();
@@ -619,16 +617,13 @@ void MCSCF_ORB_GRAD::dump_tpdm_df() {
         auto D3aa_ptr = D3aa.data().data();
 
         for (size_t Q = 0; Q < naux; ++Q) {
-            d3_so->zero();
-
             // aa block
-            C_DCOPY(nactv_ * nactv_, D3aa_ptr + Q * nactv_ * nactv_, 1, aa_ptr, 1);
+            C_DCOPY(naa, D3aa_ptr + Q * naa, 1, aa_ptr, 1);
             C_DGEMM('N', 'N', nso_, nactv_, nactv_, 1.0, Cactv_ptr, nactv_, aa_ptr, nactv_, 0.0,
                     aa_half_ptr, nactv_);
-            C_DGEMM('N', 'T', nso_, nso_, nactv_, 1.0, aa_half_ptr, nactv_, Cactv_ptr, nactv_, 1.0,
+            C_DGEMM('N', 'T', nso_, nso_, nactv_, 1.0, aa_half_ptr, nactv_, Cactv_ptr, nactv_, 0.0,
                     d3_so_ptr, nso_);
-
-            C_DCOPY(nso_ * nso_, d3_so_ptr, 1, d3_ptr + Q * nso_ * nso_, 1);
+            C_DAXPY(nso2, 1.0, d3_so_ptr, 1, d3_ptr + Q * nso2, 1);
         }
     }
 
