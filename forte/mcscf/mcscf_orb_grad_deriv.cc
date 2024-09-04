@@ -500,9 +500,6 @@ void MCSCF_ORB_GRAD::dump_tpdm_df() {
         Cdocc->set_column(0, i, C_nosym->get_column(0, docc_mos[i]));
     }
 
-    df_helper_->add_space("DOCC", Cdocc);
-    df_helper_->add_space("ACTV", Cactv);
-
     // compute C^{P}_{pq} = (P|Q)^{-1/2} B^{Q}_{pq} integrals in ambit form
     // notes on C_DGEMM
     // LDA = transA ? rowA : colA; LDB = transB ? rowB : colB; LDC = colC;
@@ -511,29 +508,33 @@ void MCSCF_ORB_GRAD::dump_tpdm_df() {
     auto C3aa = ambit::Tensor::build(CoreTensor, "C3aa", {naux, nactv_, nactv_});
 
     if (ndocc) {
+        df_helper_->add_space("DOCC", Cdocc);
         df_helper_->add_transformation("A", "DOCC", "DOCC", "Qpq");
         df_helper_->transform();
         auto A = df_helper_->get_tensor("A");
         C_DGEMM('N', 'N', naux, ndocc * ndocc, naux, 1.0, Jm12->get_pointer(), naux,
                 A->get_pointer(), ndocc * ndocc, 0.0, C3oo.data().data(), ndocc * ndocc);
-        df_helper_->clear_transformations();
+        df_helper_->clear_all();
     }
     if (ndocc and nactv_) {
+        df_helper_->add_space("DOCC", Cdocc);
+        df_helper_->add_space("ACTV", Cactv);
         df_helper_->add_transformation("B", "DOCC", "ACTV", "Qpq");
         df_helper_->transform();
         auto B = df_helper_->get_tensor("B");
         C_DGEMM('N', 'N', naux, ndocc * nactv_, naux, 1.0, Jm12->get_pointer(), naux,
                 B->get_pointer(), ndocc * nactv_, 0.0, C3oa.data().data(), ndocc * nactv_);
-        df_helper_->clear_transformations();
+        df_helper_->clear_all();
     }
     if (nactv_) {
+        df_helper_->add_space("ACTV", Cactv);
         df_helper_->add_transformation("C", "ACTV", "ACTV", "Qpq");
         df_helper_->transform();
         auto C = df_helper_->get_tensor("C");
         C_DGEMM('N', 'N', naux, nactv_ * nactv_, naux, 1.0, Jm12->get_pointer(), naux,
                 C->get_pointer(), nactv_ * nactv_, 0.0, C3aa.data().data(), nactv_ * nactv_);
+        df_helper_->clear_all();
     }
-    df_helper_->clear_all();
 
     auto Ioo = ambit::Tensor::build(CoreTensor, "Ioo", {ndocc, ndocc});
     for (size_t i = 0; i < ndocc; ++i) {

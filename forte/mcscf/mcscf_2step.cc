@@ -205,7 +205,7 @@ double MCSCF_2STEP::compute_energy() {
     if (no_orb_opt) {
         energy_ = e_c;
         pass_energy_to_psi4();
-        if (der_type_ == "FIRST") {
+        if (der_type_ == "FIRST" and options_->get_str("CORRELATION_SOLVER") == "NONE") {
             cas_grad.compute_nuclear_gradient();
         }
         return energy_;
@@ -465,7 +465,7 @@ double MCSCF_2STEP::compute_energy() {
             throw_convergence_error();
 
         // for nuclear gradient
-        if (der_type_ == "FIRST") {
+        if (der_type_ == "FIRST" and options_->get_str("CORRELATION_SOLVER") == "NONE") {
             // TODO: remove this re-diagonalization if CI transformation is impelementd
             if (not is_single_reference()) {
                 diagonalize_hamiltonian(
