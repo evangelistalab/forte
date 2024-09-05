@@ -168,6 +168,13 @@ class VectorSpace {
         return c;
     }
 
+    /// @brief Negate a vector
+    Derived operator-() const {
+        Derived result = self();
+        result *= -1;
+        return result;
+    }
+
     /// @brief Add two vectors
     Derived operator+(const Derived& rhs) const {
         Derived result = self();

@@ -78,8 +78,22 @@ void export_ForteIntegrals(py::module& m);
 void export_ForteOptions(py::module& m);
 void export_MOSpaceInfo(py::module& m);
 void export_RDMs(py::module& m);
+
 void export_Determinant(py::module& m);
-void export_GAS(py::module& m);
+void export_String(py::module& m);
+void export_Configuration(py::module& m);
+
+void export_SQOperatorString(py::module& m);
+void export_SparseExp(py::module& m);
+void export_SparseFactExp(py::module& m);
+void export_SparseHamiltonian(py::module& m);
+void export_SparseOperator(py::module& m);
+void export_SparseOperatorList(py::module& m);
+void export_SparseOperatorSimTrans(py::module& m);
+void export_SparseState(py::module& m);
+void export_Determinant2(py::module& m);
+void export_GenCIStringLists(py::module& m);
+void export_GenCIVector(py::module& m);
 void export_StateInfo(py::module& m);
 void export_SigmaVector(py::module& m);
 void export_SparseCISolver(py::module& m);
@@ -295,8 +309,22 @@ PYBIND11_MODULE(_forte, m) {
     export_SemiCanonical(m);
 
     export_Determinant(m);
+    export_Configuration(m);
+    export_String(m);
 
-    export_GAS(m);
+    export_SQOperatorString(m);
+    export_SparseExp(m);
+    export_SparseFactExp(m);
+    export_SparseHamiltonian(m);
+    export_SparseOperator(m);
+    export_SparseOperatorList(m);
+    export_SparseOperatorSimTrans(m);
+    export_SparseState(m);
+
+    export_Determinant2(m);
+
+    export_GenCIStringLists(m);
+    export_GenCIVector(m);
 
     export_RDMs(m);
 
