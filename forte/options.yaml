@@ -53,6 +53,10 @@ Driver:
     default: "SS"
     choices: ["SS", "SA", "MS", "DWMS"]
     help: "The type of computation"
+  MCSCF_REFERENCE:
+    type: bool
+    default: True
+    help: "Whether to use MCSCF reference in Forte or not"
   NEL:
     type: int
     default: None
@@ -1359,10 +1363,6 @@ MCSCF:
     type: int
     default: 1
     help: "How often to solve CI?\n< 1: do CI in the first macro iteration ONLY\n= n: do CI every n macro iteration"
-  MCSCF_REFERENCE:
-    type: bool
-    default: True
-    help: "Force to use MCSCF reference in Forte"
   MCSCF_DF_TEIALG:
     type: bool
     default: True
