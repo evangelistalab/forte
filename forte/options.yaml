@@ -52,6 +52,10 @@ Driver:
     default: "SS"
     choices: ["SS", "SA", "MS", "DWMS"]
     help: "The type of computation"
+  MCSCF_REFERENCE:
+    type: bool
+    default: True
+    help: "Whether to use MCSCF reference in Forte or not"
   NEL:
     type: int
     default: None
@@ -1370,14 +1374,14 @@ MCSCF:
     type: int
     default: 1
     help: "How often to solve CI?\n< 1: do CI in the first macro iteration ONLY\n= n: do CI every n macro iteration"
-  MCSCF_REFERENCE:
+  MCSCF_DF_TEIALG:
     type: bool
     default: True
-    help: "Run a FCI followed by MCSCF computation?"
-  MCSCF_FREEZE_CORE:
+    help: "Algorithm to build (pu|xy) integrals in DF-MCSCF. Use (Q|pu) if True; Otherwise use JK build for every xy pair"
+  MCSCF_IGNORE_FROZEN_ORBS:
     type: bool
-    default: False
-    help: "Freeze core orbitals in MCSCF?"
+    default: True
+    help: "Ignore frozen orbitals in the input file for MCSCF or not"
   MCSCF_MULTIPLICITY:
     type: int
     default: 0

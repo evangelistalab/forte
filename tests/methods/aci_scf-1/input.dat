@@ -41,7 +41,7 @@ set forte{
    int_type                conventional
    sigma                   0.0
    gamma                   0.0
-   mcscf_freeze_core       true
+   mcscf_ignore_frozen_orbs false
    mcscf_do_diis           false
 }
 

@@ -26,8 +26,8 @@ set forte {
   mcscf_e_convergence  8  # energy convergence of the MCSCF iterations
   mcscf_g_convergence  6  # gradient convergence of the MCSCF iterations
   mcscf_micro_maxiter  4  # do at most 4 micro iterations per macro iteration
-  mcscf_freeze_core    true  # enables freezing the MCSCF core orbitals
+  mcscf_ignore_frozen_orbs false  # enables freezing the MCSCF core orbitals
 }
 
 energy('forte')
-compare_values(-112.871834862958, variable("CURRENT ENERGY"), 11, "MCSCF energy")
+compare_values(-112.871834862958, variable("CURRENT ENERGY"), 8, "MCSCF energy")

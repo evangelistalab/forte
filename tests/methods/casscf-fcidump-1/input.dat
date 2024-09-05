@@ -24,7 +24,7 @@ set forte {
   frozen_uocc        [0,0,0,0]
   restricted_docc    [2,0,0,0]
   active             [2,0,2,2]
-  mcscf_freeze_core true
+  mcscf_ignore_frozen_orbs false
   e_convergence      8
   r_convergence      8
 }

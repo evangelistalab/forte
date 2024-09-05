@@ -40,7 +40,7 @@ set forte{
   mcscf_maxiter          25
   mcscf_e_convergence    7
   mcscf_g_convergence    7
-  mcscf_freeze_core      true
+  mcscf_ignore_frozen_orbs false
   print                   0
 }
 Ecas_1 = energy('forte')
