@@ -441,12 +441,13 @@ double MCSCF_2STEP::compute_energy() {
             auto F = cas_grad.fock(rdms);
             ints_->set_fock_matrix(F, F);
 
-            auto inactive_mix = options_->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
-            auto active_mix = options_->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
+            // if we do not freeze orbitals, we need to set the inactive_mix flag to make sure
+            // the frozen and active core/virtual orbitals are canonicalized together.
+            auto inactive_mix = ignore_frozen;
 
-            // if we do not freeze the core, we need to set the inactive_mix flag to make sure
-            // the core orbitals are canonicalized together with the active orbitals
-            inactive_mix = ignore_frozen;
+            if (!ignore_frozen)
+                inactive_mix = options_->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
+            auto active_mix = options_->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
 
             psi::outfile->Printf("\n  Canonicalizing final MCSCF orbitals");
             SemiCanonical semi(mo_space_info_, ints_, options_, inactive_mix, active_mix);

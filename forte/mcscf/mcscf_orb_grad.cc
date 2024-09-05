@@ -529,8 +529,7 @@ void MCSCF_ORB_GRAD::build_tei_df() {
 
     auto puxy = psi::linalg::doublet(B, Baa, true, false); // (nmo * nactv) * (nactv * nactv)
     auto puxy_ptr = puxy->get_pointer();
-    for (const auto& label_mos_pair : label_to_mos_) {
-        const auto& [p_label, p_mos] = label_mos_pair;
+    for (const auto& [p_label, p_mos] : label_to_mos_) {
         std::string block = p_label + "aaa";
         auto& data = V_.block(block).data();
         for (size_t p = 0, psize = p_mos.size(), nactv2 = nactv_ * nactv_; p < psize; ++p) {
