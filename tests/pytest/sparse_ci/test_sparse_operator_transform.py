@@ -68,7 +68,7 @@ def run_test_sparse_operator_transform(type, O, A, theta):
         forte.sim_trans_fact_antiherm(O, A)
     else:
         C_python = compute_st_nilpotent(O, A, theta)
-        forte.sim_trans_fact_exc(O, A)
+        forte.sim_trans_fact_op(O, A)
 
     python_error = (C_python - C_taylor).norm()
     forte_error = (O - C_taylor).norm()

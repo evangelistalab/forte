@@ -4,7 +4,7 @@ import numpy as np
 
 
 def st_taylor(O, S):
-    """Compute stO = exp(-S) O exp(S) numerically"""
+    """Compute stO = exp(-S) O exp(S) numerically using the Taylor expansion"""
     stO = forte.SparseOperator(O)
     C = forte.SparseOperator(O)
     for i in range(1, 50):
@@ -16,7 +16,7 @@ def st_taylor(O, S):
 
 
 def op_exp(S):
-    """Compute the exponential of a sparse operator numerically"""
+    """Compute the exponential of a sparse operator numerically using the Taylor expansion"""
     expS = forte.sparse_operator("[]", 1.0)
     powS = forte.SparseOperator(S)
     for k in range(20):
@@ -38,10 +38,6 @@ def test_sparse_operator_complex_1():
 
 def test_sparse_operator_complex_2():
     """test exponentiation of a sparse operator numerically"""
-    # exp(i * 0.1 (a+(g1) a-(g0) + a+(g0) a-(g1)))
-    # 1 + i 0.09983341664682815(a+(g0) a-(g1) + a+(g1) a-(g0))
-    # + -0.0049958347219741794(-2 a+(g0) a+(g1) a-(g1) a-(g0) + a+(g0) a-(g0) + a+(g1) a-(g1))
-
     theta = 0.1
     A = forte.sparse_operator([("[1a+ 0a-]", theta * 1j), ("[0a+ 1a-]", theta * 1j)])
     expA = op_exp(A)
@@ -51,10 +47,6 @@ def test_sparse_operator_complex_2():
     assert np.isclose(expA["[1a+ 1a-]"], -0.0049958347219741794, atol=1e-15)
     assert np.isclose(expA["[0a+ 0a-]"], -0.0049958347219741794, atol=1e-15)
     assert np.isclose(expA["[0a+ 1a+ 1a- 0a-]"], 0.0049958347219741794 * 2.0, atol=1e-15)
-
-    # exp(-i * 0.1 (a+(g1) a-(g0) + a+(g0) a-(g1)))
-    # 1 - i 0.09983341664682815(a+(g0) a-(g1) + a+(g1) a-(g0))
-    # + -0.0049958347219741794(-2 a+(g0) a+(g1) a-(g1) a-(g0) + a+(g0) a-(g0) + a+(g1) a-(g1))
 
     mA = forte.sparse_operator([("[1a+ 0a-]", -theta * 1j), ("[0a+ 1a-]", -theta * 1j)])
     expmA = op_exp(mA)
@@ -100,8 +92,6 @@ def test_sparse_operator_complex_2():
     T = forte.SparseOperatorList()
     T.add("[1a+ 0a-]", theta)
     forte.sim_trans_fact_imagherm(STO3, T)
-    print(f"STO_test = {STO_test}")
-    print(f"STO3 = {STO3}")
 
     assert np.isclose((STO3 - STO_test).norm(), 0.0, atol=1e-15)
 
@@ -160,6 +150,7 @@ def test_sparse_operator_complex_3():
 
 
 def make_O():
+    """Make a random sparse operator"""
     O = forte.SparseOperator()
     O = forte.sparse_operator("[0a+ 0a-]", 2.0 + 3.0j)
     O += forte.sparse_operator("[1a+ 1a-]", 0.3 - 0.5j)
@@ -180,75 +171,87 @@ def make_O():
 
 
 def test_sparse_operator_complex_transform1():
-    """test exponentiation of a sparse operator numerically"""
+    """Test exponentiation of a sparse operator numerically"""
     O = make_O()
     op = "[1a+ 0a-]"
-    opd = "[0a+ 1a-]"
     theta = 0.35711
-    run_sparse_operator_test(O, theta, op, opd)
+    run_sparse_operator_test(O, theta, op)
 
 
 def test_sparse_operator_complex_transform2():
-    """test exponentiation of a sparse operator numerically"""
+    """Test exponentiation of a sparse operator numerically"""
     O = make_O()
     op = "[1a+ 2a+ 2a- 0a-]"
-    opd = "[0a+ 2a+ 2a- 1a-]"
     theta = 0.35711
-    run_sparse_operator_test(O, theta, op, opd)
+    run_sparse_operator_test(O, theta, op)
 
 
 def test_sparse_operator_complex_transform3():
     """test exponentiation of a sparse operator numerically"""
     O = make_O()
     op = "[1a+ 2a+ 3a- 0a-]"
-    opd = "[0a+ 3a+ 2a- 1a-]"
     theta = 0.35711
-    run_sparse_operator_test(O, theta, op, opd)
+    run_sparse_operator_test(O, theta, op)
 
 
 def test_sparse_operator_complex_transform4():
     """test exponentiation of a sparse operator numerically"""
     O = make_O()
     op = "[0a+ 0a-]"
-    opd = "[0a+ 0a-]"
     theta = 0.35711
-    run_sparse_operator_test(O, theta, op, opd)
+    run_sparse_operator_test(O, theta, op)
 
 
 def test_sparse_operator_complex_transform5():
     """test exponentiation of a sparse operator numerically"""
     O = make_O()
     op = "[0a+ 1a+ 1a- 0a-]"
-    opd = "[0a+ 1a+ 1a- 0a-]"
     theta = 0.35711
-    run_sparse_operator_test(O, theta, op, opd)
+    run_sparse_operator_test(O, theta, op)
 
 
 def test_sparse_operator_complex_transform5():
     """test exponentiation of a sparse operator numerically"""
     O = make_O()
     op = "[0a+ 1a+ 2a+ 2a- 1a- 0a-]"
-    opd = "[0a+ 1a+ 2a+ 2a- 1a- 0a-]"
     theta = 0.35711
-    run_sparse_operator_test(O, theta, op, opd)
+    run_sparse_operator_test(O, theta, op)
 
 
-def run_sparse_operator_test(O, theta, op, opd):
-    """test exponentiation of a sparse operator numerically"""
+def run_sparse_operator_test(O, theta, op):
+    """test exponentiation of a single sparse operator numerically"""
+    sqop, _ = forte.sqop(op)
+    sqop_dagger = sqop.adjoint()
 
     T = forte.SparseOperatorList()
     T.add(op, theta)
-    A = forte.sparse_operator([(op, theta), (opd, -theta)])
-    S = forte.sparse_operator([(op, -1j * theta), (opd, -1j * theta)])
+    A = forte.sparse_operator([(sqop, theta), (sqop_dagger, -theta)])
+    S = forte.sparse_operator([(sqop, -1j * theta), (sqop_dagger, -1j * theta)])
 
-    # test exp(-theta A) O exp(theta A)
+    # test transformations generated by the anti-Hermitian combination of two generators
+    # A = T - T^dagger
+    # exp(-theta A) O exp(theta A)
     STO_antiherm_taylor = st_taylor(O, A)
     STO_antiherm_analytical = forte.SparseOperator(O)
     forte.sim_trans_fact_antiherm(STO_antiherm_analytical, T)
-
     assert np.isclose((STO_antiherm_taylor - STO_antiherm_analytical).norm(), 0.0, atol=1e-12)
 
-    # test exp(i theta S) O exp(-i theta S)
+    # test the gradient of the transformation generated by the anti-Hermitian combination of two generators
+    # A = T - T^dagger
+    # d/d theta exp(-theta A) O exp(theta A)
+    dtheta = 1e-6
+    Ap = forte.sparse_operator([(sqop, theta + dtheta), (sqop_dagger, -theta - dtheta)])
+    Am = forte.sparse_operator([(sqop, theta - dtheta), (sqop_dagger, -theta + dtheta)])
+    STO_antiherm_taylor_p = st_taylor(O, Ap)
+    STO_antiherm_taylor_m = st_taylor(O, Am)
+    STO_antiherm_grad_taylor = (STO_antiherm_taylor_p - STO_antiherm_taylor_m) / (2 * dtheta)
+    STO_antiherm_grad_analytical = forte.SparseOperator(O)
+    forte.sim_trans_fact_antiherm_grad(STO_antiherm_grad_analytical, T, 0)
+    assert np.isclose((STO_antiherm_grad_taylor - STO_antiherm_grad_analytical).norm(), 0.0, atol=1e-6)
+
+    # test transformations generated by the Hermitian combination of two generators
+    # S = (T + T^dagger)
+    # exp(i theta S) O exp(-i theta S)
     STO_imagherm_taylor = st_taylor(O, S)
     STO_imagherm_analytical = forte.SparseOperator(O)
     forte.sim_trans_fact_imagherm(STO_imagherm_analytical, T)

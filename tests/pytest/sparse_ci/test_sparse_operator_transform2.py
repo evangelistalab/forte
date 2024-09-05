@@ -154,7 +154,7 @@ def test_sparse_operator_transform_cc_1():
 
     print(f"{H.size() = }")
     print(f"{T.size() = }")
-    forte.sim_trans_fact_exc(Hbar, T, screen_thresh=1.0e-10)
+    forte.sim_trans_fact_op(Hbar, T, screen_thresh=1.0e-10)
     Hbar_ref = forte.apply_op(Hbar, ref)
     E1 = forte.overlap(ref, Hbar_ref)
     print(f"{E1 = } (transform)")

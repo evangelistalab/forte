@@ -45,10 +45,6 @@ template <typename Real> std::complex<Real> conjugate(const std::complex<Real>& 
     return std::conj(value);
 }
 
-// Defining a concept for arithmetic types
-// template <typename F>
-// concept Arithmetic = std::is_arithmetic_v<F>;
-
 /// @brief A template class to define a vector space over a field F for a given type T
 /// @tparam Derived The derived class
 /// @tparam T The type of the vector space
