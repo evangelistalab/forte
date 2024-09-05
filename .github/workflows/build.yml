@@ -137,6 +137,7 @@ jobs:
         key: ${{ runner.os }}-${{ runner.arch }}-block2-${{ steps.get-block2-key.outputs.key }}
 
     - name: Compile Forte
+      id: compile-forte
       run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib
         export AMBITPATH=$HOME/bin/ambit
@@ -157,7 +158,7 @@ jobs:
         pip list
 
     - name: Run Forte methods tests
-      if: always()  
+      if: steps.compile-forte.outcome == 'success'
       run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
         export AMBITPATH=$HOME/bin/ambit
@@ -167,7 +168,7 @@ jobs:
         python run_forte_tests.py --failed_dump --bw
 
     - name: Run Forte block2 test
-      if: always()
+      if: steps.compile-forte.outcome == 'success'
       run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
         export AMBITPATH=$HOME/bin/ambit
@@ -188,7 +189,7 @@ jobs:
         python run_forte_tests.py --failed_dump --bw
 
     - name: Run Forte pytest tests
-      if: always()
+      if: steps.compile-forte.outcome == 'success'
       run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
         export AMBITPATH=$HOME/bin/ambit
@@ -198,7 +199,7 @@ jobs:
         pytest -v
 
     - name: Run Forte pytest methods tests
-      if: always()
+      if: steps.compile-forte.outcome == 'success'
       run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
         export AMBITPATH=$HOME/bin/ambit
@@ -208,7 +209,7 @@ jobs:
         pytest -v
 
     - name: Run Forte pytest block2 test
-      if: always()
+      if: steps.compile-forte.outcome == 'success'
       run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
         export AMBITPATH=$HOME/bin/ambit
