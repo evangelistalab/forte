@@ -100,6 +100,9 @@ def test_sparse_operator_complex_2():
     T = forte.SparseOperatorList()
     T.add("[1a+ 0a-]", theta)
     forte.sim_trans_fact_imagherm(STO3, T)
+    print(f"STO_test = {STO_test}")
+    print(f"STO3 = {STO3}")
+
     assert np.isclose((STO3 - STO_test).norm(), 0.0, atol=1e-15)
 
 

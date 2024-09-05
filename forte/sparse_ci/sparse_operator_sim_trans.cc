@@ -30,6 +30,22 @@
 
 namespace forte {
 
+void sim_trans_op_impl(SparseOperator& O, const SQOperatorString& T_op, sparse_scalar_t theta,
+                       double screen_threshold);
+
+// void sim_trans_imagherm_impl(SparseOperator& O, const SQOperatorString& T_op, sparse_scalar_t
+// theta,
+//                              double screen_threshold);
+
+// void sim_trans_imagherm_impl2(SparseOperator& O, const SQOperatorString& T_op,
+//                               sparse_scalar_t theta, double screen_threshold);
+
+/// General implementation of the similarity transformation
+void sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
+                    std::pair<sparse_scalar_t, sparse_scalar_t> c1_pair,
+                    std::pair<sparse_scalar_t, sparse_scalar_t> c2_pair, sparse_scalar_t sigma,
+                    bool add, double screen_threshold);
+
 void sim_trans_antiherm_impl_fast(SparseOperator& O, const SQOperatorString& T_op,
                                   sparse_scalar_t theta, double screen_threshold);
 
@@ -39,12 +55,41 @@ void sim_trans_antiherm_impl(SparseOperator& O, const SQOperatorString& T_op, sp
 void sim_trans_antiherm_impl_grad(SparseOperator& O, const SQOperatorString& T_op,
                                   sparse_scalar_t theta, double screen_threshold);
 
+void sim_trans_antiherm_impl_grad_fast(SparseOperator& O, const SQOperatorString& T_op,
+                                       sparse_scalar_t theta, double screen_threshold);
+
+// void sim_trans_imagherm_impl2(SparseOperator& O, const SQOperatorString& T_op,
+//                               sparse_scalar_t theta, double screen_threshold);
+
 void sim_trans_fact_antiherm(SparseOperator& O, const SparseOperatorList& T, bool reverse,
                              double screen_threshold) {
     const auto& elements = T.elements();
     auto operation = [&](const auto& iter) {
-        const auto& [sqop, c] = *iter;
-        sim_trans_antiherm_impl_fast(O, sqop, c, screen_threshold);
+        const auto& [sqop, theta] = *iter;
+
+        // sanity check that theta is real
+        if (std::abs(std::imag(theta)) > 1.0e-12) {
+            throw std::runtime_error("sim_trans_antiherm_impl: the angle theta must be real.");
+        }
+
+        // skip transformation if theta is zero
+        if (std::abs(theta) < screen_threshold) {
+            return;
+        }
+
+        // if T = T^dagger, then the transformation is trivial, so we can skip it
+        if (sqop.is_self_adjoint()) {
+            return;
+        }
+
+        // compute the coefficients for the similarity transformation
+        const auto sin_theta = std::sin(theta);
+        const auto one_minus_cos_theta = 1.0 - std::cos(theta);
+        const auto half_sin_2_theta = 0.5 * std::sin(2.0 * theta);
+        const auto half_sin_theta_2 = 0.5 * std::pow(std::sin(theta), 2.0);
+        const std::pair c1_pair{sin_theta, half_sin_2_theta};
+        const std::pair c2_pair{one_minus_cos_theta, half_sin_theta_2};
+        sim_trans_impl(O, sqop, c1_pair, c2_pair, -1.0, true, screen_threshold);
     };
     if (reverse) {
         for (auto it = elements.rbegin(), end = elements.rend(); it != end; ++it) {
@@ -57,13 +102,132 @@ void sim_trans_fact_antiherm(SparseOperator& O, const SparseOperatorList& T, boo
     }
 }
 
+void sim_trans_fact_imagherm(SparseOperator& O, const SparseOperatorList& T, bool reverse,
+                             double screen_threshold) {
+    const auto& elements = T.elements();
+    auto operation = [&](const auto& iter) {
+        const auto& [sqop, theta] = *iter;
+
+        // sanity check that theta is real
+        if (std::abs(std::imag(theta)) > 1.0e-12) {
+            throw std::runtime_error("sim_trans_antiherm_impl: the angle theta must be real.");
+        }
+
+        // skip transformation if theta is zero
+        if (std::abs(theta) < screen_threshold) {
+            return;
+        }
+
+        // consider the case where the operator is a number operator
+        if (sqop.cre().fast_a_xor_b_count(sqop.ann()) == 0) {
+            SparseOperator T;
+            double two_theta = 2.0 * std::real(theta);
+            sparse_scalar_t four_sin_theta_2 = 4.0 * std::pow(std::sin(theta), 2.0);
+            std::complex<double> exp_phase_min_one = std::polar(1.0, two_theta) - 1.0;
+            std::complex<double> exp_min_phase_min_one = std::polar(1.0, -two_theta) - 1.0;
+            for (const auto& [O_op, O_c] : O.elements()) {
+                auto NO = sqop * O_op;
+                for (const auto& [NO_op, NO_c] : NO) {
+                    T.add(NO_op, exp_phase_min_one * NO_c * O_c);
+                    auto NON = NO_op * sqop;
+                    for (const auto& [NON_op, NON_c] : NON) {
+                        T.add(NON_op, four_sin_theta_2 * NON_c * NO_c * O_c);
+                    }
+                }
+                auto ON = O_op * sqop;
+                for (const auto& [ON_op, ON_c] : ON) {
+                    T.add(ON_op, exp_min_phase_min_one * ON_c * O_c);
+                }
+            }
+            O += T;
+            return;
+        }
+
+        // compute the coefficients for the similarity transformation
+        std::complex<double> imag1 = std::complex<double>(0.0, 1.0);
+        std::complex<double> zero = std::complex<double>(0.0, 0.0);
+        const auto min_i_sin_theta = -imag1 * std::sin(theta);
+        const auto cos_theta_minus_1 = std::cos(theta) - 1.0;
+        const auto min_i_half_sin_2_theta = -imag1 * 0.5 * std::sin(2.0 * theta);
+        const auto min_half_sin_theta_2 = -0.5 * std::pow(std::sin(theta), 2.0);
+
+        const std::pair c1_pair{min_i_sin_theta, min_i_half_sin_2_theta};
+        const std::pair c2_pair{cos_theta_minus_1, min_half_sin_theta_2};
+        sim_trans_impl(O, sqop, c1_pair, c2_pair, 1.0, true, screen_threshold);
+    };
+    if (reverse) {
+        for (auto it = elements.rbegin(), end = elements.rend(); it != end; ++it) {
+            operation(it);
+        }
+    } else {
+        for (auto it = elements.begin(), end = elements.end(); it != end; ++it) {
+            operation(it);
+        }
+    }
+}
+
+void sim_trans_fact_op(SparseOperator& O, const SparseOperatorList& T, bool reverse,
+                       double screen_threshold) {
+    const auto& elements = T.elements();
+    auto operation = [&](const auto& iter) {
+        const auto& [sqop, c] = *iter;
+        sim_trans_op_impl(O, sqop, c, screen_threshold);
+    };
+    if (reverse) {
+        for (auto it = elements.rbegin(), end = elements.rend(); it != end; ++it) {
+            operation(it);
+        }
+    } else {
+        for (auto it = elements.begin(), end = elements.end(); it != end; ++it) {
+            operation(it);
+        }
+    }
+}
+
+void sim_trans_op_impl(SparseOperator& O, const SQOperatorString& T_op, sparse_scalar_t theta,
+                       double screen_threshold) {
+    // sanity check to make sure all indices are distinct
+    if (T_op.cre().fast_a_xor_b_count(T_op.ann()) == 0) {
+        throw std::runtime_error("sim_trans_op_impl: the operator " + T_op.str() +
+                                 " contains repeated indices.\nThis is not allowed for the "
+                                 "similarity transformation.");
+    }
+    // (1 - T) O(1 + T) = O + [ O, T ] - T O T
+    SparseOperator T;
+    for (const auto& [O_op, O_c] : O.elements()) {
+        if (std::abs(O_c * theta) < screen_threshold) {
+            continue;
+        }
+        const bool do_O_T_commute = do_ops_commute(O_op, T_op);
+        // if the commutator is zero, then we can skip this term
+        if (do_O_T_commute) {
+            continue;
+        }
+        auto cOT = commutator_fast(O_op, T_op);
+        for (const auto& [cOT_op, cOT_c] : cOT) {
+            // + [O, T]
+            if (std::abs(theta * cOT_c * O_c) > screen_threshold) {
+                T.add(cOT_op, theta * cOT_c * O_c);
+            }
+            // - T [O,T]
+            auto T_cOT = T_op * cOT_op;
+            for (const auto& [T_cOT_op, T_cOT_c] : T_cOT) {
+                if (std::abs(theta * theta * T_cOT_c * cOT_c * O_c) > screen_threshold) {
+                    T.add(T_cOT_op, -theta * theta * T_cOT_c * cOT_c * O_c);
+                }
+            }
+        }
+    }
+    O += T;
+}
+
 void sim_trans_fact_antiherm_grad(SparseOperator& O, const SparseOperatorList& T, size_t n,
                                   bool reverse, double screen_threshold) {
     const auto& elements = T.elements();
     auto operation = [&](const auto& iter, const auto& index, const auto& grad_index) {
         const auto& [sqop, c] = *iter;
         if (index == grad_index) {
-            sim_trans_antiherm_impl_grad(O, sqop, c, screen_threshold);
+            sim_trans_antiherm_impl_grad_fast(O, sqop, c, screen_threshold);
         } else {
             sim_trans_antiherm_impl(O, sqop, c, screen_threshold);
         }
@@ -84,15 +248,14 @@ void sim_trans_fact_antiherm_grad(SparseOperator& O, const SparseOperatorList& T
 
 void sim_trans_antiherm_impl_fast(SparseOperator& O, const SQOperatorString& T_op,
                                   sparse_scalar_t theta, double screen_threshold) {
-    // sanity check to make sure all indices are distinct
-    if (T_op.cre().fast_a_xor_b_count(T_op.ann()) == 0) {
+    // if T = T^dagger, then the transformation is trivial, so we can skip it
+    if (T_op.is_self_adjoint()) {
         return;
     }
     // sanity check that theta is real
     if (std::abs(std::imag(theta)) > 1.0e-12) {
         throw std::runtime_error("sim_trans_antiherm_impl: the angle theta must be real.");
     }
-
     // Td = T^dagger
     auto Td_op = T_op.adjoint();
     // TTd = T T^dagger (gives a number operator if there are no repeated indices)
@@ -108,9 +271,9 @@ void sim_trans_antiherm_impl_fast(SparseOperator& O, const SQOperatorString& T_o
 
     SparseOperator T;
     auto sin_theta = std::sin(theta);
+    auto one_minus_cos_theta = 1.0 - std::cos(theta);
     auto half_sin_theta_2 = 0.5 * std::pow(std::sin(theta), 2.0);
     auto half_sin_2_theta = 0.5 * std::sin(2.0 * theta);
-    auto one_minus_cos_theta = 1.0 - std::cos(theta);
     sparse_scalar_t c1, c2;
     Determinant nn_Op_cre;
     Determinant nn_Op_ann;
@@ -266,6 +429,145 @@ void sim_trans_antiherm_impl_fast(SparseOperator& O, const SQOperatorString& T_o
         }
     }
     O += T;
+}
+
+void sim_trans_antiherm_impl_grad_fast(SparseOperator& O, const SQOperatorString& T_op,
+                                       sparse_scalar_t theta, double screen_threshold) {
+    // if T = T^dagger, then the transformation is trivial, so we can skip it
+    if (T_op.is_self_adjoint()) {
+        return;
+    }
+    // sanity check that theta is real
+    if (std::abs(std::imag(theta)) > 1.0e-12) {
+        throw std::runtime_error("sim_trans_antiherm_impl: the angle theta must be real.");
+    }
+    // Td = T^dagger
+    auto Td_op = T_op.adjoint();
+    // TTd = T T^dagger (gives a number operator if there are no repeated indices)
+    auto TTd = T_op * Td_op;
+    // TdT = T^dagger T (gives a number operator if there are no repeated indices)
+    auto TdT = Td_op * T_op;
+    // T_n = T number component, T_nn = T non-number component
+    auto T_n = T_op.number_component();
+    auto T_nn = T_op.non_number_component();
+    // Td_n = T^dagger number component, Td_nn = T^dagger non-number component
+    auto Td_n = Td_op.number_component();
+    auto Td_nn = Td_op.non_number_component();
+
+    SparseOperator T;
+    auto sin_theta = std::sin(theta);
+    auto cos_theta = std::cos(theta);
+    auto half_sin_2_theta = 0.5 * std::sin(2.0 * theta);
+    auto cos_2_theta = std::cos(2.0 * theta);
+    sparse_scalar_t c1, c2;
+    Determinant nn_Op_cre;
+    Determinant nn_Op_ann;
+
+    for (const auto& [O_op, O_c] : O.elements()) {
+        const auto O_T_commutator_type = commutator_type(O_op, T_op);
+        const auto O_Td_commutator_type = commutator_type(O_op, Td_op);
+        // if both commutators are zero, then we can skip this term
+        if (O_T_commutator_type == CommutatorType::Commute and
+            O_Td_commutator_type == CommutatorType::Commute) {
+            continue;
+        }
+
+        // // Check if TOTd or TdOT are nonzero
+        auto O_n = O_op.number_component();
+        auto O_nn = O_op.non_number_component();
+        int alpha = 1;
+
+        // Simplified checks using lambda expressions
+        auto check_ABA_case = [&](const auto& A, const auto& B) {
+            return O_nn.cre().fast_a_and_b_equal_b(A.cre()) &&
+                   O_nn.ann().fast_a_and_b_equal_b(A.ann()) &&
+                   O_nn.cre().fast_a_and_b_eq_zero(B.cre()) &&
+                   O_nn.ann().fast_a_and_b_eq_zero(B.cre());
+        };
+
+        auto check_ABAd_case = [&](const auto& A, const auto& B, const auto& C) {
+            return O_nn.cre().fast_a_and_b_eq_zero(A.cre()) &&
+                   O_nn.ann().fast_a_and_b_eq_zero(A.ann()) &&
+                   O_nn.cre().fast_a_and_b_eq_zero(B.cre()) &&
+                   O_nn.ann().fast_a_and_b_eq_zero(B.ann()) &&
+                   O_n.cre().fast_a_and_b_eq_zero(B.cre()) &&
+                   O_nn.cre().fast_a_and_b_eq_zero(C.cre()) &&
+                   O_nn.ann().fast_a_and_b_eq_zero(C.cre());
+        };
+
+        // Check conditions and set alpha accordingly
+        if (check_ABA_case(Td_nn, T_n)) {
+            // Check if TOT != 0
+            alpha = 4;
+        } else if (check_ABA_case(T_nn, Td_n)) {
+            // Check if TdOTd != 0
+            alpha = 4;
+        } else if (check_ABAd_case(T_nn, Td_nn, T_n)) {
+            // Check if TOTd != 0
+            alpha = 4;
+        } else if (check_ABAd_case(Td_nn, T_nn, Td_n)) {
+            // Check if TdOT != 0
+            alpha = 4;
+        }
+
+        if (alpha == 4) {
+            c1 = cos_2_theta * O_c;
+            c2 = half_sin_2_theta * O_c;
+        } else {
+            c1 = cos_theta * O_c;
+            c2 = sin_theta * O_c;
+        }
+
+        // // check which terms survive the screening
+        const auto do_c1 = std::abs(c1) > screen_threshold;
+        const auto do_c2 = std::abs(c2) > screen_threshold;
+
+        if (O_T_commutator_type != CommutatorType::Commute) {
+            // [O, T]
+            auto cOT = commutator_fast(O_op, T_op);
+            for (const auto& [cOT_op, cOT_c] : cOT) {
+                // + c1 [O, T]
+                if (do_c1) {
+                    T.add(cOT_op, cOT_c * c1);
+                }
+                if (do_c2) {
+                    auto ccOTT = commutator_fast(cOT_op, T_op);
+                    for (const auto& [ccOTT_op, ccOTT_c] : ccOTT) {
+                        // + c2 [[O, T], T]
+                        T.add(ccOTT_op, ccOTT_c * cOT_c * c2);
+                    }
+                    auto ccOTTd = commutator_fast(cOT_op, Td_op);
+                    for (const auto& [ccOTTd_op, ccOTTd_c] : ccOTTd) {
+                        // - c2 [[O, T], T^dagger]
+                        T.add(ccOTTd_op, -ccOTTd_c * cOT_c * c2);
+                    }
+                }
+            }
+        }
+        if (O_Td_commutator_type != CommutatorType::Commute) {
+            // [O, T^dagger]
+            auto cOTd = commutator_fast(O_op, Td_op);
+            for (const auto& [cOTd_op, cOTd_c] : cOTd) {
+                // -c1 [O, T^dagger]
+                if (do_c1) {
+                    T.add(cOTd_op, -cOTd_c * c1);
+                }
+                if (do_c2) {
+                    auto ccOTdT = commutator_fast(cOTd_op, T_op);
+                    for (const auto& [ccOTdT_op, ccOTdT_c] : ccOTdT) {
+                        // -c2 [[O, T^dagger], T]
+                        T.add(ccOTdT_op, -ccOTdT_c * cOTd_c * c2);
+                    }
+                    auto ccOTdTd = commutator_fast(cOTd_op, Td_op);
+                    for (const auto& [ccOTdTd_op, ccOTdTd_c] : ccOTdTd) {
+                        // +c2 [[O, T^dagger], T^dagger]
+                        T.add(ccOTdTd_op, ccOTdTd_c * cOTd_c * c2);
+                    }
+                }
+            }
+        }
+    }
+    O = T;
 }
 
 void sim_trans_antiherm_impl(SparseOperator& O, const SQOperatorString& T_op, sparse_scalar_t theta,
@@ -688,6 +990,373 @@ void sim_trans_antiherm_impl_grad(SparseOperator& O, const SQOperatorString& T_o
         }
     }
     O = T;
+}
+
+// void sim_trans_fact_imagherm(SparseOperator& O, const SparseOperatorList& T, bool reverse,
+//                              double screen_threshold) {
+//     const auto& elements = T.elements();
+//     auto operation = [&](const auto& iter) {
+//         const auto& [sqop, c] = *iter;
+//         sim_trans_imagherm_impl2(O, sqop, c, screen_threshold);
+//     };
+//     if (reverse) {
+//         for (auto it = elements.rbegin(), end = elements.rend(); it != end; ++it) {
+//             operation(it);
+//         }
+//     } else {
+//         for (auto it = elements.begin(), end = elements.end(); it != end; ++it) {
+//             operation(it);
+//         }
+//     }
+// }
+
+// void sim_trans_imagherm_impl2(SparseOperator& O, const SQOperatorString& T_op,
+//                               sparse_scalar_t theta, double screen_threshold) {
+//     // This function evaluates exp(i theta (T + T^dagger)) O exp(-i theta (T + T^dagger))
+//     // sanity check that theta is real
+//     if (std::abs(std::imag(theta)) > 1.0e-12) {
+//         throw std::runtime_error("sim_trans_imagherm_impl: the angle theta must be real.");
+//     }
+
+//     // consider the case where the operator is a number operator
+//     if (T_op.cre().fast_a_xor_b_count(T_op.ann()) == 0) {
+//         SparseOperator T;
+//         double two_theta = 2.0 * std::real(theta);
+//         sparse_scalar_t four_sin_theta_2 = 4.0 * std::pow(std::sin(theta), 2.0);
+//         std::complex<double> exp_phase_min_one = std::polar(1.0, two_theta) - 1.0;
+//         std::complex<double> exp_min_phase_min_one = std::polar(1.0, -two_theta) - 1.0;
+//         for (const auto& [O_op, O_c] : O.elements()) {
+//             auto NO = T_op * O_op;
+//             for (const auto& [NO_op, NO_c] : NO) {
+//                 T.add(NO_op, exp_phase_min_one * NO_c * O_c);
+//                 auto NON = NO_op * T_op;
+//                 for (const auto& [NON_op, NON_c] : NON) {
+//                     T.add(NON_op, four_sin_theta_2 * NON_c * NO_c * O_c);
+//                 }
+//             }
+//             auto ON = O_op * T_op;
+//             for (const auto& [ON_op, ON_c] : ON) {
+//                 T.add(ON_op, exp_min_phase_min_one * ON_c * O_c);
+//             }
+//         }
+//         O += T;
+//         return;
+//     }
+
+//     // Td = T^dagger
+//     auto Td_op = T_op.adjoint();
+//     // TTd = T T^dagger (gives a number operator if there are no repeated indices)
+//     auto TTd = T_op * Td_op;
+//     // TdT = T^dagger T (gives a number operator if there are no repeated indices)
+//     auto TdT = Td_op * T_op;
+
+//     SparseOperator T;
+//     std::complex<double> imag1 = std::complex<double>(0.0, 1.0);
+//     sparse_scalar_t min_i_sin_theta = -imag1 * std::sin(theta);
+//     sparse_scalar_t cos_theta_minus_1 = std::cos(theta) - 1.0;
+//     sparse_scalar_t sin_theta_2 = std::pow(std::sin(theta), 2.0);
+//     sparse_scalar_t i_sin_theta_cos_theta_minus_1 =
+//         imag1 * std::sin(theta) * (std::cos(theta) - 1.0);
+//     sparse_scalar_t cos_theta_minus_1_2 = std::pow(std::cos(theta) - 1.0, 2.0);
+
+//     for (const auto& [O_op, O_c] : O.elements()) {
+//         if (std::abs(O_c) < screen_threshold) {
+//             continue;
+//         }
+//         const bool do_O_T_commute = do_ops_commute(O_op, T_op);
+//         const bool do_O_Td_commute = do_ops_commute(O_op, Td_op);
+//         // if both commutators are zero, then we can skip this term
+//         if (do_O_T_commute and do_O_Td_commute) {
+//             continue;
+//         }
+
+//         // check which terms survive the screening
+//         const auto do_min_i_sin_theta = std::abs(min_i_sin_theta * O_c) > screen_threshold;
+//         const auto do_sin_theta_2 = std::abs(sin_theta_2 * O_c) > screen_threshold;
+//         const auto do_i_sin_theta_cos_theta_minus_1 =
+//             std::abs(i_sin_theta_cos_theta_minus_1 * O_c) > screen_threshold;
+//         const auto do_cos_theta_minus_1_2 = std::abs(cos_theta_minus_1_2 * O_c) >
+//         screen_threshold;
+
+//         // -i sin(theta) [O, S] (all)
+//         // +sin(theta)^2 SOS (all)
+//         auto OT = O_op * T_op;
+//         for (const auto& [OT_op, OT_c] : OT) {
+//             T.add(OT_op, +min_i_sin_theta * OT_c * O_c);
+//             auto TOT = T_op * OT_op;
+//             // +sin(theta)^2 TOT
+//             for (const auto& [TOT_op, TOT_c] : TOT) {
+//                 T.add(TOT_op, sin_theta_2 * TOT_c * OT_c * O_c);
+//             }
+//             auto TdOT = Td_op * OT_op;
+//             // +sin(theta)^2 TdOT
+//             for (const auto& [TdOT_op, TdOT_c] : TdOT) {
+//                 T.add(TdOT_op, sin_theta_2 * TdOT_c * OT_c * O_c);
+//             }
+//         }
+//         auto TO = T_op * O_op;
+//         for (const auto& [TO_op, TO_c] : TO) {
+//             T.add(TO_op, -min_i_sin_theta * TO_c * O_c);
+//         }
+//         auto OTd = O_op * Td_op;
+//         for (const auto& [OTd_op, OTd_c] : OTd) {
+//             T.add(OTd_op, +min_i_sin_theta * OTd_c * O_c);
+//             // +sin(theta)^2 TOTd
+//             auto TOTd = T_op * OTd_op;
+//             for (const auto& [TOTd_op, TOTd_c] : TOTd) {
+//                 T.add(TOTd_op, sin_theta_2 * TOTd_c * OTd_c * O_c);
+//             }
+//             // +sin(theta)^2 TdOTd
+//             auto TdOTd = Td_op * OTd_op;
+//             for (const auto& [TdOTd_op, TdOTd_c] : TdOTd) {
+//                 T.add(TdOTd_op, sin_theta_2 * TdOTd_c * OTd_c * O_c);
+//             }
+//         }
+//         auto TdO = Td_op * O_op;
+//         for (const auto& [TdO_op, TdO_c] : TdO) {
+//             T.add(TdO_op, -min_i_sin_theta * TdO_c * O_c);
+//         }
+
+//         // // (cos(theta) - 1) {O, SS} (all)
+//         for (const auto& [TTd_op, TTd_c] : TTd) {
+//             auto OTTd = O_op * TTd_op;
+//             for (const auto& [OTTd_op, OTTd_c] : OTTd) {
+//                 // (cos(theta) - 1) OTTd
+//                 T.add(OTTd_op, cos_theta_minus_1 * OTTd_c * TTd_c * O_c); // OK
+//                 // + i sin(theta) (cos(theta) - 1) TOTTd
+//                 auto TOTTd = T_op * OTTd_op;
+//                 for (const auto& [TOTTd_op, TOTTd_c] : TOTTd) {
+//                     T.add(TOTTd_op, i_sin_theta_cos_theta_minus_1 * TOTTd_c * OTTd_c * TTd_c *
+//                     O_c);
+//                 }
+//                 // + i sin(theta) (cos(theta) - 1) TdOTTd
+//                 auto TdOTTd = Td_op * OTTd_op;
+//                 for (const auto& [TdOTTd_op, TdOTTd_c] : TdOTTd) {
+//                     T.add(TdOTTd_op,
+//                           i_sin_theta_cos_theta_minus_1 * TdOTTd_c * OTTd_c * TTd_c * O_c);
+//                 }
+//                 // + (cos(theta) - 1)^2 TTdOTTd
+//                 for (const auto& [TTd_op2, TTd_c2] : TTd) {
+//                     auto TTdOTTd = TTd_op2 * OTTd_op;
+//                     for (const auto& [TTdOTTd_op, TTdOTTd_c] : TTdOTTd) {
+//                         T.add(TTdOTTd_op,
+//                               cos_theta_minus_1_2 * TTdOTTd_c * TTd_c2 * OTTd_c * TTd_c * O_c);
+//                     }
+//                 }
+//                 // + (cos(theta) - 1)^2 TdTOTTd
+//                 for (const auto& [TdT_op, TdT_c] : TdT) {
+//                     auto TdTOTTd = TdT_op * OTTd_op;
+//                     for (const auto& [TdTOTTd_op, TdTOTTd_c] : TdTOTTd) {
+//                         T.add(TdTOTTd_op,
+//                               cos_theta_minus_1_2 * TdTOTTd_c * TdT_c * OTTd_c * TTd_c * O_c);
+//                     }
+//                 }
+//             }
+//             auto TTdO = TTd_op * O_op;
+//             for (const auto& [TTdO_op, TTdO_c] : TTdO) {
+//                 // (cos(theta) - 1) TTdO
+//                 T.add(TTdO_op, cos_theta_minus_1 * TTdO_c * TTd_c * O_c);
+//                 // - i sin(theta) (cos(theta) - 1) TTdOT
+//                 auto TTdOT = TTdO_op * T_op;
+//                 for (const auto& [TTdOT_op, TTdOT_c] : TTdOT) {
+//                     T.add(TTdOT_op,
+//                           -i_sin_theta_cos_theta_minus_1 * TTdOT_c * TTdO_c * TTd_c * O_c);
+//                 }
+//                 // - i sin(theta) (cos(theta) - 1) TTdOTd
+//                 auto TTdOTd = TTdO_op * Td_op;
+//                 for (const auto& [TTdOTd_op, TTdOTd_c] : TTdOTd) {
+//                     T.add(TTdOTd_op,
+//                           -i_sin_theta_cos_theta_minus_1 * TTdOTd_c * TTdO_c * TTd_c * O_c);
+//                 }
+//             }
+//         }
+//         for (const auto& [TdT_op, TdT_c] : TdT) {
+//             auto OTdT = O_op * TdT_op;
+//             for (const auto& [OTdT_op, OTdT_c] : OTdT) {
+//                 // (cos(theta) - 1) OTdT
+//                 T.add(OTdT_op, cos_theta_minus_1 * OTdT_c * TdT_c * O_c);
+//                 // + i sin(theta) (cos(theta) - 1) TOTdT
+//                 auto TOTdT = T_op * OTdT_op;
+//                 for (const auto& [TOTdT_op, TOTdT_c] : TOTdT) {
+//                     T.add(TOTdT_op, i_sin_theta_cos_theta_minus_1 * TOTdT_c * OTdT_c * TdT_c *
+//                     O_c);
+//                 }
+//                 // + i sin(theta) (cos(theta) - 1) TdOTdT
+//                 auto TdOTdT = Td_op * OTdT_op;
+//                 for (const auto& [TdOTdT_op, TdOTdT_c] : TdOTdT) {
+//                     T.add(TdOTdT_op,
+//                           i_sin_theta_cos_theta_minus_1 * TdOTdT_c * OTdT_c * TdT_c * O_c);
+//                 }
+//                 // + (cos(theta) - 1)^2 TTdOTdT
+//                 for (const auto& [TTd_op, TTd_c] : TTd) {
+//                     auto TTdOTdT = TTd_op * OTdT_op;
+//                     for (const auto& [TTdOTdT_op, TTdOTdT_c] : TTdOTdT) {
+//                         T.add(TTdOTdT_op,
+//                               cos_theta_minus_1_2 * TTdOTdT_c * TTd_c * OTdT_c * TdT_c * O_c);
+//                     }
+//                 }
+//                 // + (cos(theta) - 1)^2 TdTOTdT
+//                 for (const auto& [TdT_op2, TdT_c2] : TdT) {
+//                     auto TdTOTdT = TdT_op2 * OTdT_op;
+//                     for (const auto& [TdTOTdT_op, TdTOTdT_c] : TdTOTdT) {
+//                         T.add(TdTOTdT_op,
+//                               cos_theta_minus_1_2 * TdTOTdT_c * TdT_c2 * OTdT_c * TdT_c * O_c);
+//                     }
+//                 }
+//             }
+//             auto TdTO = TdT_op * O_op;
+//             for (const auto& [TdTO_op, TdTO_c] : TdTO) {
+//                 // (cos(theta) - 1) OTdT
+//                 T.add(TdTO_op, cos_theta_minus_1 * TdTO_c * TdT_c * O_c);
+//                 // - i sin(theta) (cos(theta) - 1) TdTOT
+//                 auto TdTOT = TdTO_op * T_op;
+//                 for (const auto& [TdTOT_op, TdTOT_c] : TdTOT) {
+//                     T.add(TdTOT_op,
+//                           -i_sin_theta_cos_theta_minus_1 * TdTOT_c * TdTO_c * TdT_c * O_c);
+//                 }
+//                 // - i sin(theta) (cos(theta) - 1) TdTOTd
+//                 auto TdTOTd = TdTO_op * Td_op;
+//                 for (const auto& [TdTOTd_op, TdTOTd_c] : TdTOTd) {
+//                     T.add(TdTOTd_op,
+//                           -i_sin_theta_cos_theta_minus_1 * TdTOTd_c * TdTO_c * TdT_c * O_c);
+//                 }
+//             }
+//         }
+//     }
+//     O += T;
+// }
+
+void sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
+                    std::pair<sparse_scalar_t, sparse_scalar_t> c1_pair,
+                    std::pair<sparse_scalar_t, sparse_scalar_t> c2_pair, sparse_scalar_t sigma,
+                    bool add, double screen_threshold) {
+    // Td = T^dagger
+    auto Td_op = T_op.adjoint();
+    // TTd = T T^dagger (gives a number operator if there are no repeated indices)
+    auto TTd = T_op * Td_op;
+    // TdT = T^dagger T (gives a number operator if there are no repeated indices)
+    auto TdT = Td_op * T_op;
+    // T_n = T number component, T_nn = T non-number component
+    auto T_n = T_op.number_component();
+    auto T_nn = T_op.non_number_component();
+    // Td_n = T^dagger number component, Td_nn = T^dagger non-number component
+    auto Td_n = Td_op.number_component();
+    auto Td_nn = Td_op.non_number_component();
+
+    SparseOperator T;
+    sparse_scalar_t c1, c2;
+    Determinant nn_Op_cre;
+    Determinant nn_Op_ann;
+
+    for (const auto& [O_op, O_c] : O.elements()) {
+        const auto O_T_commutator_type = commutator_type(O_op, T_op);
+        const auto O_Td_commutator_type = commutator_type(O_op, Td_op);
+        // if both commutators are zero, then we can skip this term
+        if (O_T_commutator_type == CommutatorType::Commute and
+            O_Td_commutator_type == CommutatorType::Commute) {
+            continue;
+        }
+
+        // // Check if TOTd or TdOT are nonzero
+        auto O_n = O_op.number_component();
+        auto O_nn = O_op.non_number_component();
+        int alpha = 1;
+
+        // Simplified checks using lambda expressions
+        auto check_ABA_case = [&](const auto& A, const auto& B) {
+            return O_nn.cre().fast_a_and_b_equal_b(A.cre()) &&
+                   O_nn.ann().fast_a_and_b_equal_b(A.ann()) &&
+                   O_nn.cre().fast_a_and_b_eq_zero(B.cre()) &&
+                   O_nn.ann().fast_a_and_b_eq_zero(B.cre());
+        };
+
+        auto check_ABAd_case = [&](const auto& A, const auto& B, const auto& C) {
+            return O_nn.cre().fast_a_and_b_eq_zero(A.cre()) &&
+                   O_nn.ann().fast_a_and_b_eq_zero(A.ann()) &&
+                   O_nn.cre().fast_a_and_b_eq_zero(B.cre()) &&
+                   O_nn.ann().fast_a_and_b_eq_zero(B.ann()) &&
+                   O_n.cre().fast_a_and_b_eq_zero(B.cre()) &&
+                   O_nn.cre().fast_a_and_b_eq_zero(C.cre()) &&
+                   O_nn.ann().fast_a_and_b_eq_zero(C.cre());
+        };
+
+        // Check conditions and set alpha accordingly
+        if (check_ABA_case(Td_nn, T_n)) {
+            // Check if TOT != 0
+            alpha = 4;
+        } else if (check_ABA_case(T_nn, Td_n)) {
+            // Check if TdOTd != 0
+            alpha = 4;
+        } else if (check_ABAd_case(T_nn, Td_nn, T_n)) {
+            // Check if TOTd != 0
+            alpha = 4;
+        } else if (check_ABAd_case(Td_nn, T_nn, Td_n)) {
+            // Check if TdOT != 0
+            alpha = 4;
+        }
+
+        if (alpha == 4) {
+            c1 = c1_pair.second * O_c;
+            c2 = c2_pair.second * O_c;
+        } else {
+            c1 = c1_pair.first * O_c;
+            c2 = c2_pair.first * O_c;
+        }
+
+        // // check which terms survive the screening
+        const auto do_c1 = std::abs(c1) > screen_threshold;
+        const auto do_c2 = std::abs(c2) > screen_threshold;
+
+        if (O_T_commutator_type != CommutatorType::Commute) {
+            // [O, T]
+            auto cOT = commutator_fast(O_op, T_op);
+            for (const auto& [cOT_op, cOT_c] : cOT) {
+                // + c1 [O, T]
+                if (do_c1) {
+                    T.add(cOT_op, cOT_c * c1);
+                }
+                if (do_c2) {
+                    auto ccOTT = commutator_fast(cOT_op, T_op);
+                    for (const auto& [ccOTT_op, ccOTT_c] : ccOTT) {
+                        // + c2 [[O, T], T]
+                        T.add(ccOTT_op, ccOTT_c * cOT_c * c2);
+                    }
+                    auto ccOTTd = commutator_fast(cOT_op, Td_op);
+                    for (const auto& [ccOTTd_op, ccOTTd_c] : ccOTTd) {
+                        // sigma * c2 [[O, T], T^dagger]
+                        T.add(ccOTTd_op, sigma * ccOTTd_c * cOT_c * c2);
+                    }
+                }
+            }
+        }
+        if (O_Td_commutator_type != CommutatorType::Commute) {
+            // [O, T^dagger]
+            auto cOTd = commutator_fast(O_op, Td_op);
+            for (const auto& [cOTd_op, cOTd_c] : cOTd) {
+                // sigma * c1 [O, T^dagger]
+                if (do_c1) {
+                    T.add(cOTd_op, sigma * cOTd_c * c1);
+                }
+                if (do_c2) {
+                    auto ccOTdT = commutator_fast(cOTd_op, T_op);
+                    for (const auto& [ccOTdT_op, ccOTdT_c] : ccOTdT) {
+                        // sigma * c2 [[O, T^dagger], T]
+                        T.add(ccOTdT_op, sigma * ccOTdT_c * cOTd_c * c2);
+                    }
+                    auto ccOTdTd = commutator_fast(cOTd_op, Td_op);
+                    for (const auto& [ccOTdTd_op, ccOTdTd_c] : ccOTdTd) {
+                        // +c2 [[O, T^dagger], T^dagger]
+                        T.add(ccOTdTd_op, ccOTdTd_c * cOTd_c * c2);
+                    }
+                }
+            }
+        }
+    }
+    if (add) {
+        O += T;
+    } else {
+        O = T;
+    }
 }
 
 } // namespace forte

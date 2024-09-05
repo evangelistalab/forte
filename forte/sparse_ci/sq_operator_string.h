@@ -103,6 +103,8 @@ class SQOperatorString {
     SQOperatorString non_number_component() const;
     /// @return true if this operator is the identity (no creation/annihilation  operators)
     bool is_identity() const;
+    /// @return true if this operator is such that op = op^dagger (identity or number operator)
+    bool is_self_adjoint() const;
     /// @return true if this operator is such that op^2 = 0.
     /// The identity and number operators are not nilpotent.
     bool is_nilpotent() const;

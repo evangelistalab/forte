@@ -76,6 +76,8 @@ bool SQOperatorString::is_nilpotent() const {
     return (cre() != ann());
 }
 
+bool SQOperatorString::is_self_adjoint() const { return this->cre() == this->ann(); }
+
 SQOperatorString SQOperatorString::number_component() const {
     const Determinant number = this->cre() & this->ann();
     return SQOperatorString(number, number);
