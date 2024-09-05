@@ -80,7 +80,7 @@ void MCSCF_ORB_GRAD::startup() {
     JK_ = ints_->jk();
     if (ints_->integral_type() == IntegralType::DF or
         ints_->integral_type() == IntegralType::DiskDF) {
-        tei_alg_ = TEIALG::DF;
+        tei_alg_ = options_->get_bool("MCSCF_DF_TEIALG") ? TEIALG::DF : TEIALG::JK;
 
         outfile->Printf("\n\n  DF-MCSCF adopts integrals from DFHelper of Psi4.\n");
 
@@ -517,25 +517,27 @@ void MCSCF_ORB_GRAD::build_tei_df() {
     size_t naux = df_helper_->get_naux();
     auto Baa = std::make_shared<psi::Matrix>("Baa", naux, nactv_ * nactv_);
     for (size_t Q = 0; Q < naux; ++Q) {
-        auto Bq = B->get_row(0, Q);
-        auto Ba = Baa->get_row(0, Q);
-        for (size_t u = 0; u < nactv_; ++u) {
-            for (size_t v = 0; v < nactv_; ++v) {
-                Ba->set(u * nactv_ + v, Bq->get(label_to_mos_["a"][u] * nactv_ + v));
+        for (size_t u = 0, nua = 0; u < nactv_; ++u) {
+            nua = label_to_mos_["a"][u] * nactv_;
+            Baa->set(Q, u * nactv_ + u, B->get(Q, nua + u));
+            for (size_t v = u + 1; v < nactv_; ++v) {
+                Baa->set(Q, u * nactv_ + v, B->get(Q, nua + v));
+                Baa->set(Q, v * nactv_ + u, B->get(Q, nua + v));
             }
         }
-        Baa->set_row(0, Q, Ba);
     }
 
     auto puxy = psi::linalg::doublet(B, Baa, true, false); // (nmo * nactv) * (nactv * nactv)
-    for (size_t p = 0; p < nmo_; ++p) {
-        size_t np = mos_rel_space_[p].second;
-        std::string block = mos_rel_space_[p].first + "aaa";
+    auto puxy_ptr = puxy->get_pointer();
+    for (const auto& label_mos_pair : label_to_mos_) {
+        const auto& [p_label, p_mos] = label_mos_pair;
+        std::string block = p_label + "aaa";
         auto& data = V_.block(block).data();
-        for (size_t u = 0; u < nactv_; ++u) {
-            auto tmp = puxy->get_row(0, p * nactv_ + u);
-            C_DCOPY(nactv_ * nactv_, tmp->pointer(), 1, &data[(np * nactv_ + u) * nactv_ * nactv_],
-                    1);
+        for (size_t p = 0, psize = p_mos.size(), nactv2 = nactv_ * nactv_; p < psize; ++p) {
+            for (size_t u = 0; u < nactv_; ++u) {
+                C_DCOPY(nactv2, puxy_ptr + (p_mos[p] * nactv_ + u) * nactv2, 1,
+                        &data[(p * nactv_ + u) * nactv2], 1);
+            }
         }
     }
 

@@ -1362,7 +1362,11 @@ MCSCF:
   MCSCF_REFERENCE:
     type: bool
     default: True
-    help: "Run a FCI followed by MCSCF computation?"
+    help: "Force to use MCSCF reference in Forte"
+  MCSCF_DF_TEIALG:
+    type: bool
+    default: True
+    help: "Algorithm to build (pu|xy) integrals in DF-MCSCF. Use (Q|pu) if True; Otherwise use JK build for every xy pair"
   MCSCF_IGNORE_FROZEN_ORBS:
     type: bool
     default: True
