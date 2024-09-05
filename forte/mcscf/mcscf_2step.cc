@@ -442,7 +442,7 @@ double MCSCF_2STEP::compute_energy() {
             ints_->set_fock_matrix(F, F);
 
             // if we do not freeze orbitals, we need to set the inactive_mix flag to make sure
-            // the frozen and active core/virtual orbitals are canonicalized together.
+            // the frozen and non-frozen core/virtual orbitals are canonicalized together.
             auto inactive_mix = ignore_frozen;
 
             if (!ignore_frozen)
