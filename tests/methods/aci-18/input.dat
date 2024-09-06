@@ -2,7 +2,7 @@ import forte
 
 e_scf = -39.72595399459846
 en_ref0 = -39.805891312415
-en_ref1 = -28.917284957659
+en_ref1 = -28.91728496366
 
 molecule CH4{
 0 1
@@ -18,8 +18,8 @@ symmetry c1
 
 set {
   scf_type pk
-#  basis cc-pcvdz
   basis sto-3g
+  e_convergence 10
 }
 
 set forte {

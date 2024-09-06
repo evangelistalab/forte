@@ -248,14 +248,17 @@ class MRDSRG : public MASTER_DSRG {
     std::vector<std::pair<std::vector<size_t>, double>> lt2bb_;
 
     /// Compute DSRG-transformed Hamiltonian Hbar
-    void compute_hbar();
+    void compute_hbar(double& rsc_conv);
     /// Compute DSRG-transformed Hamiltonian Hbar sequentially
-    void compute_hbar_sequential();
+    void compute_hbar_sequential(double& rsc_conv);
     /// Compute DSRG-transformed Hamiltonian Hbar sequentially by orbital rotation
-    void compute_hbar_sequential_rotation();
+    void compute_hbar_sequential_rotation(double& rsc_conv);
     /// Compute DSRG-transformed Hamiltonian Hbar truncated to quadratic nested
     /// commutator
     void compute_hbar_qc();
+    /// Determine the adaptive RSC convergence threshold
+    double get_adaptive_rsc_conv(const int& iter, const double& deltaE, const double& rsc_conv, 
+                                 const double& rsc_conv_adapt, const double& rsc_conv_adapt_delta_e, const double& e_conv);
 
     /// Temporary one-body Hamiltonian
     ambit::BlockedTensor O1_;

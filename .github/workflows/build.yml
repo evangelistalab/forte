@@ -1,4 +1,4 @@
-name: Python Package using Conda
+name: build
 
 on: 
   push:
@@ -114,12 +114,15 @@ jobs:
 
     - name: Compile block2
       if: steps.cache-restore-block2.outputs.cache-hit != 'true'
+      env: 
+        BLAS_ROOT: $
       run: |
         cd $HOME
         git clone https://github.com/block-hczhai/block2-preview.git
         mkdir -p block2-preview/build
         cd block2-preview/build
-        cmake .. -DUSE_MKL=OFF -DBUILD_CLIB=ON \
+        cmake .. -DBUILD_CLIB=ON \
+          -DCMAKE_BUILD_TYPE=Release \
           -DLARGE_BOND=ON \
           -DMPI=OFF \
           -DCMAKE_INSTALL_PREFIX=${HOME}/block2-bin
@@ -134,6 +137,7 @@ jobs:
         key: ${{ runner.os }}-${{ runner.arch }}-block2-${{ steps.get-block2-key.outputs.key }}
 
     - name: Compile Forte
+      id: compile-forte
       run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib
         export AMBITPATH=$HOME/bin/ambit
@@ -153,18 +157,65 @@ jobs:
         make -j4
         pip list
 
-    - name: Test Forte
+    - name: Run Forte methods tests
+      if: steps.compile-forte.outcome == 'success' && '!cancelled()'
       run: |
         export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
         export AMBITPATH=$HOME/bin/ambit
         export PATH=$PATH:$HOME/psi4/objdir/stage/bin
         export OPENBLAS_NUM_THREADS=1
+        lscpu
+        export CPUTYPE=$(lscpu | grep 'Vendor ID' | awk '{print $3}')
+        echo $CPUTYPE
+        if [ "$CPUTYPE" = "AuthenticAMD" ]; then
+          echo "int mkl_serv_intel_cpu_true() { return 1; }" > fixcpu.c
+          gcc -shared -fPIC -o libfixcpu.so fixcpu.c
+        fi
+        export CPUTYPE=$(lscpu | grep 'Vendor ID' | awk '{print $3}')
+        if [ "$CPUTYPE" = "AuthenticAMD" ]; then
+          export LD_PRELOAD=$PWD/libfixcpu.so
+        fi
         cd $HOME/work/forte/forte/tests/methods
         python run_forte_tests.py --failed_dump --bw
+
+    - name: Run Forte pytest tests
+      if: steps.compile-forte.outcome == 'success' && '!cancelled()'
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
+        export AMBITPATH=$HOME/bin/ambit
+        export PATH=$PATH:$HOME/psi4/objdir/stage/bin
+        export OPENBLAS_NUM_THREADS=1
         cd $HOME/work/forte/forte/tests/pytest
         pytest -v
+
+    - name: Run Forte pytest methods tests
+      if: steps.compile-forte.outcome == 'success' && '!cancelled()'
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
+        export AMBITPATH=$HOME/bin/ambit
+        export PATH=$PATH:$HOME/psi4/objdir/stage/bin
+        export OPENBLAS_NUM_THREADS=1
         cd $HOME/work/forte/forte/tests/pytest-methods
         pytest -v
+
+    - name: Run Forte pytest block2 test
+      if: steps.compile-forte.outcome == 'success' && '!cancelled()'
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
+        export AMBITPATH=$HOME/bin/ambit
+        export PATH=$PATH:$HOME/psi4/objdir/stage/bin
+        export OPENBLAS_NUM_THREADS=1
+        lscpu
+        export CPUTYPE=$(lscpu | grep 'Vendor ID' | awk '{print $3}')
+        echo $CPUTYPE
+        if [ "$CPUTYPE" = "AuthenticAMD" ]; then
+          echo "int mkl_serv_intel_cpu_true() { return 1; }" > fixcpu.c
+          gcc -shared -fPIC -o libfixcpu.so fixcpu.c
+        fi
+        export CPUTYPE=$(lscpu | grep 'Vendor ID' | awk '{print $3}')
+        if [ "$CPUTYPE" = "AuthenticAMD" ]; then
+          export LD_PRELOAD=$PWD/libfixcpu.so
+        fi
         cd $HOME/work/forte/forte/tests/pytest-block2
         pytest -v
     
@@ -175,4 +226,6 @@ jobs:
         name: forte-test-outputs
         path: |
           ~/work/forte/forte/tests/methods/*/output.dat
+          ~/work/forte/forte/tests/methods/*/output.log
           ~/work/forte/forte/tests/pytest*/output.dat
+          ~/work/forte/forte/tests/pytest*/output.log

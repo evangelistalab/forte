@@ -88,6 +88,9 @@ class SOMRDSRG : public DynamicCorrelationSolver {
     /// Source operator
     std::string source_;
 
+    /// DSRG transformation type
+    std::string dsrg_trans_type_;
+
     /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
     double taylor_threshold_;
     /// Order of the Taylor expansion of f(z) = (1-exp(-z^2))/z

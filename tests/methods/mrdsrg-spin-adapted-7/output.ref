@@ -1,9 +1,9 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.8a1.dev5 
+                               Psi4 1.10a1.dev48 
 
-                         Git: Rev {master} 4d94910 
+                         Git: Rev {master} 1813c0c dirty
 
 
     D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
@@ -31,13 +31,13 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Sunday, 29 January 2023 03:16AM
+    Psi4 started on: Monday, 02 September 2024 11:54AM
 
-    Process ID: 99467
-    Host:       Yorks-Mac.local
-    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
+    Process ID: 5381
+    Host:       Brian-Zs-MBA.local
+    PSIDATADIR: /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4
     Memory:     500.0 MiB
-    Threads:    8
+    Threads:    1
     
   ==> Input File <==
 
@@ -124,7 +124,7 @@ set forte {
   restricted_docc           [2,0,0,1,0,1,1,0]
   active                    [0,0,2,0,0,0,0,1]
   avg_state                 [[0,1,1],[5,1,2]]
-  active_space_solver       cas
+  active_space_solver       detci
   correlation_solver        sa-mrdsrg
   corr_level                pt2
   dsrg_s                    0.35
@@ -132,6 +132,7 @@ set forte {
   transition_dipoles        true
   dsrg_max_dipole_level     1
   dsrg_max_quadrupole_level 1
+  mcscf_reference false
 }
 Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 
@@ -157,6 +158,7 @@ set forte {
   dsrg_s         1.5
   dsrg_nivo      true
   dsrg_read_amps true
+  dsrg_adaptive_rsc false
 }
 Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 
@@ -167,18 +169,24 @@ compare_results("ldsrg2_casci")
 
   Memory set to   7.451 GiB by Python driver.
 
-Scratch directory: /Users/york/scratch/psi4/
+Scratch directory: /tmp/
+   => Libint2 <=
 
-*** tstart() called on Yorks-Mac.local
-*** at Sun Jan 29 03:16:13 2023
+    Primary   basis highest AM E, G, H:  6, 6, 3
+    Auxiliary basis highest AM E, G, H:  7, 7, 4
+    Onebody   basis highest AM E, G, H:  -, -, -
+    Solid Harmonics ordering:            Gaussian
+
+*** tstart() called on Brian-Zs-MBA.local
+*** at Mon Sep  2 11:54:06 2024
 
    => Loading Basis Set <=
 
     Name: AUG-CC-PVDZ
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1, 4     entry C          line   182 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz.gbs 
-    atoms 2-3, 5-6 entry H          line    40 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz.gbs 
+    atoms 1, 4     entry C          line   182 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz.gbs 
+    atoms 2-3, 5-6 entry H          line    40 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz.gbs 
 
 
          ---------------------------------------------------------
@@ -186,7 +194,7 @@ Scratch directory: /Users/york/scratch/psi4/
                by Justin Turney, Rob Parrish, Andy Simmonett
                           and Daniel G. A. Smith
                               RHF Reference
-                        8 Threads,   7629 MiB Core
+                        1 Threads,   7629 MiB Core
          ---------------------------------------------------------
 
   ==> Geometry <==
@@ -243,19 +251,21 @@ Scratch directory: /Users/york/scratch/psi4/
     Name: AUG-CC-PVDZ-JKFIT
     Role: JKFIT
     Keyword: DF_BASIS_SCF
-    atoms 1, 4     entry C          line   154 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
-    atoms 2-3, 5-6 entry H          line    70 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
+    atoms 1, 4     entry C          line   154 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
+    atoms 2-3, 5-6 entry H          line    70 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
 
   ==> Integral Setup <==
 
-  DFHelper Memory: AOs need 0.017 GiB; user supplied 5.588 GiB. Using in-core AOs.
+  DFHelper Memory: AOs need 0.017 GiB; user supplied 5.588 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
 
   ==> MemDFJK: Density-Fitted J/K Matrices <==
 
     J tasked:                   Yes
     K tasked:                   Yes
     wK tasked:                   No
-    OpenMP threads:               8
+    OpenMP threads:               1
     Memory [MiB]:              5722
     Algorithm:                 Core
     Schwarz Cutoff:           1E-12
@@ -299,13 +309,15 @@ Scratch directory: /Users/york/scratch/psi4/
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-RHF iter SAD:   -77.24229140694897   -7.72423e+01   0.00000e+00 
-   @DF-RHF iter   1:   -77.96701480686212   -7.24723e-01   1.05730e-02 ADIIS/DIIS
-   @DF-RHF iter   2:   -78.03223502320557   -6.52202e-02   4.19828e-03 ADIIS/DIIS
-   @DF-RHF iter   3:   -78.04273229499955   -1.04973e-02   6.84138e-04 ADIIS/DIIS
-   @DF-RHF iter   4:   -78.04326487002314   -5.32575e-04   6.32341e-05 DIIS
-   @DF-RHF iter   5:   -78.04327012301866   -5.25300e-06   6.87028e-06 DIIS
-   @DF-RHF iter   6:   -78.04327019247262   -6.94540e-08   8.45597e-07 DIIS
+   @DF-RHF iter SAD:   -78.44099472317092   -7.84410e+01   0.00000e+00 
+   @DF-RHF iter   1:   -75.70117594797536    2.73982e+00   4.10828e-02 DIIS/ADIIS
+   @DF-RHF iter   2:   -77.60198070589625   -1.90080e+00   2.67346e-02 DIIS/ADIIS
+   @DF-RHF iter   3:   -78.03763640099355   -4.35656e-01   2.73763e-03 DIIS/ADIIS
+   @DF-RHF iter   4:   -78.04289414198222   -5.25774e-03   5.34181e-04 DIIS/ADIIS
+   @DF-RHF iter   5:   -78.04324386755529   -3.49726e-04   1.27177e-04 DIIS/ADIIS
+   @DF-RHF iter   6:   -78.04326884313492   -2.49756e-05   2.67948e-05 DIIS
+   @DF-RHF iter   7:   -78.04327015620851   -1.31307e-06   4.63988e-06 DIIS
+   @DF-RHF iter   8:   -78.04327019274001   -3.65315e-08   5.71836e-07 DIIS
   Energy and wave function converged.
 
 
@@ -316,37 +328,37 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Doubly Occupied:                                                      
 
-       1Ag   -11.241289     1B1u  -11.239667     2Ag    -1.034302  
-       2B1u   -0.792668     1B2u   -0.643029     3Ag    -0.585096  
-       1B3g   -0.507725     1B3u   -0.375276  
+       1Ag   -11.241287     1B1u  -11.239665     2Ag    -1.034302  
+       2B1u   -0.792668     1B2u   -0.643028     3Ag    -0.585096  
+       1B3g   -0.507724     1B3u   -0.375274  
 
     Virtual:                                                              
 
-       4Ag     0.040443     3B1u    0.050381     2B2u    0.051267  
-       2B3g    0.070767     1B2g    0.101690     2B3u    0.120755  
+       4Ag     0.040444     3B1u    0.050381     2B2u    0.051267  
+       2B3g    0.070767     1B2g    0.101690     2B3u    0.120756  
        5Ag     0.127477     4B1u    0.146917     3B2u    0.177478  
-       6Ag     0.178562     3B3g    0.206300     2B2g    0.208280  
-       5B1u    0.223511     7Ag     0.250135     4B2u    0.294456  
+       6Ag     0.178563     3B3g    0.206301     2B2g    0.208280  
+       5B1u    0.223511     7Ag     0.250136     4B2u    0.294457  
        1B1g    0.326318     6B1u    0.327736     1Au     0.402408  
-       8Ag     0.408541     7B1u    0.413228     3B3u    0.439745  
-       4B3g    0.451252     5B2u    0.470208     9Ag     0.532316  
-       5B3g    0.539289     3B2g    0.547977     6B2u    0.558807  
-      10Ag     0.600891     4B3u    0.607907     7B2u    0.615434  
-       8B1u    0.617331     6B3g    0.631609    11Ag     0.637046  
-       2B1g    0.652010     9B1u    0.691285    10B1u    0.727519  
+       8Ag     0.408541     7B1u    0.413229     3B3u    0.439746  
+       4B3g    0.451252     5B2u    0.470209     9Ag     0.532316  
+       5B3g    0.539289     3B2g    0.547978     6B2u    0.558807  
+      10Ag     0.600891     4B3u    0.607908     7B2u    0.615435  
+       8B1u    0.617332     6B3g    0.631609    11Ag     0.637047  
+       2B1g    0.652011     9B1u    0.691285    10B1u    0.727520  
        4B2g    0.727942    11B1u    0.798913     2Au     0.846447  
-       5B3u    0.884344     7B3g    0.887715    12Ag     1.000580  
-       5B2g    1.087738     8B2u    1.182051    12B1u    1.230769  
-       8B3g    1.283912    13Ag     1.443448     9B2u    1.454016  
-       6B3u    1.512611     3B1g    1.522430    13B1u    1.621696  
-      14Ag     1.693103     9B3g    1.770445     3Au     1.790555  
-      15Ag     1.850015     6B2g    1.879724    10B2u    1.951378  
-      16Ag     2.014520    14B1u    2.059054     7B3u    2.087650  
-      10B3g    2.114813    15B1u    2.119749     4B1g    2.144447  
-      11B2u    2.169499     7B2g    2.381826     4Au     2.440953  
-      16B1u    2.468088    17Ag     2.618476    11B3g    2.669643  
-      17B1u    2.785116    18Ag     2.808202    12B2u    2.888832  
-      18B1u    3.422065    12B3g    3.473373  
+       5B3u    0.884346     7B3g    0.887716    12Ag     1.000580  
+       5B2g    1.087739     8B2u    1.182052    12B1u    1.230770  
+       8B3g    1.283913    13Ag     1.443448     9B2u    1.454016  
+       6B3u    1.512612     3B1g    1.522431    13B1u    1.621696  
+      14Ag     1.693104     9B3g    1.770445     3Au     1.790556  
+      15Ag     1.850015     6B2g    1.879725    10B2u    1.951378  
+      16Ag     2.014521    14B1u    2.059054     7B3u    2.087651  
+      10B3g    2.114814    15B1u    2.119750     4B1g    2.144447  
+      11B2u    2.169499     7B2g    2.381827     4Au     2.440953  
+      16B1u    2.468089    17Ag     2.618477    11B3g    2.669644  
+      17B1u    2.785117    18Ag     2.808202    12B2u    2.888833  
+      18B1u    3.422066    12B3g    3.473374  
 
     Final Occupation by Irrep:
              Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
@@ -354,14 +366,14 @@ Scratch directory: /Users/york/scratch/psi4/
     NA   [     3,    0,    0,    1,    0,    2,    1,    1 ]
     NB   [     3,    0,    0,    1,    0,    2,    1,    1 ]
 
-  @DF-RHF Final Energy:   -78.04327019247262
+  @DF-RHF Final Energy:   -78.04327019274001
 
    => Energetics <=
 
     Nuclear Repulsion Energy =             33.2649999611281402
-    One-Electron Energy =                -169.7784184629053073
-    Two-Electron Energy =                  58.4701483093045340
-    Total Energy =                        -78.0432701924726189
+    One-Electron Energy =                -169.7784255771898643
+    Two-Electron Energy =                  58.4701554233217351
+    Total Energy =                        -78.0432701927400103
 
 Computation Completed
 
@@ -385,23 +397,23 @@ Properties computed using the SCF density matrix
 
  ------------------------------------------------------------------------------------
 
-*** tstop() called on Yorks-Mac.local at Sun Jan 29 03:16:14 2023
+*** tstop() called on Brian-Zs-MBA.local at Mon Sep  2 11:54:06 2024
 Module time:
-	user time   =       7.89 seconds =       0.13 minutes
-	system time =       0.30 seconds =       0.01 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.41 seconds =       0.01 minutes
+	system time =       0.04 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       7.89 seconds =       0.13 minutes
-	system time =       0.30 seconds =       0.01 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.41 seconds =       0.01 minutes
+	system time =       0.04 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
 
-Scratch directory: /Users/york/scratch/psi4/
+Scratch directory: /tmp/
 
   Forte
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: quadrupole - git commit: 1815803a
+    git branch: adpative-rsc - git commit: 2a44e333
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -409,7 +421,6 @@ Scratch directory: /Users/york/scratch/psi4/
     Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
-  Size of Determinant class: 128 bits
 
   Preparing forte objects from a Psi4 Wavefunction object
 
@@ -442,8 +453,8 @@ Scratch directory: /Users/york/scratch/psi4/
     Name: AUG-CC-PVDZ
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1, 4     entry C          line   182 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz.gbs 
-    atoms 2-3, 5-6 entry H          line    40 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz.gbs 
+    atoms 1, 4     entry C          line   182 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz.gbs 
+    atoms 2-3, 5-6 entry H          line    40 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz.gbs 
 
 
   Checking orbital orthonormality against current geometry ... Done (OK)
@@ -453,18 +464,23 @@ Scratch directory: /Users/york/scratch/psi4/
     Name: AUG-CC-PVDZ-JKFIT
     Role: RIFIT
     Keyword: DF_BASIS_MP2
-    atoms 1, 4     entry C          line   154 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
-    atoms 2-3, 5-6 entry H          line    70 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
+    atoms 1, 4     entry C          line   154 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
+    atoms 2-3, 5-6 entry H          line    70 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
 
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1, 4     entry C          line    61 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
-    atoms 2-3, 5-6 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 1, 4     entry C          line    61 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2-3, 5-6 entry H          line    19 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
 
 
+  State Singlet (Ms = 0) Ag GAS min: 0 0 0 0 0 0 ; GAS max: 6 0 0 0 0 0 ; weights:
+      0.333333333333
+  State Singlet (Ms = 0) B1u GAS min: 0 0 0 0 0 0 ; GAS max: 6 0 0 0 0 0 ; weights:
+      0.333333333333
+      0.333333333333
   Forte will use psi4 integrals
 
   ==> Primary Basis Set Summary <==
@@ -479,14 +495,16 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   JK created using MemDF integrals
-  DFHelper Memory: AOs need 0.017 GiB; user supplied 5.960 GiB. Using in-core AOs.
+  DFHelper Memory: AOs need 0.017 GiB; user supplied 5.960 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
 
   ==> MemDFJK: Density-Fitted J/K Matrices <==
 
     J tasked:                   Yes
     K tasked:                   Yes
     wK tasked:                   No
-    OpenMP threads:               8
+    OpenMP threads:               1
     Memory [MiB]:              6103
     Algorithm:                 Core
     Schwarz Cutoff:           1E-12
@@ -518,15 +536,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
   Number of auxiliary basis functions:  300
   Need 16.14 MB to store DF integrals
-  DFHelper Memory: AOs need 0.017 GiB; user supplied 6.688 GiB. Using in-core AOs.
+  DFHelper Memory: AOs need 0.017 GiB; user supplied 6.689 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
 
   ==> DFHelper <==
     NBF:                              82
     NAux:                            300
     Schwarz Cutoff:                1E-12
     Mask sparsity (%):                 0
-    DFH Avail. Memory [GiB]:       6.688
-    OpenMP threads:                    8
+    DFH Avail. Memory [GiB]:       6.689
+    OpenMP threads:                    1
     Algorithm:                     STORE
     AO Core:                        True
     MO Core:                       False
@@ -538,184 +558,160 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   Transforming DF Integrals
-  Timing for density-fitting transformation:                  0.125 s.
+  Timing for density-fitting transformation:                  0.033 s.
 
-  Frozen-core energy         -78.519766265366485 a.u.
+  Frozen-core energy         -78.519766265362819 a.u.
   Timing for frozen one-body operator:                        0.004 s.
   Resorting integrals after freezing core.
-  Timing for resorting DF integrals:                          0.067 s.
-  Timing for freezing core and virtual orbitals:              0.070 s.
-  Timing for computing density-fitted integrals:              0.490 s.
+  Timing for resorting DF integrals:                          0.010 s.
+  Timing for freezing core and virtual orbitals:              0.013 s.
+  Timing for computing density-fitted integrals:              0.148 s.
 
-  ==> Summary of Active Space Solver Input <==
-
-    Irrep.  Multi.(2ms)      N
-    --------------------------
-       Ag      1  (  0)      1
-      B1u      1  (  0)      2
-    --------------------------
-    N: number of roots
-    ms: spin z component
-    Total number of roots:   3
-    --------------------------
+  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn
 
 
-              ---------------------------------------------------
-                Complete Active Space Configuration Interaction
-                                  Chenyang Li
-              ---------------------------------------------------
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 3
+  Number of active alpha electrons: 1
+  Number of active beta electrons: 1
+  Number of determinants (CAS): 5
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) Ag <==
 
 
-  ==> Input Summary <==
-
-    No. a electrons in active      =     1
-    No. b electrons in active      =     1
-    multiplicity                   =     1
-    spin ms (2 * Sz)               =     0
-
-  ==> Orbital Spaces <==
-
-    TOTAL MO                      [   18     4     7    12     4    18    12     7 ]
-    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
-    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
-    CORRELATED MO                 [   17     4     7    12     4    17    12     7 ]
-    CORE                          [    2     0     0     1     0     1     1     0 ]
-    ACTIVE                        [    0     0     2     0     0     0     0     1 ]
-    VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000044 s
-  Forming determinants                ...  Done. Timing        0.000012 s
-
-  ==> Determinants Summary <==
-
-    number of alpha active electrons         =     1
-    number of beta active electrons          =     1
-    root symmetry (zero based)               =     0
-    number of determinants                   =     5
-
-  Diagonalizing Hamiltonian           ...
-
-  ==> Computing 1 Coupling Lists <==
-
-        α          3.011e-05 seconds
-        β          1.507e-05 seconds
-
-  ==> Computing 2 Coupling Lists <==
-
-        αα         1.192e-05 seconds
-        ββ         6.204e-06 seconds
-        αβ         2.562e-05 seconds
-
-  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 4 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000536 s
+  Found 1 roots with 2S+1 = 3
 
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
-
-  ==> Root No. 0 <==
-
-    00 2          0.9848842279
-    20 0         -0.1159020605
-    ba 0         -0.0810162071
-    ab 0         -0.0810162071
-    02 0         -0.0586729784
-
-    Total Energy:   -78.050972650022345
-
-
-
-              ---------------------------------------------------
-                Complete Active Space Configuration Interaction
-                                  Chenyang Li
-              ---------------------------------------------------
-
-
-  ==> Input Summary <==
-
-    No. a electrons in active      =     1
-    No. b electrons in active      =     1
-    multiplicity                   =     1
-    spin ms (2 * Sz)               =     0
-
-  ==> Orbital Spaces <==
-
-    TOTAL MO                      [   18     4     7    12     4    18    12     7 ]
-    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
-    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
-    CORRELATED MO                 [   17     4     7    12     4    17    12     7 ]
-    CORE                          [    2     0     0     1     0     1     1     0 ]
-    ACTIVE                        [    0     0     2     0     0     0     0     1 ]
-    VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000025 s
-  Forming determinants                ...  Done. Timing        0.000007 s
-
-  ==> Determinants Summary <==
-
-    number of alpha active electrons         =     1
-    number of beta active electrons          =     1
-    root symmetry (zero based)               =     5
-    number of determinants                   =     4
-
-  Diagonalizing Hamiltonian           ...
+  Done diagonalizing Hamiltonian, 1.226e-03 seconds.
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.220e-05 seconds
-        β          1.039e-05 seconds
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          4.850e-05 seconds
+        β          5.791e-06 seconds
+  Time spent building 1-rdm: 1.208e-06 seconds
 
-  ==> Computing 2 Coupling Lists <==
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) Ag <==
 
-        αα         6.218e-06 seconds
-        ββ         4.689e-06 seconds
-        αβ         9.500e-06 seconds
+  Important determinants with coefficients |C| >= 5.000e-02
 
-  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  ---- Root No. 0 ----
+
+     B2g B3u    Coefficients
+    ------------------------
+      00   2    0.9848842279
+      20   0   -0.1159020605
+      ba   0   -0.0810162071
+      ab   0   -0.0810162071
+      02   0   -0.0586729784
+    ------------------------
+
+    Occupation Numbers:
+        1B3u  1.93999388    1B2g  0.03999383    2B2g  0.02001229
+
+    Total Energy:  -78.050972649967647
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 3
+  Number of active alpha electrons: 1
+  Number of active beta electrons: 1
+  Number of determinants (CAS): 4
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) B1u <==
+
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 2 roots with 2S+1 = 1 *
-  Found 2 roots with 2S+1 = 3  Done. Timing        0.000267 s
+  Found 2 roots with 2S+1 = 3
 
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
+  Done diagonalizing Hamiltonian, 4.287e-05 seconds.
 
-  ==> Root No. 0 <==
+  ==> Computing 1 Coupling Lists <==
 
-    a0 b         -0.6884183942
-    b0 a         -0.6884183942
-    0a b          0.1614933886
-    0b a          0.1614933886
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.750e-06 seconds
+        β          2.750e-06 seconds
+  Time spent building 1-rdm: 1.042e-06 seconds
 
-    Total Energy:   -77.754262809385494
+  ==> Computing 1 Coupling Lists <==
 
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.083e-06 seconds
+        β          2.541e-06 seconds
+  Time spent building 1-rdm: 6.670e-07 seconds
 
-  ==> Root No. 1 <==
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) B1u <==
 
-    0a b          0.6884183942
-    0b a          0.6884183942
-    a0 b          0.1614933886
-    b0 a          0.1614933886
+  Important determinants with coefficients |C| >= 5.000e-02
 
-    Total Energy:   -77.640640110184961
+  ---- Root No. 0 ----
 
+     B2g B3u    Coefficients
+    ------------------------
+      a0   b   -0.6884183942
+      b0   a   -0.6884183942
+      0a   b    0.1614933886
+      0b   a    0.1614933886
+    ------------------------
 
+    Occupation Numbers:
+        1B3u  1.00000000    1B2g  0.94783977    2B2g  0.05216023
+
+    Total Energy:  -77.754262809332019
+
+  ---- Root No. 1 ----
+
+     B2g B3u    Coefficients
+    ------------------------
+      0a   b    0.6884183942
+      0b   a    0.6884183942
+      a0   b    0.1614933886
+      b0   a    0.1614933886
+    ------------------------
+
+    Occupation Numbers:
+        1B3u  1.00000000    2B2g  0.94783977    1B2g  0.05216023
+
+    Total Energy:  -77.640640110135507
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)    Ag     0      -78.050972650022   0.000000
+       1  (  0)    Ag     0      -78.050972649968   0.000000
     --------------------------------------------------------
-       1  (  0)   B1u     0      -77.754262809385   0.000000
-       1  (  0)   B1u     1      -77.640640110185   0.000000
+       1  (  0)   B1u     0      -77.754262809332   0.000000
+       1  (  0)   B1u     1      -77.640640110136   0.000000
     --------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          9.625e-06 seconds
+        β          2.958e-06 seconds
+  Time spent building 1-rdm: 2.625e-06 seconds
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000055 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
          0AG     0.00000000     0.00000000     0.00000000     0.00000000
@@ -723,21 +719,48 @@ Scratch directory: /Users/york/scratch/psi4/
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.375e-06 seconds
+        β          2.875e-06 seconds
+  Time spent building 1-rdm: 1.625e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.083e-06 seconds
+        β          2.500e-06 seconds
+  Time spent building 1-rdm: 1.292e-06 seconds
+
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000045 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
         0B1U     0.00000000     0.00000000     0.00000000     0.00000000
-        1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+        1B1U     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          9.458e-06 seconds
+        β          2.666e-06 seconds
+  Time spent building 1-rdm: 1.458e-06 seconds
+
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000048 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
          0AG   -11.68455315     0.00000000     0.00000000    -8.48273398     0.00000000    -7.81728633
@@ -745,10 +768,28 @@ Scratch directory: /Users/york/scratch/psi4/
      Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
     --------------------------------------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.291e-06 seconds
+        β          2.500e-06 seconds
+  Time spent building 1-rdm: 1.334e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.875e-06 seconds
+        β          2.375e-06 seconds
+  Time spent building 1-rdm: 1.209e-06 seconds
+
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000060 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000049 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
         0B1U   -21.88290076     0.00000000     0.00000000   -11.85325349     0.00000000   -19.67456801
@@ -759,12 +800,10 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000076 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000065 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
-       0AG   0B1U    -0.00000000    -0.00000000     1.25329859     1.25329859
-       0AG   1B1U    -0.00000000    -0.00000000    -0.92470591     0.92470591
+       0AG   0B1U    -0.00000000     0.00000000     1.25329859     1.25329859
+       0AG   1B1U     0.00000000    -0.00000000    -0.92470591     0.92470591
     -------------------------------------------------------------------------
 
   ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
@@ -796,10 +835,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000066 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
-      0B1U   1B1U    -0.00000000     0.00000000    -0.00000000     0.00000000
+      0B1U   1B1U     0.00000000     0.00000000     0.00000000     0.00000000
     -------------------------------------------------------------------------
 
   ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
@@ -816,40 +854,136 @@ Scratch directory: /Users/york/scratch/psi4/
     ----------------------------------------------------------
       0B1U   1B1U     0.11362270     3.09183113     0.00000000
     ----------------------------------------------------------
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000062 s
- Computing  2RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000064 s
- Computing  3RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000063 s
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000055 s
- Computing  2RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000047 s
- Computing  3RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000041 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000053 s
- Computing  2RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000049 s
- Computing  3RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          1.013e-05 seconds
+        β          2.875e-06 seconds
+  Time spent building 1-rdm: 1.416e-06 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+        αα         1.764e-04 seconds
+  (N-2) ab lists size counts
+      Size      Count
+         5          1
+        αβ         1.267e-05 seconds
+        ββ         1.583e-06 seconds
+  Time spent building 2-rdm: 2.875e-06 seconds
+
+  ==> Computing 3 Coupling Lists <==
+
+  (N-3) aaa lists size counts
+      Size      Count
+        ααα        7.959e-06 seconds
+  (N-3) aab lists size counts
+      Size      Count
+        ααβ        8.125e-06 seconds
+        αββ        2.208e-06 seconds
+        βββ        1.917e-06 seconds
+  Time spent building 3-rdm: 1.562e-04 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.500e-06 seconds
+        β          2.417e-06 seconds
+  Time spent building 1-rdm: 1.208e-06 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+        αα         4.583e-06 seconds
+  (N-2) ab lists size counts
+      Size      Count
+         4          1
+        αβ         7.208e-06 seconds
+        ββ         1.250e-06 seconds
+  Time spent building 2-rdm: 1.542e-06 seconds
+
+  ==> Computing 3 Coupling Lists <==
+
+  (N-3) aaa lists size counts
+      Size      Count
+        ααα        4.625e-06 seconds
+  (N-3) aab lists size counts
+      Size      Count
+        ααβ        5.208e-06 seconds
+        αββ        1.125e-06 seconds
+        βββ        1.167e-06 seconds
+  Time spent building 3-rdm: 1.417e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.167e-06 seconds
+        β          2.417e-06 seconds
+  Time spent building 1-rdm: 1.250e-06 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+        αα         4.292e-06 seconds
+  (N-2) ab lists size counts
+      Size      Count
+         4          1
+        αβ         6.833e-06 seconds
+        ββ         1.083e-06 seconds
+  Time spent building 2-rdm: 1.375e-06 seconds
+
+  ==> Computing 3 Coupling Lists <==
+
+  (N-3) aaa lists size counts
+      Size      Count
+        ααα        4.416e-06 seconds
+  (N-3) aab lists size counts
+      Size      Count
+        ααβ        5.041e-06 seconds
+        αββ        1.125e-06 seconds
+        βββ        1.125e-06 seconds
+  Time spent building 3-rdm: 1.417e-06 seconds
 
   ==> Semicanonicalize Orbitals <==
 
-    MIX INACTIVE ORBITALS   ...... FALSE
-    MIX GAS ACTIVE ORBITALS ...... FALSE
-    FROZEN_DOCC     ...  CANONICAL
-    FROZEN_UOCC     ...  CANONICAL
-    GAS1            ...  CANONICAL
-    RESTRICTED_DOCC ...  CANONICAL
-    RESTRICTED_UOCC ...  CANONICAL
+    MIX INACTIVE ORBITALS         FALSE
+    MIX GAS ACTIVE ORBITALS       FALSE
+    FROZEN_DOCC                   CANONICAL
+    FROZEN_UOCC                   CANONICAL
+    GAS1                          CANONICAL
+    RESTRICTED_DOCC               CANONICAL
+    RESTRICTED_UOCC               CANONICAL
 
     Off-Diag. Elements       Max           2-Norm
     ------------------------------------------------
     FROZEN_DOCC          0.0000000000   0.0000000000
     GAS1                 0.0000000000   0.0000000000
     RESTRICTED_DOCC      0.0000000000   0.0000000000
-    RESTRICTED_UOCC      0.0000000000   0.0000000000
+    RESTRICTED_UOCC      0.0000000048   0.0000000248
     ------------------------------------------------
+
+    Canonicalization test passed
+
   Orbitals are already semicanonicalized.
-  Timing for orbital canonicalization:                        0.010 s.
+  Timing for orbital canonicalization:                        0.012 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
                             written by Chenyang Li
-                                 8 OMP threads
+                                 1 OMP thread
     -----------------------------------------------------------------------
 
   Disclaimer:
@@ -858,11 +992,11 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
-    Computing Fock matrix and cleaning JK ....... Done. Timing      0.010 s
+    Computing Fock matrix and cleaning JK ....... Done. Timing      0.011 s
     Reading DSRG options ........................ Done. Timing      0.000 s
     Setting ambit MO space ...................... Done. Timing      0.000 s
     Initializing density cumulants .............. Done. Timing      0.001 s
-    Filling Fock matrix from ForteIntegrals ..... Done. Timing      0.001 s
+    Filling Fock matrix from ForteIntegrals ..... Done. Timing      0.000 s
 
   ==> Density Cumulant Summary <==
 
@@ -877,7 +1011,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Block                Max            Mean
     ----------------------------------------
     CORE        0.0000000000    0.0000000000
-    VIRTUAL     0.0000000000    0.0000000000
+    VIRTUAL     0.0000000048    0.0000000001
     GAS1        0.0000000000    0.0000000000
     ----------------------------------------
     Orbitals are semi-canonicalized.
@@ -887,8 +1021,9 @@ Scratch directory: /Users/york/scratch/psi4/
                   --------------------------------------------
 
 
-  ==> Computation Information <==
+  ==> Calculation Information <==
 
+    --------------------------------------------------------
     Integral type                                         DF
     Source operator                                 STANDARD
     Core-Virtual source type                          NORMAL
@@ -901,7 +1036,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Taylor expansion threshold                     1.000e-03
     Intruder amplitudes threshold                  1.000e-01
     Number of amplitudes for printing                     15
-
+    --------------------------------------------------------
 
   ==> DSRG-MRPT2 Memory Information <==
 
@@ -914,19 +1049,19 @@ Scratch directory: /Users/york/scratch/psi4/
     3-index auxiliary integrals                      1.44 MB
     T1 cluster amplitudes                            4.80 KB
     1- and 2-body Hbar                             720.00  B
-    Local integrals for CCVV energy                  1.01 MB
-    Local integrals for CAVV energy                733.25 KB
-    Local integrals for CCAV energy                 58.18 KB
+    Local integrals for CCVV energy                428.54 KB
+    Local integrals for CAVV energy                696.46 KB
+    Local integrals for CCAV energy                 49.27 KB
     Local integrals for forming Hbar                59.40 KB
-    Max memory for local intermediates               1.01 MB
+    Max memory for local intermediates             696.46 KB
     Memory currently available                       7.16 GB
 
 
   ==> Prepare Integrals & Amplitudes <==
 
-    Initializing integrals ...................... Done. Timing      0.017 s
+    Initializing integrals ...................... Done. Timing      0.003 s
     Allocating amplitudes ....................... Done. Timing      0.000 s
-    Computing T2 amplitudes minimal ............. Done. Timing      0.007 s
+    Computing T2 amplitudes minimal ............. Done. Timing      0.002 s
     Computing T1 amplitudes ..................... Done. Timing      0.001 s
 
   ==> First-Order Excitation Amplitudes Summary <==
@@ -941,7 +1076,7 @@ Scratch directory: /Users/york/scratch/psi4/
     [  22   25] 0.0017798 [  73   77] 0.0017462 [  73   74] 0.0012765
     [  22   27] 0.0008372 [  21   27] 0.0002499 [  22   23] 0.0001287
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.012172876176739
+    2-Norm of T1 vector:                            0.012172876176243
     Number of nonzero elements:                                    84
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
@@ -953,40 +1088,46 @@ Scratch directory: /Users/york/scratch/psi4/
     [  22   73   25   73] 0.0128221 [  73   44   73   51] 0.0126854 [   0   73   73   12] 0.0124500
     [  73   61   73   68] 0.0123788 [   0   44   73   21] 0.0123308 [  21   73   25   77] 0.0119484
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.163417820557287
-    Number of nonzero elements:                                                               14188
+    2-Norm of T2 vector:                                                          0.163417820542077
+    Number of nonzero elements:                                                               12877
     -----------------------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
 
     T1 amplitudes larger than 0.1000: NULL
     T2 amplitudes larger than 0.1000: NULL
-    Renormalizing 2-body integrals .............. Done. Timing      0.030 s
+  =>** Before self.dsrg_solver.compute_energy() **<=
+
+    Renormalizing 2-body integrals .............. Done. Timing      0.001 s
     Renormalizing 1-body integrals .............. Done. Timing      0.001 s
     Computing <0|[Fr, T1]|0> .................... Done. Timing      0.000 s
     Computing <0|[Fr, T2]|0> .................... Done. Timing      0.000 s
     Computing <0|[Vr, T1]|0> .................... Done. Timing      0.000 s
-    Computing <0|[Vr, T2]|0> minimal ............ Done. Timing      0.004 s
-    Computing DF <0|[Vr, T2]|0> CCVV ............ Done. Timing      0.007 s
-    Computing DF Hbar1 CAVV ..................... Done. Timing      0.013 s
-    Computing DF Hbar1 CCAV ..................... Done. Timing      0.006 s
-  DF-PT2 CCVV energy:     -0.159761440639193
-  DF-PT2 CAVV energy:     -0.052385924839114
-  DF-PT2 CCAV energy:     -0.011017636522910
+    Computing <0|[Vr, T2]|0> minimal ............ Done. Timing      0.003 s
+    Computing DF <0|[Vr, T2]|0> CCVV ............ Done. Timing      0.005 s
+    Computing DF Hbar1 CAVV ..................... Done. Timing      0.023 s
+    Computing DF Hbar1 CCAV ..................... Done. Timing      0.003 s
+  DF-PT2 CCVV energy:     -0.159761440632474
+  DF-PT2 CAVV energy:     -0.052385924838148
+  DF-PT2 CCAV energy:     -0.011017636522938
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =    -77.815291856530948
-    < Phi_0 | [Fr, T1] | Phi_0 >   =     -0.000674102200716
-    < Phi_0 | [Fr, T2] | Phi_0 >   =      0.000672172613506
-    < Phi_0 | [Vr, T1] | Phi_0 >   =      0.000669176813758
-    < Phi_0 | [Vr, T2] | Phi_0 >   =     -0.271685529899487
-      - [Vr, T2] L1 contribution   =     -0.274187909606937
-      - [Vr, T2] L2 contribution   =      0.002293183498345
-      - [Vr, T2] L3 contribution   =      0.000209196209105
-    DSRG-MRPT2 correlation energy  =     -0.271018282672938
-    DSRG-MRPT2 total energy        =    -78.086310139203889
-    Computing MRPT2 Hbar AAAA minimal ........... Done. Timing      0.013 s
+    E0 (reference)                 =    -77.815291856478424
+    < Phi_0 | [Fr, T1] | Phi_0 >   =     -0.000674102200692
+    < Phi_0 | [Fr, T2] | Phi_0 >   =      0.000672172613489
+    < Phi_0 | [Vr, T1] | Phi_0 >   =      0.000669176813740
+    < Phi_0 | [Vr, T2] | Phi_0 >   =     -0.271685529888093
+      - [Vr, T2] L1 contribution   =     -0.274187909595224
+      - [Vr, T2] L2 contribution   =      0.002293183498025
+      - [Vr, T2] L3 contribution   =      0.000209196209106
+    DSRG-MRPT2 correlation energy  =     -0.271018282661556
+    DSRG-MRPT2 total energy        =    -78.086310139139982
+    Computing MRPT2 Hbar AAAA minimal ........... Done. Timing      0.010 s
+  =>** After self.dsrg_solver.compute_energy() **<=
+
+  =>** In reference relaxation loop **<=
+
 
   ==> De-Normal-Order 2-Body DSRG Transformed Hamiltonian <==
 
@@ -996,25 +1137,25 @@ Scratch directory: /Users/york/scratch/psi4/
   ==> Transform One-Electron Operators <==
 
     Transforming DIPOLE X ....................... Done. Timing      0.001 s
-    Transforming DIPOLE Y ....................... Done. Timing      0.002 s
-    Transforming DIPOLE Z ....................... Done. Timing      0.002 s
-    Transforming QUADRUPOLE XX .................. Done. Timing      0.002 s
+    Transforming DIPOLE Y ....................... Done. Timing      0.001 s
+    Transforming DIPOLE Z ....................... Done. Timing      0.001 s
+    Transforming QUADRUPOLE XX .................. Done. Timing      0.001 s
     Transforming QUADRUPOLE XY .................. Done. Timing      0.001 s
     Transforming QUADRUPOLE XZ .................. Done. Timing      0.001 s
-    Transforming QUADRUPOLE YY .................. Done. Timing      0.002 s
-    Transforming QUADRUPOLE YZ .................. Done. Timing      0.002 s
-    Transforming QUADRUPOLE ZZ .................. Done. Timing      0.002 s
+    Transforming QUADRUPOLE YY .................. Done. Timing      0.001 s
+    Transforming QUADRUPOLE YZ .................. Done. Timing      0.001 s
+    Transforming QUADRUPOLE ZZ .................. Done. Timing      0.001 s
 
   ==> Expectation Values of the DSRG Transformed One-Body Operators [a.u.] <==
 
-    DIPOLE X:  -0.00000000
+    DIPOLE X:   0.00000000
     DIPOLE Y:  -0.00000000
-    DIPOLE Z:  -0.00000000
+    DIPOLE Z:   0.00000000
     QUADRUPOLE XX: -18.38890650
-    QUADRUPOLE XY:   0.00000000
-    QUADRUPOLE XZ:   0.00000000
+    QUADRUPOLE XY:  -0.00000000
+    QUADRUPOLE XZ:  -0.00000000
     QUADRUPOLE YY: -10.58881702
-    QUADRUPOLE YZ:  -0.00000000
+    QUADRUPOLE YZ:   0.00000000
     QUADRUPOLE ZZ: -15.40033466
 
   ==> De-Normal-Order 1-Body DSRG Transformed DIPOLE X <==
@@ -1053,157 +1194,143 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Computing the scalar term ................... Done. Timing      0.000 s
 
-              ---------------------------------------------------
-                Complete Active Space Configuration Interaction
-                                  Chenyang Li
-              ---------------------------------------------------
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 3
+  Number of active alpha electrons: 1
+  Number of active beta electrons: 1
+  Number of determinants (CAS): 5
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) Ag <==
 
 
-  ==> Input Summary <==
-
-    No. a electrons in active      =     1
-    No. b electrons in active      =     1
-    multiplicity                   =     1
-    spin ms (2 * Sz)               =     0
-
-  ==> Orbital Spaces <==
-
-    TOTAL MO                      [   18     4     7    12     4    18    12     7 ]
-    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
-    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
-    CORRELATED MO                 [   17     4     7    12     4    17    12     7 ]
-    CORE                          [    2     0     0     1     0     1     1     0 ]
-    ACTIVE                        [    0     0     2     0     0     0     0     1 ]
-    VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000038 s
-  Forming determinants                ...  Done. Timing        0.000008 s
-
-  ==> Determinants Summary <==
-
-    number of alpha active electrons         =     1
-    number of beta active electrons          =     1
-    root symmetry (zero based)               =     0
-    number of determinants                   =     5
-
-  Diagonalizing Hamiltonian           ...
-
-  ==> Computing 1 Coupling Lists <==
-
-        α          1.563e-05 seconds
-        β          1.220e-05 seconds
-
-  ==> Computing 2 Coupling Lists <==
-
-        αα         6.852e-06 seconds
-        ββ         4.972e-06 seconds
-        αβ         1.148e-05 seconds
-
-  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 4 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000340 s
+  Found 1 roots with 2S+1 = 3
 
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
-
-  ==> Root No. 0 <==
-
-    00 2          0.9905024485
-    20 0         -0.0923134245
-    ba 0         -0.0641462491
-    ab 0         -0.0641462491
-
-    Total Energy:   -78.322910420240447
-
-
-
-              ---------------------------------------------------
-                Complete Active Space Configuration Interaction
-                                  Chenyang Li
-              ---------------------------------------------------
-
-
-  ==> Input Summary <==
-
-    No. a electrons in active      =     1
-    No. b electrons in active      =     1
-    multiplicity                   =     1
-    spin ms (2 * Sz)               =     0
-
-  ==> Orbital Spaces <==
-
-    TOTAL MO                      [   18     4     7    12     4    18    12     7 ]
-    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
-    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
-    CORRELATED MO                 [   17     4     7    12     4    17    12     7 ]
-    CORE                          [    2     0     0     1     0     1     1     0 ]
-    ACTIVE                        [    0     0     2     0     0     0     0     1 ]
-    VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000026 s
-  Forming determinants                ...  Done. Timing        0.000007 s
-
-  ==> Determinants Summary <==
-
-    number of alpha active electrons         =     1
-    number of beta active electrons          =     1
-    root symmetry (zero based)               =     5
-    number of determinants                   =     4
-
-  Diagonalizing Hamiltonian           ...
+  Done diagonalizing Hamiltonian, 2.534e-04 seconds.
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.224e-05 seconds
-        β          1.043e-05 seconds
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          1.129e-05 seconds
+        β          3.750e-06 seconds
+  Time spent building 1-rdm: 1.250e-06 seconds
 
-  ==> Computing 2 Coupling Lists <==
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) Ag <==
 
-        αα         5.968e-06 seconds
-        ββ         4.571e-06 seconds
-        αβ         1.016e-05 seconds
+  Important determinants with coefficients |C| >= 5.000e-02
 
-  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  ---- Root No. 0 ----
+
+     B2g B3u    Coefficients
+    ------------------------
+      00   2    0.9905024485
+      20   0   -0.0923134245
+      ba   0   -0.0641462491
+      ab   0   -0.0641462491
+    ------------------------
+
+    Occupation Numbers:
+        1B3u  1.96219020    1B2g  0.02527302    2B2g  0.01253678
+
+    Total Energy:  -78.322910420176839
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 3
+  Number of active alpha electrons: 1
+  Number of active beta electrons: 1
+  Number of determinants (CAS): 4
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) B1u <==
+
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 2 roots with 2S+1 = 1 *
-  Found 2 roots with 2S+1 = 3  Done. Timing        0.000334 s
+  Found 2 roots with 2S+1 = 3
 
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
+  Done diagonalizing Hamiltonian, 4.221e-05 seconds.
 
-  ==> Root No. 0 <==
+  ==> Computing 1 Coupling Lists <==
 
-    a0 b         -0.7058304520
-    b0 a         -0.7058304520
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          1.063e-05 seconds
+        β          3.166e-06 seconds
+  Time spent building 1-rdm: 8.330e-07 seconds
 
-    Total Energy:   -78.024073016709949
+  ==> Computing 1 Coupling Lists <==
 
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.458e-06 seconds
+        β          3.000e-06 seconds
+  Time spent building 1-rdm: 7.500e-07 seconds
 
-  ==> Root No. 1 <==
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) B1u <==
 
-    0a b          0.7058304520
-    0b a          0.7058304520
+  Important determinants with coefficients |C| >= 5.000e-02
 
-    Total Energy:   -77.912657326092372
+  ---- Root No. 0 ----
 
+     B2g B3u    Coefficients
+    ------------------------
+      a0   b   -0.7058304520
+      b0   a   -0.7058304520
+    ------------------------
 
+    Occupation Numbers:
+        1B3u  1.00000000    1B2g  0.99639325    2B2g  0.00360675
+
+    Total Energy:  -78.024073016642859
+
+  ---- Root No. 1 ----
+
+     B2g B3u    Coefficients
+    ------------------------
+      0a   b    0.7058304520
+      0b   a    0.7058304520
+    ------------------------
+
+    Occupation Numbers:
+        1B3u  1.00000000    2B2g  0.99639325    1B2g  0.00360675
+
+    Total Energy:  -77.912657326031265
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)    Ag     0      -78.322910420240   0.000000
+       1  (  0)    Ag     0      -78.322910420177   0.000000
     --------------------------------------------------------
-       1  (  0)   B1u     0      -78.024073016710   0.000000
-       1  (  0)   B1u     1      -77.912657326092   0.000000
+       1  (  0)   B1u     0      -78.024073016643   0.000000
+       1  (  0)   B1u     1      -77.912657326031   0.000000
     --------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          9.750e-06 seconds
+        β          2.917e-06 seconds
+  Time spent building 1-rdm: 1.833e-06 seconds
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000060 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
          0AG     0.00000000     0.00000000     0.00000000     0.00000000
@@ -1211,21 +1338,48 @@ Scratch directory: /Users/york/scratch/psi4/
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.459e-06 seconds
+        β          3.042e-06 seconds
+  Time spent building 1-rdm: 1.458e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.083e-06 seconds
+        β          2.708e-06 seconds
+  Time spent building 1-rdm: 1.292e-06 seconds
+
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000053 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000048 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
         0B1U     0.00000000     0.00000000     0.00000000     0.00000000
-        1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+        1B1U     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          9.083e-06 seconds
+        β          2.833e-06 seconds
+  Time spent building 1-rdm: 1.458e-06 seconds
+
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000055 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
          0AG   -11.67531764     0.00000000     0.00000000    -8.47402702     0.00000000    -7.75468726
@@ -1233,10 +1387,28 @@ Scratch directory: /Users/york/scratch/psi4/
      Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
     --------------------------------------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.958e-06 seconds
+        β          3.042e-06 seconds
+  Time spent building 1-rdm: 1.375e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          1.346e-05 seconds
+        β          3.042e-06 seconds
+  Time spent building 1-rdm: 1.292e-06 seconds
+
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000057 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000049 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
         0B1U   -16.51957819     0.00000000     0.00000000   -10.28839551     0.00000000   -14.79281562
@@ -1247,8 +1419,6 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000069 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000064 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
        0AG   0B1U    -0.00000000     0.00000000     1.53221223     1.53221223
@@ -1281,10 +1451,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000066 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
-      0B1U   1B1U    -0.00000000     0.00000000    -0.00000000     0.00000000
+      0B1U   1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
     -------------------------------------------------------------------------
 
   ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
@@ -1302,31 +1471,67 @@ Scratch directory: /Users/york/scratch/psi4/
       0B1U   1B1U     0.11141569     3.03177537     0.00000000
     ----------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          9.042e-06 seconds
+        β          2.708e-06 seconds
+  Time spent building 1-rdm: 1.292e-06 seconds
+
   ==> DSRG Dressed Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000056 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
-         0AG     0.00000000    -0.00000000    -0.00000000     0.00000000
+         0AG     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.542e-06 seconds
+        β          2.500e-06 seconds
+  Time spent building 1-rdm: 1.209e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.541e-06 seconds
+        β          2.459e-06 seconds
+  Time spent building 1-rdm: 1.125e-06 seconds
 
   ==> DSRG Dressed Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000051 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000047 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
-        0B1U    -0.00000000    -0.00000000    -0.00000000     0.00000000
-        1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+        0B1U     0.00000000    -0.00000000     0.00000000     0.00000000
+        1B1U    -0.00000000    -0.00000000    -0.00000000     0.00000000
     --------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          8.792e-06 seconds
+        β          2.542e-06 seconds
+  Time spent building 1-rdm: 1.209e-06 seconds
+
   ==> DSRG Dressed Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000055 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
          0AG   -11.78113010    -0.00000000     0.00000000    -8.72309233    -0.00000000    -8.22888228
@@ -1334,26 +1539,42 @@ Scratch directory: /Users/york/scratch/psi4/
      Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
     --------------------------------------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.625e-06 seconds
+        β          2.291e-06 seconds
+  Time spent building 1-rdm: 1.125e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.375e-06 seconds
+        β          2.291e-06 seconds
+  Time spent building 1-rdm: 1.125e-06 seconds
+
   ==> DSRG Dressed Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000052 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000048 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
-        0B1U   -16.49446567     0.00000000     0.00000000   -10.23398953    -0.00000000   -14.61966901
-        1B1U   -26.88313011     0.00000000     0.00000000   -12.80323897    -0.00000000   -23.29934218
+        0B1U   -16.49446567    -0.00000000     0.00000000   -10.23398953     0.00000000   -14.61966901
+        1B1U   -26.88313011     0.00000000    -0.00000000   -12.80323897     0.00000000   -23.29934218
     --------------------------------------------------------------------------------------------------
      Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
     --------------------------------------------------------------------------------------------------
 
   ==> DSRG Dressed Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000068 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000063 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
-       0AG   0B1U    -0.00000000     0.00000000     1.44585584     1.44585584
-       0AG   1B1U     0.00000000    -0.00000000    -0.51144971     0.51144971
+       0AG   0B1U     0.00000000    -0.00000000     1.44585584     1.44585584
+       0AG   1B1U    -0.00000000     0.00000000    -0.51144971     0.51144971
     -------------------------------------------------------------------------
 
   ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
@@ -1382,10 +1603,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000065 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
-      0B1U   1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+      0B1U   1B1U     0.00000000    -0.00000000    -0.00000000     0.00000000
     -------------------------------------------------------------------------
 
   ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
@@ -1402,20 +1622,22 @@ Scratch directory: /Users/york/scratch/psi4/
     ----------------------------------------------------------
       0B1U   1B1U     0.11141569     3.03177537     0.00000000
     ----------------------------------------------------------
+  Semicanonical orbitals must be used!
+
 
   ==> Total Timings (s) for Computing Commutators <==
 
-             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+           [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]  
     -----------------------------------------------------
-    -> C0       0.002       0.002       0.000       0.000
-    -> C1       0.000       0.003       0.000       0.000
+    -> C0       0.001       0.002       0.000       0.000
+    -> C1       0.000       0.002       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
 
 
-  Time to prepare integrals:        0.753 seconds
-  Time to run job          :        0.187 seconds
-  Total                    :        0.940 seconds
+  Time to prepare integrals:        0.345 seconds
+  Time to run job          :        0.119 seconds
+  Total                    :        0.464 seconds
     CASSCF ENERGY.........................................................................PASSED
     CASSCF ENERGY.........................................................................PASSED
     CASSCF ENERGY.........................................................................PASSED
@@ -1438,13 +1660,13 @@ Scratch directory: /Users/york/scratch/psi4/
     SA-DSRG-PT2/BARE MULTIPOLE OSCILLATOR STRENGTH OF 0B1U................................PASSED
     SA-DSRG-PT2/BARE MULTIPOLE OSCILLATOR STRENGTH OF 1B1U................................PASSED
 
-Scratch directory: /Users/york/scratch/psi4/
+Scratch directory: /tmp/
 
   Forte
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: quadrupole - git commit: 1815803a
+    git branch: adpative-rsc - git commit: 2a44e333
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -1452,7 +1674,6 @@ Scratch directory: /Users/york/scratch/psi4/
     Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
-  Size of Determinant class: 128 bits
 
   Preparing forte objects from a Psi4 Wavefunction object
 
@@ -1485,8 +1706,8 @@ Scratch directory: /Users/york/scratch/psi4/
     Name: AUG-CC-PVDZ
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1, 4     entry C          line   182 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz.gbs 
-    atoms 2-3, 5-6 entry H          line    40 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz.gbs 
+    atoms 1, 4     entry C          line   182 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz.gbs 
+    atoms 2-3, 5-6 entry H          line    40 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz.gbs 
 
 
   Checking orbital orthonormality against current geometry ... Done (OK)
@@ -1496,18 +1717,23 @@ Scratch directory: /Users/york/scratch/psi4/
     Name: AUG-CC-PVDZ-JKFIT
     Role: RIFIT
     Keyword: DF_BASIS_MP2
-    atoms 1, 4     entry C          line   154 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
-    atoms 2-3, 5-6 entry H          line    70 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
+    atoms 1, 4     entry C          line   154 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
+    atoms 2-3, 5-6 entry H          line    70 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
 
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1, 4     entry C          line    61 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
-    atoms 2-3, 5-6 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 1, 4     entry C          line    61 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2-3, 5-6 entry H          line    19 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
 
 
+  State Singlet (Ms = 0) Ag GAS min: 0 0 0 0 0 0 ; GAS max: 6 0 0 0 0 0 ; weights:
+      0.333333333333
+  State Singlet (Ms = 0) B1u GAS min: 0 0 0 0 0 0 ; GAS max: 6 0 0 0 0 0 ; weights:
+      0.333333333333
+      0.333333333333
   Forte will use psi4 integrals
 
   ==> Primary Basis Set Summary <==
@@ -1522,14 +1748,16 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   JK created using MemDF integrals
-  DFHelper Memory: AOs need 0.017 GiB; user supplied 5.960 GiB. Using in-core AOs.
+  DFHelper Memory: AOs need 0.017 GiB; user supplied 5.960 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
 
   ==> MemDFJK: Density-Fitted J/K Matrices <==
 
     J tasked:                   Yes
     K tasked:                   Yes
     wK tasked:                   No
-    OpenMP threads:               8
+    OpenMP threads:               1
     Memory [MiB]:              6103
     Algorithm:                 Core
     Schwarz Cutoff:           1E-12
@@ -1561,15 +1789,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
   Number of auxiliary basis functions:  300
   Need 16.14 MB to store DF integrals
-  DFHelper Memory: AOs need 0.017 GiB; user supplied 6.688 GiB. Using in-core AOs.
+  DFHelper Memory: AOs need 0.017 GiB; user supplied 6.689 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
 
   ==> DFHelper <==
     NBF:                              82
     NAux:                            300
     Schwarz Cutoff:                1E-12
     Mask sparsity (%):                 0
-    DFH Avail. Memory [GiB]:       6.688
-    OpenMP threads:                    8
+    DFH Avail. Memory [GiB]:       6.689
+    OpenMP threads:                    1
     Algorithm:                     STORE
     AO Core:                        True
     MO Core:                       False
@@ -1581,184 +1811,160 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   Transforming DF Integrals
-  Timing for density-fitting transformation:                  0.119 s.
+  Timing for density-fitting transformation:                  0.024 s.
 
-  Frozen-core energy         -78.519766265366485 a.u.
+  Frozen-core energy         -78.519766265362819 a.u.
   Timing for frozen one-body operator:                        0.003 s.
   Resorting integrals after freezing core.
-  Timing for resorting DF integrals:                          0.056 s.
-  Timing for freezing core and virtual orbitals:              0.059 s.
-  Timing for computing density-fitted integrals:              0.474 s.
+  Timing for resorting DF integrals:                          0.009 s.
+  Timing for freezing core and virtual orbitals:              0.011 s.
+  Timing for computing density-fitted integrals:              0.135 s.
 
-  ==> Summary of Active Space Solver Input <==
-
-    Irrep.  Multi.(2ms)      N
-    --------------------------
-       Ag      1  (  0)      1
-      B1u      1  (  0)      2
-    --------------------------
-    N: number of roots
-    ms: spin z component
-    Total number of roots:   3
-    --------------------------
+  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn
 
 
-              ---------------------------------------------------
-                Complete Active Space Configuration Interaction
-                                  Chenyang Li
-              ---------------------------------------------------
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 3
+  Number of active alpha electrons: 1
+  Number of active beta electrons: 1
+  Number of determinants (CAS): 5
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) Ag <==
 
 
-  ==> Input Summary <==
-
-    No. a electrons in active      =     1
-    No. b electrons in active      =     1
-    multiplicity                   =     1
-    spin ms (2 * Sz)               =     0
-
-  ==> Orbital Spaces <==
-
-    TOTAL MO                      [   18     4     7    12     4    18    12     7 ]
-    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
-    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
-    CORRELATED MO                 [   17     4     7    12     4    17    12     7 ]
-    CORE                          [    2     0     0     1     0     1     1     0 ]
-    ACTIVE                        [    0     0     2     0     0     0     0     1 ]
-    VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000050 s
-  Forming determinants                ...  Done. Timing        0.000010 s
-
-  ==> Determinants Summary <==
-
-    number of alpha active electrons         =     1
-    number of beta active electrons          =     1
-    root symmetry (zero based)               =     0
-    number of determinants                   =     5
-
-  Diagonalizing Hamiltonian           ...
-
-  ==> Computing 1 Coupling Lists <==
-
-        α          1.862e-05 seconds
-        β          1.465e-05 seconds
-
-  ==> Computing 2 Coupling Lists <==
-
-        αα         8.198e-06 seconds
-        ββ         6.161e-06 seconds
-        αβ         1.471e-05 seconds
-
-  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 4 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000388 s
+  Found 1 roots with 2S+1 = 3
 
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
-
-  ==> Root No. 0 <==
-
-    00 2          0.9848842279
-    20 0         -0.1159020605
-    ba 0         -0.0810162071
-    ab 0         -0.0810162071
-    02 0         -0.0586729784
-
-    Total Energy:   -78.050972650022345
-
-
-
-              ---------------------------------------------------
-                Complete Active Space Configuration Interaction
-                                  Chenyang Li
-              ---------------------------------------------------
-
-
-  ==> Input Summary <==
-
-    No. a electrons in active      =     1
-    No. b electrons in active      =     1
-    multiplicity                   =     1
-    spin ms (2 * Sz)               =     0
-
-  ==> Orbital Spaces <==
-
-    TOTAL MO                      [   18     4     7    12     4    18    12     7 ]
-    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
-    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
-    CORRELATED MO                 [   17     4     7    12     4    17    12     7 ]
-    CORE                          [    2     0     0     1     0     1     1     0 ]
-    ACTIVE                        [    0     0     2     0     0     0     0     1 ]
-    VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000025 s
-  Forming determinants                ...  Done. Timing        0.000007 s
-
-  ==> Determinants Summary <==
-
-    number of alpha active electrons         =     1
-    number of beta active electrons          =     1
-    root symmetry (zero based)               =     5
-    number of determinants                   =     4
-
-  Diagonalizing Hamiltonian           ...
+  Done diagonalizing Hamiltonian, 9.650e-05 seconds.
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.181e-05 seconds
-        β          1.054e-05 seconds
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          1.133e-05 seconds
+        β          3.500e-06 seconds
+  Time spent building 1-rdm: 1.167e-06 seconds
 
-  ==> Computing 2 Coupling Lists <==
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) Ag <==
 
-        αα         6.130e-06 seconds
-        ββ         4.665e-06 seconds
-        αβ         9.454e-06 seconds
+  Important determinants with coefficients |C| >= 5.000e-02
 
-  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  ---- Root No. 0 ----
+
+     B2g B3u    Coefficients
+    ------------------------
+      00   2    0.9848842279
+      20   0   -0.1159020605
+      ba   0   -0.0810162071
+      ab   0   -0.0810162071
+      02   0   -0.0586729784
+    ------------------------
+
+    Occupation Numbers:
+        1B3u  1.93999388    1B2g  0.03999383    2B2g  0.02001229
+
+    Total Energy:  -78.050972649967647
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 3
+  Number of active alpha electrons: 1
+  Number of active beta electrons: 1
+  Number of determinants (CAS): 4
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) B1u <==
+
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 2 roots with 2S+1 = 1 *
-  Found 2 roots with 2S+1 = 3  Done. Timing        0.000270 s
+  Found 2 roots with 2S+1 = 3
 
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
+  Done diagonalizing Hamiltonian, 4.400e-05 seconds.
 
-  ==> Root No. 0 <==
+  ==> Computing 1 Coupling Lists <==
 
-    a0 b         -0.6884183942
-    b0 a         -0.6884183942
-    0a b          0.1614933886
-    0b a          0.1614933886
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.750e-06 seconds
+        β          3.042e-06 seconds
+  Time spent building 1-rdm: 7.920e-07 seconds
 
-    Total Energy:   -77.754262809385494
+  ==> Computing 1 Coupling Lists <==
 
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.958e-06 seconds
+        β          2.458e-06 seconds
+  Time spent building 1-rdm: 6.250e-07 seconds
 
-  ==> Root No. 1 <==
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) B1u <==
 
-    0a b          0.6884183942
-    0b a          0.6884183942
-    a0 b          0.1614933886
-    b0 a          0.1614933886
+  Important determinants with coefficients |C| >= 5.000e-02
 
-    Total Energy:   -77.640640110184961
+  ---- Root No. 0 ----
 
+     B2g B3u    Coefficients
+    ------------------------
+      a0   b   -0.6884183942
+      b0   a   -0.6884183942
+      0a   b    0.1614933886
+      0b   a    0.1614933886
+    ------------------------
 
+    Occupation Numbers:
+        1B3u  1.00000000    1B2g  0.94783977    2B2g  0.05216023
+
+    Total Energy:  -77.754262809332019
+
+  ---- Root No. 1 ----
+
+     B2g B3u    Coefficients
+    ------------------------
+      0a   b    0.6884183942
+      0b   a    0.6884183942
+      a0   b    0.1614933886
+      b0   a    0.1614933886
+    ------------------------
+
+    Occupation Numbers:
+        1B3u  1.00000000    2B2g  0.94783977    1B2g  0.05216023
+
+    Total Energy:  -77.640640110135507
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)    Ag     0      -78.050972650022   0.000000
+       1  (  0)    Ag     0      -78.050972649968   0.000000
     --------------------------------------------------------
-       1  (  0)   B1u     0      -77.754262809385   0.000000
-       1  (  0)   B1u     1      -77.640640110185   0.000000
+       1  (  0)   B1u     0      -77.754262809332   0.000000
+       1  (  0)   B1u     1      -77.640640110136   0.000000
     --------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          1.313e-05 seconds
+        β          2.875e-06 seconds
+  Time spent building 1-rdm: 1.625e-06 seconds
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000049 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
          0AG     0.00000000     0.00000000     0.00000000     0.00000000
@@ -1766,21 +1972,48 @@ Scratch directory: /Users/york/scratch/psi4/
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.167e-06 seconds
+        β          2.584e-06 seconds
+  Time spent building 1-rdm: 1.292e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          2.562e-05 seconds
+        β          2.417e-06 seconds
+  Time spent building 1-rdm: 1.250e-06 seconds
+
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000045 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
         0B1U     0.00000000     0.00000000     0.00000000     0.00000000
-        1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+        1B1U     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          9.167e-06 seconds
+        β          2.708e-06 seconds
+  Time spent building 1-rdm: 1.333e-06 seconds
+
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000047 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
          0AG   -11.68455315     0.00000000     0.00000000    -8.48273398     0.00000000    -7.81728633
@@ -1788,10 +2021,28 @@ Scratch directory: /Users/york/scratch/psi4/
      Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
     --------------------------------------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.083e-06 seconds
+        β          2.500e-06 seconds
+  Time spent building 1-rdm: 1.250e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.875e-06 seconds
+        β          2.500e-06 seconds
+  Time spent building 1-rdm: 1.250e-06 seconds
+
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000043 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000040 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
         0B1U   -21.88290076     0.00000000     0.00000000   -11.85325349     0.00000000   -19.67456801
@@ -1802,12 +2053,10 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000058 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000054 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
-       0AG   0B1U    -0.00000000    -0.00000000     1.25329859     1.25329859
-       0AG   1B1U    -0.00000000    -0.00000000    -0.92470591     0.92470591
+       0AG   0B1U    -0.00000000     0.00000000     1.25329859     1.25329859
+       0AG   1B1U     0.00000000    -0.00000000    -0.92470591     0.92470591
     -------------------------------------------------------------------------
 
   ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
@@ -1839,10 +2088,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000055 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
-      0B1U   1B1U    -0.00000000     0.00000000    -0.00000000     0.00000000
+      0B1U   1B1U     0.00000000     0.00000000     0.00000000     0.00000000
     -------------------------------------------------------------------------
 
   ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
@@ -1859,40 +2107,136 @@ Scratch directory: /Users/york/scratch/psi4/
     ----------------------------------------------------------
       0B1U   1B1U     0.11362270     3.09183113     0.00000000
     ----------------------------------------------------------
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000052 s
- Computing  2RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000043 s
- Computing  3RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000038 s
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000045 s
- Computing  2RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000039 s
- Computing  3RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000035 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000044 s
- Computing  2RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000038 s
- Computing  3RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000035 s
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          9.250e-06 seconds
+        β          2.625e-06 seconds
+  Time spent building 1-rdm: 1.291e-06 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+        αα         4.625e-06 seconds
+  (N-2) ab lists size counts
+      Size      Count
+         5          1
+        αβ         7.625e-06 seconds
+        ββ         1.500e-06 seconds
+  Time spent building 2-rdm: 2.041e-06 seconds
+
+  ==> Computing 3 Coupling Lists <==
+
+  (N-3) aaa lists size counts
+      Size      Count
+        ααα        4.708e-06 seconds
+  (N-3) aab lists size counts
+      Size      Count
+        ααβ        5.917e-06 seconds
+        αββ        1.375e-06 seconds
+        βββ        1.250e-06 seconds
+  Time spent building 3-rdm: 2.291e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.833e-06 seconds
+        β          2.625e-06 seconds
+  Time spent building 1-rdm: 1.250e-06 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+        αα         4.166e-06 seconds
+  (N-2) ab lists size counts
+      Size      Count
+         4          1
+        αβ         6.542e-06 seconds
+        ββ         1.167e-06 seconds
+  Time spent building 2-rdm: 1.416e-06 seconds
+
+  ==> Computing 3 Coupling Lists <==
+
+  (N-3) aaa lists size counts
+      Size      Count
+        ααα        4.416e-06 seconds
+  (N-3) aab lists size counts
+      Size      Count
+        ααβ        5.000e-06 seconds
+        αββ        1.042e-06 seconds
+        βββ        1.084e-06 seconds
+  Time spent building 3-rdm: 1.333e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.709e-06 seconds
+        β          2.417e-06 seconds
+  Time spent building 1-rdm: 1.125e-06 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+        αα         4.041e-06 seconds
+  (N-2) ab lists size counts
+      Size      Count
+         4          1
+        αβ         6.459e-06 seconds
+        ββ         1.041e-06 seconds
+  Time spent building 2-rdm: 1.333e-06 seconds
+
+  ==> Computing 3 Coupling Lists <==
+
+  (N-3) aaa lists size counts
+      Size      Count
+        ααα        4.375e-06 seconds
+  (N-3) aab lists size counts
+      Size      Count
+        ααβ        4.708e-06 seconds
+        αββ        1.042e-06 seconds
+        βββ        1.042e-06 seconds
+  Time spent building 3-rdm: 1.250e-06 seconds
 
   ==> Semicanonicalize Orbitals <==
 
-    MIX INACTIVE ORBITALS   ...... FALSE
-    MIX GAS ACTIVE ORBITALS ...... FALSE
-    FROZEN_DOCC     ...  CANONICAL
-    FROZEN_UOCC     ...  CANONICAL
-    GAS1            ...  CANONICAL
-    RESTRICTED_DOCC ...  CANONICAL
-    RESTRICTED_UOCC ...  CANONICAL
+    MIX INACTIVE ORBITALS         FALSE
+    MIX GAS ACTIVE ORBITALS       FALSE
+    FROZEN_DOCC                   CANONICAL
+    FROZEN_UOCC                   CANONICAL
+    GAS1                          CANONICAL
+    RESTRICTED_DOCC               CANONICAL
+    RESTRICTED_UOCC               CANONICAL
 
     Off-Diag. Elements       Max           2-Norm
     ------------------------------------------------
     FROZEN_DOCC          0.0000000000   0.0000000000
     GAS1                 0.0000000000   0.0000000000
     RESTRICTED_DOCC      0.0000000000   0.0000000000
-    RESTRICTED_UOCC      0.0000000000   0.0000000000
+    RESTRICTED_UOCC      0.0000000048   0.0000000248
     ------------------------------------------------
+
+    Canonicalization test passed
+
   Orbitals are already semicanonicalized.
-  Timing for orbital canonicalization:                        0.008 s.
+  Timing for orbital canonicalization:                        0.011 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
                             written by Chenyang Li
-                                 8 OMP threads
+                                 1 OMP thread
     -----------------------------------------------------------------------
 
   Disclaimer:
@@ -1901,11 +2245,11 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
-    Computing Fock matrix and cleaning JK ....... Done. Timing      0.008 s
+    Computing Fock matrix and cleaning JK ....... Done. Timing      0.012 s
     Reading DSRG options ........................ Done. Timing      0.000 s
     Setting ambit MO space ...................... Done. Timing      0.000 s
     Initializing density cumulants .............. Done. Timing      0.001 s
-    Filling Fock matrix from ForteIntegrals ..... Done. Timing      0.001 s
+    Filling Fock matrix from ForteIntegrals ..... Done. Timing      0.000 s
 
   ==> Density Cumulant Summary <==
 
@@ -1920,7 +2264,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Block                Max            Mean
     ----------------------------------------
     CORE        0.0000000000    0.0000000000
-    VIRTUAL     0.0000000000    0.0000000000
+    VIRTUAL     0.0000000048    0.0000000001
     GAS1        0.0000000000    0.0000000000
     ----------------------------------------
     Orbitals are semi-canonicalized.
@@ -1930,8 +2274,9 @@ Scratch directory: /Users/york/scratch/psi4/
                   -------------------------------------------
 
 
-  ==> Computation Information <==
+  ==> Calculation Information <==
 
+    --------------------------------------------------------
     Integral type                                         DF
     Source operator                                 STANDARD
     Core-Virtual source type                          NORMAL
@@ -1944,7 +2289,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Taylor expansion threshold                     1.000e-03
     Intruder amplitudes threshold                  1.000e-01
     Number of amplitudes for printing                     15
-
+    --------------------------------------------------------
 
   ==> DSRG-MRPT3 Memory Information <==
 
@@ -1963,9 +2308,11 @@ Scratch directory: /Users/york/scratch/psi4/
     Max memory for local intermediates               8.65 MB
     Memory currently available                       7.14 GB
 
-    Initializing integrals ...................... Done. Timing      0.151 s
-    Allocating amplitudes ....................... Done. Timing      0.001 s
-    Computing T2 amplitudes ..................... Done. Timing      0.197 s
+    Initializing integrals ...................... Done. Timing      0.030 s
+    Allocating amplitudes ....................... Done. Timing      0.000 s
+  =>** Before self.dsrg_solver.compute_energy() **<=
+
+    Computing T2 amplitudes ..................... Done. Timing      0.010 s
     Computing T1 amplitudes ..................... Done. Timing      0.001 s
 
   ==> First-Order Excitation Amplitudes Summary <==
@@ -1980,7 +2327,7 @@ Scratch directory: /Users/york/scratch/psi4/
     [  73   77] 0.0043544 [  21   26] 0.0027663 [  73   79] 0.0025061
     [  22   27] 0.0010349 [  22   23] 0.0006556 [  22   24] 0.0003397
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.032464509812081
+    2-Norm of T1 vector:                            0.032464509808723
     Number of nonzero elements:                                    84
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
@@ -1992,8 +2339,8 @@ Scratch directory: /Users/york/scratch/psi4/
     [  73   73   73   74] 0.0362875 [  73   61   73   63] 0.0311937 [  73   28   73   34] 0.0300546
     [  73   22   73   24] 0.0300011 [  73   28   73   30] 0.0292374 [  73    1   73   10] 0.0291759
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.522564775245924
-    Number of nonzero elements:                                                              106531
+    2-Norm of T2 vector:                                                          0.522564775240829
+    Number of nonzero elements:                                                              103669
     -----------------------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -2003,23 +2350,23 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 3rd-Order Energy Contribution (1/3) <==
 
-    Computing 3rd-order energy (1/3) ............ Done. Timing      0.156 s
-    Computing integrals for ref. relaxation ..... Done. Timing      0.016 s
+    Computing 3rd-order energy (1/3) ............ Done. Timing      0.118 s
+    Computing integrals for ref. relaxation ..... Done. Timing      0.011 s
 
   ==> Computing 2nd-Order Correlation Energy <==
 
-    Renormalizing 2-body integrals .............. Done. Timing      0.183 s
+    Renormalizing 2-body integrals .............. Done. Timing      0.008 s
     Renormalizing 1-body integrals .............. Done. Timing      0.001 s
-    Computing 2nd-order energy .................. Done. Timing      0.006 s
-    Computing integrals for ref. relaxation ..... Done. Timing      0.014 s
+    Computing 2nd-order energy .................. Done. Timing      0.004 s
+    Computing integrals for ref. relaxation ..... Done. Timing      0.012 s
 
   ==> Computing 3rd-Order Energy Contribution (2/3) <==
 
-    Preparing 2nd-order amplitudes .............. Done. Timing      0.720 s
-    Computing T2 amplitudes ..................... Done. Timing      0.191 s
+    Preparing 2nd-order amplitudes .............. Done. Timing      0.943 s
+    Computing T2 amplitudes ..................... Done. Timing      0.011 s
     Computing T1 amplitudes ..................... Done. Timing      0.001 s
-    Computing 3rd-order energy (2/3) ............ Done. Timing      0.007 s
-    Computing integrals for ref. relaxation ..... Done. Timing      0.015 s
+    Computing 3rd-order energy (2/3) ............ Done. Timing      0.005 s
+    Computing integrals for ref. relaxation ..... Done. Timing      0.012 s
 
   ==> Second-Order Excitation Amplitudes Summary <==
 
@@ -2033,8 +2380,8 @@ Scratch directory: /Users/york/scratch/psi4/
     [  21   24] 0.0047189 [   1   13] 0.0040985 [   1    6] 0.0037502
     [   1   15] 0.0036264 [  44   51] 0.0034779 [  73   79] 0.0034078
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.039062529873585
-    Number of nonzero elements:                                   305
+    2-Norm of T1 vector:                            0.039062529873280
+    Number of nonzero elements:                                   294
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
         i    j    a    b                i    j    a    b                i    j    a    b
@@ -2045,8 +2392,8 @@ Scratch directory: /Users/york/scratch/psi4/
     [  73   22   73   24] 0.0106611 [  22   73   73   25] 0.0097508 [  21   22   21   25] 0.0097392
     [  73   21   73   24] 0.0097285 [  22   22   21   25] 0.0096410 [  73    1   73    6] 0.0094662
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.123005038171167
-    Number of nonzero elements:                                                              125333
+    2-Norm of T2 vector:                                                          0.123005038169943
+    Number of nonzero elements:                                                              122831
     -----------------------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -2056,21 +2403,21 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 3rd-Order Energy Contribution (3/3) <==
 
-    Renormalizing 2-body integrals .............. Done. Timing      0.178 s
+    Renormalizing 2-body integrals .............. Done. Timing      0.008 s
     Renormalizing 1-body integrals .............. Done. Timing      0.001 s
-    Computing 3rd-order energy (3/3) ............ Done. Timing      0.006 s
-    Computing integrals for ref. relaxation ..... Done. Timing      0.018 s
+    Computing 3rd-order energy (3/3) ............ Done. Timing      0.005 s
+    Computing integrals for ref. relaxation ..... Done. Timing      0.012 s
 
   ==> DSRG-MRPT3 Energy Summary <==
 
-    Reference energy                         =    -77.815291856530948
-    2nd-order correlation energy             =     -0.292762925387540
-    3rd-order correlation energy part 1      =      0.002413079512237
-    3rd-order correlation energy part 2      =     -0.017832110710214
-    3rd-order correlation energy part 3      =      0.000715778987805
-    3rd-order correlation energy             =     -0.014703252210171
-    DSRG-MRPT3 correlation energy            =     -0.307466177597711
-    DSRG-MRPT3 total energy                  =    -78.122758034128665
+    Reference energy                         =    -77.815291856478424
+    2nd-order correlation energy             =     -0.292762925386812
+    3rd-order correlation energy part 1      =      0.002413079512379
+    3rd-order correlation energy part 2      =     -0.017832110706351
+    3rd-order correlation energy part 3      =      0.000715778988247
+    3rd-order correlation energy             =     -0.014703252205726
+    DSRG-MRPT3 correlation energy            =     -0.307466177592537
+    DSRG-MRPT3 total energy                  =    -78.122758034070955
 
     Notes:
       3rd-order energy part 1: -1.0 / 12.0 * [[[H0th, A1st], A1st], A1st]
@@ -2078,6 +2425,10 @@ Scratch directory: /Users/york/scratch/psi4/
       3rd-order energy part 3: 0.5 * [Hbar2nd, A1st]
       Hbar1st = H1st + [H0th, A1st]
       Hbar2nd = 0.5 * [H1st + Hbar1st, A1st] + [H0th, A2nd]
+  =>** After self.dsrg_solver.compute_energy() **<=
+
+  =>** In reference relaxation loop **<=
+
 
   ==> De-Normal-Order 2-Body DSRG Transformed Hamiltonian <==
 
@@ -2086,21 +2437,21 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transform One-Electron Operators <==
 
-    Transforming DIPOLE X ....................... Done. Timing      0.013 s
-    Transforming DIPOLE Y ....................... Done. Timing      0.014 s
-    Transforming DIPOLE Z ....................... Done. Timing      0.016 s
-    Transforming QUADRUPOLE XX .................. Done. Timing      0.016 s
-    Transforming QUADRUPOLE XY .................. Done. Timing      0.016 s
-    Transforming QUADRUPOLE XZ .................. Done. Timing      0.014 s
-    Transforming QUADRUPOLE YY .................. Done. Timing      0.015 s
-    Transforming QUADRUPOLE YZ .................. Done. Timing      0.014 s
-    Transforming QUADRUPOLE ZZ .................. Done. Timing      0.015 s
+    Transforming DIPOLE X ....................... Done. Timing      0.010 s
+    Transforming DIPOLE Y ....................... Done. Timing      0.009 s
+    Transforming DIPOLE Z ....................... Done. Timing      0.009 s
+    Transforming QUADRUPOLE XX .................. Done. Timing      0.009 s
+    Transforming QUADRUPOLE XY .................. Done. Timing      0.009 s
+    Transforming QUADRUPOLE XZ .................. Done. Timing      0.009 s
+    Transforming QUADRUPOLE YY .................. Done. Timing      0.009 s
+    Transforming QUADRUPOLE YZ .................. Done. Timing      0.009 s
+    Transforming QUADRUPOLE ZZ .................. Done. Timing      0.009 s
 
   ==> Expectation Values of the DSRG Transformed One-Body Operators [a.u.] <==
 
-    DIPOLE X:   0.00000000
+    DIPOLE X:  -0.00000000
     DIPOLE Y:  -0.00000000
-    DIPOLE Z:  -0.00000000
+    DIPOLE Z:   0.00000000
     QUADRUPOLE XX: -18.27590759
     QUADRUPOLE XY:   0.00000000
     QUADRUPOLE XZ:   0.00000000
@@ -2144,162 +2495,148 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Computing the scalar term ................... Done. Timing      0.000 s
 
-              ---------------------------------------------------
-                Complete Active Space Configuration Interaction
-                                  Chenyang Li
-              ---------------------------------------------------
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 3
+  Number of active alpha electrons: 1
+  Number of active beta electrons: 1
+  Number of determinants (CAS): 5
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) Ag <==
 
 
-  ==> Input Summary <==
-
-    No. a electrons in active      =     1
-    No. b electrons in active      =     1
-    multiplicity                   =     1
-    spin ms (2 * Sz)               =     0
-
-  ==> Orbital Spaces <==
-
-    TOTAL MO                      [   18     4     7    12     4    18    12     7 ]
-    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
-    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
-    CORRELATED MO                 [   17     4     7    12     4    17    12     7 ]
-    CORE                          [    2     0     0     1     0     1     1     0 ]
-    ACTIVE                        [    0     0     2     0     0     0     0     1 ]
-    VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000039 s
-  Forming determinants                ...  Done. Timing        0.000010 s
-
-  ==> Determinants Summary <==
-
-    number of alpha active electrons         =     1
-    number of beta active electrons          =     1
-    root symmetry (zero based)               =     0
-    number of determinants                   =     5
-
-  Diagonalizing Hamiltonian           ...
-
-  ==> Computing 1 Coupling Lists <==
-
-        α          1.639e-05 seconds
-        β          1.252e-05 seconds
-
-  ==> Computing 2 Coupling Lists <==
-
-        αα         6.890e-06 seconds
-        ββ         5.167e-06 seconds
-        αβ         1.211e-05 seconds
-
-  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 4 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000367 s
+  Found 1 roots with 2S+1 = 3
 
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
-
-  ==> Root No. 0 <==
-
-    00 2          0.9892098129
-    20 0         -0.0971217294
-    ba 0         -0.0688124976
-    ab 0         -0.0688124976
-    02 0         -0.0506062850
-
-    Total Energy:   -78.355123774026509
-
-
-
-              ---------------------------------------------------
-                Complete Active Space Configuration Interaction
-                                  Chenyang Li
-              ---------------------------------------------------
-
-
-  ==> Input Summary <==
-
-    No. a electrons in active      =     1
-    No. b electrons in active      =     1
-    multiplicity                   =     1
-    spin ms (2 * Sz)               =     0
-
-  ==> Orbital Spaces <==
-
-    TOTAL MO                      [   18     4     7    12     4    18    12     7 ]
-    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
-    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
-    CORRELATED MO                 [   17     4     7    12     4    17    12     7 ]
-    CORE                          [    2     0     0     1     0     1     1     0 ]
-    ACTIVE                        [    0     0     2     0     0     0     0     1 ]
-    VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000034 s
-  Forming determinants                ...  Done. Timing        0.000011 s
-
-  ==> Determinants Summary <==
-
-    number of alpha active electrons         =     1
-    number of beta active electrons          =     1
-    root symmetry (zero based)               =     5
-    number of determinants                   =     4
-
-  Diagonalizing Hamiltonian           ...
+  Done diagonalizing Hamiltonian, 7.479e-05 seconds.
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.437e-05 seconds
-        β          1.244e-05 seconds
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          1.067e-05 seconds
+        β          3.250e-06 seconds
+  Time spent building 1-rdm: 1.208e-06 seconds
 
-  ==> Computing 2 Coupling Lists <==
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) Ag <==
 
-        αα         7.315e-06 seconds
-        ββ         5.751e-06 seconds
-        αβ         1.169e-05 seconds
+  Important determinants with coefficients |C| >= 5.000e-02
 
-  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  ---- Root No. 0 ----
+
+     B2g B3u    Coefficients
+    ------------------------
+      00   2    0.9892098129
+      20   0   -0.0971217294
+      ba   0   -0.0688124976
+      ab   0   -0.0688124976
+      02   0   -0.0506062850
+    ------------------------
+
+    Occupation Numbers:
+        1B3u  1.95707211    1B2g  0.02833558    2B2g  0.01459231
+
+    Total Energy:  -78.355123773966852
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 3
+  Number of active alpha electrons: 1
+  Number of active beta electrons: 1
+  Number of determinants (CAS): 4
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) B1u <==
+
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 2 roots with 2S+1 = 1 *
-  Found 2 roots with 2S+1 = 3  Done. Timing        0.000357 s
+  Found 2 roots with 2S+1 = 3
 
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
+  Done diagonalizing Hamiltonian, 4.100e-05 seconds.
 
-  ==> Root No. 0 <==
+  ==> Computing 1 Coupling Lists <==
 
-    a0 b         -0.7048376658
-    b0 a         -0.7048376658
-    0a b         -0.0566026929
-    0b a         -0.0566026929
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.208e-06 seconds
+        β          2.625e-06 seconds
+  Time spent building 1-rdm: 8.340e-07 seconds
 
-    Total Energy:   -78.063699729828315
+  ==> Computing 1 Coupling Lists <==
 
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.625e-06 seconds
+        β          2.583e-06 seconds
+  Time spent building 1-rdm: 7.080e-07 seconds
 
-  ==> Root No. 1 <==
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) B1u <==
 
-    0a b          0.7048376658
-    0b a          0.7048376658
-    a0 b         -0.0566026929
-    b0 a         -0.0566026929
+  Important determinants with coefficients |C| >= 5.000e-02
 
-    Total Energy:   -77.949828270257768
+  ---- Root No. 0 ----
 
+     B2g B3u    Coefficients
+    ------------------------
+      a0   b   -0.7048376658
+      b0   a   -0.7048376658
+      0a   b   -0.0566026929
+      0b   a   -0.0566026929
+    ------------------------
 
+    Occupation Numbers:
+        1B3u  1.00000000    1B2g  0.99359227    2B2g  0.00640773
+
+    Total Energy:  -78.063699729771542
+
+  ---- Root No. 1 ----
+
+     B2g B3u    Coefficients
+    ------------------------
+      0a   b    0.7048376658
+      0b   a    0.7048376658
+      a0   b   -0.0566026929
+      b0   a   -0.0566026929
+    ------------------------
+
+    Occupation Numbers:
+        1B3u  1.00000000    2B2g  0.99359227    1B2g  0.00640773
+
+    Total Energy:  -77.949828270201252
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)    Ag     0      -78.355123774027   0.000000
+       1  (  0)    Ag     0      -78.355123773967   0.000000
     --------------------------------------------------------
-       1  (  0)   B1u     0      -78.063699729828   0.000000
-       1  (  0)   B1u     1      -77.949828270258   0.000000
+       1  (  0)   B1u     0      -78.063699729772   0.000000
+       1  (  0)   B1u     1      -77.949828270201   0.000000
     --------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          9.917e-06 seconds
+        β          2.750e-06 seconds
+  Time spent building 1-rdm: 1.667e-06 seconds
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000064 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
          0AG     0.00000000     0.00000000     0.00000000     0.00000000
@@ -2307,21 +2644,48 @@ Scratch directory: /Users/york/scratch/psi4/
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.875e-06 seconds
+        β          2.375e-06 seconds
+  Time spent building 1-rdm: 1.375e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.584e-06 seconds
+        β          2.625e-06 seconds
+  Time spent building 1-rdm: 1.167e-06 seconds
+
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000055 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000052 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
         0B1U     0.00000000     0.00000000     0.00000000     0.00000000
-        1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+        1B1U     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          9.458e-06 seconds
+        β          2.750e-06 seconds
+  Time spent building 1-rdm: 1.375e-06 seconds
+
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000058 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
          0AG   -11.67820964     0.00000000     0.00000000    -8.47613499     0.00000000    -7.76957211
@@ -2329,10 +2693,28 @@ Scratch directory: /Users/york/scratch/psi4/
      Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
     --------------------------------------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.791e-06 seconds
+        β          2.416e-06 seconds
+  Time spent building 1-rdm: 1.208e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.791e-06 seconds
+        β          2.792e-06 seconds
+  Time spent building 1-rdm: 1.208e-06 seconds
+
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000055 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000051 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
         0B1U   -16.19479253     0.00000000     0.00000000   -10.19147402     0.00000000   -14.49289084
@@ -2343,8 +2725,6 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000071 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000067 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
        0AG   0B1U    -0.00000000     0.00000000     1.52799621     1.52799621
@@ -2377,10 +2757,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000069 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
-      0B1U   1B1U    -0.00000000     0.00000000    -0.00000000     0.00000000
+      0B1U   1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
     -------------------------------------------------------------------------
 
   ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
@@ -2398,31 +2777,67 @@ Scratch directory: /Users/york/scratch/psi4/
       0B1U   1B1U     0.11387146     3.09860024     0.00000000
     ----------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          9.042e-06 seconds
+        β          2.625e-06 seconds
+  Time spent building 1-rdm: 1.250e-06 seconds
+
   ==> DSRG Dressed Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000060 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
-         0AG     0.00000000    -0.00000000    -0.00000000     0.00000000
+         0AG    -0.00000000    -0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.959e-06 seconds
+        β          2.458e-06 seconds
+  Time spent building 1-rdm: 1.167e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.458e-06 seconds
+        β          2.375e-06 seconds
+  Time spent building 1-rdm: 1.208e-06 seconds
 
   ==> DSRG Dressed Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000056 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000052 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
-        0B1U    -0.00000000    -0.00000000    -0.00000000     0.00000000
-        1B1U     0.00000000    -0.00000000     0.00000000     0.00000000
+        0B1U    -0.00000000    -0.00000000     0.00000000     0.00000000
+        1B1U    -0.00000000    -0.00000000    -0.00000000     0.00000000
     --------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          8.917e-06 seconds
+        β          2.541e-06 seconds
+  Time spent building 1-rdm: 1.250e-06 seconds
+
   ==> DSRG Dressed Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000059 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
          0AG   -11.75769641     0.00000000     0.00000000    -8.95243988    -0.00000000    -8.71870992
@@ -2430,26 +2845,42 @@ Scratch directory: /Users/york/scratch/psi4/
      Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
     --------------------------------------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.625e-06 seconds
+        β          2.459e-06 seconds
+  Time spent building 1-rdm: 1.125e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.542e-06 seconds
+        β          2.292e-06 seconds
+  Time spent building 1-rdm: 1.125e-06 seconds
+
   ==> DSRG Dressed Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000055 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000051 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
-        0B1U   -16.19286291     0.00000000     0.00000000   -10.20796758    -0.00000000   -14.31931066
-        1B1U   -26.87350548    -0.00000000     0.00000000   -12.62585595    -0.00000000   -23.03759463
+        0B1U   -16.19286291    -0.00000000     0.00000000   -10.20796758    -0.00000000   -14.31931066
+        1B1U   -26.87350548     0.00000000     0.00000000   -12.62585595     0.00000000   -23.03759462
     --------------------------------------------------------------------------------------------------
      Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
     --------------------------------------------------------------------------------------------------
 
   ==> DSRG Dressed Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000078 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000068 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
-       0AG   0B1U     0.00000000     0.00000000     1.35506186     1.35506186
-       0AG   1B1U    -0.00000000    -0.00000000    -0.40372524     0.40372524
+       0AG   0B1U    -0.00000000    -0.00000000     1.35506186     1.35506186
+       0AG   1B1U     0.00000000     0.00000000    -0.40372524     0.40372524
     -------------------------------------------------------------------------
 
   ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
@@ -2478,10 +2909,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000069 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
-      0B1U   1B1U    -0.00000000    -0.00000000     0.00000000     0.00000000
+      0B1U   1B1U     0.00000000    -0.00000000    -0.00000000     0.00000000
     -------------------------------------------------------------------------
 
   ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
@@ -2498,20 +2928,22 @@ Scratch directory: /Users/york/scratch/psi4/
     ----------------------------------------------------------
       0B1U   1B1U     0.11387146     3.09860024     0.00000000
     ----------------------------------------------------------
+  Semicanonical orbitals must be used!
+
 
   ==> Total Timings (s) for Computing Commutators <==
 
-             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+           [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]  
     -----------------------------------------------------
-    -> C0       0.004       0.005       0.001       0.023
-    -> C1       0.013       0.089       0.030       0.133
-    -> C2                   0.025       0.056       0.603
+    -> C0       0.003       0.003       0.001       0.016
+    -> C1       0.009       0.057       0.026       0.112
+    -> C2                   0.021       0.051       0.832
     -----------------------------------------------------
 
 
-  Time to prepare integrals:        0.759 seconds
-  Time to run job          :        2.265 seconds
-  Total                    :        3.024 seconds
+  Time to prepare integrals:        0.331 seconds
+  Time to run job          :        1.343 seconds
+  Total                    :        1.674 seconds
     SA-DSRG-PT3 ENERGY....................................................................PASSED
     SA-DSRG-PT3 ENERGY....................................................................PASSED
     SA-DSRG-PT3 ENERGY....................................................................PASSED
@@ -2526,13 +2958,13 @@ Scratch directory: /Users/york/scratch/psi4/
     SA-DSRG-PT3/BARE MULTIPOLE OSCILLATOR STRENGTH OF 0B1U................................PASSED
     SA-DSRG-PT3/BARE MULTIPOLE OSCILLATOR STRENGTH OF 1B1U................................PASSED
 
-Scratch directory: /Users/york/scratch/psi4/
+Scratch directory: /tmp/
 
   Forte
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: quadrupole - git commit: 1815803a
+    git branch: adpative-rsc - git commit: 2a44e333
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -2540,7 +2972,6 @@ Scratch directory: /Users/york/scratch/psi4/
     Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
-  Size of Determinant class: 128 bits
 
   Preparing forte objects from a Psi4 Wavefunction object
 
@@ -2573,8 +3004,8 @@ Scratch directory: /Users/york/scratch/psi4/
     Name: AUG-CC-PVDZ
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1, 4     entry C          line   182 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz.gbs 
-    atoms 2-3, 5-6 entry H          line    40 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz.gbs 
+    atoms 1, 4     entry C          line   182 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz.gbs 
+    atoms 2-3, 5-6 entry H          line    40 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz.gbs 
 
 
   Checking orbital orthonormality against current geometry ... Done (OK)
@@ -2584,18 +3015,23 @@ Scratch directory: /Users/york/scratch/psi4/
     Name: AUG-CC-PVDZ-JKFIT
     Role: RIFIT
     Keyword: DF_BASIS_MP2
-    atoms 1, 4     entry C          line   154 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
-    atoms 2-3, 5-6 entry H          line    70 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
+    atoms 1, 4     entry C          line   154 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
+    atoms 2-3, 5-6 entry H          line    70 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
 
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1, 4     entry C          line    61 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
-    atoms 2-3, 5-6 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 1, 4     entry C          line    61 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2-3, 5-6 entry H          line    19 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
 
 
+  State Singlet (Ms = 0) Ag GAS min: 0 0 0 0 0 0 ; GAS max: 6 0 0 0 0 0 ; weights:
+      0.333333333333
+  State Singlet (Ms = 0) B1u GAS min: 0 0 0 0 0 0 ; GAS max: 6 0 0 0 0 0 ; weights:
+      0.333333333333
+      0.333333333333
   Forte will use psi4 integrals
 
   ==> Primary Basis Set Summary <==
@@ -2610,14 +3046,16 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   JK created using MemDF integrals
-  DFHelper Memory: AOs need 0.017 GiB; user supplied 5.960 GiB. Using in-core AOs.
+  DFHelper Memory: AOs need 0.017 GiB; user supplied 5.960 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
 
   ==> MemDFJK: Density-Fitted J/K Matrices <==
 
     J tasked:                   Yes
     K tasked:                   Yes
     wK tasked:                   No
-    OpenMP threads:               8
+    OpenMP threads:               1
     Memory [MiB]:              6103
     Algorithm:                 Core
     Schwarz Cutoff:           1E-12
@@ -2649,15 +3087,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
   Number of auxiliary basis functions:  300
   Need 16.14 MB to store DF integrals
-  DFHelper Memory: AOs need 0.017 GiB; user supplied 6.688 GiB. Using in-core AOs.
+  DFHelper Memory: AOs need 0.017 GiB; user supplied 6.689 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
 
   ==> DFHelper <==
     NBF:                              82
     NAux:                            300
     Schwarz Cutoff:                1E-12
     Mask sparsity (%):                 0
-    DFH Avail. Memory [GiB]:       6.688
-    OpenMP threads:                    8
+    DFH Avail. Memory [GiB]:       6.689
+    OpenMP threads:                    1
     Algorithm:                     STORE
     AO Core:                        True
     MO Core:                       False
@@ -2669,184 +3109,160 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   Transforming DF Integrals
-  Timing for density-fitting transformation:                  0.122 s.
+  Timing for density-fitting transformation:                  0.024 s.
 
-  Frozen-core energy         -78.519766265366485 a.u.
+  Frozen-core energy         -78.519766265362819 a.u.
   Timing for frozen one-body operator:                        0.003 s.
   Resorting integrals after freezing core.
-  Timing for resorting DF integrals:                          0.063 s.
-  Timing for freezing core and virtual orbitals:              0.066 s.
-  Timing for computing density-fitted integrals:              0.484 s.
+  Timing for resorting DF integrals:                          0.009 s.
+  Timing for freezing core and virtual orbitals:              0.012 s.
+  Timing for computing density-fitted integrals:              0.133 s.
 
-  ==> Summary of Active Space Solver Input <==
-
-    Irrep.  Multi.(2ms)      N
-    --------------------------
-       Ag      1  (  0)      1
-      B1u      1  (  0)      2
-    --------------------------
-    N: number of roots
-    ms: spin z component
-    Total number of roots:   3
-    --------------------------
+  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn
 
 
-              ---------------------------------------------------
-                Complete Active Space Configuration Interaction
-                                  Chenyang Li
-              ---------------------------------------------------
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 3
+  Number of active alpha electrons: 1
+  Number of active beta electrons: 1
+  Number of determinants (CAS): 5
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) Ag <==
 
 
-  ==> Input Summary <==
-
-    No. a electrons in active      =     1
-    No. b electrons in active      =     1
-    multiplicity                   =     1
-    spin ms (2 * Sz)               =     0
-
-  ==> Orbital Spaces <==
-
-    TOTAL MO                      [   18     4     7    12     4    18    12     7 ]
-    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
-    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
-    CORRELATED MO                 [   17     4     7    12     4    17    12     7 ]
-    CORE                          [    2     0     0     1     0     1     1     0 ]
-    ACTIVE                        [    0     0     2     0     0     0     0     1 ]
-    VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000041 s
-  Forming determinants                ...  Done. Timing        0.000013 s
-
-  ==> Determinants Summary <==
-
-    number of alpha active electrons         =     1
-    number of beta active electrons          =     1
-    root symmetry (zero based)               =     0
-    number of determinants                   =     5
-
-  Diagonalizing Hamiltonian           ...
-
-  ==> Computing 1 Coupling Lists <==
-
-        α          1.885e-05 seconds
-        β          1.655e-05 seconds
-
-  ==> Computing 2 Coupling Lists <==
-
-        αα         8.122e-06 seconds
-        ββ         6.259e-06 seconds
-        αβ         1.561e-05 seconds
-
-  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 4 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000431 s
+  Found 1 roots with 2S+1 = 3
 
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
-
-  ==> Root No. 0 <==
-
-    00 2          0.9848842279
-    20 0         -0.1159020605
-    ba 0         -0.0810162071
-    ab 0         -0.0810162071
-    02 0         -0.0586729784
-
-    Total Energy:   -78.050972650022345
-
-
-
-              ---------------------------------------------------
-                Complete Active Space Configuration Interaction
-                                  Chenyang Li
-              ---------------------------------------------------
-
-
-  ==> Input Summary <==
-
-    No. a electrons in active      =     1
-    No. b electrons in active      =     1
-    multiplicity                   =     1
-    spin ms (2 * Sz)               =     0
-
-  ==> Orbital Spaces <==
-
-    TOTAL MO                      [   18     4     7    12     4    18    12     7 ]
-    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
-    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
-    CORRELATED MO                 [   17     4     7    12     4    17    12     7 ]
-    CORE                          [    2     0     0     1     0     1     1     0 ]
-    ACTIVE                        [    0     0     2     0     0     0     0     1 ]
-    VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000033 s
-  Forming determinants                ...  Done. Timing        0.000011 s
-
-  ==> Determinants Summary <==
-
-    number of alpha active electrons         =     1
-    number of beta active electrons          =     1
-    root symmetry (zero based)               =     5
-    number of determinants                   =     4
-
-  Diagonalizing Hamiltonian           ...
+  Done diagonalizing Hamiltonian, 6.533e-05 seconds.
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.426e-05 seconds
-        β          1.292e-05 seconds
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          1.083e-05 seconds
+        β          3.583e-06 seconds
+  Time spent building 1-rdm: 1.292e-06 seconds
 
-  ==> Computing 2 Coupling Lists <==
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) Ag <==
 
-        αα         7.574e-06 seconds
-        ββ         5.624e-06 seconds
-        αβ         1.216e-05 seconds
+  Important determinants with coefficients |C| >= 5.000e-02
 
-  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  ---- Root No. 0 ----
+
+     B2g B3u    Coefficients
+    ------------------------
+      00   2    0.9848842279
+      20   0   -0.1159020605
+      ba   0   -0.0810162071
+      ab   0   -0.0810162071
+      02   0   -0.0586729784
+    ------------------------
+
+    Occupation Numbers:
+        1B3u  1.93999388    1B2g  0.03999383    2B2g  0.02001229
+
+    Total Energy:  -78.050972649967647
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 3
+  Number of active alpha electrons: 1
+  Number of active beta electrons: 1
+  Number of determinants (CAS): 4
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) B1u <==
+
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 2 roots with 2S+1 = 1 *
-  Found 2 roots with 2S+1 = 3  Done. Timing        0.000354 s
+  Found 2 roots with 2S+1 = 3
 
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
+  Done diagonalizing Hamiltonian, 3.888e-05 seconds.
 
-  ==> Root No. 0 <==
+  ==> Computing 1 Coupling Lists <==
 
-    a0 b         -0.6884183942
-    b0 a         -0.6884183942
-    0a b          0.1614933886
-    0b a          0.1614933886
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.625e-06 seconds
+        β          3.000e-06 seconds
+  Time spent building 1-rdm: 9.580e-07 seconds
 
-    Total Energy:   -77.754262809385494
+  ==> Computing 1 Coupling Lists <==
 
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          1.192e-05 seconds
+        β          2.750e-06 seconds
+  Time spent building 1-rdm: 6.670e-07 seconds
 
-  ==> Root No. 1 <==
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) B1u <==
 
-    0a b          0.6884183942
-    0b a          0.6884183942
-    a0 b          0.1614933886
-    b0 a          0.1614933886
+  Important determinants with coefficients |C| >= 5.000e-02
 
-    Total Energy:   -77.640640110184961
+  ---- Root No. 0 ----
 
+     B2g B3u    Coefficients
+    ------------------------
+      a0   b   -0.6884183942
+      b0   a   -0.6884183942
+      0a   b    0.1614933886
+      0b   a    0.1614933886
+    ------------------------
 
+    Occupation Numbers:
+        1B3u  1.00000000    1B2g  0.94783977    2B2g  0.05216023
+
+    Total Energy:  -77.754262809332019
+
+  ---- Root No. 1 ----
+
+     B2g B3u    Coefficients
+    ------------------------
+      0a   b    0.6884183942
+      0b   a    0.6884183942
+      a0   b    0.1614933886
+      b0   a    0.1614933886
+    ------------------------
+
+    Occupation Numbers:
+        1B3u  1.00000000    2B2g  0.94783977    1B2g  0.05216023
+
+    Total Energy:  -77.640640110135507
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)    Ag     0      -78.050972650022   0.000000
+       1  (  0)    Ag     0      -78.050972649968   0.000000
     --------------------------------------------------------
-       1  (  0)   B1u     0      -77.754262809385   0.000000
-       1  (  0)   B1u     1      -77.640640110185   0.000000
+       1  (  0)   B1u     0      -77.754262809332   0.000000
+       1  (  0)   B1u     1      -77.640640110136   0.000000
     --------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          9.917e-06 seconds
+        β          2.833e-06 seconds
+  Time spent building 1-rdm: 1.750e-06 seconds
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000062 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
          0AG     0.00000000     0.00000000     0.00000000     0.00000000
@@ -2854,21 +3270,48 @@ Scratch directory: /Users/york/scratch/psi4/
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.000e-06 seconds
+        β          2.500e-06 seconds
+  Time spent building 1-rdm: 1.375e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.541e-06 seconds
+        β          2.417e-06 seconds
+  Time spent building 1-rdm: 1.250e-06 seconds
+
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000055 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000052 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
         0B1U     0.00000000     0.00000000     0.00000000     0.00000000
-        1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+        1B1U     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          9.292e-06 seconds
+        β          2.791e-06 seconds
+  Time spent building 1-rdm: 1.459e-06 seconds
+
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000058 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
          0AG   -11.68455315     0.00000000     0.00000000    -8.48273398     0.00000000    -7.81728633
@@ -2876,10 +3319,28 @@ Scratch directory: /Users/york/scratch/psi4/
      Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
     --------------------------------------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.750e-06 seconds
+        β          2.625e-06 seconds
+  Time spent building 1-rdm: 1.208e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.625e-06 seconds
+        β          2.584e-06 seconds
+  Time spent building 1-rdm: 1.209e-06 seconds
+
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000055 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000051 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
         0B1U   -21.88290076     0.00000000     0.00000000   -11.85325349     0.00000000   -19.67456801
@@ -2890,12 +3351,10 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000072 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000067 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
-       0AG   0B1U    -0.00000000    -0.00000000     1.25329859     1.25329859
-       0AG   1B1U    -0.00000000    -0.00000000    -0.92470591     0.92470591
+       0AG   0B1U    -0.00000000     0.00000000     1.25329859     1.25329859
+       0AG   1B1U     0.00000000    -0.00000000    -0.92470591     0.92470591
     -------------------------------------------------------------------------
 
   ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
@@ -2927,10 +3386,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000068 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
-      0B1U   1B1U    -0.00000000     0.00000000    -0.00000000     0.00000000
+      0B1U   1B1U     0.00000000     0.00000000     0.00000000     0.00000000
     -------------------------------------------------------------------------
 
   ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
@@ -2947,40 +3405,136 @@ Scratch directory: /Users/york/scratch/psi4/
     ----------------------------------------------------------
       0B1U   1B1U     0.11362270     3.09183113     0.00000000
     ----------------------------------------------------------
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000065 s
- Computing  2RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000054 s
- Computing  3RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000049 s
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000055 s
- Computing  2RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000048 s
- Computing  3RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000044 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000055 s
- Computing  2RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000048 s
- Computing  3RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000044 s
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          9.083e-06 seconds
+        β          2.833e-06 seconds
+  Time spent building 1-rdm: 1.292e-06 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+        αα         4.708e-06 seconds
+  (N-2) ab lists size counts
+      Size      Count
+         5          1
+        αβ         7.625e-06 seconds
+        ββ         1.542e-06 seconds
+  Time spent building 2-rdm: 2.042e-06 seconds
+
+  ==> Computing 3 Coupling Lists <==
+
+  (N-3) aaa lists size counts
+      Size      Count
+        ααα        4.625e-06 seconds
+  (N-3) aab lists size counts
+      Size      Count
+        ααβ        5.875e-06 seconds
+        αββ        1.333e-06 seconds
+        βββ        1.291e-06 seconds
+  Time spent building 3-rdm: 2.084e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.833e-06 seconds
+        β          2.542e-06 seconds
+  Time spent building 1-rdm: 1.250e-06 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+        αα         4.083e-06 seconds
+  (N-2) ab lists size counts
+      Size      Count
+         4          1
+        αβ         6.542e-06 seconds
+        ββ         1.167e-06 seconds
+  Time spent building 2-rdm: 1.417e-06 seconds
+
+  ==> Computing 3 Coupling Lists <==
+
+  (N-3) aaa lists size counts
+      Size      Count
+        ααα        4.250e-06 seconds
+  (N-3) aab lists size counts
+      Size      Count
+        ααβ        4.958e-06 seconds
+        αββ        1.125e-06 seconds
+        βββ        1.083e-06 seconds
+  Time spent building 3-rdm: 1.375e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.500e-06 seconds
+        β          2.416e-06 seconds
+  Time spent building 1-rdm: 1.125e-06 seconds
+
+  ==> Computing 2 Coupling Lists <==
+
+  (N-2) aa lists size counts
+      Size      Count
+        αα         4.000e-06 seconds
+  (N-2) ab lists size counts
+      Size      Count
+         4          1
+        αβ         6.333e-06 seconds
+        ββ         1.167e-06 seconds
+  Time spent building 2-rdm: 1.375e-06 seconds
+
+  ==> Computing 3 Coupling Lists <==
+
+  (N-3) aaa lists size counts
+      Size      Count
+        ααα        4.208e-06 seconds
+  (N-3) aab lists size counts
+      Size      Count
+        ααβ        4.792e-06 seconds
+        αββ        1.083e-06 seconds
+        βββ        1.083e-06 seconds
+  Time spent building 3-rdm: 1.292e-06 seconds
 
   ==> Semicanonicalize Orbitals <==
 
-    MIX INACTIVE ORBITALS   ...... FALSE
-    MIX GAS ACTIVE ORBITALS ...... FALSE
-    FROZEN_DOCC     ...  CANONICAL
-    FROZEN_UOCC     ...  CANONICAL
-    GAS1            ...  CANONICAL
-    RESTRICTED_DOCC ...  CANONICAL
-    RESTRICTED_UOCC ...  CANONICAL
+    MIX INACTIVE ORBITALS         FALSE
+    MIX GAS ACTIVE ORBITALS       FALSE
+    FROZEN_DOCC                   CANONICAL
+    FROZEN_UOCC                   CANONICAL
+    GAS1                          CANONICAL
+    RESTRICTED_DOCC               CANONICAL
+    RESTRICTED_UOCC               CANONICAL
 
     Off-Diag. Elements       Max           2-Norm
     ------------------------------------------------
     FROZEN_DOCC          0.0000000000   0.0000000000
     GAS1                 0.0000000000   0.0000000000
     RESTRICTED_DOCC      0.0000000000   0.0000000000
-    RESTRICTED_UOCC      0.0000000000   0.0000000000
+    RESTRICTED_UOCC      0.0000000048   0.0000000248
     ------------------------------------------------
+
+    Canonicalization test passed
+
   Orbitals are already semicanonicalized.
-  Timing for orbital canonicalization:                        0.007 s.
+  Timing for orbital canonicalization:                        0.012 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
                             written by Chenyang Li
-                                 8 OMP threads
+                                 1 OMP thread
     -----------------------------------------------------------------------
 
   Disclaimer:
@@ -2989,11 +3543,11 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
-    Computing Fock matrix and cleaning JK ....... Done. Timing      0.007 s
+    Computing Fock matrix and cleaning JK ....... Done. Timing      0.012 s
     Reading DSRG options ........................ Done. Timing      0.000 s
     Setting ambit MO space ...................... Done. Timing      0.000 s
     Initializing density cumulants .............. Done. Timing      0.001 s
-    Filling Fock matrix from ForteIntegrals ..... Done. Timing      0.001 s
+    Filling Fock matrix from ForteIntegrals ..... Done. Timing      0.000 s
 
   ==> Density Cumulant Summary <==
 
@@ -3008,13 +3562,14 @@ Scratch directory: /Users/york/scratch/psi4/
     Block                Max            Mean
     ----------------------------------------
     CORE        0.0000000000    0.0000000000
-    VIRTUAL     0.0000000000    0.0000000000
+    VIRTUAL     0.0000000048    0.0000000001
     GAS1        0.0000000000    0.0000000000
     ----------------------------------------
     Orbitals are semi-canonicalized.
 
-  ==> Computation Information <==
+  ==> Calculation Information <==
 
+    --------------------------------------------------------
     Correlation level                                 LDSRG2
     Integral type                                         DF
     Source operator                                 STANDARD
@@ -3027,20 +3582,23 @@ Scratch directory: /Users/york/scratch/psi4/
     Omit blocks of >= 3 virtual indices                 TRUE
     Read amplitudes from current dir                    TRUE
     Write amplitudes to current dir                    FALSE
+    Use adaptive RSC threshold                         FALSE
     Flow parameter                                 1.500e+00
     Energy convergence threshold                   1.000e-06
     Residual convergence threshold                 1.000e-06
     Recursive single commutator threshold          1.000e-12
+    Adaptive RSC threshold                         1.000e-03
+    Adaptive RSC delta E                           5.000e-05
     Taylor expansion threshold                     1.000e-03
     Intruder amplitudes threshold                  1.000e-01
-    Max number of iterations                             300
+    Max number of iterations                              50
     Max nested commutators                                20
     DIIS start                                             2
     Min DIIS vectors                                       3
     Max DIIS vectors                                       8
     DIIS extrapolating freq                                1
     Number of amplitudes for printing                     15
-
+    --------------------------------------------------------
 
   ==> MR-DSRG (LDSRG2) Memory Information <==
 
@@ -3057,10 +3615,12 @@ Scratch directory: /Users/york/scratch/psi4/
     Max memory for local intermediates               8.53 MB
     Memory currently available                       7.09 GB
 
+  =>** Before self.dsrg_solver.compute_energy() **<=
+
 
   ==> Build Initial Amplitudes Guesses <==
 
-    Reading T2 from current dir ................. Done. Timing      0.002 s
+    Reading T2 from current dir ................. Done. Timing      0.003 s
     Reading T1 from current dir ................. Done. Timing      0.000 s
 
   ==> Initial Excitation Amplitudes Summary <==
@@ -3101,19 +3661,19 @@ Scratch directory: /Users/york/scratch/psi4/
     Reference:
       J. Chem. Phys. 2016, 144, 164114.
 
-                  Energy (a.u.)           Non-Diagonal Norm        Amplitude RMS         Timings (s)
-           ---------------------------  ---------------------  ---------------------  -----------------
-    Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.    DIIS
-    ---------------------------------------------------------------------------------------------------------
-       1    -0.316886920128 -3.169e-01   4.091e-02  2.500e-01   4.575e-08  2.855e-07     4.870    0.366
-       2    -0.316886920961 -8.331e-10   4.091e-02  2.500e-01   2.053e-08  1.220e-07     4.808    0.378  S
-    ---------------------------------------------------------------------------------------------------------
+                  Energy (a.u.)           Non-Diagonal Norm        Amplitude RMS          Timings (s)
+           ---------------------------  ---------------------  ---------------------  ------------------
+    Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2         Hbar     Amp.    Ncomm   DIIS
+    ------------------------------------------------------------------------------------------------------------------
+       1    -0.316886920128 -3.169e-01   4.091e-02  2.500e-01   4.575e-08  2.855e-07     4.245    0.021    11
+       2    -0.316886920959 -8.306e-10   4.091e-02  2.500e-01   2.053e-08  1.220e-07     4.410    0.020    11      S
+    ------------------------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2) Energy Summary <==
 
-    E0 (reference)                 =     -77.815291856530948
-    MR-LDSRG(2) correlation energy =      -0.316886920961327
-    MR-LDSRG(2) total energy       =     -78.132178777492271
+    E0 (reference)                 =     -77.815291856478424
+    MR-LDSRG(2) correlation energy =      -0.316886920958605
+    MR-LDSRG(2) total energy       =     -78.132178777437034
 
   ==> Final Excitation Amplitudes Summary <==
 
@@ -3127,8 +3687,8 @@ Scratch directory: /Users/york/scratch/psi4/
     [  73   77] 0.0074332 [  73   79] 0.0061687 [  61   67] 0.0059035
     [  22   24] 0.0058432 [   1   13] 0.0052178 [  21   26] 0.0050467
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.049755662141036
-    Number of nonzero elements:                                   304
+    2-Norm of T1 vector:                            0.049755662135247
+    Number of nonzero elements:                                   300
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
         i    j    a    b                i    j    a    b                i    j    a    b
@@ -3139,14 +3699,18 @@ Scratch directory: /Users/york/scratch/psi4/
     [  73   61   73   63] 0.0244996 [  73   22   73   25] 0.0238530 [  73   44   73   48] 0.0234518
     [   0   44   73   21] 0.0233338 [  73   28   73   30] 0.0224688 [  73    1   73   10] 0.0220296
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.491772493384925
-    Number of nonzero elements:                                                              140793
+    2-Norm of T2 vector:                                                          0.491772493349225
+    Number of nonzero elements:                                                              137851
     -----------------------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
 
     T1 amplitudes larger than 0.1000: NULL
     T2 amplitudes larger than 0.1000: NULL
+  =>** After self.dsrg_solver.compute_energy() **<=
+
+  =>** In reference relaxation loop **<=
+
 
   ==> De-Normal-Order 2-Body DSRG Transformed Hamiltonian <==
 
@@ -3155,26 +3719,26 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transform One-Electron Operators <==
 
-    Transforming DIPOLE X ....................... Done. Timing      0.060 s
-    Transforming DIPOLE Y ....................... Done. Timing      0.056 s
-    Transforming DIPOLE Z ....................... Done. Timing      0.056 s
-    Transforming QUADRUPOLE XX .................. Done. Timing      0.064 s
-    Transforming QUADRUPOLE XY .................. Done. Timing      0.048 s
-    Transforming QUADRUPOLE XZ .................. Done. Timing      0.068 s
-    Transforming QUADRUPOLE YY .................. Done. Timing      0.084 s
-    Transforming QUADRUPOLE YZ .................. Done. Timing      0.063 s
-    Transforming QUADRUPOLE ZZ .................. Done. Timing      0.063 s
+    Transforming DIPOLE X ....................... Done. Timing      0.035 s
+    Transforming DIPOLE Y ....................... Done. Timing      0.034 s
+    Transforming DIPOLE Z ....................... Done. Timing      0.036 s
+    Transforming QUADRUPOLE XX .................. Done. Timing      0.038 s
+    Transforming QUADRUPOLE XY .................. Done. Timing      0.027 s
+    Transforming QUADRUPOLE XZ .................. Done. Timing      0.031 s
+    Transforming QUADRUPOLE YY .................. Done. Timing      0.038 s
+    Transforming QUADRUPOLE YZ .................. Done. Timing      0.030 s
+    Transforming QUADRUPOLE ZZ .................. Done. Timing      0.038 s
 
   ==> Expectation Values of the DSRG Transformed One-Body Operators [a.u.] <==
 
-    DIPOLE X:   0.00000000
+    DIPOLE X:  -0.00000000
     DIPOLE Y:  -0.00000000
-    DIPOLE Z:  -0.00000000
+    DIPOLE Z:   0.00000000
     QUADRUPOLE XX: -18.29840316
-    QUADRUPOLE XY:  -0.00000000
+    QUADRUPOLE XY:   0.00000000
     QUADRUPOLE XZ:   0.00000000
     QUADRUPOLE YY: -10.62917517
-    QUADRUPOLE YZ:  -0.00000000
+    QUADRUPOLE YZ:   0.00000000
     QUADRUPOLE ZZ: -15.40269316
 
   ==> De-Normal-Order 1-Body DSRG Transformed DIPOLE X <==
@@ -3213,161 +3777,147 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Computing the scalar term ................... Done. Timing      0.000 s
 
-              ---------------------------------------------------
-                Complete Active Space Configuration Interaction
-                                  Chenyang Li
-              ---------------------------------------------------
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 3
+  Number of active alpha electrons: 1
+  Number of active beta electrons: 1
+  Number of determinants (CAS): 5
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) Ag <==
 
 
-  ==> Input Summary <==
-
-    No. a electrons in active      =     1
-    No. b electrons in active      =     1
-    multiplicity                   =     1
-    spin ms (2 * Sz)               =     0
-
-  ==> Orbital Spaces <==
-
-    TOTAL MO                      [   18     4     7    12     4    18    12     7 ]
-    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
-    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
-    CORRELATED MO                 [   17     4     7    12     4    17    12     7 ]
-    CORE                          [    2     0     0     1     0     1     1     0 ]
-    ACTIVE                        [    0     0     2     0     0     0     0     1 ]
-    VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000035 s
-  Forming determinants                ...  Done. Timing        0.000008 s
-
-  ==> Determinants Summary <==
-
-    number of alpha active electrons         =     1
-    number of beta active electrons          =     1
-    root symmetry (zero based)               =     0
-    number of determinants                   =     5
-
-  Diagonalizing Hamiltonian           ...
-
-  ==> Computing 1 Coupling Lists <==
-
-        α          1.613e-05 seconds
-        β          1.202e-05 seconds
-
-  ==> Computing 2 Coupling Lists <==
-
-        αα         6.797e-06 seconds
-        ββ         5.079e-06 seconds
-        αβ         1.203e-05 seconds
-
-  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 4 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000327 s
+  Found 1 roots with 2S+1 = 3
 
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
-
-  ==> Root No. 0 <==
-
-    00 2          0.9895859435
-    20 0         -0.0956788210
-    ba 0         -0.0675012893
-    ab 0         -0.0675012893
-
-    Total Energy:   -78.365075562325941
-
-
-
-              ---------------------------------------------------
-                Complete Active Space Configuration Interaction
-                                  Chenyang Li
-              ---------------------------------------------------
-
-
-  ==> Input Summary <==
-
-    No. a electrons in active      =     1
-    No. b electrons in active      =     1
-    multiplicity                   =     1
-    spin ms (2 * Sz)               =     0
-
-  ==> Orbital Spaces <==
-
-    TOTAL MO                      [   18     4     7    12     4    18    12     7 ]
-    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
-    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
-    CORRELATED MO                 [   17     4     7    12     4    17    12     7 ]
-    CORE                          [    2     0     0     1     0     1     1     0 ]
-    ACTIVE                        [    0     0     2     0     0     0     0     1 ]
-    VIRTUAL                       [   15     4     5    11     4    16    11     6 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000026 s
-  Forming determinants                ...  Done. Timing        0.000007 s
-
-  ==> Determinants Summary <==
-
-    number of alpha active electrons         =     1
-    number of beta active electrons          =     1
-    root symmetry (zero based)               =     5
-    number of determinants                   =     4
-
-  Diagonalizing Hamiltonian           ...
+  Done diagonalizing Hamiltonian, 7.692e-05 seconds.
 
   ==> Computing 1 Coupling Lists <==
 
-        α          1.191e-05 seconds
-        β          1.068e-05 seconds
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          1.104e-05 seconds
+        β          3.709e-06 seconds
+  Time spent building 1-rdm: 1.458e-06 seconds
 
-  ==> Computing 2 Coupling Lists <==
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) Ag <==
 
-        αα         6.115e-06 seconds
-        ββ         4.582e-06 seconds
-        αβ         9.465e-06 seconds
+  Important determinants with coefficients |C| >= 5.000e-02
 
-  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  ---- Root No. 0 ----
+
+     B2g B3u    Coefficients
+    ------------------------
+      00   2    0.9895859435
+      20   0   -0.0956788210
+      ba   0   -0.0675012893
+      ab   0   -0.0675012893
+    ------------------------
+
+    Occupation Numbers:
+        1B3u  1.95856068    1B2g  0.02742172    2B2g  0.01401760
+
+    Total Energy:  -78.365075562272153
+
+  ==> General Determinant-Based CI Solver <==
+
+  Number of active orbitals: 3
+  Number of active alpha electrons: 1
+  Number of active beta electrons: 1
+  Number of determinants (CAS): 4
+
+  ==> Diagonalizing Hamiltonian Singlet (Ms = 0) B1u <==
+
+
+  Davidson-Liu solver algorithm using SigmaVectorFull sigma algorithm
 
   Performing full diagonalization of the H matrix
   Found 2 roots with 2S+1 = 1 *
-  Found 2 roots with 2S+1 = 3  Done. Timing        0.000260 s
+  Found 2 roots with 2S+1 = 3
 
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
+  Done diagonalizing Hamiltonian, 4.046e-05 seconds.
 
-  ==> Root No. 0 <==
+  ==> Computing 1 Coupling Lists <==
 
-    a0 b         -0.7049911493
-    b0 a         -0.7049911493
-    0a b         -0.0546578399
-    0b a         -0.0546578399
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          9.375e-06 seconds
+        β          2.792e-06 seconds
+  Time spent building 1-rdm: 8.330e-07 seconds
 
-    Total Energy:   -78.072476887734112
+  ==> Computing 1 Coupling Lists <==
 
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.833e-06 seconds
+        β          2.708e-06 seconds
+  Time spent building 1-rdm: 7.080e-07 seconds
 
-  ==> Root No. 1 <==
+  ==> CI Vectors & Occupation Number for Singlet (Ms = 0) B1u <==
 
-    0a b          0.7049911493
-    0b a          0.7049911493
-    a0 b         -0.0546578399
-    b0 a         -0.0546578399
+  Important determinants with coefficients |C| >= 5.000e-02
 
-    Total Energy:   -77.959441188992116
+  ---- Root No. 0 ----
 
+     B2g B3u    Coefficients
+    ------------------------
+      a0   b   -0.7049911493
+      b0   a   -0.7049911493
+      0a   b   -0.0546578399
+      0b   a   -0.0546578399
+    ------------------------
 
+    Occupation Numbers:
+        1B3u  1.00000000    1B2g  0.99402504    2B2g  0.00597496
+
+    Total Energy:  -78.072476887675094
+
+  ---- Root No. 1 ----
+
+     B2g B3u    Coefficients
+    ------------------------
+      0a   b    0.7049911493
+      0b   a    0.7049911493
+      a0   b   -0.0546578399
+      b0   a   -0.0546578399
+    ------------------------
+
+    Occupation Numbers:
+        1B3u  1.00000000    2B2g  0.99402504    1B2g  0.00597496
+
+    Total Energy:  -77.959441188939181
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)    Ag     0      -78.365075562326   0.000000
+       1  (  0)    Ag     0      -78.365075562272   0.000000
     --------------------------------------------------------
-       1  (  0)   B1u     0      -78.072476887734   0.000000
-       1  (  0)   B1u     1      -77.959441188992   0.000000
+       1  (  0)   B1u     0      -78.072476887675   0.000000
+       1  (  0)   B1u     1      -77.959441188939   0.000000
     --------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          9.083e-06 seconds
+        β          2.875e-06 seconds
+  Time spent building 1-rdm: 1.750e-06 seconds
 
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000049 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
          0AG     0.00000000     0.00000000     0.00000000     0.00000000
@@ -3375,21 +3925,48 @@ Scratch directory: /Users/york/scratch/psi4/
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.834e-06 seconds
+        β          2.667e-06 seconds
+  Time spent building 1-rdm: 1.375e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.625e-06 seconds
+        β          2.667e-06 seconds
+  Time spent building 1-rdm: 1.291e-06 seconds
+
   ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000044 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
         0B1U     0.00000000     0.00000000     0.00000000     0.00000000
-        1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+        1B1U     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          8.792e-06 seconds
+        β          2.625e-06 seconds
+  Time spent building 1-rdm: 1.375e-06 seconds
+
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000048 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
          0AG   -11.67741522     0.00000000     0.00000000    -8.47552699     0.00000000    -7.76526842
@@ -3397,10 +3974,28 @@ Scratch directory: /Users/york/scratch/psi4/
      Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
     --------------------------------------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.833e-06 seconds
+        β          2.583e-06 seconds
+  Time spent building 1-rdm: 1.292e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.500e-06 seconds
+        β          2.500e-06 seconds
+  Time spent building 1-rdm: 1.250e-06 seconds
+
   ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000044 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
         0B1U   -16.23898589     0.00000000     0.00000000   -10.20468148     0.00000000   -14.53374010
@@ -3411,8 +4006,6 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000058 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000054 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
        0AG   0B1U    -0.00000000     0.00000000     1.53099838     1.53099838
@@ -3445,10 +4038,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000056 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
-      0B1U   1B1U    -0.00000000     0.00000000    -0.00000000     0.00000000
+      0B1U   1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
     -------------------------------------------------------------------------
 
   ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
@@ -3466,58 +4058,110 @@ Scratch directory: /Users/york/scratch/psi4/
       0B1U   1B1U     0.11303570     3.07585803     0.00000000
     ----------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          9.250e-06 seconds
+        β          2.834e-06 seconds
+  Time spent building 1-rdm: 1.292e-06 seconds
+
   ==> DSRG Dressed Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000049 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
-         0AG     0.00000000    -0.00000000    -0.00000000     0.00000000
+         0AG    -0.00000000    -0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.750e-06 seconds
+        β          2.708e-06 seconds
+  Time spent building 1-rdm: 1.250e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.541e-06 seconds
+        β          2.583e-06 seconds
+  Time spent building 1-rdm: 1.125e-06 seconds
 
   ==> DSRG Dressed Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000044 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000041 s
        State           DM_X           DM_Y           DM_Z           |DM|
     --------------------------------------------------------------------
-        0B1U     0.00000000    -0.00000000    -0.00000000     0.00000000
-        1B1U     0.00000000    -0.00000000     0.00000000     0.00000000
+        0B1U    -0.00000000    -0.00000000     0.00000000     0.00000000
+        1B1U    -0.00000000    -0.00000000    -0.00000000     0.00000000
     --------------------------------------------------------------------
      Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
     --------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          1
+         2          2
+        α          9.041e-06 seconds
+        β          2.750e-06 seconds
+  Time spent building 1-rdm: 1.250e-06 seconds
+
   ==> DSRG Dressed Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
 
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000055 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
-         0AG   -11.76918733    -0.00000000     0.00000000    -8.97388062    -0.00000000    -8.68867981
+         0AG   -11.76918733     0.00000000     0.00000000    -8.97388062    -0.00000000    -8.68867981
     --------------------------------------------------------------------------------------------------
      Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
     --------------------------------------------------------------------------------------------------
 
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          8.750e-06 seconds
+        β          2.667e-06 seconds
+  Time spent building 1-rdm: 1.209e-06 seconds
+
+  ==> Computing 1 Coupling Lists <==
+
+  (N-1) a lists size counts
+      Size      Count
+         1          2
+         2          1
+        α          1.462e-05 seconds
+        β          2.541e-06 seconds
+  Time spent building 1-rdm: 1.166e-06 seconds
+
   ==> DSRG Dressed Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) B1u <==
 
- Computing  1RDMs (0 Singlet B1u - 0 Singlet B1u) ... Done. Timing        0.000051 s
- Computing  1RDMs (1 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000048 s
        State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
     --------------------------------------------------------------------------------------------------
-        0B1U   -16.20586280     0.00000000     0.00000000   -10.22322690    -0.00000000   -14.35924308
-        1B1U   -26.91534639    -0.00000000     0.00000000   -12.68586936    -0.00000000   -23.12252063
+        0B1U   -16.20586280    -0.00000000     0.00000000   -10.22322690     0.00000000   -14.35924308
+        1B1U   -26.91534639     0.00000000    -0.00000000   -12.68586936     0.00000000   -23.12252063
     --------------------------------------------------------------------------------------------------
      Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
     --------------------------------------------------------------------------------------------------
 
   ==> DSRG Dressed Transition Dipole Moments [e a0] for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet Ag - 0 Singlet B1u) ... Done. Timing        0.000069 s
- Computing 1TrDMs (0 Singlet Ag - 1 Singlet B1u) ... Done. Timing        0.000063 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
-       0AG   0B1U     0.00000000     0.00000000     1.36837819     1.36837819
-       0AG   1B1U    -0.00000000    -0.00000000    -0.42125510     0.42125510
+       0AG   0B1U    -0.00000000    -0.00000000     1.36837819     1.36837819
+       0AG   1B1U     0.00000000     0.00000000    -0.42125510     0.42125510
     -------------------------------------------------------------------------
 
   ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
@@ -3546,10 +4190,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> DSRG Dressed Transition Dipole Moments [e a0] for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
 
- Computing 1TrDMs (0 Singlet B1u - 1 Singlet B1u) ... Done. Timing        0.000065 s
        Bra    Ket           DM_X           DM_Y           DM_Z           |DM|
     -------------------------------------------------------------------------
-      0B1U   1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+      0B1U   1B1U     0.00000000    -0.00000000    -0.00000000     0.00000000
     -------------------------------------------------------------------------
 
   ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) B1u -> Singlet (Ms = 0) B1u <==
@@ -3566,20 +4209,22 @@ Scratch directory: /Users/york/scratch/psi4/
     ----------------------------------------------------------
       0B1U   1B1U     0.11303570     3.07585803     0.00000000
     ----------------------------------------------------------
+  Semicanonical orbitals must be used!
+
 
   ==> Total Timings (s) for Computing Commutators <==
 
-             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+           [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]  
     -----------------------------------------------------
-    -> C0       0.028       0.028       0.012       0.309
-    -> C1       0.060       0.578       0.234       1.308
-    -> C2                   0.428       1.039       5.791
+    -> C0       0.016       0.018       0.007       0.144
+    -> C1       0.041       0.310       0.164       1.045
+    -> C2                   0.353       0.903       5.690
     -----------------------------------------------------
 
 
-  Time to prepare integrals:        0.746 seconds
-  Time to run job          :       11.444 seconds
-  Total                    :       12.190 seconds
+  Time to prepare integrals:        0.323 seconds
+  Time to run job          :        9.124 seconds
+  Total                    :        9.447 seconds
     SA-LDSRG(2) ENERGY....................................................................PASSED
     SA-LDSRG(2) ENERGY....................................................................PASSED
     SA-LDSRG(2) ENERGY....................................................................PASSED
@@ -3594,7 +4239,7 @@ Scratch directory: /Users/york/scratch/psi4/
     SA-LDSRG(2)/BARE MULTIPOLE OSCILLATOR STRENGTH OF 0B1U................................PASSED
     SA-LDSRG(2)/BARE MULTIPOLE OSCILLATOR STRENGTH OF 1B1U................................PASSED
 
-    Psi4 stopped on: Sunday, 29 January 2023 03:16AM
-    Psi4 wall time for execution: 0:00:19.17
+    Psi4 stopped on: Monday, 02 September 2024 11:54AM
+    Psi4 wall time for execution: 0:00:13.08
 
 *** Psi4 exiting successfully. Buy a developer a beer!

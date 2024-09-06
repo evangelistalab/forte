@@ -168,8 +168,8 @@ double MCSCF_2STEP::compute_energy() {
     };
 
     // prepare for orbital gradients
-    const bool freeze_core = options_->get_bool("MCSCF_FREEZE_CORE");
-    MCSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_, freeze_core);
+    const bool ignore_frozen = options_->get_bool("MCSCF_IGNORE_FROZEN_ORBS");
+    MCSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_, ignore_frozen);
     auto nrot = cas_grad.nrot();
     auto dG = std::make_shared<psi::Vector>("dG", nrot);
 
@@ -205,7 +205,7 @@ double MCSCF_2STEP::compute_energy() {
     if (no_orb_opt) {
         energy_ = e_c;
         pass_energy_to_psi4();
-        if (der_type_ == "FIRST") {
+        if (der_type_ == "FIRST" and options_->get_str("CORRELATION_SOLVER") == "NONE") {
             cas_grad.compute_nuclear_gradient();
         }
         return energy_;
@@ -465,14 +465,13 @@ double MCSCF_2STEP::compute_energy() {
             auto F = cas_grad.fock(rdms);
             ints_->set_fock_matrix(F, F);
 
-            auto inactive_mix = options_->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
-            auto active_mix = options_->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
+            // if we do not freeze orbitals, we need to set the inactive_mix flag to make sure
+            // the frozen and non-frozen core/virtual orbitals are canonicalized together.
+            auto inactive_mix = ignore_frozen;
 
-            // if we do not freeze the core, we need to set the inactive_mix flag to make sure
-            // the core orbitals are canonicalized together with the active orbitals
-            if (not freeze_core) {
-                inactive_mix = true;
-            }
+            if (!ignore_frozen)
+                inactive_mix = options_->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
+            auto active_mix = options_->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
 
             psi::outfile->Printf("\n  Canonicalizing final MCSCF orbitals");
             SemiCanonical semi(mo_space_info_, ints_, options_, inactive_mix, active_mix);
@@ -491,7 +490,7 @@ double MCSCF_2STEP::compute_energy() {
             throw_convergence_error();
 
         // for nuclear gradient
-        if (der_type_ == "FIRST") {
+        if (der_type_ == "FIRST" and options_->get_str("CORRELATION_SOLVER") == "NONE") {
             // TODO: remove this re-diagonalization if CI transformation is impelementd
             if (not is_single_reference()) {
                 diagonalize_hamiltonian(

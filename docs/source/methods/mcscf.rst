@@ -257,7 +257,7 @@ computation with two doubly occupied orbitals frozen ::
   
 
 To override this behavior and freeze the core orbitals in the MCSCF procedure, the user can set the option
-:code:`MCSCF_FREEZE_CORE` to :code:`True`.
+:code:`MCSCF_IGNORE_FROZEN_ORBS` to :code:`False`.
 This might be necessary in certain cases, if orbital rotations involving core orbitals cause convergence issues.
 The following input (see :code:`tests/manual/mcscf-5/input.dat`) performs an MCSCF calculation on CO molecule and
 freezes the 1s orbital of the carbon and oxygen atoms
@@ -277,7 +277,7 @@ freezes the 1s orbital of the carbon and oxygen atoms
       mcscf_e_convergence  8
       mcscf_g_convergence  6
       mcscf_micro_maxiter  4
-      mcscf_freeze_core    true  # enables freezing the MCSCF core orbitals
+      mcscf_ignore_frozen_orbs false  # enables freezing the MCSCF core orbitals
     }
 
     energy('forte')
@@ -321,17 +321,17 @@ The maximum number of macro iterations.
 
 **MCSCF_MICRO_MAXITER**
 
-The maximum number of micro iterations.
-
-* Type: int
-* Default: 40
-
-**MCSCF_MICRO_MINITER**
-
-The minimum number of micro iterations.
+The maximum number of micro iterations (orbital optimization) for a given CI.
 
 * Type: int
 * Default: 6
+
+**MCSCF_MCI_MAXITER**
+
+The maximum number of micro CI iterations in every macro iteration.
+
+* Type: int
+* Default: 12
 
 **MCSCF_E_CONVERGENCE**
 
@@ -389,14 +389,6 @@ For example, 1 means do DIIS every iteration and 2 is for every other iteration,
 * Type: int
 * Default: 1
 
-**MCSCF_CI_SOLVER**
-
-Which active space solver to be used.
-
-* Type: string
-* Options: CAS, FCI, ACI, PCI
-* Default: CAS
-
 **MCSCF_DEBUG_PRINTING**
 
 Whether to enable debug printing.
@@ -422,6 +414,14 @@ Turn off orbital optimization procedure if true.
 **MCSCF_DIE_IF_NOT_CONVERGED**
 
 Stop Forte if MCSCF did not converge.
+
+* Type: Boolean
+* Default: True
+
+**MCSCF_IGNORE_FROZEN_ORBS**
+
+Whether to ignore frozen orbitals in the input file or not.
+By default, all orbitals will be optimized in MCSCF.
 
 * Type: Boolean
 * Default: True
@@ -458,6 +458,22 @@ This option is useful when doing core-excited state computations.
 
 * Type: array
 * Default: No Default
+
+**MCSCF_ORB_ORTHO_TRANS**
+
+Ways to compute the orthogonal transformation U from orbital rotation R
+
+* Type: string
+* Options: CAYLEY, POWER, PADE
+* Default: CAYLEY
+
+**MCSCF_DF_TEIALG**
+
+Algorithm to build (pu|xy) integrals in DF-MCSCF.
+Use (Q|pu) if True; Otherwise use JK build for every xy pair
+
+* Type: Boolean
+* Fefault: True
 
 CPSCF Options
 ~~~~~~~~~~~~~

@@ -376,26 +376,7 @@ void Psi4Integrals::rotate_mos() {
     wfn_->epsilon_b()->copy(eps_a_new);
 }
 
-std::shared_ptr<psi::Matrix> Psi4Integrals::Ca_AO() const {
-    auto aotoso = wfn_->aotoso();
-    auto nao = nso_;
-
-    auto Ca_ao = std::make_shared<psi::Matrix>("Ca_AO", nao, nmo_);
-
-    // Transform from the SO to the AO basis
-    for (int h = 0, index = 0; h < nirrep_; ++h) {
-        auto nso = nsopi_[h];
-        if (nso == 0)
-            continue;
-
-        for (int i = 0, nmo_this = nmopi_[h]; i < nmo_this; ++i) {
-            // notes: LDA value is nso (not nao, see libqt/blas_intfc23.cc)
-            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Ca_->pointer(h)[0][i],
-                    nmo_this, 0.0, &Ca_ao->pointer()[0][index++], nmo_);
-        }
-    }
-    return Ca_ao;
-}
+std::shared_ptr<psi::Matrix> Psi4Integrals::Ca_AO() const { return Ca_SO2AO(Ca_); }
 
 void Psi4Integrals::build_multipole_ints_ao() {
     std::shared_ptr<psi::BasisSet> basisset = wfn_->basisset();
