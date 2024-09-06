@@ -39,8 +39,8 @@ void sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
                     std::pair<sparse_scalar_t, sparse_scalar_t> c2_pair, sparse_scalar_t sigma,
                     bool add, double screen_threshold);
 
-void sim_trans_fact_antiherm(SparseOperator& O, const SparseOperatorList& T, bool reverse,
-                             double screen_threshold) {
+void fact_unitary_trans_antiherm(SparseOperator& O, const SparseOperatorList& T, bool reverse,
+                                 double screen_threshold) {
     const auto& elements = T.elements();
     auto operation = [&](const auto& iter) {
         const auto& [sqop, theta] = *iter;
@@ -80,8 +80,8 @@ void sim_trans_fact_antiherm(SparseOperator& O, const SparseOperatorList& T, boo
     }
 }
 
-void sim_trans_fact_antiherm_grad(SparseOperator& O, const SparseOperatorList& T, size_t n,
-                                  bool reverse, double screen_threshold) {
+void fact_unitary_trans_antiherm_grad(SparseOperator& O, const SparseOperatorList& T, size_t n,
+                                      bool reverse, double screen_threshold) {
     const auto& elements = T.elements();
     auto operation = [&](const auto& iter, const auto& index, const auto& grad_index) {
         const auto& [sqop, theta] = *iter;
@@ -140,8 +140,8 @@ void sim_trans_fact_antiherm_grad(SparseOperator& O, const SparseOperatorList& T
     }
 }
 
-void sim_trans_fact_imagherm(SparseOperator& O, const SparseOperatorList& T, bool reverse,
-                             double screen_threshold) {
+void fact_unitary_trans_imagherm(SparseOperator& O, const SparseOperatorList& T, bool reverse,
+                                 double screen_threshold) {
     std::complex<double> imag1 = std::complex<double>(0.0, 1.0);
     const auto& elements = T.elements();
     auto operation = [&](const auto& iter) {
@@ -336,8 +336,8 @@ void sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
     }
 }
 
-void sim_trans_fact_op(SparseOperator& O, const SparseOperatorList& T, bool reverse,
-                       double screen_threshold) {
+void fact_trans_lin(SparseOperator& O, const SparseOperatorList& T, bool reverse,
+                    double screen_threshold) {
     const auto& elements = T.elements();
     auto operation = [&](const auto& iter) {
         const auto& [sqop, c] = *iter;

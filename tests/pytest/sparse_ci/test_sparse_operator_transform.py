@@ -65,10 +65,10 @@ def run_test_sparse_operator_transform(type, O, A, theta):
     C_taylor = compute_st_taylor(O, A2)
     if type == "antiherm":
         C_python = compute_st_antihermitian(O, A2, theta)
-        forte.sim_trans_fact_antiherm(O, A)
+        forte.fact_unitary_trans_antiherm(O, A)
     else:
         C_python = compute_st_nilpotent(O, A, theta)
-        forte.sim_trans_fact_op(O, A)
+        forte.fact_trans_lin(O, A)
 
     python_error = (C_python - C_taylor).norm()
     forte_error = (O - C_taylor).norm()

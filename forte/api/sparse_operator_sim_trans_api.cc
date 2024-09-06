@@ -39,34 +39,36 @@ namespace forte {
 /// Export the Determinant class
 void export_SparseOperatorSimTrans(py::module& m) {
     m.def(
-        "sim_trans_fact_op",
+        "fact_trans_lin",
         [](SparseOperator& O, const SparseOperatorList& T, bool reverse, double screen_thresh) {
             // time this call and print to std::cout
-            sim_trans_fact_op(O, T, reverse, screen_thresh);
+            fact_trans_lin(O, T, reverse, screen_thresh);
         },
         "O"_a, "T"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12,
         "Evaluate ... (1 - T1) O (1 + T1) ...");
 
     m.def(
-        "sim_trans_fact_antiherm",
+        "fact_unitary_trans_antiherm",
         [](SparseOperator& O, const SparseOperatorList& T, bool reverse, double screen_thresh) {
             // time this call and print to std::cout
-            sim_trans_fact_antiherm(O, T, reverse, screen_thresh);
+            fact_unitary_trans_antiherm(O, T, reverse, screen_thresh);
         },
         "O"_a, "T"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12,
         "Evaluate ... exp(T1^dagger - T1) O exp(T1 - T1^dagger) ...");
 
     m.def(
-        "sim_trans_fact_antiherm_grad",
+        "fact_unitary_trans_antiherm_grad",
         [](SparseOperator& O, const SparseOperatorList& T, size_t n, bool reverse,
-           double screen_thresh) { sim_trans_fact_antiherm_grad(O, T, n, reverse, screen_thresh); },
+           double screen_thresh) {
+            fact_unitary_trans_antiherm_grad(O, T, n, reverse, screen_thresh);
+        },
         "O"_a, "T"_a, "n"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12,
         "Evaluate the gradient of ... exp(T1^dagger - T1) O exp(T1 - T1^dagger) ...");
 
     m.def(
-        "sim_trans_fact_imagherm",
+        "fact_unitary_trans_imagherm",
         [](SparseOperator& O, const SparseOperatorList& T, bool reverse, double screen_thresh) {
-            sim_trans_fact_imagherm(O, T, reverse, screen_thresh);
+            fact_unitary_trans_imagherm(O, T, reverse, screen_thresh);
         },
         "O"_a, "T"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12,
         "Evaluate ... exp(i (T1^dagger + T1)) O exp(-i(T1 + T1^dagger)) ...");

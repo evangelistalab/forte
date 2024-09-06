@@ -45,6 +45,7 @@ void export_SparseOperatorList(py::module& m) {
     py::class_<SparseOperatorList>(m, "SparseOperatorList",
                                    "A class to represent a list of sparse operators")
         .def(py::init<>())
+        .def(py::init<SparseOperatorList>())
         .def("add", &SparseOperatorList::add)
         .def("add", &SparseOperatorList::add_term_from_str, "str"_a,
              "coefficient"_a = sparse_scalar_t(1), "allow_reordering"_a = false)
@@ -102,30 +103,42 @@ void export_SparseOperatorList(py::module& m) {
             sop.add_term_from_str(s, coefficient, allow_reordering);
             return sop;
         },
-        "s"_a, "coefficient"_a = sparse_scalar_t(1), "allow_reordering"_a = false);
+        "s"_a, "coefficient"_a = sparse_scalar_t(1), "allow_reordering"_a = false,
+        "Create a SparseOperatorList object from a string and a complex");
 
-    m.def("operator_list", [](const std::vector<std::pair<std::string, sparse_scalar_t>>& list,
-                              bool allow_reordering) {
-        SparseOperatorList sop;
-        for (const auto& [s, coefficient] : list) {
-            sop.add_term_from_str(s, coefficient, allow_reordering);
-        }
-        return sop;
-    });
+    m.def(
+        "operator_list",
+        [](const std::vector<std::pair<std::string, sparse_scalar_t>>& list,
+           bool allow_reordering) {
+            SparseOperatorList sop;
+            for (const auto& [s, coefficient] : list) {
+                sop.add_term_from_str(s, coefficient, allow_reordering);
+            }
+            return sop;
+        },
+        "list"_a, "allow_reordering"_a = false,
+        "Create a SparseOperatorList object from a list of Tuple[str, complex]");
 
-    m.def("operator_list", [](const SQOperatorString& sqop, sparse_scalar_t coefficient) {
-        SparseOperatorList sop;
-        sop.add(sqop, coefficient);
-        return sop;
-    });
+    m.def(
+        "operator_list",
+        [](const SQOperatorString& sqop, sparse_scalar_t coefficient) {
+            SparseOperatorList sop;
+            sop.add(sqop, coefficient);
+            return sop;
+        },
+        "s"_a, "coefficient"_a = sparse_scalar_t(1),
+        "Create a SparseOperatorList object from a SQOperatorString and a complex");
 
-    m.def("operator_list",
-          [](const std::vector<std::pair<SQOperatorString, sparse_scalar_t>>& list) {
-              SparseOperatorList sop;
-              for (const auto& [sqop, coefficient] : list) {
-                  sop.add(sqop, coefficient);
-              }
-              return sop;
-          });
+    m.def(
+        "operator_list",
+        [](const std::vector<std::pair<SQOperatorString, sparse_scalar_t>>& list) {
+            SparseOperatorList sop;
+            for (const auto& [sqop, coefficient] : list) {
+                sop.add(sqop, coefficient);
+            }
+            return sop;
+        },
+        "list"_a,
+        "Create a SparseOperatorList object from a list of Tuple[SQOperatorString, complex]");
 }
 } // namespace forte

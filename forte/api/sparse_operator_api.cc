@@ -115,16 +115,12 @@ void export_SparseOperator(py::module& m) {
         .def("__isub__", &SparseOperator::operator-=,
              "Subtract a SparseOperator from this SparseOperator")
         .def("__imul__", &SparseOperator::operator*=, "Multiply this SparseOperator by a scalar")
-        // .def("__itruediv__", &SparseOperator::operator/=, "Divide this SparseOperator by a
-        // scalar")
         .def(
             "__itruediv__",
             [](SparseOperator& self, sparse_scalar_t scalar) {
                 return self /= scalar; // Call the in-place division operator
             },
             py::is_operator())
-
-        // Bind division by a scalar
         .def(
             "__truediv__",
             [](const SparseOperator& self, sparse_scalar_t scalar) {
@@ -157,7 +153,47 @@ void export_SparseOperator(py::module& m) {
         .def("adjoint", [](const SparseOperator& op) { return op.adjoint(); })
         .def("__eq__", &SparseOperator::operator==)
         .def("__repr__", [](const SparseOperator& op) { return join(op.str(), "\n"); })
-        .def("__str__", [](const SparseOperator& op) { return join(op.str(), "\n"); });
+        .def("__str__", [](const SparseOperator& op) { return join(op.str(), "\n"); })
+        .def(
+            "fact_trans_lin",
+            [](SparseOperator& O, const SparseOperatorList& T, bool reverse, double screen_thresh) {
+                auto O_copy = O;
+                fact_trans_lin(O_copy, T, reverse, screen_thresh);
+                return O_copy;
+            },
+            "T"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12,
+            "Evaluate ... (1 - T1) O (1 + T1) ...")
+
+        .def(
+            "fact_unitary_trans_antiherm",
+            [](SparseOperator& O, const SparseOperatorList& T, bool reverse, double screen_thresh) {
+                auto O_copy = O;
+                fact_unitary_trans_antiherm(O_copy, T, reverse, screen_thresh);
+                return O_copy;
+            },
+            "T"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12,
+            "Evaluate ... exp(T1^dagger - T1) O exp(T1 - T1^dagger) ...")
+
+        .def(
+            "fact_unitary_trans_antiherm_grad",
+            [](SparseOperator& O, const SparseOperatorList& T, size_t n, bool reverse,
+               double screen_thresh) {
+                auto O_copy = O;
+                fact_unitary_trans_antiherm_grad(O_copy, T, n, reverse, screen_thresh);
+                return O_copy;
+            },
+            "T"_a, "n"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12,
+            "Evaluate the gradient of ... exp(T1^dagger - T1) O exp(T1 - T1^dagger) ...")
+
+        .def(
+            "fact_unitary_trans_imagherm",
+            [](SparseOperator& O, const SparseOperatorList& T, bool reverse, double screen_thresh) {
+                auto O_copy = O;
+                fact_unitary_trans_imagherm(O_copy, T, reverse, screen_thresh);
+                return O_copy;
+            },
+            "T"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12,
+            "Evaluate ... exp(i (T1^dagger + T1)) O exp(-i(T1 + T1^dagger)) ...");
 
     m.def(
         "sparse_operator",
@@ -166,7 +202,8 @@ void export_SparseOperator(py::module& m) {
             sop.add_term_from_str(s, coefficient, allow_reordering);
             return sop;
         },
-        "s"_a, "coefficient"_a = sparse_scalar_t(1), "allow_reordering"_a = false);
+        "s"_a, "coefficient"_a = sparse_scalar_t(1), "allow_reordering"_a = false,
+        "Create a SparseOperator object from a string and a complex");
 
     m.def(
         "sparse_operator",
@@ -178,7 +215,8 @@ void export_SparseOperator(py::module& m) {
             }
             return sop;
         },
-        "list"_a, "allow_reordering"_a = false);
+        "list"_a, "allow_reordering"_a = false,
+        "Create a SparseOperator object from a list of Tuple[str, complex]");
 
     m.def(
         "sparse_operator",
@@ -187,7 +225,8 @@ void export_SparseOperator(py::module& m) {
             sop.add(sqop, coefficient);
             return sop;
         },
-        "s"_a, "coefficient"_a = sparse_scalar_t(1));
+        "s"_a, "coefficient"_a = sparse_scalar_t(1),
+        "Create a SparseOperator object from a SQOperatorString and a complex");
 
     m.def(
         "sparse_operator",
@@ -198,7 +237,7 @@ void export_SparseOperator(py::module& m) {
             }
             return sop;
         },
-        "list"_a);
+        "list"_a, "Create a SparseOperator object from a list of Tuple[SQOperatorString, complex]");
 
     m.def("new_product", [](const SparseOperator A, const SparseOperator B) {
         SparseOperator C;
