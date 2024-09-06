@@ -285,6 +285,7 @@ endif()
 if(TARGET block2::block2)
     target_link_libraries(_forte PRIVATE block2::block2)
     add_definitions(-DHAVE_BLOCK2)
+    add_definitions(-D_USE_GLOBAL_VARIABLE -D_EXPLICIT_TEMPLATE -D_LARGE_BOND -D_USE_CORE -D_USE_SU2SZ -D_USE_DMRG)
 endif()
 
 if(ENABLE_MPI)
