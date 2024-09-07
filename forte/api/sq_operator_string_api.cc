@@ -32,6 +32,7 @@
 #include <pybind11/operators.h>
 
 #include "sparse_ci/sq_operator_string.h"
+#include "sparse_ci/sparse_operator.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -72,26 +73,31 @@ void export_SQOperatorString(py::module& m) {
              "Get the string representation of the operator string")
         .def("__repr__", &SQOperatorString::str,
              "Get the string representation of the operator string")
-        // Bind multiplication with complex to return a tuple (workaround for scaling)
         .def(
             "__mul__",
             [](const SQOperatorString& sqop, const std::complex<double>& scalar) {
-                return std::make_pair(sqop, scalar);
+                SparseOperator sop;
+                sop.add(sqop, scalar);
+                return sop;
             },
-            py::is_operator())
+            py::is_operator(), "Multiply an operator string by a scalar")
         .def(
             "__rmul__",
             [](const SQOperatorString& sqop, const std::complex<double>& scalar) {
-                return std::make_pair(sqop, scalar);
+                SparseOperator sop;
+                sop.add(sqop, scalar);
+                return sop;
             },
-            py::is_operator());
+            py::is_operator(), "Multiply an operator string by a scalar");
 
     m.def(
         "sqop",
         [](const std::string& s, bool allow_reordering) {
             return make_sq_operator_string(s, allow_reordering);
         },
-        "s"_a, "allow_reordering"_a = false);
+        "s"_a, "allow_reordering"_a = false,
+        "Create an operator string from a string representation (default: no not allow "
+        "reordering)");
 
     py::enum_<CommutatorType>(m, "CommutatorType")
         .value("commute", CommutatorType::Commute)

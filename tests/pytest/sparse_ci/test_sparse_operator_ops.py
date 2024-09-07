@@ -91,8 +91,9 @@ def test_sparse_operator_ops_1():
     A_str = forte.sqop("[2a+ 1a-]")[0]
     Ad_str = A_str.adjoint()
     A = forte.SparseOperator()
-    A += A_str * 0.6j
-    A += -0.6j * Ad_str
+    A += A_str * 0.6j - 0.6j * Ad_str
+    assert A == forte.sparse_operator([("[2a+ 1a-]", +0.6j), ("[1a+ 2a-]", -0.6j)])
+    A = A_str * 0.6j - 0.6j * Ad_str
     assert A == forte.sparse_operator([("[2a+ 1a-]", +0.6j), ("[1a+ 2a-]", -0.6j)])
 
 

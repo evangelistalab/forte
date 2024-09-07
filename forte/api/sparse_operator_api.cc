@@ -97,24 +97,28 @@ void export_SparseOperator(py::module& m) {
                 return commutator(lhs, rhs);
             },
             "Compute the commutator of two SparseOperator objects")
-        .def("__iadd__",
-             [](SparseOperator& self, const SparseOperator& other) {
-                 self += other;
-                 return self;
-             })
-        // Bind operator+= for in-place addition of scaled SQOperatorString pairs
-        .def(
-            "__iadd__",
-            [](SparseOperator& self,
-               const std::pair<SQOperatorString, std::complex<double>>& scaledSqop) {
-                self.add(scaledSqop.first,
-                         scaledSqop.second); // Add the scaled element in-place
-                return self;                 // Return self for in-place addition
-            },
-            py::is_operator())
+        .def("__iadd__", &SparseOperator::operator+=, "Add a SparseOperator to this SparseOperator")
         .def("__isub__", &SparseOperator::operator-=,
              "Subtract a SparseOperator from this SparseOperator")
-        .def("__imul__", &SparseOperator::operator*=, "Multiply this SparseOperator by a scalar")
+        .def(
+            "__imul__",
+            [](const SparseOperator self, sparse_scalar_t scalar) {
+                return self * scalar; // Call the multiplication operator
+            },
+            "Multiply this SparseOperator by a scalar")
+        .def(
+            "__imul__",
+            [](SparseOperator self, const SparseOperator& other) {
+                SparseOperator C;
+                for (const auto& [op, coeff] : self.elements()) {
+                    for (const auto& [op2, coeff2] : other.elements()) {
+                        new_product2(C, op, op2, coeff * coeff2);
+                    }
+                }
+                self = C;
+                return self;
+            },
+            "Multiply this SparseOperator by another SparseOperator")
         .def(
             "__itruediv__",
             [](SparseOperator& self, sparse_scalar_t scalar) {
@@ -135,6 +139,16 @@ void export_SparseOperator(py::module& m) {
              [](const SparseOperator& self, sparse_scalar_t scalar) {
                  // This enables the reversed operation: scalar * SparseOperator
                  return self * scalar; // Reuse the __mul__ logic
+             })
+        .def("__mul__",
+             [](const SparseOperator& self, const SparseOperator& other) {
+                 SparseOperator C;
+                 for (const auto& [op, coeff] : self.elements()) {
+                     for (const auto& [op2, coeff2] : other.elements()) {
+                         new_product2(C, op, op2, coeff * coeff2);
+                     }
+                 }
+                 return C;
              })
         .def("__rdiv__",
              [](const SparseOperator& self, sparse_scalar_t scalar) {
