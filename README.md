@@ -60,6 +60,7 @@ or for Debug mode
 ```tcsh
 python setup.py build_ext --debug develop
 ```
+If using `src/forte/setup.cfg`, instead append the line `debug=True` to `src/forte/setup.cfg` and then use `python setup.py develop` as normal.
 This procedure will register forte within pip and you should be able to see forte listed just by calling
 ```tcsh
 pip list
