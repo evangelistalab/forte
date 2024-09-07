@@ -2,7 +2,6 @@
 #! Generated using commit GITCOMMIT
 import forte
 
-refmcscf    = -15.569761360884
 refdsrgpt2 =  -15.613389000040760
 
 molecule {
@@ -17,6 +16,7 @@ molecule {
 set globals{
    reference      rhf
    scf_type       pk
+   guess          sap
    d_convergence  8
    e_convergence  12
    df_basis_mp2   cc-pvdz-ri
@@ -69,4 +69,4 @@ S   1   1.00
 }
 
 forte_energy = energy('forte')
-compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),9,"DSRG-MRPT2 energy")

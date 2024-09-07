@@ -45,7 +45,6 @@ Driver:
         "SA-MRDSRG",
         "DSRG_MRPT",
         "MRDSRG_SO",
-        "SOMRDSRG",
       ]
     help: "Dynamical correlation solver type"
   CALC_TYPE:
@@ -53,6 +52,10 @@ Driver:
     default: "SS"
     choices: ["SS", "SA", "MS", "DWMS"]
     help: "The type of computation"
+  MCSCF_REFERENCE:
+    type: bool
+    default: True
+    help: "Whether to use MCSCF reference in Forte or not"
   NEL:
     type: int
     default: None
@@ -1032,6 +1035,18 @@ DSRG:
     help: >
       "Percentage of cumulative virtual occupancy kept unfrozen. "
       "If not 100.0, it takes priority over all other selection schemes."
+  DSRG_ADAPTIVE_RSC:
+    type: bool
+    default: true
+    help: "Make the threshold adaptive for terminating the recursive single commutator approximation"
+  DSRG_ADAPTIVE_RSC_THRESHOLD:
+    type: double
+    default: 1.0e-3
+    help: "The upper threshold for the adaptive termination of the recursive single commutator approximation"
+  DSRG_ADAPTIVE_RSC_DELTA_E_START:
+    type: double
+    default: 5.0e-5
+    help: "The energy difference for the adaptive RSC to kick in"
   T_ALGORITHM:
     type: str
     default: "DSRG"
@@ -1093,6 +1108,7 @@ DSRG:
   DSRG_TRANS_TYPE:
     type: str
     default: "UNITARY"
+    choices: ["UNITARY", "CC"]
     help: "DSRG transformation type"
   SMART_DSRG_S:
     type: str
@@ -1400,14 +1416,14 @@ MCSCF:
     type: int
     default: 1
     help: "How often to solve CI?\n< 1: do CI in the first macro iteration ONLY\n= n: do CI every n macro iteration"
-  MCSCF_REFERENCE:
+  MCSCF_DF_TEIALG:
     type: bool
     default: True
-    help: "Run a FCI followed by MCSCF computation?"
-  MCSCF_FREEZE_CORE:
+    help: "Algorithm to build (pu|xy) integrals in DF-MCSCF. Use (Q|pu) if True; Otherwise use JK build for every xy pair"
+  MCSCF_IGNORE_FROZEN_ORBS:
     type: bool
-    default: False
-    help: "Freeze core orbitals in MCSCF?"
+    default: True
+    help: "Ignore frozen orbitals in the input file for MCSCF or not"
   MCSCF_MULTIPLICITY:
     type: int
     default: 0

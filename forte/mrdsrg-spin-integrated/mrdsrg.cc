@@ -69,12 +69,6 @@ void MRDSRG::cleanup() {}
 
 void MRDSRG::read_options() {
     dsrg_trans_type_ = foptions_->get_str("DSRG_TRANS_TYPE");
-    if (dsrg_trans_type_ != "UNITARY") {
-        std::stringstream ss;
-        ss << "DSRG transformation type (" << dsrg_trans_type_
-           << ") is not implemented yet. Please change to UNITARY";
-        throw psi::PSIEXCEPTION(ss.str());
-    }
 
     corrlv_string_ = foptions_->get_str("CORR_LEVEL");
     std::vector<std::string> available{"PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2"};

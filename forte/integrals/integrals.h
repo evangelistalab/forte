@@ -395,6 +395,8 @@ class ForteIntegrals {
 
     /// Orbital coefficients in AO x MO basis where MO is in Pitzer order
     virtual std::shared_ptr<psi::Matrix> Ca_AO() const = 0;
+    /// Transform SO orbital coefficients to AO x MO basis where MO is Pitzer order
+    std::shared_ptr<psi::Matrix> Ca_SO2AO(std::shared_ptr<psi::Matrix> Ca_SO) const;
 
     /// Obtain AO dipole integrals [X, Y, Z]
     /// Each direction is a std::shared_ptr<psi::Matrix> of dimension nao * nao

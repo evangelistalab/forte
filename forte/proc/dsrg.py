@@ -65,6 +65,9 @@ class ProcedureDSRG:
         self.relax_ref = options.get_str("RELAX_REF")
         if self.relax_ref == "NONE" and self.do_multi_state:
             self.relax_ref = "ONCE"
+        if self.relax_ref != "NONE" and options.get_str("DSRG_TRANS_TYPE") != "UNITARY":
+            psi4.core.print_out("\n  DSRG relaxation only supports UNITARY transformation. Setting RELAX_REF to NONE.")
+            self.relax_ref = "NONE"
 
         self.max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
         if options.get_str("DSRG_3RDM_ALGORITHM") == "DIRECT":
@@ -189,9 +192,7 @@ class ProcedureDSRG:
             self.Heff_implemented = True
             self.Meff_implemented = True
         elif self.solver_type in ["MRDSRG_SO", "MRDSRG-SO"]:
-            self.dsrg_solver = forte.make_dsrg_so_y(*args)
-        elif self.solver_type == "SOMRDSRG":
-            self.dsrg_solver = forte.make_dsrg_so_f(*args)
+            self.dsrg_solver = forte.make_dsrg_so(*args)
         elif self.solver_type in ["DSRG_MRPT", "DSRG-MRPT"]:
             self.dsrg_solver = forte.make_dsrg_spin_adapted(*args)
         else:

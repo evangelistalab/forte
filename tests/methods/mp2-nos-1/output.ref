@@ -1,9 +1,9 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 undefined 
+                               Psi4 1.10a1.dev48 
 
-                         Git: Rev {master} b771313 
+                         Git: Rev {master} 1813c0c dirty
 
 
     D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
@@ -19,7 +19,8 @@
                             Additional Code Authors
     E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
     J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
-    P. Verma, M. H. Lechner, and A. Jiang
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
 
              Previous Authors, Complete List of Code Contributors,
                        and Citations for Specific Modules
@@ -30,13 +31,13 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Friday, 17 December 2021 01:35AM
+    Psi4 started on: Thursday, 29 August 2024 10:01AM
 
-    Process ID: 82373
-    Host:       Yorks-Mac.local
-    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
+    Process ID: 1951
+    Host:       Brian-Zs-MBA.local
+    PSIDATADIR: /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4
     Memory:     500.0 MiB
-    Threads:    8
+    Threads:    1
     
   ==> Input File <==
 
@@ -79,6 +80,7 @@ scf_type df
 basis def2-svp
 maxiter 100
 docc [40,7]
+e_convergence 12
 d_convergence 6
 }
 
@@ -88,9 +90,10 @@ int_type diskdf
 orbital_type mp2no
 nat_act true
 nat_orbs_print true
-mp2no_occ_threshold 0.98
-mp2no_vir_threshold 0.02
+pt2no_occ_threshold 0.98
+pt2no_vir_threshold 0.02
 frozen_docc [14,0]
+mcscf_reference false
 }
 
 Escf, wfn = energy('scf', return_wfn=True)
@@ -119,18 +122,24 @@ for name in files:
 
   Memory set to   3.725 GiB by Python driver.
 
-Scratch directory: /Users/york/scratch/psi4/
+Scratch directory: /tmp/
+   => Libint2 <=
 
-*** tstart() called on Yorks-Mac.local
-*** at Fri Dec 17 01:35:11 2021
+    Primary   basis highest AM E, G, H:  6, 6, 3
+    Auxiliary basis highest AM E, G, H:  7, 7, 4
+    Onebody   basis highest AM E, G, H:  -, -, -
+    Solid Harmonics ordering:            Gaussian
+
+*** tstart() called on Brian-Zs-MBA.local
+*** at Thu Aug 29 10:01:47 2024
 
    => Loading Basis Set <=
 
     Name: DEF2-SVP
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1-14  entry C          line    90 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-svp.gbs 
-    atoms 15-24 entry H          line    15 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-svp.gbs 
+    atoms 1-14  entry C          line    90 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/def2-svp.gbs 
+    atoms 15-24 entry H          line    15 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/def2-svp.gbs 
 
 
          ---------------------------------------------------------
@@ -138,7 +147,7 @@ Scratch directory: /Users/york/scratch/psi4/
                by Justin Turney, Rob Parrish, Andy Simmonett
                           and Daniel G. A. Smith
                               RHF Reference
-                        8 Threads,   3814 MiB Core
+                        1 Threads,   3814 MiB Core
          ---------------------------------------------------------
 
   ==> Geometry <==
@@ -194,7 +203,7 @@ Scratch directory: /Users/york/scratch/psi4/
   MOM disabled.
   Fractional occupation disabled.
   Guess Type is SAD.
-  Energy threshold   = 1.00e-06
+  Energy threshold   = 1.00e-12
   Density threshold  = 1.00e-06
   Integral threshold = 1.00e-12
 
@@ -213,19 +222,21 @@ Scratch directory: /Users/york/scratch/psi4/
     Name: (DEF2-SVP AUX)
     Role: JKFIT
     Keyword: DF_BASIS_SCF
-    atoms 1-14  entry C          line   198 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-universal-jkfit.gbs 
-    atoms 15-24 entry H          line    18 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-universal-jkfit.gbs 
+    atoms 1-14  entry C          line   198 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/def2-universal-jkfit.gbs 
+    atoms 15-24 entry H          line    18 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/def2-universal-jkfit.gbs 
 
   ==> Integral Setup <==
 
-  DFHelper Memory: AOs need 0.495 GiB; user supplied 2.794 GiB. Using in-core AOs.
+  DFHelper Memory: AOs need 0.492 GiB; user supplied 2.794 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
 
   ==> MemDFJK: Density-Fitted J/K Matrices <==
 
     J tasked:                   Yes
     K tasked:                   Yes
     wK tasked:                   No
-    OpenMP threads:               8
+    OpenMP threads:               1
     Memory [MiB]:              2861
     Algorithm:                 Core
     Schwarz Cutoff:           1E-12
@@ -263,15 +274,26 @@ Scratch directory: /Users/york/scratch/psi4/
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-RHF iter SAD:  -535.45348774463832   -5.35453e+02   0.00000e+00 
-   @DF-RHF iter   1:  -535.38411547496776    6.93723e-02   2.79785e-03 DIIS
-   @DF-RHF iter   2:  -535.57758836781215   -1.93473e-01   1.02475e-03 DIIS
-   @DF-RHF iter   3:  -535.59973556702437   -2.21472e-02   2.86173e-04 DIIS
-   @DF-RHF iter   4:  -535.60215320076657   -2.41763e-03   7.76481e-05 DIIS
-   @DF-RHF iter   5:  -535.60231269436622   -1.59494e-04   1.93456e-05 DIIS
-   @DF-RHF iter   6:  -535.60234207151211   -2.93771e-05   7.34136e-06 DIIS
-   @DF-RHF iter   7:  -535.60234793347297   -5.86196e-06   3.73042e-06 DIIS
-   @DF-RHF iter   8:  -535.60234884304543   -9.09572e-07   9.25323e-07 DIIS
+   @DF-RHF iter SAD:  -502.59651699355231   -5.02597e+02   0.00000e+00 
+   @DF-RHF iter   1:  -466.91563468030017    3.56809e+01   4.24692e-02 ADIIS/DIIS
+   @DF-RHF iter   2:  -352.24713698475756    1.14668e+02   7.85471e-02 ADIIS/DIIS
+   @DF-RHF iter   3:  -527.55390614454359   -1.75307e+02   1.96740e-02 ADIIS/DIIS
+   @DF-RHF iter   4:  -530.83041801512650   -3.27651e+00   1.49579e-02 ADIIS/DIIS
+   @DF-RHF iter   5:  -535.51323059390450   -4.68281e+00   1.55571e-03 ADIIS/DIIS
+   @DF-RHF iter   6:  -535.58751177478496   -7.42812e-02   6.93764e-04 ADIIS/DIIS
+   @DF-RHF iter   7:  -535.59955606357767   -1.20443e-02   2.02351e-04 ADIIS/DIIS
+   @DF-RHF iter   8:  -535.60191980928653   -2.36375e-03   6.62832e-05 DIIS
+   @DF-RHF iter   9:  -535.60224569016862   -3.25881e-04   3.38710e-05 DIIS
+   @DF-RHF iter  10:  -535.60233750312909   -9.18130e-05   9.98383e-06 DIIS
+   @DF-RHF iter  11:  -535.60234850749339   -1.10044e-05   2.13150e-06 DIIS
+   @DF-RHF iter  12:  -535.60234889015044   -3.82657e-07   5.48503e-07 DIIS
+   @DF-RHF iter  13:  -535.60234889779315   -7.64271e-09   2.32542e-07 DIIS
+   @DF-RHF iter  14:  -535.60234889930189   -1.50874e-09   4.76156e-08 DIIS
+   @DF-RHF iter  15:  -535.60234889942490   -1.23009e-10   1.60985e-08 DIIS
+   @DF-RHF iter  16:  -535.60234889944081   -1.59162e-11   9.32291e-09 DIIS
+   @DF-RHF iter  17:  -535.60234889944354   -2.72848e-12   4.42771e-09 DIIS
+   @DF-RHF iter  18:  -535.60234889944525   -1.70530e-12   2.60434e-09 DIIS
+   @DF-RHF iter  19:  -535.60234889944468    5.68434e-13   1.03054e-09 DIIS
   Energy and wave function converged.
 
 
@@ -282,105 +304,107 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Doubly Occupied:                                                      
 
-       1Ap   -11.246109     2Ap   -11.245927     3Ap   -11.245308  
-       4Ap   -11.244942     5Ap   -11.243087     6Ap   -11.243072  
-       7Ap   -11.242121     8Ap   -11.242111     9Ap   -11.242022  
-      10Ap   -11.242013    11Ap   -11.240439    12Ap   -11.240435  
-      13Ap   -11.239665    14Ap   -11.239659    15Ap    -1.181107  
-      16Ap    -1.140020    17Ap    -1.077984    18Ap    -1.055009  
-      19Ap    -1.013447    20Ap    -0.998368    21Ap    -0.952903  
-      22Ap    -0.871656    23Ap    -0.837231    24Ap    -0.815266  
-      25Ap    -0.804732    26Ap    -0.735485    27Ap    -0.712165  
-      28Ap    -0.688840    29Ap    -0.643689    30Ap    -0.640744  
-      31Ap    -0.625292    32Ap    -0.624569    33Ap    -0.592900  
-      34Ap    -0.581177    35Ap    -0.577308    36Ap    -0.550652  
-       1App   -0.550219    37Ap    -0.537747    38Ap    -0.499405  
-       2App   -0.497029    39Ap    -0.486913    40Ap    -0.478394  
-       3App   -0.416999     4App   -0.407390     5App   -0.349404  
-       6App   -0.314663     7App   -0.261907  
+       1Ap   -11.246103     2Ap   -11.245921     3Ap   -11.245302  
+       4Ap   -11.244937     5Ap   -11.243075     6Ap   -11.243060  
+       7Ap   -11.242128     8Ap   -11.242118     9Ap   -11.242029  
+      10Ap   -11.242020    11Ap   -11.240443    12Ap   -11.240439  
+      13Ap   -11.239668    14Ap   -11.239662    15Ap    -1.181103  
+      16Ap    -1.140019    17Ap    -1.077983    18Ap    -1.055005  
+      19Ap    -1.013447    20Ap    -0.998366    21Ap    -0.952901  
+      22Ap    -0.871654    23Ap    -0.837229    24Ap    -0.815262  
+      25Ap    -0.804732    26Ap    -0.735485    27Ap    -0.712164  
+      28Ap    -0.688838    29Ap    -0.643690    30Ap    -0.640744  
+      31Ap    -0.625289    32Ap    -0.624567    33Ap    -0.592901  
+      34Ap    -0.581176    35Ap    -0.577305    36Ap    -0.550650  
+       1App   -0.550216    37Ap    -0.537747    38Ap    -0.499405  
+       2App   -0.497028    39Ap    -0.486911    40Ap    -0.478391  
+       3App   -0.416998     4App   -0.407386     5App   -0.349405  
+       6App   -0.314659     7App   -0.261906  
 
     Virtual:                                                              
 
-       8App    0.056118     9App    0.110245    10App    0.145257  
-      11App    0.182520    41Ap     0.185536    42Ap     0.190758  
-      43Ap     0.192320    44Ap     0.221984    45Ap     0.223462  
-      12App    0.230193    46Ap     0.247454    47Ap     0.251451  
+       8App    0.056121     9App    0.110248    10App    0.145258  
+      11App    0.182524    41Ap     0.185535    42Ap     0.190757  
+      43Ap     0.192320    44Ap     0.221984    45Ap     0.223461  
+      12App    0.230195    46Ap     0.247453    47Ap     0.251451  
       48Ap     0.267767    49Ap     0.284794    50Ap     0.317503  
-      13App    0.344246    51Ap     0.385876    14App    0.404678  
-      52Ap     0.428131    53Ap     0.434047    54Ap     0.438623  
-      55Ap     0.454088    56Ap     0.463880    57Ap     0.471762  
-      58Ap     0.483868    59Ap     0.485662    60Ap     0.498489  
-      61Ap     0.522834    62Ap     0.526658    63Ap     0.530664  
-      64Ap     0.548566    65Ap     0.552280    66Ap     0.556961  
-      67Ap     0.599850    68Ap     0.605905    69Ap     0.616767  
-      70Ap     0.645740    71Ap     0.664828    72Ap     0.665208  
-      15App    0.667074    73Ap     0.669439    16App    0.689726  
-      74Ap     0.699193    75Ap     0.699700    76Ap     0.713904  
-      77Ap     0.715472    17App    0.718756    78Ap     0.727534  
-      18App    0.730578    19App    0.756217    79Ap     0.791815  
-      20App    0.798671    21App    0.804749    22App    0.807893  
-      80Ap     0.851347    23App    0.861112    81Ap     0.863344  
-      24App    0.878017    82Ap     0.880091    83Ap     0.891190  
-      84Ap     0.896317    25App    0.905624    85Ap     0.913257  
-      86Ap     0.918998    26App    0.923261    87Ap     0.933795  
-      88Ap     0.941450    89Ap     0.952921    90Ap     0.955413  
-      91Ap     0.982008    92Ap     0.988905    27App    0.997970  
-      28App    1.012784    93Ap     1.038301    94Ap     1.043365  
-      95Ap     1.063776    96Ap     1.064104    97Ap     1.079071  
-      98Ap     1.108330    99Ap     1.120260   100Ap     1.130863  
-     101Ap     1.161960   102Ap     1.162610   103Ap     1.178715  
-     104Ap     1.285593   105Ap     1.304429   106Ap     1.374759  
-     107Ap     1.386541   108Ap     1.389258    29App    1.406301  
-      30App    1.425914   109Ap     1.447308   110Ap     1.457481  
-      31App    1.486120    32App    1.488546    33App    1.491026  
-      34App    1.506422   111Ap     1.511211    35App    1.520862  
-     112Ap     1.523257   113Ap     1.527523    36App    1.530647  
-     114Ap     1.542250    37App    1.551725    38App    1.560647  
-      39App    1.592640    40App    1.606808   115Ap     1.649827  
-     116Ap     1.737920   117Ap     1.745211   118Ap     1.781538  
-      41App    1.893845   119Ap     1.911469   120Ap     1.915917  
-      42App    1.947723   121Ap     1.949930   122Ap     1.952856  
-      43App    1.986880   123Ap     2.003188    44App    2.003637  
-     124Ap     2.016689   125Ap     2.027838   126Ap     2.030416  
-     127Ap     2.041979    45App    2.044309   128Ap     2.056335  
-      46App    2.063713   129Ap     2.069321   130Ap     2.074456  
-      47App    2.079854   131Ap     2.088488   132Ap     2.102750  
-     133Ap     2.113898   134Ap     2.162922    48App    2.205924  
-     135Ap     2.207839    49App    2.237415    50App    2.240908  
-     136Ap     2.258794   137Ap     2.273767   138Ap     2.284782  
-      51App    2.299270   139Ap     2.331975   140Ap     2.336556  
-     141Ap     2.351321    52App    2.362354   142Ap     2.388787  
-     143Ap     2.403791   144Ap     2.422282    53App    2.434472  
-     145Ap     2.445786   146Ap     2.457398   147Ap     2.464163  
-     148Ap     2.478478   149Ap     2.481845    54App    2.513973  
-     150Ap     2.558400    55App    2.567431    56App    2.577002  
-     151Ap     2.605437    57App    2.628100   152Ap     2.648316  
-      58App    2.672402    59App    2.693533    60App    2.729267  
-     153Ap     2.731571    61App    2.748304   154Ap     2.751263  
-      62App    2.773047   155Ap     2.857319    63App    2.883175  
-     156Ap     2.910630    64App    2.931549   157Ap     2.934332  
-     158Ap     2.937932   159Ap     2.992179   160Ap     2.998881  
-      65App    3.021463   161Ap     3.038446    66App    3.047318  
-     162Ap     3.062979   163Ap     3.072591   164Ap     3.089631  
-     165Ap     3.115264   166Ap     3.125709   167Ap     3.174393  
-     168Ap     3.253677   169Ap     3.260932   170Ap     3.268808  
-     171Ap     3.297405   172Ap     3.400064   173Ap     3.445697  
-     174Ap     3.477433   175Ap     3.510947   176Ap     3.530964  
-     177Ap     3.651524   178Ap     3.849577   179Ap     4.028756  
-     180Ap     4.046543  
+      13App    0.344247    51Ap     0.385877    14App    0.404681  
+      52Ap     0.428133    53Ap     0.434046    54Ap     0.438625  
+      55Ap     0.454089    56Ap     0.463883    57Ap     0.471763  
+      58Ap     0.483868    59Ap     0.485661    60Ap     0.498491  
+      61Ap     0.522834    62Ap     0.526661    63Ap     0.530666  
+      64Ap     0.548566    65Ap     0.552281    66Ap     0.556962  
+      67Ap     0.599851    68Ap     0.605906    69Ap     0.616767  
+      70Ap     0.645741    71Ap     0.664829    72Ap     0.665209  
+      15App    0.667077    73Ap     0.669439    16App    0.689726  
+      74Ap     0.699193    75Ap     0.699701    76Ap     0.713906  
+      77Ap     0.715474    17App    0.718757    78Ap     0.727535  
+      18App    0.730580    19App    0.756216    79Ap     0.791817  
+      20App    0.798671    21App    0.804749    22App    0.807895  
+      80Ap     0.851348    23App    0.861112    81Ap     0.863342  
+      24App    0.878020    82Ap     0.880091    83Ap     0.891188  
+      84Ap     0.896316    25App    0.905626    85Ap     0.913260  
+      86Ap     0.918997    26App    0.923261    87Ap     0.933794  
+      88Ap     0.941449    89Ap     0.952922    90Ap     0.955414  
+      91Ap     0.982007    92Ap     0.988905    27App    0.997972  
+      28App    1.012788    93Ap     1.038302    94Ap     1.043365  
+      95Ap     1.063778    96Ap     1.064105    97Ap     1.079072  
+      98Ap     1.108332    99Ap     1.120261   100Ap     1.130865  
+     101Ap     1.161963   102Ap     1.162612   103Ap     1.178716  
+     104Ap     1.285594   105Ap     1.304431   106Ap     1.374760  
+     107Ap     1.386542   108Ap     1.389262    29App    1.406303  
+      30App    1.425914   109Ap     1.447312   110Ap     1.457482  
+      31App    1.486121    32App    1.488549    33App    1.491026  
+      34App    1.506421   111Ap     1.511214    35App    1.520863  
+     112Ap     1.523257   113Ap     1.527524    36App    1.530649  
+     114Ap     1.542252    37App    1.551725    38App    1.560647  
+      39App    1.592642    40App    1.606810   115Ap     1.649829  
+     116Ap     1.737921   117Ap     1.745212   118Ap     1.781539  
+      41App    1.893846   119Ap     1.911469   120Ap     1.915917  
+      42App    1.947723   121Ap     1.949932   122Ap     1.952857  
+      43App    1.986882   123Ap     2.003189    44App    2.003637  
+     124Ap     2.016690   125Ap     2.027838   126Ap     2.030416  
+     127Ap     2.041980    45App    2.044310   128Ap     2.056336  
+      46App    2.063715   129Ap     2.069321   130Ap     2.074455  
+      47App    2.079857   131Ap     2.088489   132Ap     2.102751  
+     133Ap     2.113898   134Ap     2.162923    48App    2.205925  
+     135Ap     2.207840    49App    2.237413    50App    2.240906  
+     136Ap     2.258794   137Ap     2.273769   138Ap     2.284783  
+      51App    2.299270   139Ap     2.331977   140Ap     2.336557  
+     141Ap     2.351323    52App    2.362355   142Ap     2.388787  
+     143Ap     2.403790   144Ap     2.422284    53App    2.434474  
+     145Ap     2.445787   146Ap     2.457400   147Ap     2.464162  
+     148Ap     2.478481   149Ap     2.481846    54App    2.513976  
+     150Ap     2.558401    55App    2.567435    56App    2.577003  
+     151Ap     2.605438    57App    2.628100   152Ap     2.648315  
+      58App    2.672401    59App    2.693534    60App    2.729269  
+     153Ap     2.731573    61App    2.748307   154Ap     2.751264  
+      62App    2.773047   155Ap     2.857322    63App    2.883175  
+     156Ap     2.910634    64App    2.931550   157Ap     2.934331  
+     158Ap     2.937935   159Ap     2.992179   160Ap     2.998882  
+      65App    3.021465   161Ap     3.038447    66App    3.047322  
+     162Ap     3.062979   163Ap     3.072589   164Ap     3.089630  
+     165Ap     3.115265   166Ap     3.125712   167Ap     3.174393  
+     168Ap     3.253679   169Ap     3.260932   170Ap     3.268809  
+     171Ap     3.297406   172Ap     3.400064   173Ap     3.445696  
+     174Ap     3.477432   175Ap     3.510951   176Ap     3.530964  
+     177Ap     3.651524   178Ap     3.849579   179Ap     4.028757  
+     180Ap     4.046546  
 
     Final Occupation by Irrep:
              Ap   App 
     DOCC [    40,    7 ]
+    NA   [    40,    7 ]
+    NB   [    40,    7 ]
 
-  @DF-RHF Final Energy:  -535.60234884304543
+  @DF-RHF Final Energy:  -535.60234889944468
 
    => Energetics <=
 
     Nuclear Repulsion Energy =            768.2489730203435556
-    One-Electron Energy =               -2247.8672484450312368
-    Two-Electron Energy =                 944.0159265816422476
-    Total Energy =                       -535.6023488430454336
+    One-Electron Energy =               -2247.8677139609089863
+    Two-Electron Energy =                 944.0163920411207528
+    Total Energy =                       -535.6023488994446780
 
 Computation Completed
 
@@ -389,36 +413,38 @@ Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
 
 Properties computed using the SCF density matrix
 
-  Nuclear Dipole Moment: [e a0]
-     X:    -0.0002      Y:    -0.0003      Z:     0.0000
 
-  Electronic Dipole Moment: [e a0]
-     X:     0.0001      Y:     0.0002      Z:     0.0000
+ Multipole Moments:
 
-  Dipole Moment: [e a0]
-     X:    -0.0001      Y:    -0.0001      Z:     0.0000     Total:     0.0001
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
 
-  Dipole Moment: [D]
-     X:    -0.0002      Y:    -0.0003      Z:     0.0000     Total:     0.0004
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0001209           -0.0002022           -0.0000813
+ Dipole Y            :          0.0001780           -0.0002906           -0.0001126
+ Dipole Z            :          0.0000000            0.0000000            0.0000000
+ Magnitude           :                                                    0.0001389
 
+ ------------------------------------------------------------------------------------
 
-*** tstop() called on Yorks-Mac.local at Fri Dec 17 01:35:22 2021
+*** tstop() called on Brian-Zs-MBA.local at Thu Aug 29 10:01:57 2024
 Module time:
-	user time   =      60.52 seconds =       1.01 minutes
-	system time =       5.63 seconds =       0.09 minutes
-	total time  =         11 seconds =       0.18 minutes
+	user time   =      30.89 seconds =       0.51 minutes
+	system time =       1.35 seconds =       0.02 minutes
+	total time  =         10 seconds =       0.17 minutes
 Total time:
-	user time   =      60.52 seconds =       1.01 minutes
-	system time =       5.63 seconds =       0.09 minutes
-	total time  =         11 seconds =       0.18 minutes
+	user time   =      30.89 seconds =       0.51 minutes
+	system time =       1.35 seconds =       0.02 minutes
+	total time  =         10 seconds =       0.17 minutes
 
-Scratch directory: /Users/york/scratch/psi4/
+Scratch directory: /tmp/
 
   Forte
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: dfmp2-nos - git commit: 8aa9a2e8
+    git branch: adpative-rsc - git commit: 9cf22643
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -426,7 +452,6 @@ Scratch directory: /Users/york/scratch/psi4/
     Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
-  Size of Determinant class: 128 bits
 
   Preparing forte objects from a Psi4 Wavefunction object
   Read options for space FROZEN_DOCC
@@ -453,8 +478,8 @@ Scratch directory: /Users/york/scratch/psi4/
     Name: DEF2-SVP
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1-14  entry C          line    90 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-svp.gbs 
-    atoms 15-24 entry H          line    15 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-svp.gbs 
+    atoms 1-14  entry C          line    90 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/def2-svp.gbs 
+    atoms 15-24 entry H          line    15 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/def2-svp.gbs 
 
 
   Checking orbital orthonormality against current geometry ... Done (OK)
@@ -464,20 +489,20 @@ Scratch directory: /Users/york/scratch/psi4/
     Name: (DEF2-SVP AUX)
     Role: RIFIT
     Keyword: DF_BASIS_MP2
-    atoms 1-14  entry C          line   153 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-svp-ri.gbs 
-    atoms 15-24 entry H          line    22 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-svp-ri.gbs 
+    atoms 1-14  entry C          line   153 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/def2-svp-ri.gbs 
+    atoms 15-24 entry H          line    22 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/def2-svp-ri.gbs 
 
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1-14  entry C          line    61 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
-    atoms 15-24 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 1-14  entry C          line    61 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 15-24 entry H          line    19 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
 
 
-  ==> List of Planes Requested <==
-
+  State Singlet (Ms = 0) Ap GAS min: 0 0 0 0 0 0 ; GAS max: 464 0 0 0 0 0 ; weights:
+      1.000000000000
   Forte will use psi4 integrals
 
   ==> Primary Basis Set Summary <==
@@ -497,8 +522,8 @@ Scratch directory: /Users/york/scratch/psi4/
     J tasked:                  Yes
     K tasked:                  Yes
     wK tasked:                  No
-    OpenMP threads:              8
-    Integrals threads:           8
+    OpenMP threads:              1
+    Integrals threads:           1
     Memory [MiB]:             3051
     Algorithm:                Core
     Integral Cache:           NONE
@@ -530,33 +555,35 @@ Scratch directory: /Users/york/scratch/psi4/
 
   Number of auxiliary basis functions:  812
   Need 0.366114 GB to store DF integrals
-  DFHelper Memory: AOs need 0.327 GiB; user supplied 3.173 GiB. Using in-core AOs.
+  DFHelper Memory: AOs need 0.324 GiB; user supplied 3.183 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
 
   ==> DFHelper <==
     NBF:                             246
     NAux:                            812
     Schwarz Cutoff:                1E-12
     Mask sparsity (%):                16
-    DFH Avail. Memory [GiB]:       3.173
-    OpenMP threads:                    8
+    DFH Avail. Memory [GiB]:       3.183
+    OpenMP threads:                    1
     Algorithm:                     STORE
     AO Core:                        True
     MO Core:                       False
     Hold Metric:                   False
     Metric Power:                 -0.500
-    Fitting Condition:             1E-12
+    Fitting Condition:             1E-10
     Q Shell Max:                       7
 
 
 
   Computing DF Integrals
-  Timing for computing density-fitted integrals:              2.186 s.
-  Frozen-core energy        -846.543980145773730 a.u.
-  Timing for frozen one-body operator:                        0.316 s.
+  Timing for computing density-fitted integrals:              1.173 s.
+  Frozen-core energy        -846.543980060406966 a.u.
+  Timing for frozen one-body operator:                        0.260 s.
   Resorting integrals after freezing core.
   Timing for resorting integrals:                             0.000 s.
-  Timing for freezing core and virtual orbitals:              0.316 s.
-  Timing for disk-based density-fitted integrals:             5.704 s.
+  Timing for freezing core and virtual orbitals:              0.260 s.
+  Timing for disk-based density-fitted integrals:             3.248 s.
 
                 ------------------------------------------------
                   Second-Order Moller-Plesset Natural Orbitals
@@ -564,502 +591,502 @@ Scratch directory: /Users/york/scratch/psi4/
                 ------------------------------------------------
 
     Memory in MB                    3433.2
-    Number of threads                    8
+    Number of threads                    1
     Number of α occupied orbitals       33
     Number of β occupied orbitals       33
     Number of α virtual orbitals       199
     Number of β virtual orbitals       199
 
-    SCF energy                            = -535.602348843045434
-    MP2 correlation energy                =   -1.802861833444602
-  * MP2 total energy                      = -537.405210676490015
+    SCF energy                            = -535.602348899444678
+    MP2 correlation energy                =   -1.802862261904745
+  * MP2 total energy                      = -537.405211161349371
 
  # D1oo_evals #
  Irrep: 1
-      1:    0.992985121205509
-      2:    0.992407293451546
-      3:    0.991344819890004
-      4:    0.991109069652288
-      5:    0.990415634630372
-      6:    0.989618790896500
-      7:    0.989098076837500
-      8:    0.987196036770693
-      9:    0.986460342879215
-     10:    0.986232904324914
-     11:    0.986175375243281
-     12:    0.985189290888292
-     13:    0.983605946039793
-     14:    0.983348033184289
-     15:    0.982876616003953
-     16:    0.982739149667042
-     17:    0.980921299462264
-     18:    0.980707673304066
-     19:    0.980439680322704
-     20:    0.979220129935918
-     21:    0.978537442452061
-     22:    0.977589843768595
-     23:    0.977165717887387
-     24:    0.976836569541029
-     25:    0.976039011673321
-     26:    0.974059631990248
+      1:    0.992985111448245
+      2:    0.992407283252595
+      3:    0.991344810357514
+      4:    0.991109061191181
+      5:    0.990415628075304
+      6:    0.989618785774544
+      7:    0.989098072226503
+      8:    0.987196039657194
+      9:    0.986460330076501
+     10:    0.986232915353189
+     11:    0.986175378007854
+     12:    0.985189314494227
+     13:    0.983605919380793
+     14:    0.983348019173365
+     15:    0.982876617245213
+     16:    0.982739137988547
+     17:    0.980921257016426
+     18:    0.980707656914947
+     19:    0.980439657487733
+     20:    0.979220096463172
+     21:    0.978537415070429
+     22:    0.977589820321554
+     23:    0.977165692790832
+     24:    0.976836545422152
+     25:    0.976038984833668
+     26:    0.974059612945573
 
  Irrep: 2
-      1:    0.976615063109995
-      2:    0.973319675575764
-      3:    0.966484615908461
-      4:    0.965132215024285
-      5:    0.959436452240279
-      6:    0.949387941743889
-      7:    0.946592044084537
+      1:    0.976615033303264
+      2:    0.973319621816024
+      3:    0.966484667448632
+      4:    0.965132178041169
+      5:    0.959436577490854
+      6:    0.949387943142618
+      7:    0.946592452870742
 
 
  # D1vv_evals #
  Irrep: 1
-      1:    0.014771826420420
-      2:    0.014254683355827
-      3:    0.013614742097406
-      4:    0.013159061359892
-      5:    0.012916524976896
-      6:    0.012047811398375
-      7:    0.011902205676290
-      8:    0.011624307128177
-      9:    0.010989229598543
-     10:    0.010914940400310
-     11:    0.009995924623215
-     12:    0.009910535522479
-     13:    0.009595248798146
-     14:    0.009082847399388
-     15:    0.009005979297638
-     16:    0.008695495135747
-     17:    0.008652399992099
-     18:    0.008583879927898
-     19:    0.008430377895231
-     20:    0.008303082889718
-     21:    0.008262668889221
-     22:    0.007642824670981
-     23:    0.007631207234235
-     24:    0.007526388756096
-     25:    0.006928803411892
-     26:    0.006653285194859
-     27:    0.006625438747508
-     28:    0.006535233277637
-     29:    0.005813672992976
-     30:    0.005764173676271
-     31:    0.005309605643943
-     32:    0.004863091420705
-     33:    0.004768692462675
-     34:    0.004724347229523
-     35:    0.004404750085777
-     36:    0.004387645089923
-     37:    0.004384180863800
-     38:    0.004129414300018
-     39:    0.004105420448225
-     40:    0.003084193110173
-     41:    0.002962145923830
-     42:    0.002697434833456
-     43:    0.002496408339900
-     44:    0.002479580832748
-     45:    0.002374064926707
-     46:    0.002190379696979
-     47:    0.002188927434337
-     48:    0.001912716002183
-     49:    0.001763081502856
-     50:    0.001444990882688
-     51:    0.001430114122610
-     52:    0.001409414181355
-     53:    0.001352560947159
-     54:    0.001276600392368
-     55:    0.001274034999619
-     56:    0.001261600948673
-     57:    0.001208765433914
-     58:    0.001199681571445
-     59:    0.001066717376143
-     60:    0.001047171590458
-     61:    0.001001050664074
-     62:    0.000985816434776
-     63:    0.000947478097041
-     64:    0.000944735303218
-     65:    0.000929918650252
-     66:    0.000907815695631
-     67:    0.000899042803369
-     68:    0.000787037229060
-     69:    0.000786805666520
-     70:    0.000781923926440
-     71:    0.000744332339070
-     72:    0.000735827027290
-     73:    0.000728494105099
-     74:    0.000724351186848
-     75:    0.000708572353550
-     76:    0.000653592283973
-     77:    0.000621793220978
-     78:    0.000607909186812
-     79:    0.000576583736454
-     80:    0.000541735163517
-     81:    0.000539915214758
-     82:    0.000523184126976
-     83:    0.000510256782454
-     84:    0.000491098192653
-     85:    0.000488845488403
-     86:    0.000475570179279
-     87:    0.000457518373639
-     88:    0.000456883927275
-     89:    0.000449718788727
-     90:    0.000425847690813
-     91:    0.000403591961493
-     92:    0.000347950909261
-     93:    0.000346441576966
-     94:    0.000330899238364
-     95:    0.000325170896059
-     96:    0.000313845834927
-     97:    0.000309255436629
-     98:    0.000301756204073
-     99:    0.000300890184771
-    100:    0.000295230302959
-    101:    0.000273148447650
-    102:    0.000256562056057
-    103:    0.000251664143562
-    104:    0.000245317850376
-    105:    0.000228027839173
-    106:    0.000224974507826
-    107:    0.000219524443621
-    108:    0.000211579875309
-    109:    0.000187356381004
-    110:    0.000187248934584
-    111:    0.000186824918862
-    112:    0.000182145452833
-    113:    0.000168938376891
-    114:    0.000166982894097
-    115:    0.000154620199012
-    116:    0.000154074104830
-    117:    0.000153393916795
-    118:    0.000147842966424
-    119:    0.000134505246321
-    120:    0.000117900635483
-    121:    0.000113988784492
-    122:    0.000110415468250
-    123:    0.000104175381711
-    124:    0.000103433336537
-    125:    0.000095225624223
-    126:    0.000084550149014
-    127:    0.000084135063357
-    128:    0.000079040261163
-    129:    0.000078855561732
-    130:    0.000075582308813
-    131:    0.000074726546760
-    132:    0.000068053247731
-    133:    0.000066430075788
-    134:    0.000055215128734
-    135:    0.000054478826025
-    136:    0.000054136248301
-    137:    0.000048227221283
-    138:    0.000048068302368
-    139:    0.000040976272422
-    140:    0.000040680405564
+      1:    0.014771845037073
+      2:    0.014254675516739
+      3:    0.013614748922195
+      4:    0.013159076287792
+      5:    0.012916539906569
+      6:    0.012047815453017
+      7:    0.011902215296678
+      8:    0.011624366110157
+      9:    0.010989226129293
+     10:    0.010914977055280
+     11:    0.009995936752375
+     12:    0.009910541707409
+     13:    0.009595278712168
+     14:    0.009082858092567
+     15:    0.009005987063457
+     16:    0.008695514418799
+     17:    0.008652404217344
+     18:    0.008583890814879
+     19:    0.008430383414796
+     20:    0.008303100252280
+     21:    0.008262664578887
+     22:    0.007642841392217
+     23:    0.007631230416291
+     24:    0.007526398338418
+     25:    0.006928825491841
+     26:    0.006653293582026
+     27:    0.006625427202220
+     28:    0.006535233260677
+     29:    0.005813682231625
+     30:    0.005764163550667
+     31:    0.005309618732905
+     32:    0.004863076844316
+     33:    0.004768691218966
+     34:    0.004724351562523
+     35:    0.004404745543492
+     36:    0.004387648422375
+     37:    0.004384182174563
+     38:    0.004129408040168
+     39:    0.004105416487177
+     40:    0.003084196323637
+     41:    0.002962144587932
+     42:    0.002697432699967
+     43:    0.002496405196296
+     44:    0.002479580634768
+     45:    0.002374063828735
+     46:    0.002190376974105
+     47:    0.002188926272570
+     48:    0.001912714733642
+     49:    0.001763078805054
+     50:    0.001444990152777
+     51:    0.001430114996830
+     52:    0.001409414076933
+     53:    0.001352560816480
+     54:    0.001276599650488
+     55:    0.001274034939031
+     56:    0.001261601678513
+     57:    0.001208766094607
+     58:    0.001199681856898
+     59:    0.001066718506176
+     60:    0.001047171608064
+     61:    0.001001051685655
+     62:    0.000985816512080
+     63:    0.000947477681675
+     64:    0.000944733633398
+     65:    0.000929918664911
+     66:    0.000907814964486
+     67:    0.000899044128424
+     68:    0.000787034336299
+     69:    0.000786802606980
+     70:    0.000781922649790
+     71:    0.000744333300100
+     72:    0.000735824943533
+     73:    0.000728495445081
+     74:    0.000724353065449
+     75:    0.000708572797907
+     76:    0.000653594118901
+     77:    0.000621793811314
+     78:    0.000607910980239
+     79:    0.000576583920291
+     80:    0.000541735402157
+     81:    0.000539915361178
+     82:    0.000523183929508
+     83:    0.000510257755564
+     84:    0.000491099515862
+     85:    0.000488846228926
+     86:    0.000475571247207
+     87:    0.000457517836887
+     88:    0.000456884320510
+     89:    0.000449719005829
+     90:    0.000425848382859
+     91:    0.000403592206504
+     92:    0.000347950981456
+     93:    0.000346441907947
+     94:    0.000330899455777
+     95:    0.000325171185067
+     96:    0.000313846045915
+     97:    0.000309255858015
+     98:    0.000301756002490
+     99:    0.000300890476932
+    100:    0.000295230174566
+    101:    0.000273148910360
+    102:    0.000256562639947
+    103:    0.000251664346188
+    104:    0.000245317844875
+    105:    0.000228027960143
+    106:    0.000224974773041
+    107:    0.000219524757480
+    108:    0.000211579703637
+    109:    0.000187356505647
+    110:    0.000187249337259
+    111:    0.000186825009262
+    112:    0.000182145570341
+    113:    0.000168938559282
+    114:    0.000166983109393
+    115:    0.000154620372921
+    116:    0.000154074289581
+    117:    0.000153394178953
+    118:    0.000147842786936
+    119:    0.000134505234736
+    120:    0.000117900739014
+    121:    0.000113988734149
+    122:    0.000110415700864
+    123:    0.000104175317712
+    124:    0.000103433471862
+    125:    0.000095225906124
+    126:    0.000084549756267
+    127:    0.000084134310454
+    128:    0.000079039717274
+    129:    0.000078855224142
+    130:    0.000075581765122
+    131:    0.000074725653855
+    132:    0.000068053263708
+    133:    0.000066430070220
+    134:    0.000055215289535
+    135:    0.000054478907783
+    136:    0.000054136221600
+    137:    0.000048227263934
+    138:    0.000048068354733
+    139:    0.000040976310776
+    140:    0.000040680549658
 
  Irrep: 2
-      1:    0.046084295156388
-      2:    0.041498734424572
-      3:    0.032130480554956
-      4:    0.025974048412850
-      5:    0.024749258475907
-      6:    0.017250777074182
-      7:    0.013440980072532
-      8:    0.004791087425119
-      9:    0.004779384975852
-     10:    0.004694876118790
-     11:    0.004462925152712
-     12:    0.004361400075350
-     13:    0.004092784030020
-     14:    0.003803596856409
-     15:    0.003728158371247
-     16:    0.003611589418673
-     17:    0.003157904398808
-     18:    0.002893671841976
-     19:    0.002782185960812
-     20:    0.002618029664393
-     21:    0.002497367868756
-     22:    0.002369402506802
-     23:    0.002249597026671
-     24:    0.002235883345843
-     25:    0.002017258353951
-     26:    0.001936399031448
-     27:    0.001930623812887
-     28:    0.001916816027323
-     29:    0.001815829327674
-     30:    0.001551802406330
-     31:    0.001525767667139
-     32:    0.001484523876388
-     33:    0.001443770650068
-     34:    0.000674096016776
-     35:    0.000671689996857
-     36:    0.000662998601708
-     37:    0.000626303629943
-     38:    0.000606949072776
-     39:    0.000603646346944
-     40:    0.000573164298028
-     41:    0.000520992063553
-     42:    0.000434900645303
-     43:    0.000425096102553
-     44:    0.000412399148916
-     45:    0.000403338041787
-     46:    0.000379555197509
-     47:    0.000362494369107
-     48:    0.000360181434400
-     49:    0.000359197076430
-     50:    0.000337098197490
-     51:    0.000328800047355
-     52:    0.000302102387025
-     53:    0.000288152030452
-     54:    0.000272915967315
-     55:    0.000272603703830
-     56:    0.000267019130751
-     57:    0.000234982909440
-     58:    0.000194470771557
-     59:    0.000181885730377
+      1:    0.046083950017680
+      2:    0.041498561611572
+      3:    0.032130487981034
+      4:    0.025974059437220
+      5:    0.024749203088296
+      6:    0.017250866229359
+      7:    0.013440978945530
+      8:    0.004791098877241
+      9:    0.004779395211844
+     10:    0.004694883099702
+     11:    0.004462936686602
+     12:    0.004361396747105
+     13:    0.004092785982766
+     14:    0.003803587788866
+     15:    0.003728162856159
+     16:    0.003611583671614
+     17:    0.003157898961164
+     18:    0.002893669421427
+     19:    0.002782180976714
+     20:    0.002618032021452
+     21:    0.002497365154009
+     22:    0.002369401112960
+     23:    0.002249598915267
+     24:    0.002235881971936
+     25:    0.002017255779332
+     26:    0.001936398416838
+     27:    0.001930623349511
+     28:    0.001916815481739
+     29:    0.001815829300425
+     30:    0.001551802346450
+     31:    0.001525768283507
+     32:    0.001484524594342
+     33:    0.001443769904135
+     34:    0.000674097421439
+     35:    0.000671689527155
+     36:    0.000662999109293
+     37:    0.000626304853003
+     38:    0.000606948232872
+     39:    0.000603648059354
+     40:    0.000573161908428
+     41:    0.000520990539801
+     42:    0.000434899346169
+     43:    0.000425095272485
+     44:    0.000412398787533
+     45:    0.000403339157338
+     46:    0.000379555605318
+     47:    0.000362493067384
+     48:    0.000360181453886
+     49:    0.000359197062865
+     50:    0.000337098458879
+     51:    0.000328800177270
+     52:    0.000302103140437
+     53:    0.000288152337910
+     54:    0.000272916486731
+     55:    0.000272603748488
+     56:    0.000267019302211
+     57:    0.000234983172050
+     58:    0.000194470949495
+     59:    0.000181885903683
 
 
  # D1OO_evals #
  Irrep: 1
-      1:    0.992985121205509
-      2:    0.992407293451546
-      3:    0.991344819890004
-      4:    0.991109069652288
-      5:    0.990415634630372
-      6:    0.989618790896500
-      7:    0.989098076837500
-      8:    0.987196036770693
-      9:    0.986460342879215
-     10:    0.986232904324914
-     11:    0.986175375243281
-     12:    0.985189290888292
-     13:    0.983605946039793
-     14:    0.983348033184289
-     15:    0.982876616003953
-     16:    0.982739149667042
-     17:    0.980921299462264
-     18:    0.980707673304066
-     19:    0.980439680322704
-     20:    0.979220129935918
-     21:    0.978537442452061
-     22:    0.977589843768595
-     23:    0.977165717887387
-     24:    0.976836569541029
-     25:    0.976039011673321
-     26:    0.974059631990248
+      1:    0.992985111448245
+      2:    0.992407283252595
+      3:    0.991344810357514
+      4:    0.991109061191181
+      5:    0.990415628075304
+      6:    0.989618785774544
+      7:    0.989098072226503
+      8:    0.987196039657194
+      9:    0.986460330076501
+     10:    0.986232915353189
+     11:    0.986175378007854
+     12:    0.985189314494227
+     13:    0.983605919380793
+     14:    0.983348019173365
+     15:    0.982876617245213
+     16:    0.982739137988547
+     17:    0.980921257016426
+     18:    0.980707656914947
+     19:    0.980439657487733
+     20:    0.979220096463172
+     21:    0.978537415070429
+     22:    0.977589820321554
+     23:    0.977165692790832
+     24:    0.976836545422152
+     25:    0.976038984833668
+     26:    0.974059612945573
 
  Irrep: 2
-      1:    0.976615063109995
-      2:    0.973319675575764
-      3:    0.966484615908461
-      4:    0.965132215024285
-      5:    0.959436452240279
-      6:    0.949387941743889
-      7:    0.946592044084537
+      1:    0.976615033303264
+      2:    0.973319621816024
+      3:    0.966484667448632
+      4:    0.965132178041169
+      5:    0.959436577490854
+      6:    0.949387943142618
+      7:    0.946592452870742
 
 
  # D1VV_evals #
  Irrep: 1
-      1:    0.014771826420420
-      2:    0.014254683355827
-      3:    0.013614742097406
-      4:    0.013159061359892
-      5:    0.012916524976896
-      6:    0.012047811398375
-      7:    0.011902205676290
-      8:    0.011624307128177
-      9:    0.010989229598543
-     10:    0.010914940400310
-     11:    0.009995924623215
-     12:    0.009910535522479
-     13:    0.009595248798146
-     14:    0.009082847399388
-     15:    0.009005979297638
-     16:    0.008695495135747
-     17:    0.008652399992099
-     18:    0.008583879927898
-     19:    0.008430377895231
-     20:    0.008303082889718
-     21:    0.008262668889221
-     22:    0.007642824670981
-     23:    0.007631207234235
-     24:    0.007526388756096
-     25:    0.006928803411892
-     26:    0.006653285194859
-     27:    0.006625438747508
-     28:    0.006535233277637
-     29:    0.005813672992976
-     30:    0.005764173676271
-     31:    0.005309605643943
-     32:    0.004863091420705
-     33:    0.004768692462675
-     34:    0.004724347229523
-     35:    0.004404750085777
-     36:    0.004387645089923
-     37:    0.004384180863800
-     38:    0.004129414300018
-     39:    0.004105420448225
-     40:    0.003084193110173
-     41:    0.002962145923830
-     42:    0.002697434833456
-     43:    0.002496408339900
-     44:    0.002479580832748
-     45:    0.002374064926707
-     46:    0.002190379696979
-     47:    0.002188927434337
-     48:    0.001912716002183
-     49:    0.001763081502856
-     50:    0.001444990882688
-     51:    0.001430114122610
-     52:    0.001409414181355
-     53:    0.001352560947159
-     54:    0.001276600392368
-     55:    0.001274034999619
-     56:    0.001261600948673
-     57:    0.001208765433914
-     58:    0.001199681571445
-     59:    0.001066717376143
-     60:    0.001047171590458
-     61:    0.001001050664074
-     62:    0.000985816434776
-     63:    0.000947478097041
-     64:    0.000944735303218
-     65:    0.000929918650252
-     66:    0.000907815695631
-     67:    0.000899042803369
-     68:    0.000787037229060
-     69:    0.000786805666520
-     70:    0.000781923926440
-     71:    0.000744332339070
-     72:    0.000735827027290
-     73:    0.000728494105099
-     74:    0.000724351186848
-     75:    0.000708572353550
-     76:    0.000653592283973
-     77:    0.000621793220978
-     78:    0.000607909186812
-     79:    0.000576583736454
-     80:    0.000541735163517
-     81:    0.000539915214758
-     82:    0.000523184126976
-     83:    0.000510256782454
-     84:    0.000491098192653
-     85:    0.000488845488403
-     86:    0.000475570179279
-     87:    0.000457518373639
-     88:    0.000456883927275
-     89:    0.000449718788727
-     90:    0.000425847690813
-     91:    0.000403591961493
-     92:    0.000347950909261
-     93:    0.000346441576966
-     94:    0.000330899238364
-     95:    0.000325170896059
-     96:    0.000313845834927
-     97:    0.000309255436629
-     98:    0.000301756204073
-     99:    0.000300890184771
-    100:    0.000295230302959
-    101:    0.000273148447650
-    102:    0.000256562056057
-    103:    0.000251664143562
-    104:    0.000245317850376
-    105:    0.000228027839173
-    106:    0.000224974507826
-    107:    0.000219524443621
-    108:    0.000211579875309
-    109:    0.000187356381004
-    110:    0.000187248934584
-    111:    0.000186824918862
-    112:    0.000182145452833
-    113:    0.000168938376891
-    114:    0.000166982894097
-    115:    0.000154620199012
-    116:    0.000154074104830
-    117:    0.000153393916795
-    118:    0.000147842966424
-    119:    0.000134505246321
-    120:    0.000117900635483
-    121:    0.000113988784492
-    122:    0.000110415468250
-    123:    0.000104175381711
-    124:    0.000103433336537
-    125:    0.000095225624223
-    126:    0.000084550149014
-    127:    0.000084135063357
-    128:    0.000079040261163
-    129:    0.000078855561732
-    130:    0.000075582308813
-    131:    0.000074726546760
-    132:    0.000068053247731
-    133:    0.000066430075788
-    134:    0.000055215128734
-    135:    0.000054478826025
-    136:    0.000054136248301
-    137:    0.000048227221283
-    138:    0.000048068302368
-    139:    0.000040976272422
-    140:    0.000040680405564
+      1:    0.014771845037073
+      2:    0.014254675516739
+      3:    0.013614748922195
+      4:    0.013159076287792
+      5:    0.012916539906569
+      6:    0.012047815453017
+      7:    0.011902215296678
+      8:    0.011624366110157
+      9:    0.010989226129293
+     10:    0.010914977055280
+     11:    0.009995936752375
+     12:    0.009910541707409
+     13:    0.009595278712168
+     14:    0.009082858092567
+     15:    0.009005987063457
+     16:    0.008695514418799
+     17:    0.008652404217344
+     18:    0.008583890814879
+     19:    0.008430383414796
+     20:    0.008303100252280
+     21:    0.008262664578887
+     22:    0.007642841392217
+     23:    0.007631230416291
+     24:    0.007526398338418
+     25:    0.006928825491841
+     26:    0.006653293582026
+     27:    0.006625427202220
+     28:    0.006535233260677
+     29:    0.005813682231625
+     30:    0.005764163550667
+     31:    0.005309618732905
+     32:    0.004863076844316
+     33:    0.004768691218966
+     34:    0.004724351562523
+     35:    0.004404745543492
+     36:    0.004387648422375
+     37:    0.004384182174563
+     38:    0.004129408040168
+     39:    0.004105416487177
+     40:    0.003084196323637
+     41:    0.002962144587932
+     42:    0.002697432699967
+     43:    0.002496405196296
+     44:    0.002479580634768
+     45:    0.002374063828735
+     46:    0.002190376974105
+     47:    0.002188926272570
+     48:    0.001912714733642
+     49:    0.001763078805054
+     50:    0.001444990152777
+     51:    0.001430114996830
+     52:    0.001409414076933
+     53:    0.001352560816480
+     54:    0.001276599650488
+     55:    0.001274034939031
+     56:    0.001261601678513
+     57:    0.001208766094607
+     58:    0.001199681856898
+     59:    0.001066718506176
+     60:    0.001047171608064
+     61:    0.001001051685655
+     62:    0.000985816512080
+     63:    0.000947477681675
+     64:    0.000944733633398
+     65:    0.000929918664911
+     66:    0.000907814964486
+     67:    0.000899044128424
+     68:    0.000787034336299
+     69:    0.000786802606980
+     70:    0.000781922649790
+     71:    0.000744333300100
+     72:    0.000735824943533
+     73:    0.000728495445081
+     74:    0.000724353065449
+     75:    0.000708572797907
+     76:    0.000653594118901
+     77:    0.000621793811314
+     78:    0.000607910980239
+     79:    0.000576583920291
+     80:    0.000541735402157
+     81:    0.000539915361178
+     82:    0.000523183929508
+     83:    0.000510257755564
+     84:    0.000491099515862
+     85:    0.000488846228926
+     86:    0.000475571247207
+     87:    0.000457517836887
+     88:    0.000456884320510
+     89:    0.000449719005829
+     90:    0.000425848382859
+     91:    0.000403592206504
+     92:    0.000347950981456
+     93:    0.000346441907947
+     94:    0.000330899455777
+     95:    0.000325171185067
+     96:    0.000313846045915
+     97:    0.000309255858015
+     98:    0.000301756002490
+     99:    0.000300890476932
+    100:    0.000295230174566
+    101:    0.000273148910360
+    102:    0.000256562639947
+    103:    0.000251664346188
+    104:    0.000245317844875
+    105:    0.000228027960143
+    106:    0.000224974773041
+    107:    0.000219524757480
+    108:    0.000211579703637
+    109:    0.000187356505647
+    110:    0.000187249337259
+    111:    0.000186825009262
+    112:    0.000182145570341
+    113:    0.000168938559282
+    114:    0.000166983109393
+    115:    0.000154620372921
+    116:    0.000154074289581
+    117:    0.000153394178953
+    118:    0.000147842786936
+    119:    0.000134505234736
+    120:    0.000117900739014
+    121:    0.000113988734149
+    122:    0.000110415700864
+    123:    0.000104175317712
+    124:    0.000103433471862
+    125:    0.000095225906124
+    126:    0.000084549756267
+    127:    0.000084134310454
+    128:    0.000079039717274
+    129:    0.000078855224142
+    130:    0.000075581765122
+    131:    0.000074725653855
+    132:    0.000068053263708
+    133:    0.000066430070220
+    134:    0.000055215289535
+    135:    0.000054478907783
+    136:    0.000054136221600
+    137:    0.000048227263934
+    138:    0.000048068354733
+    139:    0.000040976310776
+    140:    0.000040680549658
 
  Irrep: 2
-      1:    0.046084295156388
-      2:    0.041498734424572
-      3:    0.032130480554956
-      4:    0.025974048412850
-      5:    0.024749258475907
-      6:    0.017250777074182
-      7:    0.013440980072532
-      8:    0.004791087425119
-      9:    0.004779384975852
-     10:    0.004694876118790
-     11:    0.004462925152712
-     12:    0.004361400075350
-     13:    0.004092784030020
-     14:    0.003803596856409
-     15:    0.003728158371247
-     16:    0.003611589418673
-     17:    0.003157904398808
-     18:    0.002893671841976
-     19:    0.002782185960812
-     20:    0.002618029664393
-     21:    0.002497367868756
-     22:    0.002369402506802
-     23:    0.002249597026671
-     24:    0.002235883345843
-     25:    0.002017258353951
-     26:    0.001936399031448
-     27:    0.001930623812887
-     28:    0.001916816027323
-     29:    0.001815829327674
-     30:    0.001551802406330
-     31:    0.001525767667139
-     32:    0.001484523876388
-     33:    0.001443770650068
-     34:    0.000674096016776
-     35:    0.000671689996857
-     36:    0.000662998601708
-     37:    0.000626303629943
-     38:    0.000606949072776
-     39:    0.000603646346944
-     40:    0.000573164298028
-     41:    0.000520992063553
-     42:    0.000434900645303
-     43:    0.000425096102553
-     44:    0.000412399148916
-     45:    0.000403338041787
-     46:    0.000379555197509
-     47:    0.000362494369107
-     48:    0.000360181434400
-     49:    0.000359197076430
-     50:    0.000337098197490
-     51:    0.000328800047355
-     52:    0.000302102387025
-     53:    0.000288152030452
-     54:    0.000272915967315
-     55:    0.000272603703830
-     56:    0.000267019130751
-     57:    0.000234982909440
-     58:    0.000194470771557
-     59:    0.000181885730377
+      1:    0.046083950017680
+      2:    0.041498561611572
+      3:    0.032130487981034
+      4:    0.025974059437220
+      5:    0.024749203088296
+      6:    0.017250866229359
+      7:    0.013440978945530
+      8:    0.004791098877241
+      9:    0.004779395211844
+     10:    0.004694883099702
+     11:    0.004462936686602
+     12:    0.004361396747105
+     13:    0.004092785982766
+     14:    0.003803587788866
+     15:    0.003728162856159
+     16:    0.003611583671614
+     17:    0.003157898961164
+     18:    0.002893669421427
+     19:    0.002782180976714
+     20:    0.002618032021452
+     21:    0.002497365154009
+     22:    0.002369401112960
+     23:    0.002249598915267
+     24:    0.002235881971936
+     25:    0.002017255779332
+     26:    0.001936398416838
+     27:    0.001930623349511
+     28:    0.001916815481739
+     29:    0.001815829300425
+     30:    0.001551802346450
+     31:    0.001525768283507
+     32:    0.001484524594342
+     33:    0.001443769904135
+     34:    0.000674097421439
+     35:    0.000671689527155
+     36:    0.000662999109293
+     37:    0.000626304853003
+     38:    0.000606948232872
+     39:    0.000603648059354
+     40:    0.000573161908428
+     41:    0.000520990539801
+     42:    0.000434899346169
+     43:    0.000425095272485
+     44:    0.000412398787533
+     45:    0.000403339157338
+     46:    0.000379555605318
+     47:    0.000362493067384
+     48:    0.000360181453886
+     49:    0.000359197062865
+     50:    0.000337098458879
+     51:    0.000328800177270
+     52:    0.000302103140437
+     53:    0.000288152337910
+     54:    0.000272916486731
+     55:    0.000272603748488
+     56:    0.000267019302211
+     57:    0.000234983172050
+     58:    0.000194470949495
+     59:    0.000181885903683
 
 
  Suggested Active Space 
@@ -1079,7 +1106,7 @@ Scratch directory: /Users/york/scratch/psi4/
  Irrep 1 orbital    1 occupation: 0.973320 Active occupied
  Irrep 1 orbital    2 occupation: 0.966485 Active occupied
  Irrep 1 orbital    3 occupation: 0.965132 Active occupied
- Irrep 1 orbital    4 occupation: 0.959436 Active occupied
+ Irrep 1 orbital    4 occupation: 0.959437 Active occupied
  Irrep 1 orbital    5 occupation: 0.949388 Active occupied
  Irrep 1 orbital    6 occupation: 0.946592 Active occupied
  Irrep 1 orbital    0 occupation: 0.046084 Active virtual
@@ -1094,11 +1121,14 @@ Scratch directory: /Users/york/scratch/psi4/
  By occupation analysis, the active orbitals should be
 
  Active = [ 7 12 ]
+
+
+  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn
     MP2 correlation energy................................................................PASSED
     MP2 unrelaxed 1RDM: D1O...............................................................PASSED
     MP2 unrelaxed 1RDM: D1V...............................................................PASSED
 
-    Psi4 stopped on: Friday, 17 December 2021 01:35AM
-    Psi4 wall time for execution: 0:00:25.16
+    Psi4 stopped on: Thursday, 29 August 2024 10:02AM
+    Psi4 wall time for execution: 0:00:20.38
 
 *** Psi4 exiting successfully. Buy a developer a beer!

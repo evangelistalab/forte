@@ -20,6 +20,7 @@ units bohr
 set globals{
    basis                   sto-3g
    scf_type                pk
+   guess                   sap
 }
 
 set forte {
@@ -30,7 +31,7 @@ set forte {
    root_sym                0
    nroot                   1
    multiplicity            1
-   mcscf_freeze_core       true
+   mcscf_ignore_frozen_orbs false
 }
 
 energy('forte')
