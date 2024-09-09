@@ -89,6 +89,7 @@ void export_ForteIntegrals(py::module& m) {
         .def("set_oei", &ForteIntegrals::set_oei_all, "Set the one-electron integrals")
         .def("set_tei", &ForteIntegrals::set_tei_all, "Set the two-electron integrals")
         .def("initialize", &ForteIntegrals::initialize, "Initialize the integrals")
-        .def("print_ints", &ForteIntegrals::print_ints, "Print the integrals");
+        .def("print_ints", &ForteIntegrals::print_ints, "Print the integrals")
+        .def("mo_dipole_ints", &ForteIntegrals::mo_dipole_ints, "mo_dipole_ints");
 }
 } // namespace forte

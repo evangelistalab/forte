@@ -260,8 +260,13 @@ class ProcedureDSRG:
         if not self.Heff_implemented:
             self.relax_maxiter = 0
 
-        if self.options.get_bool('FULL_HBAR'):
-            self.relax_maxiter = 0
+        # if self.options.get_bool('FULL_HBAR'):
+        #     self.relax_maxiter = 0
+
+        if self.options.get_bool('FULL_HBAR') and self.relax_maxiter == 0:
+            Heff = self.dsrg_solver.compute_Heff_full()
+            Heff_dict = forte.Heff_dict(Heff)
+            np.savez('save_Hbar', **Heff_dict)
 
         # Reference relaxation procedure
         for n in range(self.relax_maxiter):
@@ -363,6 +368,10 @@ class ProcedureDSRG:
 
             # Test convergence and break loop
             if self.test_relaxation_convergence(n):
+                if self.options.get_bool('FULL_HBAR'):
+                    Heff = self.dsrg_solver.compute_Heff_full()
+                    Heff_dict = forte.Heff_dict(Heff)
+                    np.savez('save_Hbar', **Heff_dict)
                 break
 
             # Continue to solve DSRG equations
@@ -405,9 +414,9 @@ class ProcedureDSRG:
 
         ################
         if self.options.get_bool('FULL_HBAR'):
-            Heff = self.dsrg_solver.compute_Heff_full()
-            Heff_dict = forte.Heff_dict(Heff)
-            np.savez('save_Hbar', **Heff_dict)
+            # Heff = self.dsrg_solver.compute_Heff_full()
+            # Heff_dict = forte.Heff_dict(Heff)
+            # np.savez('save_Hbar', **Heff_dict)
             gamma1 = self.dsrg_solver.get_gamma1()
             eta1 = self.dsrg_solver.get_eta1()
             lambda2 = self.dsrg_solver.get_lambda2()
@@ -425,12 +434,32 @@ class ProcedureDSRG:
             np.savez('save_lambda2', **lambda2_dict)
             np.savez('save_lambda3', **lambda3_dict)
 
+            dp1 = self.ints.mo_dipole_ints()
+            np.save('save_dp1', dp1)
+
             # self.rdms = self.active_space_solver.compute_average_rdms(
-            #         self.state_weights_map, self.max_rdm_level, self.rdm_type
-            #     )
+            #     self.state_weights_map, self.max_rdm_level, self.rdm_type
+            # )
             # self.rdms.rotate(self.Ua, self.Ub)
-            # gamma1_aa =self.rdms.g1a()
+            # self.semi.semicanonicalize(self.rdms)
+            # gamma1_aa = self.rdms.g1a()
+            # gamma1_bb = self.rdms.g1b()
+            # lambda2_aa = self.rdms.L2aa()
+            # lambda2_bb = self.rdms.L2bb()
+            # lambda2_ab = self.rdms.L2ab()
+            # lambda3_aaa = self.rdms.L3aaa()
+            # lambda3_aab = self.rdms.L3aab()
+            # lambda3_abb = self.rdms.L3abb()
+            # lambda3_bbb = self.rdms.L3bbb()
             # np.save("gamma1_aa", gamma1_aa)
+            # np.save("gamma1_bb", gamma1_bb)
+            # np.save("lambda2_aa", lambda2_aa)
+            # np.save("lambda2_bb", lambda2_bb)
+            # np.save("lambda2_ab", lambda2_ab)
+            # np.save("lambda3_aaa", lambda3_aaa)
+            # np.save("lambda3_aab", lambda3_aab)
+            # np.save("lambda3_abb", lambda3_abb)
+            # np.save("lambda3_bbb", lambda3_bbb)
 
         ################
 
