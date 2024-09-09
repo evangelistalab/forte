@@ -105,11 +105,13 @@ class Block2DMRGSolver : public ActiveSpaceMethod {
     /// @param Tbra   the v_{pwxy} integrals
     /// @param Tket   the t_{pzuv} integrals
     /// @param p_syms the symmetry of p index
+    /// @param load   whether to load the old compressed mps
     /// @return a list of overlap for every root
-    std::vector<double>
-    compute_complementary_H2caa_overlap(const std::vector<size_t>& roots, ambit::Tensor Tbra,
-                                        ambit::Tensor Tket,
-                                        const std::vector<int>& p_syms) override;
+    std::vector<double> compute_complementary_H2caa_overlap(const std::vector<size_t>& roots,
+                                                            ambit::Tensor Tbra, ambit::Tensor Tket,
+                                                            const std::vector<int>& p_syms,
+                                                            const std::string& name,
+                                                            bool load = false) override;
 
     /// Dump MPS to the current working directory
     void dump_wave_function(const std::string&) override;

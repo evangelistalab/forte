@@ -157,7 +157,8 @@ class ActiveSpaceSolver {
     /// \sum_{puvwxyzστθ} v_{pwxy} t_{pzuv} <Ψ(N)| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ(N)>
     std::map<StateInfo, std::vector<double>>
     compute_complementary_H2caa_overlap(ambit::Tensor Tbra, ambit::Tensor Tket,
-                                        const std::vector<int>& p_syms);
+                                        const std::vector<int>& p_syms, const std::string& name,
+                                        bool load = false);
 
     /// Print a summary of the computation information
     void print_options();

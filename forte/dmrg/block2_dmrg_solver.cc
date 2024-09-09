@@ -72,6 +72,19 @@ struct Block2DMRGSolverImpl {
             driver_sz_ =
                 std::make_shared<block2::DMRGDriver<block2::SZ, double>>(stack_mem, scratch);
     }
+    void reset() {
+        if (is_spin_adapted_) {
+            // this line should not be deleted
+            driver_su2_ = nullptr;
+            driver_su2_ =
+                std::make_shared<block2::DMRGDriver<block2::SU2, double>>(stack_mem_, scratch_);
+        } else {
+            // this line should not be deleted
+            driver_sz_ = nullptr;
+            driver_sz_ =
+                std::make_shared<block2::DMRGDriver<block2::SZ, double>>(stack_mem_, scratch_);
+        }
+    }
     void initialize_system(int n_sites, int n_elec, int spin, int pg_irrep,
                            const vector<int>& actv_irreps, bool singlet_embedding = true,
                            int heis_twos = -1, int heis_twosz = 0) const {
@@ -253,6 +266,8 @@ double Block2DMRGSolver::compute_energy() {
     }
 
     timer t("BLOCK2 Solver Compute Energy");
+
+    impl_->reset();
 
     // system initialization
     bool singlet_embedding = dmrg_options_->get_bool("BLOCK2_SINGLET_EMBEDDING");
@@ -701,10 +716,9 @@ Block2DMRGSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& 
     return rdms;
 }
 
-std::vector<double>
-Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>& roots,
-                                                      ambit::Tensor Tbra, ambit::Tensor Tket,
-                                                      const std::vector<int>& p_syms) {
+std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
+    const std::vector<size_t>& roots, ambit::Tensor Tbra, ambit::Tensor Tket,
+    const std::vector<int>& p_syms, const std::string& name, bool load) {
     /// |bra_{pσ}> = \sum_{uvw} Tbra_{pwuv} \sum_{σ1} w^+_{σ1} v_{σ1} u_{σ} |Ψ>
     /// |ket_{pσ}> = \sum_{uvw} Tket_{pwuv} \sum_{σ1} w^+_{σ1} v_{σ1} u_{σ} |Ψ>
     /// energy <- \sum_{p} \sum_{σ} <bra_{pσ}|ket_{pσ}>
@@ -743,7 +757,8 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
     if (sweep_bond_dims.size() != 0)
         bond_dim = sweep_bond_dims.back();
     std::vector<block2::ubond_t> ket0_bond_dims(1, bond_dim);
-    std::vector<block2::ubond_t> bra_bond_dims(1, 2 * bond_dim);
+    std::vector<block2::ubond_t> bra_bond_dims(
+        1, dmrg_options_->get_int("DSRG_3RDM_BLOCK2_CPS_BOND_DIMENSION"));
     std::vector<double> noises{0.0};
 
     // system initialization
@@ -770,9 +785,8 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
 
         if (impl_->is_spin_adapted_) {
             auto ket0 = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
-            psi::outfile->Printf("\n ket0 max bond dimension: %zu",
-                                 ket0->info->get_max_bond_dimension());
-            auto bond_dim = ket0->info->get_max_bond_dimension();
+            // auto bond_dim = ket0->info->get_max_bond_dimension();
+            auto bond_dim = ket0_bond_dims[0];
 
             for (size_t p = 0; p < np; ++p) {
                 if (print_ > PrintLevel::Default)
@@ -808,46 +822,63 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                     if (print_ > PrintLevel::Default)
                         psi::outfile->Printf("  j = %2d", j);
 
-                    // auto bra = impl_->driver_su2_->load_mps(tag);
+                    auto tag = ket0->info->tag + "@BRA." + name + std::to_string(p) + "." +
+                               std::to_string(j);
+                    std::shared_ptr<block2::MPS<block2::SU2, double>> bra = nullptr;
                     auto binfo = std::make_shared<block2::MPSInfo<block2::SU2>>(
                         na1, vacuum, bq, impl_->driver_su2_->ghamil->basis);
-                    binfo->tag =
-                        ket0->info->tag + "@BRA." + std::to_string(p) + "." + std::to_string(j);
-                    binfo->set_bond_dimension_fci(bra_left_vacuum[j], vacuum);
-                    binfo->set_bond_dimension(bond_dim);
-                    binfo->bond_dim = bond_dim;
 
-                    if (binfo->get_max_bond_dimension() == 0)
-                        continue;
+                    bra = std::make_shared<block2::MPS<block2::SU2, double>>(na1, ket0->center,
+                                                                             ket0->dot);
+                    if (load) {
+                        binfo->load_data(impl_->scratch_ + tag + "-mps_info.bin");
+                        binfo->tag = tag;
+                        binfo->load_mutable();
+                        binfo->set_bond_dimension_fci(bra_left_vacuum[j], vacuum);
+                        binfo->set_bond_dimension(bond_dim);
+                        binfo->bond_dim = bond_dim;
+                        if (binfo->get_max_bond_dimension() == 0)
+                            continue;
+                        bra->initialize(binfo);
+                        bra->load_data();
+                        bra->load_mutable();
+                    } else {
+                        binfo->tag = tag;
+                        binfo->set_bond_dimension_fci(bra_left_vacuum[j], vacuum);
+                        binfo->set_bond_dimension(bond_dim);
+                        binfo->bond_dim = bond_dim;
 
-                    auto bra = std::make_shared<block2::MPS<block2::SU2, double>>(na1, ket0->center,
-                                                                                  ket0->dot);
-                    bra->initialize(binfo);
-                    bra->random_canonicalize();
-                    bra->tensors[bra->center]->normalize();
-                    bra->save_mutable();
-                    binfo->save_mutable();
-                    bra->save_data();
+                        if (binfo->get_max_bond_dimension() == 0)
+                            continue;
 
-                    auto bref = ket0->deep_copy("DSRG-BRA@TMP");
-                    auto bme =
-                        std::make_shared<block2::MovingEnvironment<block2::SU2, double, double>>(
-                            bmpo, bra, bref, "DSRG-CPS1");
-                    bme->delayed_contraction = block2::OpNamesSet::normal_ops();
-                    bme->cached_contraction = true;
-                    bme->init_environments(true);
+                        bra->initialize(binfo);
+                        bra->random_canonicalize();
+                        bra->tensors[bra->center]->normalize();
+                        bra->save_mutable();
+                        binfo->save_mutable();
+                        binfo->save_data(impl_->scratch_ + tag + "-mps_info.bin");
+                        bra->save_data();
 
-                    auto bcps = std::make_shared<block2::Linear<block2::SU2, double, double>>(
-                        bme, bra_bond_dims, ket0_bond_dims, noises);
-                    bcps->iprint = 2;
-                    bcps->noise_type = block2::NoiseTypes::ReducedPerturbative;
-                    bcps->eq_type = block2::EquationTypes::PerturbativeCompression;
-                    bcps->solve(2 * maxiter_, bra->center == 0, 1.0e-8);
-                    if (bra->center != ket0->center)
-                        bcps->solve(1, ket0->center != 0);
+                        auto bref = ket0->deep_copy("DSRG-BRA@TMP");
+                        auto bme = std::make_shared<
+                            block2::MovingEnvironment<block2::SU2, double, double>>(bmpo, bra, bref,
+                                                                                    "DSRG-CPS1");
+                        bme->delayed_contraction = block2::OpNamesSet::normal_ops();
+                        bme->cached_contraction = true;
+                        bme->init_environments(true);
 
-                    auto pvalue =
-                        impl_->driver_su2_->expectation(bra, kmpo, ket0, true, 2 * bond_dim);
+                        auto bcps = std::make_shared<block2::Linear<block2::SU2, double, double>>(
+                            bme, bra_bond_dims, std::vector<block2::ubond_t>{bref->info->bond_dim},
+                            noises);
+                        bcps->iprint = 2;
+                        bcps->noise_type = block2::NoiseTypes::ReducedPerturbative;
+                        bcps->eq_type = block2::EquationTypes::PerturbativeCompression;
+                        bcps->solve(2 * maxiter_, bra->center == 0, 1.0e-8);
+                        if (bra->center != ket0->center)
+                            bcps->solve(1, ket0->center != 0);
+                    }
+
+                    auto pvalue = impl_->driver_su2_->expectation(bra, kmpo, ket0, true, bond_dim);
 
                     if (print_ > PrintLevel::Default)
                         psi::outfile->Printf(" pvalue = %20.15f", pvalue);
