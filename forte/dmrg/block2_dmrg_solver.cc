@@ -223,7 +223,7 @@ Block2DMRGSolver::Block2DMRGSolver(StateInfo state, size_t nroot, std::shared_pt
                           psi::Process::environment.molecule()->name();
     Block2ScratchManager::manager().scratch_folders.insert(scratch);
     size_t stack_mem =
-    static_cast<size_t>(options_->get_double("BLOCK2_STACK_MEM") * 1024 * 1024 * 1024);
+        static_cast<size_t>(options_->get_double("BLOCK2_STACK_MEM") * 1024 * 1024 * 1024);
     impl_ = make_shared<Block2DMRGSolverImpl>(is_spin_adapted, stack_mem, scratch);
     na_ = state.na() - mo_space_info->size("INACTIVE_DOCC");
     nb_ = state.nb() - mo_space_info->size("INACTIVE_DOCC");
@@ -737,11 +737,6 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
     const std::vector<int> tshape{na1, na1, na1};
     const std::vector<size_t> tstride{nactv * nactv, 1, nactv};
 
-    // reset stack memory
-    auto stack_mem =
-        static_cast<size_t>(dmrg_options_->get_double("BLOCK2_STACK_MEM") * 1024 * 1024 * 1024);
-    impl_->stack_mem_ = stack_mem;
-    
     // read bond dimention
     int bond_dim = 500;
     auto sweep_bond_dims = dmrg_options_->get_int_list("BLOCK2_SWEEP_BOND_DIMS");
@@ -775,18 +770,9 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
 
         if (impl_->is_spin_adapted_) {
             auto ket0 = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
-            psi::outfile->Printf("\n ket0 max bond dimension: %zu", ket0->info->get_max_bond_dimension());
-
-            auto xexpr = impl_->expr_builder();
-            xexpr->exprs.push_back("(C+D)0");
-            xexpr->add_sum_term(as_ints_->oei_a_vector().data(), as_ints_->oei_a_vector().size(),
-                                std::vector<int>{n_sites, n_sites},
-                                std::vector<size_t>{(size_t)n_sites, 1}, integral_cutoff, sqrt(2.0),
-                                actv_irreps);
-            xexpr = xexpr->adjust_order();
-
-            auto xmpo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
-                impl_->get_mpo(xexpr, dmrg_verbose));
+            psi::outfile->Printf("\n ket0 max bond dimension: %zu",
+                                 ket0->info->get_max_bond_dimension());
+            auto bond_dim = ket0->info->get_max_bond_dimension();
 
             for (size_t p = 0; p < np; ++p) {
                 if (print_ > PrintLevel::Default)
@@ -828,8 +814,8 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                     binfo->tag =
                         ket0->info->tag + "@BRA." + std::to_string(p) + "." + std::to_string(j);
                     binfo->set_bond_dimension_fci(bra_left_vacuum[j], vacuum);
-                    binfo->set_bond_dimension(ket0->info->get_max_bond_dimension());
-                    binfo->bond_dim = ket0->info->get_max_bond_dimension();
+                    binfo->set_bond_dimension(bond_dim);
+                    binfo->bond_dim = bond_dim;
 
                     if (binfo->get_max_bond_dimension() == 0)
                         continue;
@@ -843,11 +829,6 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                     binfo->save_mutable();
                     bra->save_data();
 
-                    auto xme =
-                        std::make_shared<block2::MovingEnvironment<block2::SU2, double, double>>(
-                            xmpo, bra, bra, "DSRG-PERT");
-                    xme->init_environments(dmrg_verbose >= 2);
-
                     auto bref = ket0->deep_copy("DSRG-BRA@TMP");
                     auto bme =
                         std::make_shared<block2::MovingEnvironment<block2::SU2, double, double>>(
@@ -857,7 +838,7 @@ Block2DMRGSolver::compute_complementary_H2caa_overlap(const std::vector<size_t>&
                     bme->init_environments(true);
 
                     auto bcps = std::make_shared<block2::Linear<block2::SU2, double, double>>(
-                        xme, bme, bra_bond_dims, ket0_bond_dims, noises);
+                        bme, bra_bond_dims, ket0_bond_dims, noises);
                     bcps->iprint = 2;
                     bcps->noise_type = block2::NoiseTypes::ReducedPerturbative;
                     bcps->eq_type = block2::EquationTypes::PerturbativeCompression;
