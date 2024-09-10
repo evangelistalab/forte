@@ -29,8 +29,6 @@
 #include <unistd.h>
 #include <algorithm>
 
-#include "psi4/libmints/molecule.h"
-#include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsio/psio.hpp"
 
@@ -112,7 +110,7 @@ void SA_MRDSRG::startup() {
     // determine file names
     chk_filename_prefix_ = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
                            std::to_string(getpid()) + "." +
-                           psi::Process::environment.molecule()->name();
+                           std::to_string(mo_space_info_->size("ACTIVE"));
     t1_file_chk_.clear();
     t2_file_chk_.clear();
     if (restart_amps_ and (relax_ref_ != "NONE")) {

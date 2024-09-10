@@ -29,7 +29,6 @@
 #include <numeric>
 
 #include "psi4/libmints/matrix.h"
-#include "psi4/libmints/molecule.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/vector.h"
@@ -139,7 +138,7 @@ void SADSRG::startup() {
     // setup checkpoint filename prefix
     chk_filename_prefix_ = PSIOManager::shared_object()->get_default_path();
     chk_filename_prefix_ += "forte." + std::to_string(getpid());
-    chk_filename_prefix_ += "." + psi::Process::environment.molecule()->name();
+    chk_filename_prefix_ += "." + std::to_string(mo_space_info_->size("ACTIVE"));
     Bcan_files_.clear();
 }
 
