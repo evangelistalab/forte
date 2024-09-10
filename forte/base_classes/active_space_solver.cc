@@ -34,9 +34,7 @@
 #include "ambit/tensor.h"
 
 #include "psi4/psi4-dec.h"
-#include "psi4/libmints/molecule.h"
 #include "psi4/libmints/vector.h"
-#include "psi4/libpsi4util/process.h"
 
 #include "base_classes/forte_options.h"
 #include "base_classes/rdms.h"
@@ -417,9 +415,9 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info) {
     std::map<StateInfo, std::vector<double>> state_weights_map;
 
-    // make a StateInfo object using the information from psi4
+    // make a StateInfo object using the information
     // TODO: need to optimize for spin-free RDMs
-    auto state = make_state_info_from_psi(options); // assumes low-spin
+    auto state = make_state_info_from_options(options, mo_space_info->point_group_label()); // assumes low-spin
 
     // check if the user provided a AVG_STATE list
     py::list avg_state = options->get_gen_list("AVG_STATE");

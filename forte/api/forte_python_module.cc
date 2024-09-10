@@ -199,8 +199,8 @@ PYBIND11_MODULE(_forte, m) {
 
     m.def("make_orbital_transformation", &make_orbital_transformation,
           "Make an orbital transformation");
-    m.def("make_state_info_from_psi", &make_state_info_from_psi,
-          "Make a state info object from a psi4 Wavefunction");
+    m.def("make_state_info_from_options", &make_state_info_from_options,
+          "Make a state info object from ForteOptions");
     m.def("to_state_nroots_map", &to_state_nroots_map,
           "Convert a map of StateInfo to weight lists to a map of StateInfo to number of "
           "states.");

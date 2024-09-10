@@ -225,6 +225,25 @@ def prepare_forte_objects(data, name, **kwargs):
 
     psi4.core.print_out("\n\n  Preparing forte objects from a Psi4 Wavefunction object")
     ref_wfn, mo_space_info = prepare_psi4_ref_wfn(options, **kwargs)
+
+    # Copy state information from the wfn where applicable.
+    # This **MUST** be done before the next function prepares states.
+    # Note that we do not require Psi4 and Forte agree. This allows, e.g., using singlet orbitals for a triplet.
+    molecule = ref_wfn.molecule()
+    if (data.options.is_none("CHARGE")):
+        data.options.set_int("CHARGE", molecule.molecular_charge())
+    elif molecule.molecular_charge() != data.options.get_int("CHARGE"):
+        warnings.warn(f"Psi4 and Forte options disagree about the molecular charge ({molecule.molecular_charge()} vs {data.options.get_int('CHARGE')}).", UserWarning)
+    if (data.options.is_none("MULTIPLICITY")):
+        data.options.set_int("MULTIPLICITY", molecule.multiplicity())
+    elif molecule.multiplicity() != data.options.get_int("MULTIPLICITY"):
+        warnings.warn(f"Psi4 and Forte options disagree about the multiplicity ({molecule.multiplicity()}) vs ({data.options.get_int('MULTIPLICITY')}).", UserWarning)
+    nel = int(sum(molecule.Z(i) for i in range(molecule.natom()))) - data.options.get_int("CHARGE")
+    if (data.options.is_none("NEL")):
+        data.options.set_int("NEL", nel)
+    elif nel != data.options.get_int("NEL"):
+        warnings.warn(f"Psi4 and Forte options disagree about the number of electorns ({nel}) vs ({data.options.get_int('NEL')}).", UserWarning)
+
     forte_objects = prepare_forte_objects_from_psi4_wfn(options, ref_wfn, mo_space_info)
     state_weights_map, mo_space_info, scf_info = forte_objects
     fcidump = None
