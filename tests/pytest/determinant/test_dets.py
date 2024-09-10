@@ -269,7 +269,7 @@ def test_det_slater_sign():
     assert d.slater_sign_reverse(5) == 1
     assert d.slater_sign_reverse(6) == 1
 
-    if forte.Determinant.norb() >= 64:
+    if forte.Determinant.norb() >= 128:
         print("Testing determinant Slater sign functions")
         d = det("2"*128)
         for i in range(128):
