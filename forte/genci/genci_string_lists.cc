@@ -423,4 +423,16 @@ std::vector<H3StringSubstitution>& GenCIStringLists::get_beta_3h_list(int h_I, s
     return beta_3h_list[I_tuple];
 }
 
+std::vector<H4StringSubstitution>& GenCIStringLists::get_alfa_4h_list(int h_I, size_t add_I,
+                                                                      int h_J) {
+    std::tuple<int, size_t, int> I_tuple(h_I, add_I, h_J);
+    return alfa_4h_list[I_tuple];
+}
+
+std::vector<H4StringSubstitution>& GenCIStringLists::get_beta_4h_list(int h_I, size_t add_I,
+                                                                      int h_J) {
+    std::tuple<int, size_t, int> I_tuple(h_I, add_I, h_J);
+    return beta_4h_list[I_tuple];
+}
+
 } // namespace forte

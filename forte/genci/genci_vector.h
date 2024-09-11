@@ -285,6 +285,17 @@ class GenCIVector {
         return (ncmo * ncmo * ncmo * ncmo * ncmo * p + ncmo * ncmo * ncmo * ncmo * q +
                 ncmo * ncmo * ncmo * r + ncmo * ncmo * s + ncmo * t + u);
     }
+    static size_t eight_index(size_t p, size_t q, size_t r, size_t s, size_t t, size_t u,
+                              size_t v, size_t w, size_t ncmo) {
+        return (ncmo * ncmo * ncmo * ncmo * ncmo * ncmo * ncmo * p + 
+                ncmo * ncmo * ncmo * ncmo * ncmo * ncmo * q +
+                ncmo * ncmo * ncmo * ncmo * ncmo * r + 
+                ncmo * ncmo * ncmo * ncmo * s + 
+                ncmo * ncmo * ncmo * t + 
+                ncmo * ncmo * u + 
+                ncmo * v + 
+                w);
+    }
 
     /// @brief Apply the scalar part of the Hamiltonian to this vector and add it to the result
     /// @param result The wave function to add the result to
@@ -329,7 +340,7 @@ class GenCIVector {
     // 3-RDM elements are stored in the format
     // <a^+_p a^+_q a^+_r a_u a_t a_s> -> rdm[six_index(p,q,r,s,t,u)]
 
-    /// Compute the matrix elements of the same spin 3-RDM <a^+_p a^+_q a_s a_r> (with all indices
+    /// Compute the matrix elements of the same spin 3-RDM <a^+_p a^+_q a^+r a_u a_t a_s> (with all indices
     /// alpha or beta)
     static ambit::Tensor compute_3rdm_aaa_same_irrep(GenCIVector& C_left, GenCIVector& C_right,
                                                      bool alfa);
@@ -340,6 +351,23 @@ class GenCIVector {
     /// a_{tb} a_{sa}>
     static ambit::Tensor compute_3rdm_abb_same_irrep(GenCIVector& C_left, GenCIVector& C_right);
 
+    /// 4-RDM elements are stored in the format
+    /// <a^+_p a^+_q a^+_r a^+_s a_w a_v a_u a_t> -> rdm[eight_index(p,q,r,s,t,u,v,w)]
+
+    /// Compute the matrix elements of the same spin 4-RDM <a^+_p a^+_q a^+_r a^+_s a_w a_v a_u a_t>
+    /// (with all indices alpha or beta)
+    static ambit::Tensor compute_4rdm_aaaa_same_irrep(GenCIVector& C_left, GenCIVector& C_right,
+                                                      bool alfa);
+    /// Compute the matrix elements of the alpha-alpha-alpha-beta 4-RDM <a^+_{pa} a^+_{qa} a^+_{ra}
+    /// a^+_{sb} a_{wb} a_{va} a_{ua} a_{ta}>
+    static ambit::Tensor compute_4rdm_aaab_same_irrep(GenCIVector& C_left, GenCIVector& C_right);
+    /// Compute the matrix elements of the alpha-alpha-beta-beta 4-RDM <a^+_{pa} a^+_{qa} a^+_{rb}
+    /// a^+_{sb} a_{wb} a_{vb} a_{ua} a_{ta}>
+    static ambit::Tensor compute_4rdm_aabb_same_irrep(GenCIVector& C_left, GenCIVector& C_right);
+    /// Compute the matrix elements of the alpha-beta-beta-beta 4-RDM <a^+_{pa} a^+_{qb} a^+_{rb}
+    /// a^+_{sb} a_{wb} a_{vb} a_{ub} a_{ta}>
+    static ambit::Tensor compute_4rdm_abbb_same_irrep(GenCIVector& C_left, GenCIVector& C_right);
+  
   public:
     /// @brief Provide a pointer to the a block of the coefficient matrix in such a way that we can
     /// use its content in several algorithms (sigma vector, RDMs, etc.)
