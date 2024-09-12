@@ -104,6 +104,10 @@ class GenCIStringLists {
     auto alfa_address_3h() { return alfa_address_3h_; }
     /// @return the beta string address object for N - 3 electrons
     auto beta_address_3h() { return beta_address_3h_; }
+    /// @return the alpha string address object for N - 4 electrons
+    auto alfa_address_4h() { return alfa_address_4h_; }
+    /// @return the beta string address object for N - 4 electrons
+    auto beta_address_4h() { return beta_address_4h_; }
 
     /// @return the address of a determinant in the CI vector
     size_t determinant_address(const Determinant& d) const;
@@ -151,6 +155,9 @@ class GenCIStringLists {
     std::vector<H3StringSubstitution>& get_alfa_3h_list(int h_I, size_t add_I, int h_J);
     std::vector<H3StringSubstitution>& get_beta_3h_list(int h_I, size_t add_I, int h_J);
 
+    std::vector<H4StringSubstitution>& get_alfa_4h_list(int h_I, size_t add_I, int h_J);
+    std::vector<H4StringSubstitution>& get_beta_4h_list(int h_I, size_t add_I, int h_J);
+
     Pair get_pair_list(int h, int n) const { return pair_list_[h][n]; }
 
   private:
@@ -195,6 +202,8 @@ class GenCIStringLists {
     std::vector<std::array<int, 6>> gas_beta_2h_occupations_;
     std::vector<std::array<int, 6>> gas_alfa_3h_occupations_;
     std::vector<std::array<int, 6>> gas_beta_3h_occupations_;
+    std::vector<std::array<int, 6>> gas_alfa_4h_occupations_;
+    std::vector<std::array<int, 6>> gas_beta_4h_occupations_;
 
     std::vector<std::pair<size_t, size_t>> gas_occupations_;
 
@@ -248,6 +257,9 @@ class GenCIStringLists {
     /// The 3-hole lists
     H3List alfa_3h_list;
     H3List beta_3h_list;
+    /// The 4-hole lists
+    H4List alfa_4h_list;
+    H4List beta_4h_list;
 
     /// Addressers
     /// The alpha string address
@@ -266,6 +278,10 @@ class GenCIStringLists {
     std::shared_ptr<StringAddress> alfa_address_3h_;
     /// The beta string address for N - 3 electrons
     std::shared_ptr<StringAddress> beta_address_3h_;
+    /// The alpha string address for N - 4 electrons
+    std::shared_ptr<StringAddress> alfa_address_4h_;
+    /// The beta string address for N - 4 electrons
+    std::shared_ptr<StringAddress> beta_address_4h_;
 
     // ==> Class Functions <==
 

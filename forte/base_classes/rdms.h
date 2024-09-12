@@ -281,6 +281,12 @@ class RDMsSpinDependent : public RDMs {
     RDMsSpinDependent(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
                       ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab,
                       ambit::Tensor g3abb, ambit::Tensor g3bbb);
+    /// @brief Construct a RDMsSpinDependent object with the 1-, 2-, 3-, and 4-rdms
+    RDMsSpinDependent(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
+                      ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab,
+                      ambit::Tensor g3abb, ambit::Tensor g3bbb, ambit::Tensor g4aaaa,
+                      ambit::Tensor g4aaab, ambit::Tensor g4aabb, ambit::Tensor g4abbb,
+                      ambit::Tensor g4bbbb);
 
     /// @return the alpha 1-RDM
     ambit::Tensor g1a() const override;
