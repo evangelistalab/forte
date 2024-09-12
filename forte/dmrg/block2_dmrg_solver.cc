@@ -377,20 +377,31 @@ double Block2DMRGSolver::compute_energy() {
         fs::path dir_from{"block2.o" + std::to_string(mo_space_info_->size("ACTIVE")) + "." +
                           state_.str_short()};
         fs::path dir_to{impl_->scratch_};
-        if (fs::exists(dir_from)) {
-            for (const auto& file : fs::directory_iterator(dir_from)) {
-                if (file.path().filename().string().find("KET") != std::string::npos and
-                    file.path().filename().string().find(state_.str_short()) !=
-                        std::string::npos and
-                    (!fs::exists(dir_to / file.path().filename()))) {
-                    psi::outfile->Printf("\n  Copy %s to scratch directory",
-                                         file.path().filename().c_str());
-                    fs::copy_file(file.path(), dir_to / file.path().filename(),
-                                  fs::copy_options::overwrite_existing);
-                }
+        // copy from current directory for fresh run
+        bool fresh = true;
+        for (const auto& file : fs::directory_iterator(dir_to)) {
+            if (file.path().filename().string().find("KET") != std::string::npos and
+                file.path().filename().string().find(state_.str_short()) != std::string::npos) {
+                fresh = false;
+                break;
             }
-        } else {
-            read_initial_guess = false;
+        }
+        if (fresh) {
+            if (fs::exists(dir_from)) {
+                for (const auto& file : fs::directory_iterator(dir_from)) {
+                    if (file.path().filename().string().find("KET") != std::string::npos and
+                        file.path().filename().string().find(state_.str_short()) !=
+                            std::string::npos and
+                        (!fs::exists(dir_to / file.path().filename()))) {
+                        psi::outfile->Printf("\n  Copy %s to scratch directory",
+                                             file.path().filename().c_str());
+                        fs::copy_file(file.path(), dir_to / file.path().filename(),
+                                      fs::copy_options::overwrite_existing);
+                    }
+                }
+            } else {
+                read_initial_guess = false;
+            }
         }
     }
 
