@@ -41,7 +41,6 @@ using namespace pybind11::literals;
 
 namespace forte {
 
-/// Export the Determinant class
 void export_GenCIStringLists(py::module& m) {
     py::class_<GenCIStringLists, std::shared_ptr<GenCIStringLists>>(
         m, "GenCIStringLists", "A class to represent the strings of a GAS")

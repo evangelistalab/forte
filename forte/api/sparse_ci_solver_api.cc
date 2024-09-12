@@ -58,7 +58,6 @@ void export_SigmaVector(py::module& m) {
         .export_values();
 }
 
-/// Export the Determinant class
 void export_SparseCISolver(py::module& m) {
     py::class_<SparseCISolver, std::shared_ptr<SparseCISolver>>(
         m, "SparseCISolver", "A class to represent a sparse CI solver")

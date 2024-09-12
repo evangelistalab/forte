@@ -37,7 +37,6 @@ using namespace pybind11::literals;
 
 namespace forte {
 
-/// Export the Determinant class
 void export_String(py::module& m) {
     py::class_<String>(
         m, "String",

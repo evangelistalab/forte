@@ -36,8 +36,6 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace forte {
-
-/// Export the RDMs class
 void export_RDMs(py::module& m) {
     py::enum_<RDMsType>(m, "RDMsType")
         .value("spin_dependent", RDMsType::spin_dependent)

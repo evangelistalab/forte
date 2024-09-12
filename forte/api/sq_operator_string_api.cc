@@ -39,7 +39,6 @@ using namespace pybind11::literals;
 
 namespace forte {
 
-/// Export the Determinant class
 void export_SQOperatorString(py::module& m) {
     py::class_<SQOperatorString>(m, "SQOperatorString",
                                  "A class to represent a string of creation/annihilation operators")

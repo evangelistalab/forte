@@ -35,8 +35,6 @@
 namespace py = pybind11;
 
 namespace forte {
-
-/// Export the CubeFile class
 void export_ForteCubeFile(py::module& m) {
     py::class_<CubeFile, std::shared_ptr<CubeFile>>(m, "CubeFile")
         .def(py::init<const std::string&>())

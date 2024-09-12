@@ -36,7 +36,6 @@ using namespace pybind11::literals;
 
 namespace forte {
 
-/// Export the Determinant class
 void export_SparseHamiltonian(py::module& m) {
     py::class_<SparseHamiltonian>(m, "SparseHamiltonian",
                                   "A class to represent a sparse Hamiltonian")

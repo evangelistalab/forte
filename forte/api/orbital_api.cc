@@ -44,8 +44,6 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace forte {
-
-/// Export the OrbitalTransform class
 void export_OrbitalTransform(py::module& m) {
     py::class_<OrbitalTransform>(m, "OrbitalTransform")
         .def("compute_transformation", &OrbitalTransform::compute_transformation)
@@ -53,7 +51,6 @@ void export_OrbitalTransform(py::module& m) {
         .def("get_Ub", &OrbitalTransform::get_Ub, "Get Ub rotation");
 }
 
-/// Export the ForteOptions class
 void export_Localize(py::module& m) {
     py::class_<Localize>(m, "Localize")
         .def(py::init<std::shared_ptr<ForteOptions>, std::shared_ptr<ForteIntegrals>,

@@ -36,8 +36,6 @@
 namespace py = pybind11;
 
 namespace forte {
-
-/// Export the ForteOptions class
 void export_ForteOptions(py::module& m) {
     py::class_<ForteOptions, std::shared_ptr<ForteOptions>>(m, "ForteOptions")
         .def(py::init<>())

@@ -38,7 +38,6 @@ using namespace pybind11::literals;
 
 namespace forte {
 
-/// Export the Determinant class
 void export_SparseState(py::module& m) {
     py::class_<SparseState, std::shared_ptr<SparseState>>(
         m, "SparseState", "A class to represent a vector of determinants")

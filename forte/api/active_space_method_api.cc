@@ -35,7 +35,6 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace forte {
-/// Export the ActiveSpaceMethod class
 void export_ActiveSpaceMethod(py::module& m) {
     py::class_<ActiveSpaceMethod, std::shared_ptr<ActiveSpaceMethod>>(m, "ActiveSpaceMethod")
         .def("compute_energy", &ActiveSpaceMethod::compute_energy)

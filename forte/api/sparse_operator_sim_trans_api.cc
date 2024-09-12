@@ -36,7 +36,6 @@ using namespace pybind11::literals;
 
 namespace forte {
 
-/// Export the Determinant class
 void export_SparseOperatorSimTrans(py::module& m) {
     m.def(
         "fact_trans_lin",

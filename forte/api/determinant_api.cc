@@ -44,7 +44,6 @@ using namespace pybind11::literals;
 
 namespace forte {
 
-/// Export the Determinant class
 void export_Determinant(py::module& m) {
     py::class_<Determinant>(m, "Determinant",
                             "A class for representing a Slater determinant. The number of orbitals "

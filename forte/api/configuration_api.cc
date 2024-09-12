@@ -36,17 +36,14 @@ using namespace pybind11::literals;
 
 namespace forte {
 
-/// Export the Determinant class
 void export_Configuration(py::module& m) {
 
     py::class_<Configuration>(
         m, "Configuration",
         "A class to represent an electron configuration. A configuration stores information "
-        "about "
-        "the doubly and singly occupied orbitals. However, it does not store information about "
-        "how "
-        "the spin of singly occupied orbitals. The number of orbitals is determined at "
-        "compile time and is set to a multiple of 64.")
+        "about the doubly and singly occupied orbitals. However, it does not store information "
+        "about how the spin of singly occupied orbitals are coupled. The number of orbitals is "
+        "determined at compile time and is set to a multiple of 64.")
         .def(py::init<>(), "Build an empty configuration")
         .def(py::init<const Determinant&>(), "Build a configuration from a determinant")
         .def(

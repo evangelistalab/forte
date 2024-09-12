@@ -40,7 +40,6 @@ using namespace pybind11::literals;
 
 namespace forte {
 
-/// Export the Determinant class
 void export_SparseOperatorList(py::module& m) {
     py::class_<SparseOperatorList>(m, "SparseOperatorList",
                                    "A class to represent a list of sparse operators")
