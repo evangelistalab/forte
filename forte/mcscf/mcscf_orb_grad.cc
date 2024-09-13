@@ -51,7 +51,6 @@
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
 #include "base_classes/rdms.h"
-// #include "orbital-helpers/localize.h"
 
 #include "mcscf/mcscf_orb_grad.h"
 
@@ -763,34 +762,6 @@ double MCSCF_ORB_GRAD::evaluate(std::shared_ptr<psi::Vector> x, std::shared_ptr<
 
     return energy_;
 }
-
-// std::shared_ptr<psi::Matrix> MCSCF_ORB_GRAD::localize_orbitals() {
-//     auto localizer = std::make_shared<Localize>(options_, ints_, mo_space_info_);
-//     localizer->compute_transformation();
-//     auto Ua = localizer->get_Ua();
-
-//     auto T = psi::linalg::doublet(U_, Ua, false, false);
-//     bool rotate = true;
-//     for (int i = 0, nrow = T->nrow(); i < nrow; ++i) {
-//         auto t = T->get_row(0, i);
-//         if (fabs(T->get(i, i)) < 0.9) {
-//             rotate = false;
-//             break;
-//         }
-//     }
-//     if (rotate) {
-//         U_->copy(T);
-//         C_->gemm(false, false, 1.0, C0_, U_, 0.0);
-//         if (ints_->integral_type() == Custom) {
-//             ints_->update_orbitals(C_, C_);
-//         } else {
-//             ints_->update_orbitals(C_, C_, false);
-//         }
-//     } else {
-//         Ua->identity();
-//     }
-//     return Ua;
-// }
 
 bool MCSCF_ORB_GRAD::update_orbitals(std::shared_ptr<psi::Vector> x) {
     // test if need to update orbitals

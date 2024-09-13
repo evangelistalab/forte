@@ -421,27 +421,6 @@ double MCSCF_2STEP::compute_energy() {
             e_c = diagonalize_hamiltonian(as_solver_, fci_ints,
                                           {print_level, dl_e_conv, dl_r_conv, false});
             rdms = as_solver_->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
-
-            // if (options_->get_str("ORBITAL_TYPE") == "LOCAL" and
-            //     (ci_type_ == "BLOCK2" or ci_type_ == "DMRG")) {
-            //     auto Ua = cas_grad.localize_orbitals();
-
-            //     auto na = mo_space_info_->size("ACTIVE");
-            //     auto relative_mos = mo_space_info_->relative_mo("ACTIVE");
-            //     auto Ut = ambit::Tensor::build(ambit::CoreTensor, "Ut", {na, na});
-            //     auto& Ut_data = Ut.data();
-            //     for (size_t p = 0; p < na; ++p) {
-            //         const auto& [hp, np] = relative_mos[p];
-            //         for (size_t q = 0; q < na; ++q) {
-            //             const auto& [hq, nq] = relative_mos[q];
-            //             if (hp != hq)
-            //                 continue;
-            //             Ut_data[p * na + q] = Ua->get(hp, np, nq);
-            //         }
-            //     }
-
-            //     rdms->rotate(Ut, Ut);
-            // }
         }
 
         diis_manager.reset_subspace();
