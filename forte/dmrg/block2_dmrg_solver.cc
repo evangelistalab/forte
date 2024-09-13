@@ -282,7 +282,7 @@ double Block2DMRGSolver::compute_energy() {
     std::shared_ptr<block2::GeneralFCIDUMP<double>> r = impl_->expr_builder();
     r->const_e += as_ints_->frozen_core_energy() + as_ints_->scalar_energy() +
                   as_ints_->nuclear_repulsion_energy();
-    const double integral_cutoff = 1E-14;
+    const double integral_cutoff = dmrg_options_->get_double("BLOCK2_INTERGRAL_CUTOFF");
     const uint16_t n = n_sites;
     const std::vector<int> tei_shape = std::vector<int>{n, n, n, n};
     const std::vector<size_t> tei_strides =
@@ -435,7 +435,7 @@ double Block2DMRGSolver::compute_energy() {
     double occ_shift = dmrg_options_->get_double("BLOCK2_INITIAL_GUESS");
     std::vector<double> occs;
     if (!read_initial_guess and occ_shift > 0.0) {
-        auto occs_read = options_->get_double_list("BLOCK2_INITIAL_GUESS_OCC");
+        auto occs_read = dmrg_options_->get_double_list("BLOCK2_INITIAL_GUESS_OCC");
         bool occs_good = (occs_read.size() == (size_t)n_sites);
         for (auto n : occs_read) {
             if (n < 0.0 or n > 2.0) {
@@ -788,7 +788,7 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
     std::vector<double> noises{0.0};
 
     // system initialization
-    auto integral_cutoff = 1.0e-14;
+    auto integral_cutoff = dmrg_options_->get_double("BLOCK2_INTERGRAL_CUTOFF");
     bool singlet_embedding = dmrg_options_->get_bool("BLOCK2_SINGLET_EMBEDDING");
     auto actv_irreps = mo_space_info_->symmetry("ACTIVE");
     int n_sites = static_cast<int>(mo_space_info_->size("ACTIVE"));
@@ -927,9 +927,9 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
                         bra_expr->exprs.push_back("CDD");
                     }
                     bra_expr->add_sum_term(Tbra_data.data() + p * na3, na3, tshape, tstride,
-                                           1.0e-12, 1.0, actv_irreps, {}, p_syms[p]);
+                                           integral_cutoff, 1.0, actv_irreps, {}, p_syms[p]);
                     bra_expr->add_sum_term(Tbra_data.data() + p * na3, na3, tshape, tstride,
-                                           1.0e-12, 1.0, actv_irreps, {}, p_syms[p]);
+                                           integral_cutoff, 1.0, actv_irreps, {}, p_syms[p]);
                     bra_expr = bra_expr->adjust_order();
                     if (bra_expr->exprs.size() == 0)
                         continue;
