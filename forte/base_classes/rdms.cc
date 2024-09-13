@@ -456,6 +456,35 @@ RDMsSpinDependent::RDMsSpinDependent(ambit::Tensor g1a, ambit::Tensor g1b, ambit
     _test_rdm_dims(g3bbb, "g3bbb", 6);
 }
 
+RDMsSpinDependent::RDMsSpinDependent(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
+                                     ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab,
+                                     ambit::Tensor g3abb, ambit::Tensor g3bbb, ambit::Tensor g4aaaa,
+                                     ambit::Tensor g4aaab, ambit::Tensor g4aabb, ambit::Tensor g4abbb,
+                                     ambit::Tensor g4bbbb) 
+    : g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab),
+      g2bb_(g2bb), g3aaa_(g3aaa), g3aab_(g3aab),
+      g3abb_(g3abb), g3bbb_(g3bbb), g4aaaa_(g4aaaa),
+      g4aaab_(g4aaab), g4aabb_(g4aabb), g4abbb_(g4abbb),
+      g4bbbb_(g4bbbb) {
+    max_rdm_ = 4;
+    type_ = RDMsType::spin_dependent;
+    n_orbs_ = g1a.dim(0);
+    _test_rdm_dims(g1a, "g1a", 2);
+    _test_rdm_dims(g1b, "g1b", 2);
+    _test_rdm_dims(g2aa, "g2aa", 4);
+    _test_rdm_dims(g2ab, "g2ab", 4);
+    _test_rdm_dims(g2bb, "g2bb", 4);
+    _test_rdm_dims(g3aaa, "g3aaa", 6);
+    _test_rdm_dims(g3aab, "g3aab", 6);
+    _test_rdm_dims(g3abb, "g3abb", 6);
+    _test_rdm_dims(g3bbb, "g3bbb", 6);
+    _test_rdm_dims(g4aaaa, "g4aaaa", 8);
+    _test_rdm_dims(g4aaab, "g4aaab", 8);
+    _test_rdm_dims(g4aabb, "g4aabb", 8);
+    _test_rdm_dims(g4abbb, "g4abbb", 8);
+    _test_rdm_dims(g4bbbb, "g4bbbb", 8);
+}
+
 ambit::Tensor RDMsSpinDependent::g1a() const {
     _test_rdm_level(1, "g1a");
     return g1a_;
@@ -491,6 +520,26 @@ ambit::Tensor RDMsSpinDependent::g3abb() const {
 ambit::Tensor RDMsSpinDependent::g3bbb() const {
     _test_rdm_level(3, "g3bbb");
     return g3bbb_;
+}
+ambit::Tensor RDMsSpinDependent::g4aaaa() const {
+    _test_rdm_level(4, "g4aaaa");
+    return g4aaaa_;
+}
+ambit::Tensor RDMsSpinDependent::g4aaab() const {
+    _test_rdm_level(4, "g4aaab");
+    return g4aaab_;
+}
+ambit::Tensor RDMsSpinDependent::g4aabb() const {
+    _test_rdm_level(4, "g4aabb");
+    return g4aabb_;
+}
+ambit::Tensor RDMsSpinDependent::g4abbb() const {
+    _test_rdm_level(4, "g4abbb");
+    return g4abbb_;
+}
+ambit::Tensor RDMsSpinDependent::g4bbbb() const {
+    _test_rdm_level(4, "g4bbbb");
+    return g4bbbb_;
 }
 ambit::Tensor RDMsSpinDependent::SF_G1() const {
     _test_rdm_level(1, "SF_G1");
@@ -594,6 +643,13 @@ std::shared_ptr<RDMs> RDMsSpinDependent::clone() {
         g3abb = g3abb_.clone();
         g3bbb = g3bbb_.clone();
     }
+    if (max_rdm_ > 3) {
+        g4aaaa_ = g4aaaa_.clone();
+        g4aaab_ = g4aaab_.clone();
+        g4aabb_ = g4aabb_.clone();
+        g4abbb_ = g4abbb_.clone();
+        g4bbbb_ = g4bbbb_.clone();
+    }
 
     std::shared_ptr<RDMs> rdms;
 
@@ -625,6 +681,13 @@ void RDMsSpinDependent::scale(double factor) {
         g3aab_.scale(factor);
         g3abb_.scale(factor);
         g3bbb_.scale(factor);
+    }
+    if (max_rdm_ > 3) {
+        g4aaaa_.scale(factor);
+        g4aaab_.scale(factor);
+        g4aabb_.scale(factor);
+        g4abbb_.scale(factor);
+        g4bbbb_.scale(factor);
     }
 }
 
@@ -731,6 +794,13 @@ void RDMsSpinDependent::dump_to_disk(const std::string& filename_prefix) const {
         ambit::save(g3aab_, prefix + "g3aab.bin");
         ambit::save(g3abb_, prefix + "g3abb.bin");
         ambit::save(g3bbb_, prefix + "g3bbb.bin");
+    }
+    if (max_rdm_ > 3) {
+        ambit::save(g4aaaa_, prefix + "g4aaaa.bin");
+        ambit::save(g4aaab_, prefix + "g4aaab.bin");
+        ambit::save(g4aabb_, prefix + "g4aabb.bin");
+        ambit::save(g4abbb_, prefix + "g4abbb.bin");
+        ambit::save(g4bbbb_, prefix + "g4bbbb.bin");
     }
 }
 
