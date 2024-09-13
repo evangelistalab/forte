@@ -191,19 +191,17 @@ void SparseHamiltonian::compute_new_couplings(const std::vector<Determinant>& ne
 SparseState SparseHamiltonian::compute_sigma(const SparseState& state, double screen_thresh) {
     local_timer t;
 
-    std::vector<double> sigma_c(sigma_hash_.size(), 0.0);
+    std::vector<sparse_scalar_t> sigma_c(sigma_hash_.size(), 0.0);
 
     // compute the sigma vector
-    for (const auto& det_c : state) {
-        const auto& det = det_c.first;
-        const double c = det_c.second;
+    for (const auto& [det, c] : state) {
         for (const auto& new_det_HIJ : couplings_[det]) {
             const size_t new_det_idx = new_det_HIJ.first;
             const double h = new_det_HIJ.second;
             // since the couplings are sorted in decreasing magnitude
             // once an element falls below the threshold we can just
             // terminate the loop
-            if (std::fabs(c * h) > screen_thresh) {
+            if (std::abs(c * h) > screen_thresh) {
                 sigma_c[new_det_idx] += c * h;
             } else {
                 break;
@@ -234,10 +232,7 @@ SparseState SparseHamiltonian::compute_on_the_fly(const SparseState& state, doub
 
     Determinant new_det;
 
-    for (const auto& det_c : state) {
-        const Determinant& det = det_c.first;
-        const double c = det_c.second;
-
+    for (const auto& [det, c] : state) {
         std::vector<int> aocc = det.get_alfa_occ(nmo);
         std::vector<int> bocc = det.get_beta_occ(nmo);
         std::vector<int> avir = det.get_alfa_vir(nmo);
