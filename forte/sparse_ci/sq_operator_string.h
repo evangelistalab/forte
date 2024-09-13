@@ -64,7 +64,10 @@ namespace forte {
  */
 using op_tuple_t = std::vector<std::tuple<bool, bool, int>>;
 
-// A class enum to encode if two operators commute, anti-commute or do not commute
+/// A class enum to encode if two operators
+/// - commute
+/// - anti-commute
+/// - we cannot guarantee they commute (therefore, treat them as non-commuting)
 enum class CommutatorType { Commute, AntiCommute, MayNotCommute };
 
 /**
@@ -97,9 +100,21 @@ class SQOperatorString {
     Determinant& ann_mod();
     /// @return a op_tuple_t that represents the operator
     op_tuple_t op_tuple() const;
-    /// @return the number component of this operator
+    /// @return the number component of this operator. Returns a SQOperatorString object with the
+    /// number operators (creation followed by annihilation operator) contained in this operator.
+    /// Note that we ignore any sign associated with the permutation of the operators.
+    /// For example, the number component of the operator
+    ///   a^+_{1,\alpha} a^+_{3,\beta} a_{2,\beta} a_{1,\alpha}
+    /// is
+    ///   a^+_{1,\alpha} a_{1,\alpha}
     SQOperatorString number_component() const;
-    /// @return the non-number component of this operator
+    /// @return the non-number component of this operator. Returns a SQOperatorString object with
+    /// operators (creation or annihilation) that do not have a matching adjoint operator.
+    /// Note that we ignore any sign associated with the permutation of the operators.
+    /// For example, the non-number component of the operator
+    ///   a^+_{1,\alpha} a^+_{3,\beta} a_{2,\beta} a_{1,\alpha}
+    /// is
+    ///   a^+_{3,\beta} a_{2,\beta}
     SQOperatorString non_number_component() const;
     /// @return true if this operator is the identity (no creation/annihilation  operators)
     bool is_identity() const;

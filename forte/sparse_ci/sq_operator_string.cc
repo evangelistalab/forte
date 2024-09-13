@@ -135,16 +135,16 @@ op_tuple_t SQOperatorString::op_tuple() const {
     std::reverse(bann.begin(), bann.end());
     op_tuple_t terms;
     for (auto p : acre) {
-        terms.push_back(std::make_tuple(true, true, p));
+        terms.emplace_back(true, true, p);
     }
     for (auto p : bcre) {
-        terms.push_back(std::make_tuple(true, false, p));
+        terms.emplace_back(true, false, p);
     }
     for (auto p : bann) {
-        terms.push_back(std::make_tuple(false, false, p));
+        terms.emplace_back(false, false, p);
     }
     for (auto p : aann) {
-        terms.push_back(std::make_tuple(false, true, p));
+        terms.emplace_back(false, true, p);
     }
     return terms;
 }
