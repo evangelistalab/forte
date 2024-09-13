@@ -1644,8 +1644,12 @@ BLOCK2:
     help: "DMRG energy convergence threshold"
   BLOCK2_INITIAL_GUESS:
     type: double
-    default: -1
-    help: "Shift (0 ~ 1) of occupation number for DMRG initial guess. -1 = random initial guess"
+    default: 0.5
+    help: "Shift (0 ~ 1) of occupation number for DMRG initial guess: n + dn for n < 0.75 and n - dn for n > 1.25. dn < 0 for random initial guess"
+  BLOCK2_INITIAL_GUESS_OCC:
+    type: double_list
+    default: []
+    help: "Active occupation numbers (in Pitzer order) for DMRG initial guess; We use Hartree-Fock occupation numbers if not given."
   BLOCK2_CUTOFF:
     type: double
     default: 1E-20

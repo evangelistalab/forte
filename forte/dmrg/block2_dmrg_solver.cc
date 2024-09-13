@@ -433,52 +433,112 @@ double Block2DMRGSolver::compute_energy() {
 
     // get occupation numbers of orbitals
     double occ_shift = dmrg_options_->get_double("BLOCK2_INITIAL_GUESS");
-    std::vector<double> occs;
-    if (!read_initial_guess && occ_shift >= -0.1) {
-        psi::Dimension active_dim = mo_space_info_->dimension("ACTIVE");
-        int nirrep = static_cast<int>(mo_space_info_->nirrep());
-        std::shared_ptr<psi::Vector> ea = scf_info_->epsilon_a();
-        std::shared_ptr<psi::Vector> eb = scf_info_->epsilon_b();
-        std::vector<double> orbe_a, orbe_b;
-        for (int h = 0; h < nirrep; h++)
-            for (int u = 0; u < active_dim[h]; u++) {
-                orbe_a.push_back(ea->get(h, u));
-                orbe_b.push_back(eb->get(h, u));
+    std::vector<double> occs(n_sites, 0);
+    if (!read_initial_guess and occ_shift >= 0.0) {
+        auto occs_read = options_->get_double_list("BLOCK2_INITIAL_GUESS_OCC");
+        bool occs_good = (occs_read.size() == (size_t)n_sites);
+        for (auto n : occs_read) {
+            if (n < 0.0 or n > 2.0) {
+                occs_good = false;
+                break;
             }
-        assert(static_cast<int>(orbe_a.size()) == n_sites &&
-               static_cast<int>(orbe_b.size()) == n_sites);
-        std::vector<int> idx_a(orbe_a.size()), idx_b(orbe_b.size());
-        for (size_t i = 0; i < idx_a.size(); i++)
-            idx_a[i] = i;
-        for (size_t i = 0; i < idx_b.size(); i++)
-            idx_b[i] = i;
-        std::stable_sort(idx_a.begin(), idx_a.end(),
-                         [&orbe_a](int i, int j) { return orbe_a[i] < orbe_a[j]; });
-        std::stable_sort(idx_b.begin(), idx_b.end(),
-                         [&orbe_b](int i, int j) { return orbe_b[i] < orbe_b[j]; });
-        occs.resize(n_sites, 0);
-        for (int i = 0; i < na_; i++)
-            occs[idx_a[i]]++;
-        for (int i = 0; i < nb_; i++)
-            occs[idx_b[i]]++;
-        if (print_ >= PrintLevel::Default) {
-            psi::outfile->Printf("\n\n    Na = %4d Nb = %4d", na_, nb_);
-            psi::outfile->Printf("\n    Use occ numbers for initial guess = ");
-            psi::outfile->Printf("\n        ");
-            for (auto& x : occs)
-                psi::outfile->Printf("%4.0f", x);
-            psi::outfile->Printf("\n        ");
-            for (int i = 0; i < n_sites; i++)
-                psi::outfile->Printf("%4s", mo_space_info_->irrep_label(actv_irreps[i]).c_str());
-            psi::outfile->Printf("\n    with shift = %10.2f", occ_shift);
-            psi::outfile->Printf("\n");
         }
-        for (int i = 0; i < n_sites; i++)
+        if (occs_good) {
+            occs = occs_read;
+        } else {
+            // by default, we use Hartree-Fock occupations as initial guess
+            if (print_ >= PrintLevel::Default) {
+                if (occs_read.size() != 0)
+                    psi::outfile->Printf(
+                        "\n    Input BLOCK2_INITIAL_GUESS_OCC seems wrong. Please check!");
+                psi::outfile->Printf("\n    Use Hartree-Fock occupancy as initial guess.");
+            }
+            auto docc_dim = scf_info_->doccpi();
+            auto socc_dim = scf_info_->soccpi();
+            auto actv_dim = mo_space_info_->dimension("ACTIVE");
+            auto adocc_dim = docc_dim - mo_space_info_->dimension("INACTIVE_DOCC");
+            for (int h = 0, nirrep = mo_space_info_->nirrep(), shift = 0; h < nirrep; ++h) {
+                for (int i = 0; i < adocc_dim[h]; ++i) {
+                    occs[i + shift] = 2.0;
+                }
+                for (int i = 0; i < socc_dim[h]; ++i) {
+                    occs[i + shift + adocc_dim[h]] = 1.0;
+                }
+                shift += actv_dim[h];
+            }
+        }
+        // apply occ shift
+        for (int i = 0; i < n_sites; i++) {
             if (occs[i] < 0.75)
                 occs[i] += occ_shift;
             else if (occs[i] > 1.25)
                 occs[i] -= occ_shift;
+        }
+        // print occ guess
+        if (print_ >= PrintLevel::Default) {
+            psi::outfile->Printf("\n    Na = %4d Nb = %4d", na_, nb_);
+            psi::outfile->Printf("\n    Occupation numbers for initial guess (with shift %.3f)",
+                                 occ_shift);
+            auto actv_dim = mo_space_info_->dimension("ACTIVE");
+            for (int h = 0, nirrep = mo_space_info_->nirrep(), shift = 0; h < nirrep; ++h) {
+                if (actv_dim[h] != 0)
+                    psi::outfile->Printf("\n    %4s", mo_space_info_->irrep_label(h).c_str());
+                for (int i = 0; i < actv_dim[h]; ++i) {
+                    if (i % 10 == 0 and i != 0)
+                        psi::outfile->Printf("\n        ");
+                    psi::outfile->Printf(" %5.3f", occs[i + shift]);
+                }
+                shift += actv_dim[h];
+            }
+            psi::outfile->Printf("\n");
+        }
     }
+    // if (!read_initial_guess && occ_shift >= -0.1) {
+    //     psi::Dimension active_dim = mo_space_info_->dimension("ACTIVE");
+    //     auto rdocc_dim = mo_space_info_->dimension("INACTIVE_DOCC");
+    //     int nirrep = static_cast<int>(mo_space_info_->nirrep());
+    //     std::shared_ptr<psi::Vector> ea = scf_info_->epsilon_a();
+    //     std::shared_ptr<psi::Vector> eb = scf_info_->epsilon_b();
+    //     std::vector<double> orbe_a, orbe_b;
+    //     for (int h = 0; h < nirrep; h++)
+    //         for (int u = 0; u < active_dim[h]; u++) {
+    //             orbe_a.push_back(ea->get(h, u + rdocc_dim[h]));
+    //             orbe_b.push_back(eb->get(h, u + rdocc_dim[h]));
+    //         }
+    //     assert(static_cast<int>(orbe_a.size()) == n_sites &&
+    //            static_cast<int>(orbe_b.size()) == n_sites);
+    //     std::vector<int> idx_a(orbe_a.size()), idx_b(orbe_b.size());
+    //     for (size_t i = 0; i < idx_a.size(); i++)
+    //         idx_a[i] = i;
+    //     for (size_t i = 0; i < idx_b.size(); i++)
+    //         idx_b[i] = i;
+    //     std::stable_sort(idx_a.begin(), idx_a.end(),
+    //                      [&orbe_a](int i, int j) { return orbe_a[i] < orbe_a[j]; });
+    //     std::stable_sort(idx_b.begin(), idx_b.end(),
+    //                      [&orbe_b](int i, int j) { return orbe_b[i] < orbe_b[j]; });
+    //     occs.resize(n_sites, 0);
+    //     for (int i = 0; i < na_; i++)
+    //         occs[idx_a[i]]++;
+    //     for (int i = 0; i < nb_; i++)
+    //         occs[idx_b[i]]++;
+    //     if (print_ >= PrintLevel::Default) {
+    //         psi::outfile->Printf("\n\n    Na = %4d Nb = %4d", na_, nb_);
+    //         psi::outfile->Printf("\n    Use occ numbers for initial guess = ");
+    //         psi::outfile->Printf("\n        ");
+    //         for (auto& x : occs)
+    //             psi::outfile->Printf("%4.0f", x);
+    //         psi::outfile->Printf("\n        ");
+    //         for (int i = 0; i < n_sites; i++)
+    //             psi::outfile->Printf("%4s", mo_space_info_->irrep_label(actv_irreps[i]).c_str());
+    //         psi::outfile->Printf("\n    with shift = %10.2f", occ_shift);
+    //         psi::outfile->Printf("\n");
+    //     }
+    //     for (int i = 0; i < n_sites; i++)
+    //         if (occs[i] < 0.75)
+    //             occs[i] += occ_shift;
+    //         else if (occs[i] > 1.25)
+    //             occs[i] -= occ_shift;
+    // }
 
     // initialize mps
     std::string ket_tag = "KET@" + state_.str_short();
