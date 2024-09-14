@@ -857,7 +857,7 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
                     bra = std::make_shared<block2::MPS<block2::SU2, double>>(na1, ket0->center,
                                                                              ket0->dot);
                     if (load) {
-                        binfo->load_data(impl_->scratch_ + tag + "-mps_info.bin");
+                        binfo->load_data(impl_->scratch_ + "/" + tag + "-mps_info.bin");
                         binfo->tag = tag;
                         binfo->load_mutable();
                         binfo->set_bond_dimension_fci(bra_left_vacuum[j], vacuum);
@@ -882,7 +882,7 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
                         bra->tensors[bra->center]->normalize();
                         bra->save_mutable();
                         binfo->save_mutable();
-                        binfo->save_data(impl_->scratch_ + tag + "-mps_info.bin");
+                        binfo->save_data(impl_->scratch_ + "/" + tag + "-mps_info.bin");
                         bra->save_data();
 
                         auto bref = ket0->deep_copy("DSRG-BRA@TMP");
