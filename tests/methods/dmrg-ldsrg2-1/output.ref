@@ -1,0 +1,754 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.10a1.dev48 
+
+                         Git: Rev {master} 1813c0c dirty
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Saturday, 14 September 2024 12:12PM
+
+    Process ID: 77116
+    Host:       Chenyangs-MacBook-Pro.local
+    PSIDATADIR: /Users/york/src/psi4-build/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    4
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+# Test DMRG-LDSRG(2) for loading C-MPS within each amplitude update
+Eref_fci_dsrg  = -384.156370559677327
+Eref_dmrg_dsrg = -384.156517457750567
+
+import forte
+memory 4 gb
+
+molecule N2S {
+0 1
+C                    -1.244593000000     1.402439000000     0.000000000000
+C                    -2.433051000000     0.708272000000     0.000000000000
+C                    -2.433051000000    -0.708272000000     0.000000000000
+C                    -1.244593000000    -1.402439000000     0.000000000000
+C                     0.000000000000    -0.716921000000     0.000000000000
+C                     0.000000000000     0.716921000000     0.000000000000
+H                    -1.242226000000     2.489450000000     0.000000000000
+H                    -3.377109000000     1.245176000000     0.000000000000
+H                    -3.377109000000    -1.245176000000     0.000000000000
+H                    -1.242226000000    -2.489450000000     0.000000000000
+C                     1.244593000000     1.402439000000     0.000000000000
+C                     2.433051000000     0.708272000000     0.000000000000
+H                     3.377109000000     1.245176000000     0.000000000000
+C                     2.433051000000    -0.708272000000     0.000000000000
+H                     3.377109000000    -1.245176000000     0.000000000000
+C                     1.244593000000    -1.402439000000     0.000000000000
+H                     1.242226000000    -2.489450000000     0.000000000000
+H                     1.242226000000     2.489450000000     0.000000000000
+units angstrom
+}
+
+set {
+basis              6-31g
+reference          rhf
+e_convergence      1e-8
+d_convergence      1e-6
+scf_type           df
+df_basis_scf       def2-universal-jkfit
+df_basis_mp2       def2-universal-jkfit
+docc               [9,6,1,1,1,2,7,7]
+}
+wfn = psi4.Wavefunction.from_file("wfn_cas.npy")
+
+set forte {
+int_type                   df
+active_space_solver        block2
+orbital_type               cholesky_active
+block2_sweep_bond_dims     [100,100,100]
+block2_sweep_energy_conv   1.0e-7
+block2_sweep_n_sweeps      [5,5,10]
+block2_n_total_sweeps      20
+block2_sweep_noises        [1.0e-7,1.0e-9,0.0]
+block2_sweep_davidson_tols [1e-8,1e-8,1e-9]
+block2_stack_mem           2
+block2_verbose             2
+frozen_docc                [3,2,0,0,0,0,3,2]
+restricted_docc            [6,4,0,0,0,0,4,5]
+active                     [0,0,2,3,2,3,0,0]
+avg_state                  [[0,1,1]]
+e_convergence              1.0e-8
+print                      3
+correlation_solver         sa-mrdsrg
+corr_level                 ldsrg2
+dsrg_s                     0.5
+dsrg_nivo                  true
+dsrg_hbar_seq              true
+dsrg_rsc_ncomm             4
+dsrg_read_amps             true
+dsrg_3rdm_algorithm        direct
+mcscf_reference            false  # turn off mcscf
+dsrg_3rdm_block2_cps_bond_dimension 200
+}
+edsrg = energy("forte", ref_wfn=wfn)
+compare_values(Eref_fci_dsrg, edsrg, 3, "DMRG vs CAS LDSRG(2)/CASSCF(10,10)/6-31G energy for C10H10")
+compare_values(Eref_dmrg_dsrg, edsrg, 6, "DMRG-LDSRG(2)/CASSCF(10,10)/6-31G energy for C10H10")
+--------------------------------------------------------------------------
+
+  Memory set to   3.725 GiB by Python driver.
+   => Loading Basis Set <=
+
+    Name: 6-31G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-6, 11-12, 14, 16  entry C          line    87 file /Users/york/src/psi4-build/stage/share/psi4/basis/6-31g.gbs 
+    atoms 7-10, 13, 15, 17-18 entry H          line    26 file /Users/york/src/psi4-build/stage/share/psi4/basis/6-31g.gbs 
+
+
+Scratch directory: /Users/york/scratch/psi4/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: block2-york - git commit: 24e07fda
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------------------------------
+                       Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u   Sum
+  -------------------------------------------------------------------------
+    FROZEN_DOCC         3     2     0     0     0     0     3     2    10
+    RESTRICTED_DOCC     6     4     0     0     0     0     4     5    19
+    GAS1                0     0     2     3     2     3     0     0    10
+    GAS2                0     0     0     0     0     0     0     0     0
+    GAS3                0     0     0     0     0     0     0     0     0
+    GAS4                0     0     0     0     0     0     0     0     0
+    GAS5                0     0     0     0     0     0     0     0     0
+    GAS6                0     0     0     0     0     0     0     0     0
+    RESTRICTED_UOCC    14    14     2     3     2     3    16    13    67
+    FROZEN_UOCC         0     0     0     0     0     0     0     0     0
+    Total              23    20     4     6     4     6    23    20   106
+  -------------------------------------------------------------------------   => Loading Basis Set <=
+
+    Name: 6-31G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-6, 11-12, 14, 16  entry C          line    87 file /Users/york/src/psi4-build/stage/share/psi4/basis/6-31g.gbs 
+    atoms 7-10, 13, 15, 17-18 entry H          line    26 file /Users/york/src/psi4-build/stage/share/psi4/basis/6-31g.gbs 
+
+
+  Checking orbital orthonormality against current geometry ... Done (OK)
+
+   => Loading Basis Set <=
+
+    Name: DEF2-UNIVERSAL-JKFIT
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1-6, 11-12, 14, 16  entry C          line   198 file /Users/york/src/psi4-build/stage/share/psi4/basis/def2-universal-jkfit.gbs 
+    atoms 7-10, 13, 15, 17-18 entry H          line    18 file /Users/york/src/psi4-build/stage/share/psi4/basis/def2-universal-jkfit.gbs 
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-6, 11-12, 14, 16  entry C          line    61 file /Users/york/src/psi4-build/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 7-10, 13, 15, 17-18 entry H          line    19 file /Users/york/src/psi4-build/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  State Singlet (Ms = 0) Ag GAS min: 0 0 0 0 0 0 ; GAS max: 20 0 0 0 0 0 ; weights:
+      1.000000000000
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: 6-31G
+    Blend: 6-31G
+    Number of shells: 66
+    Number of basis functions: 106
+    Number of Cartesian functions: 106
+    Spherical Harmonics?: false
+    Max angular momentum: 1
+
+
+  JK created using MemDF integrals
+  DFHelper Memory: AOs need 0.097 GiB; user supplied 2.980 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               4
+    Memory [MiB]:              3051
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       3.4532
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: DEF2-UNIVERSAL-JKFIT
+    Blend: DEF2-UNIVERSAL-JKFIT
+    Number of shells: 298
+    Number of basis functions: 1050
+    Number of Cartesian functions: 1050
+    Spherical Harmonics?: false
+    Max angular momentum: 4
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                        106
+  Number of correlated molecular orbitals:              96
+  Number of frozen occupied orbitals:                   10
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:              Density fitting
+
+
+  Computing density fitted integrals
+
+  Number of auxiliary basis functions:  1050
+  Need 94.38 MB to store DF integrals
+  DFHelper Memory: AOs need 0.097 GiB; user supplied 3.256 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> DFHelper <==
+    NBF:                             106
+    NAux:                           1050
+    Schwarz Cutoff:                1E-12
+    Mask sparsity (%):                 3
+    DFH Avail. Memory [GiB]:       3.256
+    OpenMP threads:                    4
+    Algorithm:                     STORE
+    AO Core:                        True
+    MO Core:                       False
+    Hold Metric:                   False
+    Metric Power:                 -0.500
+    Fitting Condition:             1E-10
+    Q Shell Max:                      15
+
+
+
+  Transforming DF Integrals
+  Timing for density-fitting transformation:                  0.059 s.
+
+  Frozen-core energy        -555.360057130654013 a.u.
+  Timing for frozen one-body operator:                        0.006 s.
+  Resorting integrals after freezing core.
+  Timing for resorting DF integrals:                          0.108 s.
+  Timing for freezing core and virtual orbitals:              0.114 s.
+  Timing for computing density-fitted integrals:              0.826 s.
+
+    Forming Cholesky orbitals ... Done.
+
+  Integrals are about to be updated.
+  Computing density fitted integrals
+
+  Number of auxiliary basis functions:  1050
+  Need 94.38 MB to store DF integrals
+  DFHelper Memory: AOs need 0.097 GiB; user supplied 3.256 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> DFHelper <==
+    NBF:                             106
+    NAux:                           1050
+    Schwarz Cutoff:                1E-12
+    Mask sparsity (%):                 3
+    DFH Avail. Memory [GiB]:       3.256
+    OpenMP threads:                    4
+    Algorithm:                     STORE
+    AO Core:                        True
+    MO Core:                       False
+    Hold Metric:                   False
+    Metric Power:                 -0.500
+    Fitting Condition:             1E-10
+    Q Shell Max:                      15
+
+
+
+  Transforming DF Integrals
+  Timing for density-fitting transformation:                  0.056 s.
+
+  Frozen-core energy        -555.360057130654013 a.u.
+  Timing for frozen one-body operator:                        0.005 s.
+  Resorting integrals after freezing core.
+  Timing for resorting DF integrals:                          0.107 s.
+  Timing for freezing core and virtual orbitals:              0.112 s.
+  Integrals update took     0.793 s.
+
+  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn
+
+
+                         ------------------------------
+                           block2 DMRG (spin-adapted)
+                                by Huanchen Zhai
+                                Jan 14-16, 2023
+                         ------------------------------
+
+    Reference: H. Zhai & G. K. Chan J. Chem. Phys. 2021, 154, 224116.
+
+  ==> DMRG Settings <==
+
+    N sweeps       =          5         5        10
+    Bond dims      =        100       100       100
+    Noises         =   1.00E-07  1.00E-09  0.00E+00
+    Davidson tols  =   1.00E-08  1.00E-08  1.00E-09
+    N total sweeps =         20
+    E convergence  =   1.00E-07
+    Cutoff         =   1.00E-20
+    Initial guess  =        new
+    Verbosity      =          2
+    Stack memory   =    2.00 GB
+    Scratch        = /Users/york/scratch/psi4/forte.77116.block2.N2S
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    Ag     0     -383.349696361086   0.000000
+    --------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+
+  ==> NATURAL ORBITALS <==
+
+        1B1u    1.962680      1B2g    1.941611      1B3g    1.916832  
+        2B1u    1.891258      1Au     1.861035      2B2g    0.142697  
+        2B3g    0.111102      3B1u    0.082045      2Au     0.057075  
+        3B3g    0.033664  
+
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0AG     0.00000000    -0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+
+  ==> NATURAL ORBITALS <==
+
+        1B1u    1.962680      1B2g    1.941611      1B3g    1.916832  
+        2B1u    1.891258      1Au     1.861035      2B2g    0.142697  
+        2B3g    0.111102      3B1u    0.082045      2Au     0.057075  
+        3B3g    0.033664  
+
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) Ag <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0AG   -38.51176081    -0.00000000     0.00000000   -38.53451365     0.00000000   -47.68940437
+    --------------------------------------------------------------------------------------------------
+     Nuclear   825.06573256     0.00000000     0.00000000   344.26004833     0.00000000     0.00000000
+    --------------------------------------------------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+
+  ==> NATURAL ORBITALS <==
+
+        1B1u    1.962680      1B2g    1.941611      1B3g    1.916832  
+        2B1u    1.891258      1Au     1.861035      2B2g    0.142697  
+        2B3g    0.111102      3B1u    0.082045      2Au     0.057075  
+        3B3g    0.033664  
+
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS         FALSE
+    MIX GAS ACTIVE ORBITALS       FALSE
+    FROZEN_DOCC                   CANONICAL
+    FROZEN_UOCC                   CANONICAL
+    GAS1                          CANONICAL
+    RESTRICTED_DOCC               CANONICAL
+    RESTRICTED_UOCC               CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    FROZEN_DOCC          0.0000127324   0.0000428059
+    GAS1                 0.2457660134   0.7561263080
+    RESTRICTED_DOCC      0.0000310067   0.0001325820
+    RESTRICTED_UOCC      0.0000345491   0.0002937548
+    ------------------------------------------------
+
+    Canonicalization test failed
+
+  Integrals are about to be updated.
+  Computing density fitted integrals
+
+  Number of auxiliary basis functions:  1050
+  Need 94.38 MB to store DF integrals
+  DFHelper Memory: AOs need 0.097 GiB; user supplied 3.256 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> DFHelper <==
+    NBF:                             106
+    NAux:                           1050
+    Schwarz Cutoff:                1E-12
+    Mask sparsity (%):                 3
+    DFH Avail. Memory [GiB]:       3.256
+    OpenMP threads:                    4
+    Algorithm:                     STORE
+    AO Core:                        True
+    MO Core:                       False
+    Hold Metric:                   False
+    Metric Power:                 -0.500
+    Fitting Condition:             1E-10
+    Q Shell Max:                      15
+
+
+
+  Transforming DF Integrals
+  Timing for density-fitting transformation:                  0.051 s.
+
+  Frozen-core energy        -555.360057130653900 a.u.
+  Timing for frozen one-body operator:                        0.005 s.
+  Resorting integrals after freezing core.
+  Timing for resorting DF integrals:                          0.107 s.
+  Timing for freezing core and virtual orbitals:              0.112 s.
+  Integrals update took     0.786 s.
+  Orbital rotations on spin-free RDMs ...
+    Transformed 1 RDMs.
+    Transformed 2 RDMs.
+  Timing for orbital canonicalization:                        0.806 s.
+
+    -----------------------------------------------------------------------
+      Spin-Adapted Multireference Driven Similarity Renormalization Group
+                            written by Chenyang Li
+                                 4 OMP threads
+    -----------------------------------------------------------------------
+
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Computing Fock matrix and cleaning JK ....... Done. Timing      0.016 s
+    Reading DSRG options ........................ Done. Timing      0.000 s
+    Setting ambit MO space ...................... Done. Timing      0.000 s
+    Initializing density cumulants .............. Done. Timing      0.000 s
+    Filling Fock matrix from ForteIntegrals ..... Done. Timing      0.000 s
+
+  ==> Density Cumulant Summary <==
+
+             2-cumulant   3-cumulant
+    --------------------------------
+    max        0.316594     0.000000
+    2-norm     1.569337     0.000000
+    --------------------------------
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Block                Max            Mean
+    ----------------------------------------
+    CORE        0.0000000000    0.0000000000
+    VIRTUAL     0.0000000000    0.0000000000
+    GAS1        0.0000000000    0.0000000000
+    ----------------------------------------
+    Orbitals are semi-canonicalized.
+
+  ==> Calculation Information <==
+
+    --------------------------------------------------------
+    Correlation level                                 LDSRG2
+    Integral type                                         DF
+    Source operator                                 STANDARD
+    Reference relaxation                                NONE
+    3RDM algorithm                                    DIRECT
+    Core-Virtual source type                          NORMAL
+    T1 amplitudes initial guess                          PT2
+    Restart amplitudes                                  TRUE
+    Sequential DSRG transformation                      TRUE
+    Omit blocks of >= 3 virtual indices                 TRUE
+    Read amplitudes from current dir                    TRUE
+    Write amplitudes to current dir                    FALSE
+    Use adaptive RSC threshold                          TRUE
+    Flow parameter                                 5.000e-01
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-06
+    Recursive single commutator threshold          1.000e-12
+    Adaptive RSC threshold                         1.000e-03
+    Adaptive RSC delta E                           5.000e-05
+    Taylor expansion threshold                     1.000e-03
+    Intruder amplitudes threshold                  1.000e-01
+    Max number of iterations                              50
+    Max nested commutators                                 4
+    DIIS start                                             2
+    Min DIIS vectors                                       3
+    Max DIIS vectors                                       8
+    DIIS extrapolating freq                                1
+    Number of amplitudes for printing                     15
+    --------------------------------------------------------
+
+  ==> MR-DSRG (LDSRG2) Memory Information <==
+
+    Memory assigned by the user                      4.00 GB
+    Memory available for MR-DSRG                     3.42 GB
+    Generalized Fock matrix                         74.50 KB
+    1- and 2-density cumulants                      81.60 KB
+    1-electron and 3-index integrals                77.49 MB
+    T1 cluster amplitudes and residuals             35.73 KB
+    T2 cluster amplitudes and residuals            119.67 MB
+    1-body Hbar and intermediates                  221.18 KB
+    2-body Hbar and intermediates                  717.48 MB
+    Local intermediates for sequential Hbar         77.41 MB
+    Local intermediates for commutators            137.34 MB
+    Max memory for local intermediates             137.34 MB
+    Memory currently available                       2.50 GB
+
+  =>** Before self.dsrg_solver.compute_energy() **<=
+
+
+  ==> Build Initial Amplitudes Guesses <==
+
+    Reading T2 from current dir ................. Done. Timing      0.021 s
+    Reading T1 from current dir ................. Done. Timing      0.000 s
+
+  ==> Initial Excitation Amplitudes Summary <==
+
+    Active Indices:   38   39   42   43   44   48   49   52   53   54
+                    
+    Largest T1 amplitudes (absolute values):
+        i    a                i    a                i    a
+    -----------------------------------------------------------------
+    [  38   41] 0.0418596 [  48   51] 0.0411757 [  53   56] 0.0358225
+    [  43   46] 0.0349606 [  42   47] 0.0279850 [  53   57] 0.0230947
+    [  43   47] 0.0189867 [  48   50] 0.0147574 [  42   46] 0.0145851
+    [  42   45] 0.0133549 [  23   36] 0.0068326 [   5   19] 0.0060038
+    [  43   45] 0.0056404 [  53   55] 0.0056079 [  22   35] 0.0045791
+    -----------------------------------------------------------------
+    2-Norm of T1 vector:                            0.093670185571466
+    Number of nonzero elements:                                  1714
+    -----------------------------------------------------------------
+    Largest T2 amplitudes (absolute values):
+        i    j    a    b                i    j    a    b                i    j    a    b
+    -----------------------------------------------------------------------------------------------
+    [  52    4   43   67] 0.0122009 [  42   54   42   55] 0.0121896 [  48   39   48   40] 0.0118545
+    [   1    1   52   52] 0.0113085 [  42   44   42   45] 0.0110752 [  42   52   42   57] 0.0108360
+    [  53   44   53   45] 0.0107456 [  53    4   42   67] 0.0106126 [   0    0   54   54] 0.0105533
+    [  78   78   39   39] 0.0100592 [  58   58   44   44] 0.0100428 [  48   49   48   50] 0.0099116
+    [  54    4   44   67] 0.0098998 [  43   81   48    8] 0.0097608 [  39   81   52    8] 0.0097217
+    -----------------------------------------------------------------------------------------------
+    2-Norm of T2 vector:                                                          0.738765054703641
+    Number of nonzero elements:                                                             2371061
+    -----------------------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000: NULL
+    T2 amplitudes larger than 0.1000: NULL
+
+  ==> Computing MR-LDSRG(2) Energy <==
+
+    Reference:
+      J. Chem. Phys. 2016, 144, 164114.
+
+                  Energy (a.u.)           Non-Diagonal Norm        Amplitude RMS          Timings (s)
+           ---------------------------  ---------------------  ---------------------  ------------------
+    Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2         Hbar     Amp.    Ncomm   DIIS
+    ------------------------------------------------------------------------------------------------------------------
+ orbital 28  j =  0 pvalue =   -0.009515875825154
+ orbital 29  j =  0 pvalue =   -0.000669146935543
+ orbital 30  j =  0 pvalue =   -0.015107029961953
+ orbital 31  j =  0 pvalue =   -0.001740303848955
+ orbital 32  j =  0 pvalue =   -0.000267969270927
+ orbital 33  j =  0 pvalue =   -0.014762507129260
+ orbital 34  j =  0 pvalue =   -0.001023315978755
+ orbital 35  j =  0 pvalue =   -0.010422674513356
+ orbital 36  j =  0 pvalue =   -0.008742681136092
+ orbital 37  j =  0 pvalue =   -0.008322604046295
+ orbital 28  j =  0 pvalue =    0.007025948360998
+ orbital 29  j =  0 pvalue =    0.000558382789175
+ orbital 30  j =  0 pvalue =    0.010807104950359
+ orbital 31  j =  0 pvalue =    0.001259930107023
+ orbital 32  j =  0 pvalue =    0.000289909044210
+ orbital 33  j =  0 pvalue =    0.010292119217741
+ orbital 34  j =  0 pvalue =    0.000924580954434
+ orbital 35  j =  0 pvalue =    0.008056732476238
+ orbital 36  j =  0 pvalue =    0.006259426817497
+ orbital 37  j =  0 pvalue =    0.006474457634117
+ orbital 28  j =  0 pvalue =   -0.000962243740660
+ orbital 29  j =  0 pvalue =   -0.000053139092744
+ orbital 30  j =  0 pvalue =   -0.001557981464358
+ orbital 31  j =  0 pvalue =   -0.000131323761049
+ orbital 32  j =  0 pvalue =   -0.000024975396120
+ orbital 33  j =  0 pvalue =   -0.001387683552990
+ orbital 34  j =  0 pvalue =   -0.000111054363067
+ orbital 35  j =  0 pvalue =   -0.001196193441144
+ orbital 36  j =  0 pvalue =   -0.000884799741277
+ orbital 37  j =  0 pvalue =   -0.000908746283696
+ orbital 28  j =  0 pvalue =    0.000093117433354
+ orbital 29  j =  0 pvalue =    0.000006109174143
+ orbital 30  j =  0 pvalue =    0.000146923835671
+ orbital 31  j =  0 pvalue =    0.000012525050453
+ orbital 32  j =  0 pvalue =    0.000003857448424
+ orbital 33  j =  0 pvalue =    0.000138407926489
+ orbital 34  j =  0 pvalue =    0.000013281943201
+ orbital 35  j =  0 pvalue =    0.000106841165617
+ orbital 36  j =  0 pvalue =    0.000087143965373
+ orbital 37  j =  0 pvalue =    0.000093060455290
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       1    -0.807191912538 -8.072e-01   3.637e-01  9.737e-01   1.847e-10  2.058e-09    12.836    3.046     4
+ orbital 28  j =  0 pvalue =   -0.009515875827238
+ orbital 29  j =  0 pvalue =   -0.000669146934432
+ orbital 30  j =  0 pvalue =   -0.015107029961169
+ orbital 31  j =  0 pvalue =   -0.001740303844898
+ orbital 32  j =  0 pvalue =   -0.000267969270966
+ orbital 33  j =  0 pvalue =   -0.014762507129700
+ orbital 34  j =  0 pvalue =   -0.001023315979343
+ orbital 35  j =  0 pvalue =   -0.010422674520779
+ orbital 36  j =  0 pvalue =   -0.008742681145014
+ orbital 37  j =  0 pvalue =   -0.008322604042337
+ orbital 28  j =  0 pvalue =    0.007025948363437
+ orbital 29  j =  0 pvalue =    0.000558382789943
+ orbital 30  j =  0 pvalue =    0.010807104950699
+ orbital 31  j =  0 pvalue =    0.001259930103162
+ orbital 32  j =  0 pvalue =    0.000289909044560
+ orbital 33  j =  0 pvalue =    0.010292119219613
+ orbital 34  j =  0 pvalue =    0.000924580956389
+ orbital 35  j =  0 pvalue =    0.008056732485594
+ orbital 36  j =  0 pvalue =    0.006259426829481
+ orbital 37  j =  0 pvalue =    0.006474457630014
+ orbital 28  j =  0 pvalue =   -0.000962243740554
+ orbital 29  j =  0 pvalue =   -0.000053139092684
+ orbital 30  j =  0 pvalue =   -0.001557981464370
+ orbital 31  j =  0 pvalue =   -0.000131323760507
+ orbital 32  j =  0 pvalue =   -0.000024975396147
+ orbital 33  j =  0 pvalue =   -0.001387683552915
+ orbital 34  j =  0 pvalue =   -0.000111054363198
+ orbital 35  j =  0 pvalue =   -0.001196193442161
+ orbital 36  j =  0 pvalue =   -0.000884799742254
+ orbital 37  j =  0 pvalue =   -0.000908746283520
+ orbital 28  j =  0 pvalue =    0.000093117433262
+ orbital 29  j =  0 pvalue =    0.000006109174163
+ orbital 30  j =  0 pvalue =    0.000146923835574
+ orbital 31  j =  0 pvalue =    0.000012525050395
+ orbital 32  j =  0 pvalue =    0.000003857448435
+ orbital 33  j =  0 pvalue =    0.000138407926422
+ orbital 34  j =  0 pvalue =    0.000013281943218
+ orbital 35  j =  0 pvalue =    0.000106841165658
+ orbital 36  j =  0 pvalue =    0.000087143965492
+ orbital 37  j =  0 pvalue =    0.000093060455218
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       2    -0.807191912609 -7.080e-11   3.637e-01  9.737e-01   6.825e-11  8.261e-10    12.733    3.043     4      S
+    ------------------------------------------------------------------------------------------------------------------
+
+  ==> MR-LDSRG(2) Energy Summary <==
+
+    E0 (reference)                 =    -383.349325493636115
+    MR-LDSRG(2) correlation energy =      -0.807191912608527
+    MR-LDSRG(2) total energy       =    -384.156517406244632
+
+  ==> Final Excitation Amplitudes Summary <==
+
+    Active Indices:   38   39   42   43   44   48   49   52   53   54
+                    
+    Largest T1 amplitudes (absolute values):
+        i    a                i    a                i    a
+    -----------------------------------------------------------------
+    [  38   41] 0.0418596 [  48   51] 0.0411757 [  53   56] 0.0358225
+    [  43   46] 0.0349606 [  42   47] 0.0279850 [  53   57] 0.0230947
+    [  43   47] 0.0189867 [  48   50] 0.0147574 [  42   46] 0.0145851
+    [  42   45] 0.0133549 [  23   36] 0.0068326 [   5   19] 0.0060038
+    [  43   45] 0.0056404 [  53   55] 0.0056079 [  22   35] 0.0045791
+    -----------------------------------------------------------------
+    2-Norm of T1 vector:                            0.093670185555277
+    Number of nonzero elements:                                  1714
+    -----------------------------------------------------------------
+    Largest T2 amplitudes (absolute values):
+        i    j    a    b                i    j    a    b                i    j    a    b
+    -----------------------------------------------------------------------------------------------
+    [  52    4   43   67] 0.0122009 [  42   54   42   55] 0.0121896 [  48   39   48   40] 0.0118545
+    [   1    1   52   52] 0.0113085 [  42   44   42   45] 0.0110752 [  42   52   42   57] 0.0108360
+    [  53   44   53   45] 0.0107456 [  53    4   42   67] 0.0106126 [   0    0   54   54] 0.0105533
+    [  78   78   39   39] 0.0100592 [  58   58   44   44] 0.0100428 [  48   49   48   50] 0.0099116
+    [  54    4   44   67] 0.0098998 [  43   81   48    8] 0.0097608 [  39   81   52    8] 0.0097217
+    -----------------------------------------------------------------------------------------------
+    2-Norm of T2 vector:                                                          0.738765054950157
+    Number of nonzero elements:                                                             2371069
+    -----------------------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000: NULL
+    T2 amplitudes larger than 0.1000: NULL
+  =>** After self.dsrg_solver.compute_energy() **<=
+
+  Semicanonical orbitals must be used!
+
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+           [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]  
+    -----------------------------------------------------
+    -> C0       0.000       0.008       0.000       4.717
+    -> C1       0.000       0.140       0.000       1.966
+    -> C2                   1.135       0.000      16.247
+    -----------------------------------------------------
+
+
+  Time to prepare integrals:        1.643 seconds
+  Time to run job          :       37.434 seconds
+  Total                    :       39.077 seconds
+    DMRG vs CAS LDSRG(2)/CASSCF(10,10)/6-31G energy for C10H10............................PASSED
+    DMRG-LDSRG(2)/CASSCF(10,10)/6-31G energy for C10H10...................................PASSED
+
+    Psi4 stopped on: Saturday, 14 September 2024 12:12PM
+    Psi4 wall time for execution: 0:00:39.38
+
+*** Psi4 exiting successfully. Buy a developer a beer!
