@@ -31,9 +31,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Saturday, 14 September 2024 12:12PM
+    Psi4 started on: Saturday, 14 September 2024 12:32PM
 
-    Process ID: 77116
+    Process ID: 79176
     Host:       Chenyangs-MacBook-Pro.local
     PSIDATADIR: /Users/york/src/psi4-build/stage/share/psi4
     Memory:     500.0 MiB
@@ -108,7 +108,7 @@ dsrg_s                     0.5
 dsrg_nivo                  true
 dsrg_hbar_seq              true
 dsrg_rsc_ncomm             4
-dsrg_read_amps             true
+#dsrg_read_amps             true
 dsrg_3rdm_algorithm        direct
 mcscf_reference            false  # turn off mcscf
 dsrg_3rdm_block2_cps_bond_dimension 200
@@ -273,14 +273,14 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   Transforming DF Integrals
-  Timing for density-fitting transformation:                  0.059 s.
+  Timing for density-fitting transformation:                  0.063 s.
 
   Frozen-core energy        -555.360057130654013 a.u.
   Timing for frozen one-body operator:                        0.006 s.
   Resorting integrals after freezing core.
-  Timing for resorting DF integrals:                          0.108 s.
-  Timing for freezing core and virtual orbitals:              0.114 s.
-  Timing for computing density-fitted integrals:              0.826 s.
+  Timing for resorting DF integrals:                          0.149 s.
+  Timing for freezing core and virtual orbitals:              0.155 s.
+  Timing for computing density-fitted integrals:              0.849 s.
 
     Forming Cholesky orbitals ... Done.
 
@@ -316,9 +316,9 @@ Scratch directory: /Users/york/scratch/psi4/
   Frozen-core energy        -555.360057130654013 a.u.
   Timing for frozen one-body operator:                        0.005 s.
   Resorting integrals after freezing core.
-  Timing for resorting DF integrals:                          0.107 s.
-  Timing for freezing core and virtual orbitals:              0.112 s.
-  Integrals update took     0.793 s.
+  Timing for resorting DF integrals:                          0.105 s.
+  Timing for freezing core and virtual orbitals:              0.110 s.
+  Integrals update took     0.791 s.
 
   Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn
 
@@ -343,7 +343,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Initial guess  =        new
     Verbosity      =          2
     Stack memory   =    2.00 GB
-    Scratch        = /Users/york/scratch/psi4/forte.77116.block2.N2S
+    Scratch        = /Users/york/scratch/psi4/forte.79176.block2.N2S
 
 
   ==> Energy Summary <==
@@ -418,7 +418,7 @@ Scratch directory: /Users/york/scratch/psi4/
     ------------------------------------------------
     FROZEN_DOCC          0.0000127324   0.0000428059
     GAS1                 0.2457660134   0.7561263080
-    RESTRICTED_DOCC      0.0000310067   0.0001325820
+    RESTRICTED_DOCC      0.0000310067   0.0001325821
     RESTRICTED_UOCC      0.0000345491   0.0002937548
     ------------------------------------------------
 
@@ -451,18 +451,18 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   Transforming DF Integrals
-  Timing for density-fitting transformation:                  0.051 s.
+  Timing for density-fitting transformation:                  0.054 s.
 
-  Frozen-core energy        -555.360057130653900 a.u.
+  Frozen-core energy        -555.360057130653786 a.u.
   Timing for frozen one-body operator:                        0.005 s.
   Resorting integrals after freezing core.
-  Timing for resorting DF integrals:                          0.107 s.
+  Timing for resorting DF integrals:                          0.106 s.
   Timing for freezing core and virtual orbitals:              0.112 s.
-  Integrals update took     0.786 s.
+  Integrals update took     0.790 s.
   Orbital rotations on spin-free RDMs ...
     Transformed 1 RDMs.
     Transformed 2 RDMs.
-  Timing for orbital canonicalization:                        0.806 s.
+  Timing for orbital canonicalization:                        0.814 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
@@ -513,7 +513,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Restart amplitudes                                  TRUE
     Sequential DSRG transformation                      TRUE
     Omit blocks of >= 3 virtual indices                 TRUE
-    Read amplitudes from current dir                    TRUE
+    Read amplitudes from current dir                   FALSE
     Write amplitudes to current dir                    FALSE
     Use adaptive RSC threshold                          TRUE
     Flow parameter                                 5.000e-01
@@ -554,8 +554,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Build Initial Amplitudes Guesses <==
 
-    Reading T2 from current dir ................. Done. Timing      0.021 s
-    Reading T1 from current dir ................. Done. Timing      0.000 s
+    Computing T2 amplitudes from PT2 ............ Done. Timing      1.515 s
+    Computing T1 amplitudes from PT2 ............ Done. Timing      0.004 s
 
   ==> Initial Excitation Amplitudes Summary <==
 
@@ -564,26 +564,26 @@ Scratch directory: /Users/york/scratch/psi4/
     Largest T1 amplitudes (absolute values):
         i    a                i    a                i    a
     -----------------------------------------------------------------
-    [  38   41] 0.0418596 [  48   51] 0.0411757 [  53   56] 0.0358225
-    [  43   46] 0.0349606 [  42   47] 0.0279850 [  53   57] 0.0230947
-    [  43   47] 0.0189867 [  48   50] 0.0147574 [  42   46] 0.0145851
-    [  42   45] 0.0133549 [  23   36] 0.0068326 [   5   19] 0.0060038
-    [  43   45] 0.0056404 [  53   55] 0.0056079 [  22   35] 0.0045791
+    [  38   41] 0.0485863 [  48   51] 0.0474958 [  43   46] 0.0407797
+    [  53   56] 0.0405819 [  42   47] 0.0334598 [  53   57] 0.0274618
+    [  43   47] 0.0231245 [  48   50] 0.0169849 [  42   46] 0.0163956
+    [  42   45] 0.0149113 [  49   50] 0.0078440 [  43   45] 0.0063121
+    [  53   55] 0.0061328 [  39   40] 0.0058815 [  44   45] 0.0058424
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.093670185571466
-    Number of nonzero elements:                                  1714
+    2-Norm of T1 vector:                            0.106835521705124
+    Number of nonzero elements:                                   295
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
         i    j    a    b                i    j    a    b                i    j    a    b
     -----------------------------------------------------------------------------------------------
-    [  52    4   43   67] 0.0122009 [  42   54   42   55] 0.0121896 [  48   39   48   40] 0.0118545
-    [   1    1   52   52] 0.0113085 [  42   44   42   45] 0.0110752 [  42   52   42   57] 0.0108360
-    [  53   44   53   45] 0.0107456 [  53    4   42   67] 0.0106126 [   0    0   54   54] 0.0105533
-    [  78   78   39   39] 0.0100592 [  58   58   44   44] 0.0100428 [  48   49   48   50] 0.0099116
-    [  54    4   44   67] 0.0098998 [  43   81   48    8] 0.0097608 [  39   81   52    8] 0.0097217
+    [  48   39   48   40] 0.0139821 [  42   54   42   55] 0.0138158 [  53   44   53   45] 0.0131416
+    [  42   44   42   45] 0.0131405 [  42   52   42   57] 0.0126884 [  48   49   48   50] 0.0120971
+    [  38   49   38   50] 0.0118769 [   0    0   54   54] 0.0118278 [  43   52   43   57] 0.0117869
+    [  52    4   43   67] 0.0116620 [   1    1   52   52] 0.0116439 [  53    4   42   67] 0.0116221
+    [  53   54   53   55] 0.0115825 [  38   44   38   45] 0.0115674 [  42   42   47   47] 0.0114460
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.738765054703641
-    Number of nonzero elements:                                                             2371061
+    2-Norm of T2 vector:                                                          0.740634682266650
+    Number of nonzero elements:                                                             1320265
     -----------------------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -600,99 +600,486 @@ Scratch directory: /Users/york/scratch/psi4/
            ---------------------------  ---------------------  ---------------------  ------------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2         Hbar     Amp.    Ncomm   DIIS
     ------------------------------------------------------------------------------------------------------------------
- orbital 28  j =  0 pvalue =   -0.009515875825154
- orbital 29  j =  0 pvalue =   -0.000669146935543
- orbital 30  j =  0 pvalue =   -0.015107029961953
- orbital 31  j =  0 pvalue =   -0.001740303848955
- orbital 32  j =  0 pvalue =   -0.000267969270927
- orbital 33  j =  0 pvalue =   -0.014762507129260
- orbital 34  j =  0 pvalue =   -0.001023315978755
- orbital 35  j =  0 pvalue =   -0.010422674513356
- orbital 36  j =  0 pvalue =   -0.008742681136092
- orbital 37  j =  0 pvalue =   -0.008322604046295
- orbital 28  j =  0 pvalue =    0.007025948360998
- orbital 29  j =  0 pvalue =    0.000558382789175
- orbital 30  j =  0 pvalue =    0.010807104950359
- orbital 31  j =  0 pvalue =    0.001259930107023
- orbital 32  j =  0 pvalue =    0.000289909044210
- orbital 33  j =  0 pvalue =    0.010292119217741
- orbital 34  j =  0 pvalue =    0.000924580954434
- orbital 35  j =  0 pvalue =    0.008056732476238
- orbital 36  j =  0 pvalue =    0.006259426817497
- orbital 37  j =  0 pvalue =    0.006474457634117
- orbital 28  j =  0 pvalue =   -0.000962243740660
- orbital 29  j =  0 pvalue =   -0.000053139092744
- orbital 30  j =  0 pvalue =   -0.001557981464358
- orbital 31  j =  0 pvalue =   -0.000131323761049
- orbital 32  j =  0 pvalue =   -0.000024975396120
- orbital 33  j =  0 pvalue =   -0.001387683552990
- orbital 34  j =  0 pvalue =   -0.000111054363067
- orbital 35  j =  0 pvalue =   -0.001196193441144
- orbital 36  j =  0 pvalue =   -0.000884799741277
- orbital 37  j =  0 pvalue =   -0.000908746283696
- orbital 28  j =  0 pvalue =    0.000093117433354
- orbital 29  j =  0 pvalue =    0.000006109174143
- orbital 30  j =  0 pvalue =    0.000146923835671
- orbital 31  j =  0 pvalue =    0.000012525050453
- orbital 32  j =  0 pvalue =    0.000003857448424
- orbital 33  j =  0 pvalue =    0.000138407926489
- orbital 34  j =  0 pvalue =    0.000013281943201
- orbital 35  j =  0 pvalue =    0.000106841165617
- orbital 36  j =  0 pvalue =    0.000087143965373
- orbital 37  j =  0 pvalue =    0.000093060455290
+ orbital 28  j =  0 pvalue =   -0.011069950001801
+ orbital 29  j =  0 pvalue =   -0.000832300527806
+ orbital 30  j =  0 pvalue =   -0.018226038321422
+ orbital 31  j =  0 pvalue =   -0.002056162340097
+ orbital 32  j =  0 pvalue =   -0.000312307500851
+ orbital 33  j =  0 pvalue =   -0.017926645467776
+ orbital 34  j =  0 pvalue =   -0.001177006626325
+ orbital 35  j =  0 pvalue =   -0.012363889889414
+ orbital 36  j =  0 pvalue =   -0.011013111962278
+ orbital 37  j =  0 pvalue =   -0.010125692368240
+ orbital 28  j =  0 pvalue =    0.009268249804035
+ orbital 29  j =  0 pvalue =    0.000707893062454
+ orbital 30  j =  0 pvalue =    0.015140093657081
+ orbital 31  j =  0 pvalue =    0.001594531866661
+ orbital 32  j =  0 pvalue =    0.000343284306833
+ orbital 33  j =  0 pvalue =    0.014639723403079
+ orbital 34  j =  0 pvalue =    0.001142060072981
+ orbital 35  j =  0 pvalue =    0.010905992882307
+ orbital 36  j =  0 pvalue =    0.009413858609037
+ orbital 37  j =  0 pvalue =    0.009264065377756
+ orbital 28  j =  0 pvalue =   -0.001275165296185
+ orbital 29  j =  0 pvalue =   -0.000085024289953
+ orbital 30  j =  0 pvalue =   -0.002190845944771
+ orbital 31  j =  0 pvalue =   -0.000176149732440
+ orbital 32  j =  0 pvalue =   -0.000041956157299
+ orbital 33  j =  0 pvalue =   -0.002005775754186
+ orbital 34  j =  0 pvalue =   -0.000147982068755
+ orbital 35  j =  0 pvalue =   -0.001611920374474
+ orbital 36  j =  0 pvalue =   -0.001360736710785
+ orbital 37  j =  0 pvalue =   -0.001374014265388
+ orbital 28  j =  0 pvalue =    0.000139815055189
+ orbital 29  j =  0 pvalue =    0.000008204048715
+ orbital 30  j =  0 pvalue =    0.000223712225056
+ orbital 31  j =  0 pvalue =    0.000017973766612
+ orbital 32  j =  0 pvalue =    0.000005438993770
+ orbital 33  j =  0 pvalue =    0.000211760837937
+ orbital 34  j =  0 pvalue =    0.000016738467512
+ orbital 35  j =  0 pvalue =    0.000167487623100
+ orbital 36  j =  0 pvalue =    0.000140858640004
+ orbital 37  j =  0 pvalue =    0.000152413237799
     Warning! Hbar is not converged in   4-nested commutators!
     Please increase DSRG_RSC_NCOMM.
-       1    -0.807191912538 -8.072e-01   3.637e-01  9.737e-01   1.847e-10  2.058e-09    12.836    3.046     4
- orbital 28  j =  0 pvalue =   -0.009515875827238
- orbital 29  j =  0 pvalue =   -0.000669146934432
- orbital 30  j =  0 pvalue =   -0.015107029961169
- orbital 31  j =  0 pvalue =   -0.001740303844898
- orbital 32  j =  0 pvalue =   -0.000267969270966
- orbital 33  j =  0 pvalue =   -0.014762507129700
- orbital 34  j =  0 pvalue =   -0.001023315979343
- orbital 35  j =  0 pvalue =   -0.010422674520779
- orbital 36  j =  0 pvalue =   -0.008742681145014
- orbital 37  j =  0 pvalue =   -0.008322604042337
- orbital 28  j =  0 pvalue =    0.007025948363437
- orbital 29  j =  0 pvalue =    0.000558382789943
- orbital 30  j =  0 pvalue =    0.010807104950699
- orbital 31  j =  0 pvalue =    0.001259930103162
- orbital 32  j =  0 pvalue =    0.000289909044560
- orbital 33  j =  0 pvalue =    0.010292119219613
- orbital 34  j =  0 pvalue =    0.000924580956389
- orbital 35  j =  0 pvalue =    0.008056732485594
- orbital 36  j =  0 pvalue =    0.006259426829481
- orbital 37  j =  0 pvalue =    0.006474457630014
- orbital 28  j =  0 pvalue =   -0.000962243740554
- orbital 29  j =  0 pvalue =   -0.000053139092684
- orbital 30  j =  0 pvalue =   -0.001557981464370
- orbital 31  j =  0 pvalue =   -0.000131323760507
- orbital 32  j =  0 pvalue =   -0.000024975396147
- orbital 33  j =  0 pvalue =   -0.001387683552915
- orbital 34  j =  0 pvalue =   -0.000111054363198
- orbital 35  j =  0 pvalue =   -0.001196193442161
- orbital 36  j =  0 pvalue =   -0.000884799742254
- orbital 37  j =  0 pvalue =   -0.000908746283520
- orbital 28  j =  0 pvalue =    0.000093117433262
- orbital 29  j =  0 pvalue =    0.000006109174163
- orbital 30  j =  0 pvalue =    0.000146923835574
- orbital 31  j =  0 pvalue =    0.000012525050395
- orbital 32  j =  0 pvalue =    0.000003857448435
- orbital 33  j =  0 pvalue =    0.000138407926422
- orbital 34  j =  0 pvalue =    0.000013281943218
- orbital 35  j =  0 pvalue =    0.000106841165658
- orbital 36  j =  0 pvalue =    0.000087143965492
- orbital 37  j =  0 pvalue =    0.000093060455218
+       1    -0.773300514226 -7.733e-01   3.285e-01  9.236e-01   2.908e-02  1.362e-01    12.690    3.028     4
+ orbital 28  j =  0 pvalue =   -0.009433121164633
+ orbital 29  j =  0 pvalue =   -0.000663383951431
+ orbital 30  j =  0 pvalue =   -0.014895882216419
+ orbital 31  j =  0 pvalue =   -0.001759729551268
+ orbital 32  j =  0 pvalue =   -0.000260835160918
+ orbital 33  j =  0 pvalue =   -0.014537668638876
+ orbital 34  j =  0 pvalue =   -0.000994629581984
+ orbital 35  j =  0 pvalue =   -0.010371373708028
+ orbital 36  j =  0 pvalue =   -0.008598325629798
+ orbital 37  j =  0 pvalue =   -0.008141341697397
+ orbital 28  j =  0 pvalue =    0.006940678154835
+ orbital 29  j =  0 pvalue =    0.000552380547435
+ orbital 30  j =  0 pvalue =    0.010609231592360
+ orbital 31  j =  0 pvalue =    0.001277436918689
+ orbital 32  j =  0 pvalue =    0.000280499977409
+ orbital 33  j =  0 pvalue =    0.010079251692826
+ orbital 34  j =  0 pvalue =    0.000900181209694
+ orbital 35  j =  0 pvalue =    0.008005062631595
+ orbital 36  j =  0 pvalue =    0.006098668866395
+ orbital 37  j =  0 pvalue =    0.006302283333337
+ orbital 28  j =  0 pvalue =   -0.000953862599541
+ orbital 29  j =  0 pvalue =   -0.000051924959879
+ orbital 30  j =  0 pvalue =   -0.001546044819971
+ orbital 31  j =  0 pvalue =   -0.000133022601672
+ orbital 32  j =  0 pvalue =   -0.000023793735196
+ orbital 33  j =  0 pvalue =   -0.001377987832699
+ orbital 34  j =  0 pvalue =   -0.000112348563115
+ orbital 35  j =  0 pvalue =   -0.001190510666665
+ orbital 36  j =  0 pvalue =   -0.000869336423151
+ orbital 37  j =  0 pvalue =   -0.000901476557973
+ orbital 28  j =  0 pvalue =    0.000090202731605
+ orbital 29  j =  0 pvalue =    0.000005857586783
+ orbital 30  j =  0 pvalue =    0.000143497177286
+ orbital 31  j =  0 pvalue =    0.000012357037186
+ orbital 32  j =  0 pvalue =    0.000003581191260
+ orbital 33  j =  0 pvalue =    0.000134842858997
+ orbital 34  j =  0 pvalue =    0.000012957028147
+ orbital 35  j =  0 pvalue =    0.000104979006325
+ orbital 36  j =  0 pvalue =    0.000084045632284
+ orbital 37  j =  0 pvalue =    0.000090672192428
     Warning! Hbar is not converged in   4-nested commutators!
     Please increase DSRG_RSC_NCOMM.
-       2    -0.807191912609 -7.080e-11   3.637e-01  9.737e-01   6.825e-11  8.261e-10    12.733    3.043     4      S
+       2    -0.801101099863 -2.780e-02   3.704e-01  1.001e+00   6.879e-03  2.958e-02    13.676    3.013     4      S
+ orbital 28  j =  0 pvalue =   -0.009511195759904
+ orbital 29  j =  0 pvalue =   -0.000675934310228
+ orbital 30  j =  0 pvalue =   -0.015081127023112
+ orbital 31  j =  0 pvalue =   -0.001749314095012
+ orbital 32  j =  0 pvalue =   -0.000268204332339
+ orbital 33  j =  0 pvalue =   -0.014741188444651
+ orbital 34  j =  0 pvalue =   -0.001014392805904
+ orbital 35  j =  0 pvalue =   -0.010421496258382
+ orbital 36  j =  0 pvalue =   -0.008743873199126
+ orbital 37  j =  0 pvalue =   -0.008292807752886
+ orbital 28  j =  0 pvalue =    0.007032806154293
+ orbital 29  j =  0 pvalue =    0.000556980111224
+ orbital 30  j =  0 pvalue =    0.010795545584314
+ orbital 31  j =  0 pvalue =    0.001264704928647
+ orbital 32  j =  0 pvalue =    0.000283113909972
+ orbital 33  j =  0 pvalue =    0.010288828431084
+ orbital 34  j =  0 pvalue =    0.000905615346219
+ orbital 35  j =  0 pvalue =    0.008067205794831
+ orbital 36  j =  0 pvalue =    0.006270487291130
+ orbital 37  j =  0 pvalue =    0.006444918249535
+ orbital 28  j =  0 pvalue =   -0.000969931135595
+ orbital 29  j =  0 pvalue =   -0.000053910500463
+ orbital 30  j =  0 pvalue =   -0.001565626205645
+ orbital 31  j =  0 pvalue =   -0.000133915198272
+ orbital 32  j =  0 pvalue =   -0.000024675748423
+ orbital 33  j =  0 pvalue =   -0.001396899795272
+ orbital 34  j =  0 pvalue =   -0.000110591508083
+ orbital 35  j =  0 pvalue =   -0.001204188079869
+ orbital 36  j =  0 pvalue =   -0.000892565556676
+ orbital 37  j =  0 pvalue =   -0.000910927288268
+ orbital 28  j =  0 pvalue =    0.000093838114002
+ orbital 29  j =  0 pvalue =    0.000006024048258
+ orbital 30  j =  0 pvalue =    0.000147566219596
+ orbital 31  j =  0 pvalue =    0.000012673881071
+ orbital 32  j =  0 pvalue =    0.000003726930333
+ orbital 33  j =  0 pvalue =    0.000139088128808
+ orbital 34  j =  0 pvalue =    0.000013069030306
+ orbital 35  j =  0 pvalue =    0.000107778523200
+ orbital 36  j =  0 pvalue =    0.000087719954028
+ orbital 37  j =  0 pvalue =    0.000093094036725
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       3    -0.805569162308 -4.468e-03   3.628e-01  9.743e-01   1.082e-03  9.094e-03    13.556    3.057     4      S
+ orbital 28  j =  0 pvalue =   -0.009508864692945
+ orbital 29  j =  0 pvalue =   -0.000669258782714
+ orbital 30  j =  0 pvalue =   -0.015092438451167
+ orbital 31  j =  0 pvalue =   -0.001739720617054
+ orbital 32  j =  0 pvalue =   -0.000268071171531
+ orbital 33  j =  0 pvalue =   -0.014746251899375
+ orbital 34  j =  0 pvalue =   -0.001022008109316
+ orbital 35  j =  0 pvalue =   -0.010416746576431
+ orbital 36  j =  0 pvalue =   -0.008729848052787
+ orbital 37  j =  0 pvalue =   -0.008314124125132
+ orbital 28  j =  0 pvalue =    0.007021962803682
+ orbital 29  j =  0 pvalue =    0.000556862867311
+ orbital 30  j =  0 pvalue =    0.010797222306854
+ orbital 31  j =  0 pvalue =    0.001257762277829
+ orbital 32  j =  0 pvalue =    0.000288841044883
+ orbital 33  j =  0 pvalue =    0.010280860879948
+ orbital 34  j =  0 pvalue =    0.000922288229458
+ orbital 35  j =  0 pvalue =    0.008053334499520
+ orbital 36  j =  0 pvalue =    0.006247576169127
+ orbital 37  j =  0 pvalue =    0.006468030243578
+ orbital 28  j =  0 pvalue =   -0.000963724229470
+ orbital 29  j =  0 pvalue =   -0.000053165119517
+ orbital 30  j =  0 pvalue =   -0.001559655648698
+ orbital 31  j =  0 pvalue =   -0.000131593863136
+ orbital 32  j =  0 pvalue =   -0.000025023771251
+ orbital 33  j =  0 pvalue =   -0.001389394885292
+ orbital 34  j =  0 pvalue =   -0.000111242645313
+ orbital 35  j =  0 pvalue =   -0.001197716830038
+ orbital 36  j =  0 pvalue =   -0.000884901361205
+ orbital 37  j =  0 pvalue =   -0.000909921984480
+ orbital 28  j =  0 pvalue =    0.000093196098765
+ orbital 29  j =  0 pvalue =    0.000006079838440
+ orbital 30  j =  0 pvalue =    0.000147007993668
+ orbital 31  j =  0 pvalue =    0.000012526976859
+ orbital 32  j =  0 pvalue =    0.000003837522824
+ orbital 33  j =  0 pvalue =    0.000138448697270
+ orbital 34  j =  0 pvalue =    0.000013253356696
+ orbital 35  j =  0 pvalue =    0.000107004965634
+ orbital 36  j =  0 pvalue =    0.000087055919720
+ orbital 37  j =  0 pvalue =    0.000093093600050
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       4    -0.806616877115 -1.048e-03   3.637e-01  9.748e-01   3.972e-04  3.399e-03    12.834    3.034     4      S/E
+ orbital 28  j =  0 pvalue =   -0.009514541986041
+ orbital 29  j =  0 pvalue =   -0.000668844763414
+ orbital 30  j =  0 pvalue =   -0.015106040855276
+ orbital 31  j =  0 pvalue =   -0.001739667811910
+ orbital 32  j =  0 pvalue =   -0.000267929938442
+ orbital 33  j =  0 pvalue =   -0.014760953280346
+ orbital 34  j =  0 pvalue =   -0.001023432314283
+ orbital 35  j =  0 pvalue =   -0.010421829667014
+ orbital 36  j =  0 pvalue =   -0.008741704129864
+ orbital 37  j =  0 pvalue =   -0.008322565536516
+ orbital 28  j =  0 pvalue =    0.007024079935200
+ orbital 29  j =  0 pvalue =    0.000557683323242
+ orbital 30  j =  0 pvalue =    0.010805498929929
+ orbital 31  j =  0 pvalue =    0.001258845794638
+ orbital 32  j =  0 pvalue =    0.000289625585649
+ orbital 33  j =  0 pvalue =    0.010290039231572
+ orbital 34  j =  0 pvalue =    0.000924304385735
+ orbital 35  j =  0 pvalue =    0.008055188994067
+ orbital 36  j =  0 pvalue =    0.006258118759490
+ orbital 37  j =  0 pvalue =    0.006473812523919
+ orbital 28  j =  0 pvalue =   -0.000962112076731
+ orbital 29  j =  0 pvalue =   -0.000053097915319
+ orbital 30  j =  0 pvalue =   -0.001557886233004
+ orbital 31  j =  0 pvalue =   -0.000131241312838
+ orbital 32  j =  0 pvalue =   -0.000024988149788
+ orbital 33  j =  0 pvalue =   -0.001387500177240
+ orbital 34  j =  0 pvalue =   -0.000111035694278
+ orbital 35  j =  0 pvalue =   -0.001196091087960
+ orbital 36  j =  0 pvalue =   -0.000884715802201
+ orbital 37  j =  0 pvalue =   -0.000908692644228
+ orbital 28  j =  0 pvalue =    0.000093113056746
+ orbital 29  j =  0 pvalue =    0.000006100607629
+ orbital 30  j =  0 pvalue =    0.000146927819729
+ orbital 31  j =  0 pvalue =    0.000012516265369
+ orbital 32  j =  0 pvalue =    0.000003855127635
+ orbital 33  j =  0 pvalue =    0.000138402492919
+ orbital 34  j =  0 pvalue =    0.000013277121448
+ orbital 35  j =  0 pvalue =    0.000106841614074
+ orbital 36  j =  0 pvalue =    0.000087134525217
+ orbital 37  j =  0 pvalue =    0.000093062027395
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       5    -0.807145750411 -5.289e-04   3.637e-01  9.737e-01   5.959e-05  4.471e-04    14.041    3.042     4      S/E
+ orbital 28  j =  0 pvalue =   -0.009516169476806
+ orbital 29  j =  0 pvalue =   -0.000669154529198
+ orbital 30  j =  0 pvalue =   -0.015107584423398
+ orbital 31  j =  0 pvalue =   -0.001740328879913
+ orbital 32  j =  0 pvalue =   -0.000267977977036
+ orbital 33  j =  0 pvalue =   -0.014762890262468
+ orbital 34  j =  0 pvalue =   -0.001023341414315
+ orbital 35  j =  0 pvalue =   -0.010423222761274
+ orbital 36  j =  0 pvalue =   -0.008742868087317
+ orbital 37  j =  0 pvalue =   -0.008322939174206
+ orbital 28  j =  0 pvalue =    0.007026160763894
+ orbital 29  j =  0 pvalue =    0.000558309156468
+ orbital 30  j =  0 pvalue =    0.010807540232992
+ orbital 31  j =  0 pvalue =    0.001259865379075
+ orbital 32  j =  0 pvalue =    0.000289865920947
+ orbital 33  j =  0 pvalue =    0.010292358269487
+ orbital 34  j =  0 pvalue =    0.000924517169498
+ orbital 35  j =  0 pvalue =    0.008057239734686
+ orbital 36  j =  0 pvalue =    0.006259545322711
+ orbital 37  j =  0 pvalue =    0.006474677254012
+ orbital 28  j =  0 pvalue =   -0.000962232580432
+ orbital 29  j =  0 pvalue =   -0.000053138303010
+ orbital 30  j =  0 pvalue =   -0.001557994443120
+ orbital 31  j =  0 pvalue =   -0.000131316258274
+ orbital 32  j =  0 pvalue =   -0.000024977647931
+ orbital 33  j =  0 pvalue =   -0.001387660146419
+ orbital 34  j =  0 pvalue =   -0.000111040141539
+ orbital 35  j =  0 pvalue =   -0.001196227255803
+ orbital 36  j =  0 pvalue =   -0.000884810458528
+ orbital 37  j =  0 pvalue =   -0.000908741683794
+ orbital 28  j =  0 pvalue =    0.000093123498698
+ orbital 29  j =  0 pvalue =    0.000006108212562
+ orbital 30  j =  0 pvalue =    0.000146932810072
+ orbital 31  j =  0 pvalue =    0.000012524495062
+ orbital 32  j =  0 pvalue =    0.000003857157204
+ orbital 33  j =  0 pvalue =    0.000138413669131
+ orbital 34  j =  0 pvalue =    0.000013280821072
+ orbital 35  j =  0 pvalue =    0.000106850211325
+ orbital 36  j =  0 pvalue =    0.000087147378705
+ orbital 37  j =  0 pvalue =    0.000093065552162
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       6    -0.807183728078 -3.798e-05   3.637e-01  9.737e-01   1.784e-05  1.224e-04    13.725    3.047     4      S/E
+ orbital 28  j =  0 pvalue =   -0.009516009521239
+ orbital 29  j =  0 pvalue =   -0.000669170056366
+ orbital 30  j =  0 pvalue =   -0.015107136703119
+ orbital 31  j =  0 pvalue =   -0.001740355012249
+ orbital 32  j =  0 pvalue =   -0.000267969709409
+ orbital 33  j =  0 pvalue =   -0.014762615186330
+ orbital 34  j =  0 pvalue =   -0.001023304522773
+ orbital 35  j =  0 pvalue =   -0.010422836904913
+ orbital 36  j =  0 pvalue =   -0.008742709302315
+ orbital 37  j =  0 pvalue =   -0.008322637209993
+ orbital 28  j =  0 pvalue =    0.007026057582338
+ orbital 29  j =  0 pvalue =    0.000558378689783
+ orbital 30  j =  0 pvalue =    0.010807180247454
+ orbital 31  j =  0 pvalue =    0.001259956128200
+ orbital 32  j =  0 pvalue =    0.000289897832037
+ orbital 33  j =  0 pvalue =    0.010292189577443
+ orbital 34  j =  0 pvalue =    0.000924546766988
+ orbital 35  j =  0 pvalue =    0.008056889883514
+ orbital 36  j =  0 pvalue =    0.006259415514532
+ orbital 37  j =  0 pvalue =    0.006474477975969
+ orbital 28  j =  0 pvalue =   -0.000962239351532
+ orbital 29  j =  0 pvalue =   -0.000053139628340
+ orbital 30  j =  0 pvalue =   -0.001557976860071
+ orbital 31  j =  0 pvalue =   -0.000131325408770
+ orbital 32  j =  0 pvalue =   -0.000024974756801
+ orbital 33  j =  0 pvalue =   -0.001387679555531
+ orbital 34  j =  0 pvalue =   -0.000111051069918
+ orbital 35  j =  0 pvalue =   -0.001196196806341
+ orbital 36  j =  0 pvalue =   -0.000884795380465
+ orbital 37  j =  0 pvalue =   -0.000908744624618
+ orbital 28  j =  0 pvalue =    0.000093118872198
+ orbital 29  j =  0 pvalue =    0.000006108946322
+ orbital 30  j =  0 pvalue =    0.000146925350161
+ orbital 31  j =  0 pvalue =    0.000012525226528
+ orbital 32  j =  0 pvalue =    0.000003857297273
+ orbital 33  j =  0 pvalue =    0.000138409534088
+ orbital 34  j =  0 pvalue =    0.000013281605118
+ orbital 35  j =  0 pvalue =    0.000106843116252
+ orbital 36  j =  0 pvalue =    0.000087144453009
+ orbital 37  j =  0 pvalue =    0.000093061549806
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       7    -0.807190785022 -7.057e-06   3.637e-01  9.737e-01   3.271e-06  2.445e-05    13.101    3.029     4      S/E
+ orbital 28  j =  0 pvalue =   -0.009515890456509
+ orbital 29  j =  0 pvalue =   -0.000669149566368
+ orbital 30  j =  0 pvalue =   -0.015107024932509
+ orbital 31  j =  0 pvalue =   -0.001740310401604
+ orbital 32  j =  0 pvalue =   -0.000267969455498
+ orbital 33  j =  0 pvalue =   -0.014762511434312
+ orbital 34  j =  0 pvalue =   -0.001023313744399
+ orbital 35  j =  0 pvalue =   -0.010422677057600
+ orbital 36  j =  0 pvalue =   -0.008742686001038
+ orbital 37  j =  0 pvalue =   -0.008322594043195
+ orbital 28  j =  0 pvalue =    0.007025957521332
+ orbital 29  j =  0 pvalue =    0.000558379394408
+ orbital 30  j =  0 pvalue =    0.010807092678114
+ orbital 31  j =  0 pvalue =    0.001259932398730
+ orbital 32  j =  0 pvalue =    0.000289906672841
+ orbital 33  j =  0 pvalue =    0.010292119087363
+ orbital 34  j =  0 pvalue =    0.000924572353840
+ orbital 35  j =  0 pvalue =    0.008056729900733
+ orbital 36  j =  0 pvalue =    0.006259426875875
+ orbital 37  j =  0 pvalue =    0.006474443735558
+ orbital 28  j =  0 pvalue =   -0.000962243262652
+ orbital 29  j =  0 pvalue =   -0.000053138996866
+ orbital 30  j =  0 pvalue =   -0.001557978988120
+ orbital 31  j =  0 pvalue =   -0.000131324356138
+ orbital 32  j =  0 pvalue =   -0.000024975108151
+ orbital 33  j =  0 pvalue =   -0.001387682541467
+ orbital 34  j =  0 pvalue =   -0.000111053902229
+ orbital 35  j =  0 pvalue =   -0.001196191858885
+ orbital 36  j =  0 pvalue =   -0.000884799432962
+ orbital 37  j =  0 pvalue =   -0.000908744335725
+ orbital 28  j =  0 pvalue =    0.000093117951733
+ orbital 29  j =  0 pvalue =    0.000006109105551
+ orbital 30  j =  0 pvalue =    0.000146924228138
+ orbital 31  j =  0 pvalue =    0.000012525141641
+ orbital 32  j =  0 pvalue =    0.000003857392725
+ orbital 33  j =  0 pvalue =    0.000138408496553
+ orbital 34  j =  0 pvalue =    0.000013281868704
+ orbital 35  j =  0 pvalue =    0.000106841546340
+ orbital 36  j =  0 pvalue =    0.000087144287928
+ orbital 37  j =  0 pvalue =    0.000093060554562
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       8    -0.807191705088 -9.201e-07   3.637e-01  9.737e-01   6.909e-07  5.989e-06    13.312    3.037     4      S/E
+ orbital 28  j =  0 pvalue =   -0.009515875007942
+ orbital 29  j =  0 pvalue =   -0.000669146747168
+ orbital 30  j =  0 pvalue =   -0.015107028178133
+ orbital 31  j =  0 pvalue =   -0.001740302515494
+ orbital 32  j =  0 pvalue =   -0.000267969876053
+ orbital 33  j =  0 pvalue =   -0.014762503136743
+ orbital 34  j =  0 pvalue =   -0.001023316893566
+ orbital 35  j =  0 pvalue =   -0.010422669953355
+ orbital 36  j =  0 pvalue =   -0.008742678693578
+ orbital 37  j =  0 pvalue =   -0.008322603291039
+ orbital 28  j =  0 pvalue =    0.007025947230268
+ orbital 29  j =  0 pvalue =    0.000558382426686
+ orbital 30  j =  0 pvalue =    0.010807102575819
+ orbital 31  j =  0 pvalue =    0.001259928299881
+ orbital 32  j =  0 pvalue =    0.000289909846327
+ orbital 33  j =  0 pvalue =    0.010292114541985
+ orbital 34  j =  0 pvalue =    0.000924581728485
+ orbital 35  j =  0 pvalue =    0.008056727494543
+ orbital 36  j =  0 pvalue =    0.006259423714663
+ orbital 37  j =  0 pvalue =    0.006474456948337
+ orbital 28  j =  0 pvalue =   -0.000962243730338
+ orbital 29  j =  0 pvalue =   -0.000053139059902
+ orbital 30  j =  0 pvalue =   -0.001557981177654
+ orbital 31  j =  0 pvalue =   -0.000131323647368
+ orbital 32  j =  0 pvalue =   -0.000024975465086
+ orbital 33  j =  0 pvalue =   -0.001387682993782
+ orbital 34  j =  0 pvalue =   -0.000111054462446
+ orbital 35  j =  0 pvalue =   -0.001196193137032
+ orbital 36  j =  0 pvalue =   -0.000884799121134
+ orbital 37  j =  0 pvalue =   -0.000908746148709
+ orbital 28  j =  0 pvalue =    0.000093117558422
+ orbital 29  j =  0 pvalue =    0.000006109177015
+ orbital 30  j =  0 pvalue =    0.000146923950974
+ orbital 31  j =  0 pvalue =    0.000012525059528
+ orbital 32  j =  0 pvalue =    0.000003857456457
+ orbital 33  j =  0 pvalue =    0.000138408010138
+ orbital 34  j =  0 pvalue =    0.000013281954941
+ orbital 35  j =  0 pvalue =    0.000106841252419
+ orbital 36  j =  0 pvalue =    0.000087143990286
+ orbital 37  j =  0 pvalue =    0.000093060491742
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+       9    -0.807191886453 -1.814e-07   3.637e-01  9.737e-01   1.440e-07  1.381e-06    13.014    3.024     4      S/E
+ orbital 28  j =  0 pvalue =   -0.009515875981724
+ orbital 29  j =  0 pvalue =   -0.000669147090520
+ orbital 30  j =  0 pvalue =   -0.015107031189887
+ orbital 31  j =  0 pvalue =   -0.001740303681180
+ orbital 32  j =  0 pvalue =   -0.000267969449671
+ orbital 33  j =  0 pvalue =   -0.014762507727903
+ orbital 34  j =  0 pvalue =   -0.001023316291324
+ orbital 35  j =  0 pvalue =   -0.010422674559615
+ orbital 36  j =  0 pvalue =   -0.008742681532142
+ orbital 37  j =  0 pvalue =   -0.008322604909837
+ orbital 28  j =  0 pvalue =    0.007025948498007
+ orbital 29  j =  0 pvalue =    0.000558383059882
+ orbital 30  j =  0 pvalue =    0.010807106267933
+ orbital 31  j =  0 pvalue =    0.001259929901824
+ orbital 32  j =  0 pvalue =    0.000289909400262
+ orbital 33  j =  0 pvalue =    0.010292119827333
+ orbital 34  j =  0 pvalue =    0.000924581469094
+ orbital 35  j =  0 pvalue =    0.008056732648244
+ orbital 36  j =  0 pvalue =    0.006259427176090
+ orbital 37  j =  0 pvalue =    0.006474458796971
+ orbital 28  j =  0 pvalue =   -0.000962243738326
+ orbital 29  j =  0 pvalue =   -0.000053139105529
+ orbital 30  j =  0 pvalue =   -0.001557981592153
+ orbital 31  j =  0 pvalue =   -0.000131323721370
+ orbital 32  j =  0 pvalue =   -0.000024975432491
+ orbital 33  j =  0 pvalue =   -0.001387683593428
+ orbital 34  j =  0 pvalue =   -0.000111054407944
+ orbital 35  j =  0 pvalue =   -0.001196193474026
+ orbital 36  j =  0 pvalue =   -0.000884799717937
+ orbital 37  j =  0 pvalue =   -0.000908746420184
+ orbital 28  j =  0 pvalue =    0.000093117447793
+ orbital 29  j =  0 pvalue =    0.000006109178908
+ orbital 30  j =  0 pvalue =    0.000146923862108
+ orbital 31  j =  0 pvalue =    0.000012525050752
+ orbital 32  j =  0 pvalue =    0.000003857453815
+ orbital 33  j =  0 pvalue =    0.000138407942950
+ orbital 34  j =  0 pvalue =    0.000013281948441
+ orbital 35  j =  0 pvalue =    0.000106841180529
+ orbital 36  j =  0 pvalue =    0.000087143972443
+ orbital 37  j =  0 pvalue =    0.000093060473207
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+      10    -0.807191907768 -2.131e-08   3.637e-01  9.737e-01   3.210e-08  3.613e-07    13.916    3.039     4      S/E
+ orbital 28  j =  0 pvalue =   -0.009515875949916
+ orbital 29  j =  0 pvalue =   -0.000669147011704
+ orbital 30  j =  0 pvalue =   -0.015107030161637
+ orbital 31  j =  0 pvalue =   -0.001740303909585
+ orbital 32  j =  0 pvalue =   -0.000267969288487
+ orbital 33  j =  0 pvalue =   -0.014762507384569
+ orbital 34  j =  0 pvalue =   -0.001023316010026
+ orbital 35  j =  0 pvalue =   -0.010422674565329
+ orbital 36  j =  0 pvalue =   -0.008742681526282
+ orbital 37  j =  0 pvalue =   -0.008322604096908
+ orbital 28  j =  0 pvalue =    0.007025948488153
+ orbital 29  j =  0 pvalue =    0.000558382899259
+ orbital 30  j =  0 pvalue =    0.010807105140982
+ orbital 31  j =  0 pvalue =    0.001259930197665
+ orbital 32  j =  0 pvalue =    0.000289909066535
+ orbital 33  j =  0 pvalue =    0.010292119497681
+ orbital 34  j =  0 pvalue =    0.000924581002334
+ orbital 35  j =  0 pvalue =    0.008056732518145
+ orbital 36  j =  0 pvalue =    0.006259427260561
+ orbital 37  j =  0 pvalue =    0.006474457644958
+ orbital 28  j =  0 pvalue =   -0.000962243755574
+ orbital 29  j =  0 pvalue =   -0.000053139098634
+ orbital 30  j =  0 pvalue =   -0.001557981479899
+ orbital 31  j =  0 pvalue =   -0.000131323767924
+ orbital 32  j =  0 pvalue =   -0.000024975396734
+ orbital 33  j =  0 pvalue =   -0.001387683573498
+ orbital 34  j =  0 pvalue =   -0.000111054366213
+ orbital 35  j =  0 pvalue =   -0.001196193444714
+ orbital 36  j =  0 pvalue =   -0.000884799787983
+ orbital 37  j =  0 pvalue =   -0.000908746273229
+ orbital 28  j =  0 pvalue =    0.000093117432779
+ orbital 29  j =  0 pvalue =    0.000006109175105
+ orbital 30  j =  0 pvalue =    0.000146923835262
+ orbital 31  j =  0 pvalue =    0.000012525050965
+ orbital 32  j =  0 pvalue =    0.000003857448397
+ orbital 33  j =  0 pvalue =    0.000138407927382
+ orbital 34  j =  0 pvalue =    0.000013281943263
+ orbital 35  j =  0 pvalue =    0.000106841162825
+ orbital 36  j =  0 pvalue =    0.000087143969506
+ orbital 37  j =  0 pvalue =    0.000093060453246
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+      11    -0.807191911296 -3.529e-09   3.637e-01  9.737e-01   9.015e-09  9.419e-08    14.151    3.044     4      S/E
     ------------------------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2) Energy Summary <==
 
-    E0 (reference)                 =    -383.349325493636115
-    MR-LDSRG(2) correlation energy =      -0.807191912608527
-    MR-LDSRG(2) total energy       =    -384.156517406244632
+    E0 (reference)                 =    -383.349325493636229
+    MR-LDSRG(2) correlation energy =      -0.807191911296160
+    MR-LDSRG(2) total energy       =    -384.156517404932401
 
   ==> Final Excitation Amplitudes Summary <==
 
@@ -707,7 +1094,7 @@ Scratch directory: /Users/york/scratch/psi4/
     [  42   45] 0.0133549 [  23   36] 0.0068326 [   5   19] 0.0060038
     [  43   45] 0.0056404 [  53   55] 0.0056079 [  22   35] 0.0045791
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.093670185555277
+    2-Norm of T1 vector:                            0.093670185691154
     Number of nonzero elements:                                  1714
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
@@ -719,8 +1106,8 @@ Scratch directory: /Users/york/scratch/psi4/
     [  78   78   39   39] 0.0100592 [  58   58   44   44] 0.0100428 [  48   49   48   50] 0.0099116
     [  54    4   44   67] 0.0098998 [  43   81   48    8] 0.0097608 [  39   81   52    8] 0.0097217
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.738765054950157
-    Number of nonzero elements:                                                             2371069
+    2-Norm of T2 vector:                                                          0.738765057057495
+    Number of nonzero elements:                                                             2371061
     -----------------------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -736,19 +1123,19 @@ Scratch directory: /Users/york/scratch/psi4/
 
            [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]  
     -----------------------------------------------------
-    -> C0       0.000       0.008       0.000       4.717
-    -> C1       0.000       0.140       0.000       1.966
-    -> C2                   1.135       0.000      16.247
+    -> C0       0.000       0.063       0.000      31.181
+    -> C1       0.000       0.779       0.000      11.514
+    -> C2                   6.044       0.000      90.812
     -----------------------------------------------------
 
 
-  Time to prepare integrals:        1.643 seconds
-  Time to run job          :       37.434 seconds
-  Total                    :       39.077 seconds
+  Time to prepare integrals:        1.661 seconds
+  Time to run job          :      190.973 seconds
+  Total                    :      192.633 seconds
     DMRG vs CAS LDSRG(2)/CASSCF(10,10)/6-31G energy for C10H10............................PASSED
     DMRG-LDSRG(2)/CASSCF(10,10)/6-31G energy for C10H10...................................PASSED
 
-    Psi4 stopped on: Saturday, 14 September 2024 12:12PM
-    Psi4 wall time for execution: 0:00:39.38
+    Psi4 stopped on: Saturday, 14 September 2024 12:35PM
+    Psi4 wall time for execution: 0:03:12.97
 
 *** Psi4 exiting successfully. Buy a developer a beer!

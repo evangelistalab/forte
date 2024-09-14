@@ -150,7 +150,7 @@ df-dsrg-mrpt2:
 dmrg-dsrg:
    short:
       - dmrg-dsrg-mrpt2-1
-   medium:
+   long:
       - dmrg-ldsrg2-1
 dsrg-mrpt2_spin_adapted:
    short:
