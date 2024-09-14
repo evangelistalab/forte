@@ -434,7 +434,7 @@ double Block2DMRGSolver::compute_energy() {
     // get occupation numbers of orbitals
     double occ_shift = dmrg_options_->get_double("BLOCK2_INITIAL_GUESS");
     std::vector<double> occs;
-    if (!read_initial_guess and occ_shift > 0.0) {
+    if (!read_initial_guess and occ_shift >= 0.0) {
         auto occs_read = dmrg_options_->get_double_list("BLOCK2_INITIAL_GUESS_OCC");
         bool occs_good = (occs_read.size() == (size_t)n_sites);
         for (auto n : occs_read) {
@@ -815,9 +815,6 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
             auto bond_dim = ket0_bond_dims[0];
 
             for (size_t p = 0; p < np; ++p) {
-                if (print_ > PrintLevel::Default)
-                    psi::outfile->Printf("\n orbital %2zu", p);
-
                 auto bra_expr = impl_->expr_builder();
                 bra_expr->exprs.push_back("((C+D)0+D)1");
                 bra_expr->add_sum_term(Tbra_data.data() + p * na3, na3, tshape, tstride,
@@ -825,6 +822,9 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
                 bra_expr = bra_expr->adjust_order();
                 if (bra_expr->exprs.size() == 0)
                     continue;
+
+                if (print_ > PrintLevel::Default)
+                    psi::outfile->Printf("\n orbital %2zu", p);
 
                 auto bmpo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
                     impl_->get_mpo(bra_expr, dmrg_verbose));

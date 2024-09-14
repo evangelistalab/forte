@@ -201,117 +201,9 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
     if (do_cu3_) {
         if (store_cu3_) {
             timer t("DSRG [H2, T2] L3");
-            double E3v, E3c;
-            E3v = H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * L3_("xyzuwv");
-            E3c = H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * L3_("xyzuwv");
+            double E3v = H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * L3_("xyzuwv");
+            double E3c = H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * L3_("xyzuwv");
             E3 += E3v - E3c;
-            outfile->Printf("\n E3c (L3) = %20.15f, E3v (L3) = %20.15f", E3c, E3v);
-
-            if (foptions_->get_str("THREEPDC") == "D2") {
-                double ec, ev;
-                auto L3 = L3_.clone();
-                auto count = 0;
-                L3.iterate([&](const std::vector<size_t>& i, double& v) {
-                    std::set<size_t> s1(i.begin(), i.begin() + 3);
-                    std::set<size_t> s2(i.begin() + 3, i.end());
-                    bool zero = true;
-                    for (auto i : s1) {
-                        for (auto j : s2) {
-                            if (i == j) {
-                                zero = false;
-                                break;
-                            }
-                        }
-                        if (not zero)
-                            break;
-                    }
-                    if (zero) {
-                        v = 0.0;
-                        count++;
-                    }
-                });
-                outfile->Printf("\n Zeroed %zu elements", count);
-                ev = H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * L3("xyzuwv");
-                ec = H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * L3("xyzuwv");
-                outfile->Printf("\n E3c (L3d) = %20.15f, E3v (L3d) = %20.15f", ec, ev);
-                outfile->Printf("\n E3c (dif) = %20.15f, E3v (dif) = %20.15f", ec - E3c, ev - E3v);
-
-                auto na = actv_mos_.size();
-                auto nc = core_mos_.size();
-                auto nv = virt_mos_.size();
-                auto T2d1v = ambit::Tensor::build(CoreTensor, "T2d1v", {na, na, nv}); // uvev -> uve
-                T2d1v.iterate([&](const std::vector<size_t>& i, double& v) {
-                    v = T2.block("aava")
-                            .data()[i[0] * na * nv * na + i[1] * nv * na + i[2] * na + i[1]];
-                });
-                auto T2d2v = ambit::Tensor::build(CoreTensor, "T2d2v", {na, na, nv}); // uveu -> uve
-                T2d2v.iterate([&](const std::vector<size_t>& i, double& v) {
-                    if (i[0] != i[1])
-                        v = T2.block("aava")
-                                .data()[i[0] * na * nv * na + i[1] * nv * na + i[2] * na + i[0]];
-                });
-                auto T2d1c = ambit::Tensor::build(CoreTensor, "T2d1c", {nc, na, na}); // myxy -> mxy
-                T2d1c.iterate([&](const std::vector<size_t>& i, double& v) {
-                    v = T2.block("caaa")
-                            .data()[i[0] * na * na * na + i[2] * na * na + i[1] * na + i[2]];
-                });
-                auto T2d2c = ambit::Tensor::build(CoreTensor, "T2d2c", {nc, na, na}); // mxxy -> mxy
-                T2d2c.iterate([&](const std::vector<size_t>& i, double& v) {
-                    if (i[1] != i[2])
-                        v = T2.block("caaa")
-                                .data()[i[0] * na * na * na + i[1] * na * na + i[1] * na + i[2]];
-                });
-
-                auto L3d1 = ambit::Tensor::build(CoreTensor, "L3d1",
-                                                 {na, na, na, na, na}); // xywuvw -> xyuvw
-                L3d1.iterate([&](const std::vector<size_t>& i, double& v) {
-                    v = L3_.data()[i[0] * na * na * na * na * na + i[1] * na * na * na * na +
-                                   i[4] * na * na * na + i[2] * na * na + i[3] * na + i[4]];
-                });
-                auto L3d2 = ambit::Tensor::build(CoreTensor, "L3d2",
-                                                 {na, na, na, na, na}); // xwzuvw -> xzuvw
-                L3d2.iterate([&](const std::vector<size_t>& i, double& v) {
-                    v = L3_.data()[i[0] * na * na * na * na * na + i[4] * na * na * na * na +
-                                   i[1] * na * na * na + i[2] * na * na + i[3] * na + i[4]];
-                });
-
-                double edv1 = H2.block("vaaa")("ewxy") * T2d1v("uve") * L3d1("xyuwv");
-                double edv1_ = H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * L3_("xyzuwv");
-
-                double edv2 = H2.block("vaaa")("ewxy") * T2d2v("uve") * L3d2("yxwvu");
-                double edv2_ = H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * L3_("yzxwvu");
-
-                double edc1 = H2.block("aaca")("uvmz") * T2d1c("mxy") * L3d1("xzuvy");
-                double edc1_ = H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * L3_("xzyuvw");
-
-                double edc2 = H2.block("aaca")("uvmz") * T2d2c("mxy") * L3d2("zyvux");
-                double edc2_ = H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * L3_("zxyvuw");
-
-                // auto I = ambit::Tensor::build(CoreTensor, "I", {na, na});
-                // I.iterate([&](const std::vector<size_t>& i, double& v) {
-                //     if (i[0] == i[1])
-                //         v = 1.0;
-                // });
-                // double edc1, edc2, edv1, edv2;
-                // edv1 = H2.block("vaaa")("ewxy") * T2.block("aava")("u,a1,e,a0") * I("a1,a2") *
-                //        L3("x,y,a0,u,w,a2");
-                // edv2 = H2.block("vaaa")("ewxy") * T2.block("aava")("a1,v,e,a0") * I("a1,a2") *
-                //        L3("x,y,a0,a2,w,v");
-                // edc1 = H2.block("aaca")("uvmz") * T2.block("caaa")("m,a0,a1,y") * I("a1,a2") *
-                //        L3("a2,y,z,u,a0,v");
-                // edc2 = H2.block("aaca")("uvmz") * T2.block("caaa")("m,a0,x,a1") * I("a1,a2") *
-                //        L3("x,a2,z,u,a0,v");
-                outfile->Printf("\n E3c1 = %20.15f, E3v1 = %20.15f", edc1, edv1);
-                outfile->Printf("\n E3c2 = %20.15f, E3v2 = %20.15f", edc2, edv2);
-                outfile->Printf("\n E3c (L3d) = %20.15f, E3v (L3d) = %20.15f", edc1 + edc2,
-                                edv1 + edv2);
-                outfile->Printf("\n E3c1_ = %20.15f, E3v1_ = %20.15f", edc1_, edv1_);
-                outfile->Printf("\n E3c2_ = %20.15f, E3v2_ = %20.15f", edc2_, edv2_);
-            }
-
-            E3v = H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_->SF_G3()("xyzuwv");
-            E3c = H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_->SF_G3()("xyzuwv");
-            outfile->Printf("\n E3c (D3) = %20.15f, E3v (D3) = %20.15f", E3c, E3v);
         } else {
             // direct algorithm for 3RDM: Alex's trick JCTC 16, 6343–6357 (2020)
             // t_{uvez} v_{ewxy} D_{xyzuwv} = - t_{uvez} v_{ezxy} D_{uvxy}
@@ -340,17 +232,6 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
                 Tket, Tbra, mo_space_info_->symmetry("RESTRICTED_DOCC"), "c", load_mps);
             timer_c.stop();
 
-            for (const auto& state_weights : state_to_weights_) {
-                const auto& state = state_weights.first;
-                const auto& weights = state_weights.second;
-                for (size_t i = 0, nroots = weights.size(); i < nroots; ++i) {
-                    if (weights[i] < 1.0e-15)
-                        continue;
-                    outfile->Printf("\n E3c (mix) = %20.15f, E3v (mix) = %20.15f",
-                                    E3c_map[state][i], E3v_map[state][i]);
-                }
-            }
-
             // - 2-RDM contributions
             auto G2 = ambit::BlockedTensor::build(ambit::CoreTensor, "G2", {"aaaa"});
             G2.block("aaaa")("pqrs") = rdms_->SF_G2()("pqrs");
@@ -369,7 +250,6 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
                     E3c -= weights[i] * E3c_map[state][i];
                 }
             }
-            outfile->Printf("\n E3c (D3) = %20.15f, E3v (D3) = %20.15f", E3c, E3v);
 
             // => spin-free 1- and 2-cumulant contributions <=
 

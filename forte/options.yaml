@@ -1497,7 +1497,7 @@ Old:
   THREEPDC:
     type: str
     default: "MK"
-    choices: ["MK", "MK_DECOMP", "ZERO", "D2"]
+    choices: ["MK", "MK_DECOMP", "ZERO"]
     help: "The form of the three-particle density cumulant"
   SRG_COMM:
     type: str
