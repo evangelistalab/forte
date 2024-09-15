@@ -1433,8 +1433,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
 
         auto g3bbb = rdms->g3bbb();
         double error_3rdm_bbb = 0.0;
-        for (size_t p = 0; p < 1; ++p) {
-            //            for (size_t p = 0; p < no_; ++p){
+        for (size_t p = 0; p < ncmo; ++p) {
             for (size_t q = p + 1; q < ncmo; ++q) {
                 for (size_t r = q + 1; r < ncmo; ++r) {
                     for (size_t s = 0; s < ncmo; ++s) {
@@ -1468,6 +1467,223 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
         }
         psi::Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
         psi::outfile->Printf("\n    BBBBBB 3-RDM Error : %+e", error_3rdm_bbb);
+    }
+
+    if (max_rdm_level >= 4) {
+        auto g4aaaa = rdms->g4aaaa();
+        double error_4rdm_aaaa = 0.0;
+        for (size_t p = 0; p < 1; ++p) {
+            for (size_t q = p + 1; q < 2; ++q) {
+                for (size_t r = q + 1; r < 3; ++r) {
+                    for (size_t s = r + 1; s < ncmo; ++s) {
+                        for (size_t t = 0; t < ncmo; ++t) {
+                            for (size_t u = t + 1; u < ncmo; ++u) {
+                                for (size_t v = u + 1; v < ncmo; ++v) {
+                                    for (size_t w = v + 1; w < ncmo; ++w) {
+                                        double rdm = 0.0;
+                                        for (const auto& [I, c_I] : state_vector_r) {
+                                            J = I;
+                                            double sign = 1.0;
+                                            sign *= J.destroy_alfa_bit(t);
+                                            sign *= J.destroy_alfa_bit(u);
+                                            sign *= J.destroy_alfa_bit(v);
+                                            sign *= J.destroy_alfa_bit(w);
+                                            sign *= J.create_alfa_bit(s);
+                                            sign *= J.create_alfa_bit(r);
+                                            sign *= J.create_alfa_bit(q);
+                                            sign *= J.create_alfa_bit(p);
+                                            if (sign != 0) {
+                                                if (state_vector_l.count(J) != 0) {
+                                                    rdm += sign * state_vector_l[J] * c_I;
+                                                }
+                                            }
+                                        }
+                                        if (std::fabs(rdm) > 1.0e-12) {
+                                            double rdm_comp = g4aaaa.at({p, q, r, s, t, u, v, w});
+                                            error_4rdm_aaaa += std::fabs(rdm - rdm_comp);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        psi::Process::environment.globals["AAAAAAAA 4-RDM ERROR"] = error_4rdm_aaaa;
+        psi::outfile->Printf("\n    AAAAAAAA 4-RDM Error : %+e", error_4rdm_aaaa);
+
+        auto g4aaab = rdms->g4aaab();
+        double error_4rdm_aaab = 0.0;
+        for (size_t p = 0; p < 1; ++p) {
+            for (size_t q = p + 1; q < 2; ++q) {
+                for (size_t r = q + 1; r < 3; ++r) {
+                    for (size_t s = 0; s < ncmo; ++s) {
+                        for (size_t t = 0; t < ncmo; ++t) {
+                            for (size_t u = t + 1; u < ncmo; ++u) {
+                                for (size_t v = u + 1; v < ncmo; ++v) {
+                                    for (size_t w = 0; w < ncmo; ++w) {
+                                        double rdm = 0.0;
+                                        for (const auto& [I, c_I] : state_vector_r) {
+                                            J = I;
+                                            double sign = 1.0;
+                                            sign *= J.destroy_alfa_bit(t);
+                                            sign *= J.destroy_alfa_bit(u);
+                                            sign *= J.destroy_alfa_bit(v);
+                                            sign *= J.destroy_beta_bit(w);
+                                            sign *= J.create_beta_bit(s);
+                                            sign *= J.create_alfa_bit(r);
+                                            sign *= J.create_alfa_bit(q);
+                                            sign *= J.create_alfa_bit(p);
+                                            if (sign != 0) {
+                                                if (state_vector_l.count(J) != 0) {
+                                                    rdm += sign * state_vector_l[J] * c_I;
+                                                }
+                                            }
+                                        }
+                                        if (std::fabs(rdm) > 1.0e-12) {
+                                            double rdm_comp = g4aaab.at({p, q, r, s, t, u, v, w});
+                                            error_4rdm_aaab += std::fabs(rdm - rdm_comp);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        psi::Process::environment.globals["AAABAAAB 4-RDM ERROR"] = error_4rdm_aaab;
+        psi::outfile->Printf("\n    AAABAAAB 4-RDM Error : %+e", error_4rdm_aaab);
+
+        auto g4aabb = rdms->g4aabb();
+        double error_4rdm_aabb = 0.0;
+        for (size_t p = 0; p < 1; ++p) {
+            for (size_t q = p + 1; q < 2; ++q) {
+                for (size_t r = 0; r < ncmo; ++r) {
+                    for (size_t s = r + 1; s < ncmo; ++s) {
+                        for (size_t t = 0; t < ncmo; ++t) {
+                            for (size_t u = t + 1; u < ncmo; ++u) {
+                                for (size_t v = 0; v < ncmo; ++v) {
+                                    for (size_t w = v + 1; w < ncmo; ++w) {
+                                        double rdm = 0.0;
+                                        for (const auto& [I, c_I] : state_vector_r) {
+                                            J = I;
+                                            double sign = 1.0;
+                                            sign *= J.destroy_alfa_bit(t);
+                                            sign *= J.destroy_alfa_bit(u);
+                                            sign *= J.destroy_beta_bit(v);
+                                            sign *= J.destroy_beta_bit(w);
+                                            sign *= J.create_beta_bit(s);
+                                            sign *= J.create_beta_bit(r);
+                                            sign *= J.create_alfa_bit(q);
+                                            sign *= J.create_alfa_bit(p);
+                                            if (sign != 0) {
+                                                if (state_vector_l.count(J) != 0) {
+                                                    rdm += sign * state_vector_l[J] * c_I;
+                                                }
+                                            }
+                                        }
+                                        if (std::fabs(rdm) > 1.0e-12) {
+                                            double rdm_comp = g4aabb.at({p, q, r, s, t, u, v, w});
+                                            error_4rdm_aabb += std::fabs(rdm - rdm_comp);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        psi::Process::environment.globals["AABBAABB 4-RDM ERROR"] = error_4rdm_aabb;
+        psi::outfile->Printf("\n    AABBAABB 4-RDM Error : %+e", error_4rdm_aabb);
+
+        auto g4abbb = rdms->g4abbb();
+        double error_4rdm_abbb = 0.0;
+        for (size_t p = 0; p < ncmo; ++p) {
+            for (size_t q = 0; q < ncmo; ++q) {
+                for (size_t r = q + 1; r < ncmo; ++r) {
+                    for (size_t s = r + 1; s < ncmo; ++s) {
+                        for (size_t t = 0; t < ncmo; ++t) {
+                            for (size_t u = 0; u < ncmo; ++u) {
+                                for (size_t v = u + 1; v < ncmo; ++v) {
+                                    for (size_t w = v + 1; w < ncmo; ++w) {
+                                        double rdm = 0.0;
+                                        for (const auto& [I, c_I] : state_vector_r) {
+                                            J = I;
+                                            double sign = 1.0;
+                                            sign *= J.destroy_alfa_bit(t);
+                                            sign *= J.destroy_beta_bit(u);
+                                            sign *= J.destroy_beta_bit(v);
+                                            sign *= J.destroy_beta_bit(w);
+                                            sign *= J.create_beta_bit(s);
+                                            sign *= J.create_beta_bit(r);
+                                            sign *= J.create_beta_bit(q);
+                                            sign *= J.create_alfa_bit(p);
+                                            if (sign != 0) {
+                                                if (state_vector_l.count(J) != 0) {
+                                                    rdm += sign * state_vector_l[J] * c_I;
+                                                }
+                                            }
+                                        }
+                                        if (std::fabs(rdm) > 1.0e-12) {
+                                            double rdm_comp = g4abbb.at({p, q, r, s, t, u, v, w});
+                                            error_4rdm_abbb += std::fabs(rdm - rdm_comp);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        psi::Process::environment.globals["ABBBABBB 4-RDM ERROR"] = error_4rdm_abbb;
+        psi::outfile->Printf("\n    ABBBABBB 4-RDM Error : %+e", error_4rdm_abbb);
+
+        auto g4bbbb = rdms->g4bbbb();
+        double error_4rdm_bbbb = 0.0;
+        for (size_t p = 0; p < ncmo; ++p) {
+            for (size_t q = p + 1; q < ncmo; ++q) {
+                for (size_t r = q + 1; r < ncmo; ++r) {
+                    for (size_t s = r + 1; s < ncmo; ++s) {
+                        for (size_t t = 0; t < ncmo; ++t) {
+                            for (size_t u = t + 1; u < ncmo; ++u) {
+                                for (size_t v = u + 1; v < ncmo; ++v) {
+                                    for (size_t w = v + 1; w < ncmo; ++w) {
+                                        double rdm = 0.0;
+                                        for (const auto& [I, c_I] : state_vector_r) {
+                                            J = I;
+                                            double sign = 1.0;
+                                            sign *= J.destroy_beta_bit(t);
+                                            sign *= J.destroy_beta_bit(u);
+                                            sign *= J.destroy_beta_bit(v);
+                                            sign *= J.destroy_beta_bit(w);
+                                            sign *= J.create_beta_bit(s);
+                                            sign *= J.create_beta_bit(r);
+                                            sign *= J.create_beta_bit(q);
+                                            sign *= J.create_beta_bit(p);
+                                            if (sign != 0) {
+                                                if (state_vector_l.count(J) != 0) {
+                                                    rdm += sign * state_vector_l[J] * c_I;
+                                                }
+                                            }
+                                        }
+                                        if (std::fabs(rdm) > 1.0e-12) {
+                                            double rdm_comp = g4bbbb.at({p, q, r, s, t, u, v, w});
+                                            error_4rdm_bbbb += std::fabs(rdm - rdm_comp);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        psi::Process::environment.globals["BBBBBBBB 4-RDM ERROR"] = error_4rdm_bbbb;
+        psi::outfile->Printf("\n    BBBBBBBB 4-RDM Error : %+e", error_4rdm_bbbb);
     }
 }
 

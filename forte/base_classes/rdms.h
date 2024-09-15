@@ -201,16 +201,16 @@ class RDMs {
     virtual ambit::Tensor g3abb() const = 0;
     /// @return the beta-beta-beta 3-RDM
     virtual ambit::Tensor g3bbb() const = 0;
-    // /// @return the alpha-alpha-alpha-alpha 4-RDM
-    // virtual ambit::Tensor g4aaaa() const = 0;
-    // /// @return the alpha-alpha-alpha-beta 4-RDM
-    // virtual ambit::Tensor g4aaab() const = 0;
-    // /// @return the alpha-alpha-beta-beta 4-RDM
-    // virtual ambit::Tensor g4aabb() const = 0;
-    // /// @return the alpha-beta-beta-beta 4-RDM
-    // virtual ambit::Tensor g4abbb() const = 0;
-    // /// @return the beta-beta-beta-beta 4-RDM
-    // virtual ambit::Tensor g4bbbb() const = 0;
+    /// @return the alpha-alpha-alpha-alpha 4-RDM
+    virtual ambit::Tensor g4aaaa() const;
+    /// @return the alpha-alpha-alpha-beta 4-RDM
+    virtual ambit::Tensor g4aaab() const;
+    /// @return the alpha-alpha-beta-beta 4-RDM
+    virtual ambit::Tensor g4aabb() const;
+    /// @return the alpha-beta-beta-beta 4-RDM
+    virtual ambit::Tensor g4abbb() const;
+    /// @return the beta-beta-beta-beta 4-RDM
+    virtual ambit::Tensor g4bbbb() const;
 
     // Spin-free RDMs
 
@@ -317,15 +317,15 @@ class RDMsSpinDependent : public RDMs {
     /// @return the beta-beta-beta 3-RDM
     ambit::Tensor g3bbb() const override;
     /// @return the alpha-alpha-alpha-alpha 4-RDM
-    ambit::Tensor g4aaaa() const;
+    ambit::Tensor g4aaaa() const override;
     /// @return the alpha-alpha-alpha-beta 4-RDM
-    ambit::Tensor g4aaab() const;
+    ambit::Tensor g4aaab() const override;
     /// @return the alpha-alpha-beta-beta 4-RDM
-    ambit::Tensor g4aabb() const;
+    ambit::Tensor g4aabb() const override;
     /// @return the alpha-beta-beta-beta 4-RDM
-    ambit::Tensor g4abbb() const;
+    ambit::Tensor g4abbb() const override;
     /// @return the beta-beta-beta-beta 4-RDM
-    ambit::Tensor g4bbbb() const;
+    ambit::Tensor g4bbbb() const override;
 
     // Spin-free RDMs
 
