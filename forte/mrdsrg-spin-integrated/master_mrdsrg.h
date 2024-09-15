@@ -47,8 +47,13 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute DSRG transformed Hamiltonian
     virtual std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
 
-    /// compute DSRG full transformed Hamiltonian
+    /// Compute DSRG full transformed Hamiltonian
     std::vector<ambit::BlockedTensor> compute_Heff_full();
+
+    /// Compute DSRG transformed dipole integral
+    std::vector<double> compute_Mbar0_full() { return Mbar0_full_; }
+    std::vector<ambit::BlockedTensor> compute_Mbar1_full() { return Mbar1_full_; }
+    std::vector<ambit::BlockedTensor> compute_Mbar2_full() { return Mbar2_full_; }
 
     ambit::BlockedTensor get_gamma1() { return Gamma1_; }
     ambit::BlockedTensor get_eta1() { return Eta1_; }
@@ -383,6 +388,10 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::array<ambit::BlockedTensor, 3> Mbar2_;
     /// DSRG transformed 3-body dipole integrals (active only)
     std::array<ambit::BlockedTensor, 3> Mbar3_;
+
+    std::vector<double> Mbar0_full_; /// This is redundant.
+    std::vector<ambit::BlockedTensor> Mbar1_full_;
+    std::vector<ambit::BlockedTensor> Mbar2_full_;
 
     // ==> commutators <==
     /**

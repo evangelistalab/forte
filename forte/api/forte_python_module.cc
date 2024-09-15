@@ -282,8 +282,26 @@ PYBIND11_MODULE(_forte, m) {
             return pyints;
         },
         "Return the full Heff in a dictionary");
+    // m.def(
+    //     "Mbar_dict",
+    //     [](std::vector<ambit::BlockedTensor> Mbar) {
+    //         std::vector<py::dict> pymbar;
+    //         py::dict pyints;
+    //         for (size_t i = 0; i < Mbar.size(); i++) {
+    //             pyints = {};
+    //             for (const auto& int_ : Mbar[i]) {
+    //                 auto labels = int_.block_labels();
+    //                 for (const auto& label : labels) {
+    //                     pyints[py::str(label)] = ambit_to_np(int_.block(label));
+    //                 }
+    //             }
+    //             pymbar.push_back(pyints);
+    //         }
+    //         return pymbar;
+    //     },
+    //     "Return the full Meff in a list of dictionary");
     m.def(
-        "rdm_dict",
+        "blocktensor_to_dict",
         [](ambit::BlockedTensor rdm) {
             py::dict pyrdm;
             auto labels = rdm.block_labels();
@@ -292,7 +310,7 @@ PYBIND11_MODULE(_forte, m) {
             }
             return pyrdm;
         },
-        "Return the RDM in a dictionary");
+        "Return the BlockTensor in a dictionary");
     m.def(
         "L3_dict",
         [](std::vector<ambit::Tensor> rdm) {
@@ -384,6 +402,12 @@ PYBIND11_MODULE(_forte, m) {
              "Return the DSRG dressed ActiveSpaceIntegrals")
         .def("compute_Heff_full", &MASTER_DSRG::compute_Heff_full,
              "Return full transformed Hamiltonian")
+        .def("compute_Mbar0_full", &MASTER_DSRG::compute_Mbar0_full,
+             "Return full transformed zero-body dipole integrals")
+        .def("compute_Mbar1_full", &MASTER_DSRG::compute_Mbar1_full,
+             "Return full transformed one-body dipole integrals")
+        .def("compute_Mbar2_full", &MASTER_DSRG::compute_Mbar2_full,
+             "Return full transformed two-body dipole integrals")
         .def("get_gamma1", &MASTER_DSRG::get_gamma1, "Return the gamma1 tensor")
         .def("get_eta1", &MASTER_DSRG::get_eta1, "Return the eta1 tensor")
         .def("get_lambda2", &MASTER_DSRG::get_lambda2, "Return the lambda2 tensor")

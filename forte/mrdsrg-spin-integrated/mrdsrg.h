@@ -257,6 +257,9 @@ class MRDSRG : public MASTER_DSRG {
     /// commutator
     void compute_hbar_qc();
 
+    void transform_one_body(const std::vector<ambit::BlockedTensor>& oetens);
+    void compute_mbar_ldsrg2(const ambit::BlockedTensor& M, int ind);
+
     /// Temporary one-body Hamiltonian
     ambit::BlockedTensor O1_;
     ambit::BlockedTensor C1_;

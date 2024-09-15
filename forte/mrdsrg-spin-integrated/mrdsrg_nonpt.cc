@@ -40,6 +40,7 @@
 
 #include "helpers/timer.h"
 #include "base_classes/mo_space_info.h"
+#include "integrals/one_body_integrals.h"
 #include "mrdsrg.h"
 
 using namespace psi;
@@ -827,12 +828,180 @@ double MRDSRG::compute_energy_ldsrg2() {
 
     if (foptions_->get_bool("FULL_HBAR")) {
         compute_hbar();
+        auto mpints = std::make_shared<MultipoleIntegrals>(ints_, mo_space_info_);
+        // bare dipoles
+        std::vector<ambit::BlockedTensor> M1;
+        std::vector<std::string> dp_dirs{"X", "Y", "Z"};
+        for (int z = 0; z < 3; ++z) {
+            std::string name = "DIPOLE " + dp_dirs[z];
+            ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, spin_cases({"gg"}));
+            m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
+                           double& value) { value = mpints->dp_ints_corr(z, i[0], i[1]); });
+            M1.push_back(m1);
+        }
+        transform_one_body(M1);
     }
 
     final.stop();
 
     Hbar0_ = Ecorr;
     return Ecorr;
+}
+
+void MRDSRG::transform_one_body(const std::vector<ambit::BlockedTensor>& oetens) {
+    int n_tensors = oetens.size();
+    Mbar0_full_ = std::vector<double>(n_tensors, 0.0);
+    Mbar1_full_.resize(n_tensors);
+    Mbar2_full_.resize(n_tensors);
+    for (int i = 0; i < n_tensors; ++i) {
+        Mbar1_full_[i] = BTF_->build(tensor_type_, oetens[i].name() + "1", spin_cases({"gg"}));
+        Mbar2_full_[i] = BTF_->build(tensor_type_, oetens[i].name() + "2", spin_cases({"gggg"}));
+        const auto& M = oetens[i];
+        compute_mbar_ldsrg2(M, i);
+    }
+}
+
+void MRDSRG::compute_mbar_ldsrg2(const ambit::BlockedTensor& M, int ind) {
+    // compute reference multipole
+    {
+        Mbar0_full_[ind] = M["uv"] * Gamma1_["vu"];
+        Mbar0_full_[ind] += M["UV"] * Gamma1_["VU"];
+        auto& M1c = M.block("cc").data();
+        for (size_t m = 0, ncore = core_mos_.size(); m < ncore; ++m) {
+            Mbar0_full_[ind] += M1c[m * ncore + m];
+        }
+        auto& M1C = M.block("CC").data();
+        for (size_t m = 0, ncore = core_mos_.size(); m < ncore; ++m) {
+            Mbar0_full_[ind] += M1C[m * ncore + m];
+        }
+        Mbar1_full_[ind]["pq"] = M["pq"];
+        Mbar1_full_[ind]["PQ"] = M["PQ"];
+    }
+
+    O1_["pq"] = M["pq"];
+    O1_["PQ"] = M["PQ"];
+
+    bool converged = false;
+    int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
+    double ct_threshold = foptions_->get_double("DSRG_RSC_THRESHOLD");
+    std::string dsrg_op = foptions_->get_str("DSRG_TRANS_TYPE");
+
+    // compute Hbar recursively
+    for (int n = 1; n <= maxn; ++n) {
+        // prefactor before n-nested commutator
+        double factor = 1.0 / n;
+
+        // Compute the commutator C = 1/n [O, T]
+        double C0 = 0.0;
+        C1_.zero();
+        C2_.zero();
+
+        // zero-body
+        H1_T1_C0(O1_, T1_, factor, C0);
+        H1_T2_C0(O1_, T2_, factor, C0);
+        if (n != 1) {
+            H2_T1_C0(O2_, T1_, factor, C0);
+            H2_T2_C0(O2_, T2_, factor, C0);
+        }
+        // one-body
+        H1_T1_C1(O1_, T1_, factor, C1_);
+        H1_T2_C1(O1_, T2_, factor, C1_);
+        if (n != 1) {
+            H2_T1_C1(O2_, T1_, factor, C1_);
+        }
+        if (foptions_->get_str("SRG_COMM") == "STANDARD") {
+            if (n != 1) {
+                H2_T2_C1(O2_, T2_, factor, C1_);
+            }
+        } else if (foptions_->get_str("SRG_COMM") == "FO") {
+            BlockedTensor C1p = BTF_->build(tensor_type_, "C1p", spin_cases({"gg"}));
+            if (n != 1) {
+                H2_T2_C1(O2_, T2_, factor, C1p);
+            }
+            C1p.block("cc").scale(2.0);
+            C1p.block("aa").scale(2.0);
+            C1p.block("vv").scale(2.0);
+            C1p.block("CC").scale(2.0);
+            C1p.block("AA").scale(2.0);
+            C1p.block("VV").scale(2.0);
+            C1_["pq"] += C1p["pq"];
+            C1_["PQ"] += C1p["PQ"];
+        }
+        // two-body
+        if ((foptions_->get_str("SRG_COMM") == "STANDARD") or n < 2) {
+            H1_T2_C2(O1_, T2_, factor, C2_);
+        } else if (foptions_->get_str("SRG_COMM") == "FO2") {
+            O1_.block("cc").scale(2.0);
+            O1_.block("aa").scale(2.0);
+            O1_.block("vv").scale(2.0);
+            O1_.block("CC").scale(2.0);
+            O1_.block("AA").scale(2.0);
+            O1_.block("VV").scale(2.0);
+            H1_T2_C2(O1_, T2_, factor, C2_);
+            O1_.block("cc").scale(0.5);
+            O1_.block("aa").scale(0.5);
+            O1_.block("vv").scale(0.5);
+            O1_.block("CC").scale(0.5);
+            O1_.block("AA").scale(0.5);
+            O1_.block("VV").scale(0.5);
+        }
+        if (n != 1) {
+            H2_T1_C2(O2_, T1_, factor, C2_);
+            H2_T2_C2(O2_, T2_, factor, C2_);
+        }
+
+        // printing level
+        if (print_ > 3) {
+            std::string dash(38, '-');
+            outfile->Printf("\n    %s\n", dash.c_str());
+        }
+
+        // [H, A] = [H, T] + [H, T]^dagger
+        if (dsrg_op == "UNITARY") {
+            C0 *= 2.0;
+            O1_["pq"] = C1_["pq"];
+            O1_["PQ"] = C1_["PQ"];
+            C1_["pq"] += O1_["qp"];
+            C1_["PQ"] += O1_["QP"];
+            O2_["pqrs"] = C2_["pqrs"];
+            O2_["pQrS"] = C2_["pQrS"];
+            O2_["PQRS"] = C2_["PQRS"];
+            C2_["pqrs"] += O2_["rspq"];
+            C2_["pQrS"] += O2_["rSpQ"];
+            C2_["PQRS"] += O2_["RSPQ"];
+        }
+
+        // Hbar += C
+        Mbar0_full_[ind] += C0;
+        Mbar1_full_[ind]["pq"] += C1_["pq"];
+        Mbar1_full_[ind]["PQ"] += C1_["PQ"];
+        Mbar2_full_[ind]["pqrs"] += C2_["pqrs"];
+        Mbar2_full_[ind]["pQrS"] += C2_["pQrS"];
+        Mbar2_full_[ind]["PQRS"] += C2_["PQRS"];
+
+        // copy C to O for next level commutator
+        O1_["pq"] = C1_["pq"];
+        O1_["PQ"] = C1_["PQ"];
+        O2_["pqrs"] = C2_["pqrs"];
+        O2_["pQrS"] = C2_["pQrS"];
+        O2_["PQRS"] = C2_["PQRS"];
+
+        // test convergence of C
+        double norm_C1 = C1_.norm();
+        double norm_C2 = C2_.norm();
+        if (print_ > 3) {
+            outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
+                            C1_.norm(0), C2_.norm(0));
+        }
+        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
+            converged = true;
+            break;
+        }
+    }
+    if (!converged) {
+        outfile->Printf("\n    Warning! Mbar is not converged in %3d-nested commutators!", maxn);
+        outfile->Printf("\n    Please increase DSRG_RSC_NCOMM.");
+    }
 }
 
 void MRDSRG::compute_hbar_qc() {

@@ -413,6 +413,9 @@ class ProcedureDSRG:
             e_dsrg = self.dsrg_solver.compute_energy()
 
         ################
+        if self.solver_type == 'SA-MRDSRG':
+            print("HERE")
+            asmpints = self.dsrg_solver.compute_mp_eff_actv()
         if self.options.get_bool('FULL_HBAR'):
             # Heff = self.dsrg_solver.compute_Heff_full()
             # Heff_dict = forte.Heff_dict(Heff)
@@ -421,21 +424,30 @@ class ProcedureDSRG:
             eta1 = self.dsrg_solver.get_eta1()
             lambda2 = self.dsrg_solver.get_lambda2()
             lambda3 = self.dsrg_solver.get_lambda3()
-            gamma1_dict = forte.rdm_dict(gamma1)
-            eta_1_dict = forte.rdm_dict(eta1)
-            lambda2_dict = forte.rdm_dict(lambda2)
+            gamma1_dict = forte.blocktensor_to_dict(gamma1)
+            eta_1_dict = forte.blocktensor_to_dict(eta1)
+            lambda2_dict = forte.blocktensor_to_dict(lambda2)
             if self.solver_type in ["MRDSRG_SO", "MRDSRG-SO"]:
-                lambda3_dict = forte.rdm_dict(lambda3)
+                lambda3_dict = forte.blocktensor_to_dict(lambda3)
             else:
                 lambda3_dict = forte.L3_dict(lambda3)
+
+            Mbar0 = self.dsrg_solver.compute_Mbar0_full()
+            print(Mbar0)
+            np.save('Mbar0', Mbar0)
+            Mbar1 = self.dsrg_solver.compute_Mbar1_full()
+            Mbar2 = self.dsrg_solver.compute_Mbar2_full()
+
+            for i in range(3):
+                np.savez(f"Mbar1_{i}", **forte.blocktensor_to_dict(Mbar1[i]))
+                np.savez(f"Mbar2_{i}", **forte.blocktensor_to_dict(Mbar2[i]))
+            # Heff_dict = forte.Heff_dict(Heff)
+            # np.savez('save_Hbar', **Heff_dict)
 
             np.savez('save_gamma1', **gamma1_dict)
             np.savez('save_eta1', **eta_1_dict)
             np.savez('save_lambda2', **lambda2_dict)
             np.savez('save_lambda3', **lambda3_dict)
-
-            dp1 = self.ints.mo_dipole_ints()
-            np.save('save_dp1', dp1)
 
             # self.rdms = self.active_space_solver.compute_average_rdms(
             #     self.state_weights_map, self.max_rdm_level, self.rdm_type
