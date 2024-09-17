@@ -69,11 +69,22 @@ Determinant& SQOperatorString::cre_mod() { return cre_; }
 
 Determinant& SQOperatorString::ann_mod() { return ann_; }
 
-bool SQOperatorString::is_number() const { return (cre().count() == 0) and (ann().count() == 0); }
+bool SQOperatorString::is_identity() const { return (cre().count() == 0) and (ann().count() == 0); }
 
 bool SQOperatorString::is_nilpotent() const {
-    // here we test that op != op^dagger, otherwise op - op^dagger = 0
+    // here we test that op != op^dagger
     return (cre() != ann());
+}
+
+bool SQOperatorString::is_self_adjoint() const { return this->cre() == this->ann(); }
+
+SQOperatorString SQOperatorString::number_component() const {
+    const Determinant number = this->cre() & this->ann();
+    return SQOperatorString(number, number);
+}
+
+SQOperatorString SQOperatorString::non_number_component() const {
+    return SQOperatorString(this->cre() - this->ann(), this->ann() - this->cre());
 }
 
 int SQOperatorString::count() const { return cre().count_all() + ann().count_all(); }
@@ -92,28 +103,50 @@ bool SQOperatorString::operator<(const SQOperatorString& other) const {
 SQOperatorString SQOperatorString::adjoint() const { return SQOperatorString(ann(), cre()); }
 
 std::string SQOperatorString::str() const {
-    std::string s = "[ ";
     auto acre = cre().get_alfa_occ(cre().norb());
     auto bcre = cre().get_beta_occ(cre().norb());
     auto aann = ann().get_alfa_occ(ann().norb());
     auto bann = ann().get_beta_occ(ann().norb());
     std::reverse(aann.begin(), aann.end());
     std::reverse(bann.begin(), bann.end());
+    std::vector<std::string> terms;
     for (auto p : acre) {
-        s += std::to_string(p) + "a+ ";
+        terms.push_back(std::to_string(p) + "a+");
     }
     for (auto p : bcre) {
-        s += std::to_string(p) + "b+ ";
+        terms.push_back(std::to_string(p) + "b+");
     }
     for (auto p : bann) {
-        s += std::to_string(p) + "b- ";
+        terms.push_back(std::to_string(p) + "b-");
     }
     for (auto p : aann) {
-        s += std::to_string(p) + "a- ";
+        terms.push_back(std::to_string(p) + "a-");
     }
-    s += "]";
-
+    std::string s = "[" + join(terms, " ") + "]";
     return s;
+}
+
+op_tuple_t SQOperatorString::op_tuple() const {
+    auto acre = cre().get_alfa_occ(cre().norb());
+    auto bcre = cre().get_beta_occ(cre().norb());
+    auto aann = ann().get_alfa_occ(ann().norb());
+    auto bann = ann().get_beta_occ(ann().norb());
+    std::reverse(aann.begin(), aann.end());
+    std::reverse(bann.begin(), bann.end());
+    op_tuple_t terms;
+    for (auto p : acre) {
+        terms.emplace_back(true, true, p);
+    }
+    for (auto p : bcre) {
+        terms.emplace_back(true, false, p);
+    }
+    for (auto p : bann) {
+        terms.emplace_back(false, false, p);
+    }
+    for (auto p : aann) {
+        terms.emplace_back(false, true, p);
+    }
+    return terms;
 }
 
 // implement the << operator for SQOperatorString
@@ -144,6 +177,34 @@ std::string SQOperatorString::latex() const {
         s += "\\hat{a}_{" + std::to_string(p) + " \\alpha}";
     }
 
+    return s;
+}
+
+std::string SQOperatorString::latex_compact() const {
+    auto acre = cre().get_alfa_occ(cre().norb());
+    auto bcre = cre().get_beta_occ(cre().norb());
+    auto aann = ann().get_alfa_occ(ann().norb());
+    auto bann = ann().get_beta_occ(ann().norb());
+    std::string s;
+    s += "\\hat{a}^{";
+    std::vector<std::string> terms;
+    for (auto p : acre) {
+        terms.push_back(std::to_string(p) + "_{\\alpha}");
+    }
+    for (auto p : bcre) {
+        terms.push_back(std::to_string(p) + "_{\\beta}");
+    }
+    s += join(terms, " ");
+    s += "}_{";
+    terms.clear();
+    for (auto p : aann) {
+        terms.push_back(std::to_string(p) + "_{\\alpha}");
+    }
+    for (auto p : bann) {
+        terms.push_back(std::to_string(p) + "_{\\beta}");
+    }
+    s += join(terms, " ");
+    s += "}";
     return s;
 }
 
@@ -352,6 +413,27 @@ std::vector<std::pair<SQOperatorString, double>> operator*(const SQOperatorStrin
     return result;
 }
 
+CommutatorType commutator_type(const SQOperatorString& lhs, const SQOperatorString& rhs) {
+    // Find the number of operators in common between the two operator strings
+    const auto common_l_ann_r_cre = lhs.ann().fast_a_and_b_count(rhs.cre());
+    const auto common_l_cre_r_cre = lhs.cre().fast_a_and_b_count(rhs.cre());
+    const auto common_l_ann_r_ann = lhs.ann().fast_a_and_b_count(rhs.ann());
+    const auto common_l_cre_r_ann = lhs.cre().fast_a_and_b_count(rhs.ann());
+    // if there are no indices in common
+    if (common_l_cre_r_cre == 0 and common_l_ann_r_ann == 0 and common_l_ann_r_cre == 0 and
+        common_l_cre_r_ann == 0) {
+        const auto nl = lhs.count();
+        const auto nr = rhs.count();
+        // even number of operator permutations
+        if ((nl * nr) % 2 == 0) {
+            return CommutatorType::Commute;
+        }
+        // odd number of operator permutations
+        return CommutatorType::AntiCommute;
+    }
+    return CommutatorType::MayNotCommute;
+}
+
 bool do_ops_commute(const SQOperatorString& lhs, const SQOperatorString& rhs) {
     const auto common_l_cre_r_cre = lhs.cre().fast_a_and_b_count(rhs.cre());
     const auto common_l_cre_r_ann = lhs.cre().fast_a_and_b_count(rhs.ann());
@@ -466,8 +548,8 @@ std::vector<std::pair<SQOperatorString, double>> commutator(const SQOperatorStri
 #define debug_print(x) ; // std::cout << #x << ": " << x << std::endl;
 
 void SQOperatorProductComputer::product(
-    const SQOperatorString& lhs, const SQOperatorString& rhs, double factor,
-    std::function<void(const SQOperatorString&, const double)> func) {
+    const SQOperatorString& lhs, const SQOperatorString& rhs, sparse_scalar_t factor,
+    std::function<void(const SQOperatorString&, const sparse_scalar_t)> func) {
 
     // apologies to those who read this code, it's meant to be fast, not readable.
 
@@ -612,8 +694,8 @@ void SQOperatorProductComputer::product(
 }
 
 void SQOperatorProductComputer::commutator(
-    const SQOperatorString& lhs, const SQOperatorString& rhs, double factor,
-    std::function<void(const SQOperatorString&, const double)> func) {
+    const SQOperatorString& lhs, const SQOperatorString& rhs, sparse_scalar_t factor,
+    std::function<void(const SQOperatorString&, const sparse_scalar_t)> func) {
     product(lhs, rhs, factor, func);
     product(rhs, lhs, -factor, func);
 }

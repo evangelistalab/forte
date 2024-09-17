@@ -2,38 +2,36 @@
 # -*- coding: utf-8 -*-
 
 import math
+import numpy as np
 import forte
 
 
-def compute_st_taylor(O, A):
+def compute_st_taylor(O, S):
+    """Compute stO = exp(-S) O exp(S) numerically"""
     stO = forte.SparseOperator()
     stO += O
     C = forte.SparseOperator()
     C += O
-    for i in range(1, 100):
-        C = (1 / i) * C.commutator(A)
+    for i in range(1, 25):
+        C = (1 / i) * C.commutator(S)
         stO += C
-        if C.norm() < 1e-16:
+        if abs(C.norm()) < 1e-16:
             break
     return stO
 
 
 def compute_st_antihermitian(O, unormA, theta):
-    import numpy as np
-
+    """Compute stO = exp(-A) O exp(A) from exact equations for antihermitian A"""
     A = unormA * (1 / theta)
-    stO = forte.SparseOperator()
     cOA = O.commutator(A)
     cOAA = cOA.commutator(A)
     N = -1.0 * A @ A
-
-    stO += O
+    stO = forte.SparseOperator(O)
     stO += cOA * np.sin(theta) * (2 - np.cos(theta))
     stO += cOAA * 0.5 * np.sin(theta) ** 2
     stO += (N @ O + O @ N) * (-2.0 * np.sin(theta / 2) ** 4)
     stO += (N @ cOA + cOA @ N) * np.sin(theta) * (np.cos(theta) - 1)
     stO += (N @ O @ N) * 4.0 * np.sin(theta / 2) ** 4
-
     return stO
 
 
@@ -55,8 +53,8 @@ def compute_st_nilpotent(O, unormA, theta):
 
 
 def run_test_sparse_operator_transform(type, O, A, theta):
-    print(O)
-    print(A)
+    print(f"\n{O = }")
+    print(f"{A = }")
 
     sqop, a = A(0)
     A2 = forte.SparseOperator()
@@ -67,21 +65,22 @@ def run_test_sparse_operator_transform(type, O, A, theta):
     C_taylor = compute_st_taylor(O, A2)
     if type == "antiherm":
         C_python = compute_st_antihermitian(O, A2, theta)
-        forte.sim_trans_fact_antiherm(O, A)
+        forte.fact_unitary_trans_antiherm(O, A)
     else:
         C_python = compute_st_nilpotent(O, A, theta)
-        forte.sim_trans_fact_exc(O, A)
-
-    # print(C_taylor)
-    # print(C_python)
-    # print(O)
+        forte.fact_trans_lin(O, A)
 
     python_error = (C_python - C_taylor).norm()
     forte_error = (O - C_taylor).norm()
-    print("Error for python: ", python_error)
-    print("Error for c++:    ", forte_error)
-    assert python_error < 1e-10
-    assert forte_error < 1e-10
+    if forte_error > 1e-10:
+        print("O: ", O)
+        print("A: ", A)
+        print("C_taylor: ", C_taylor)
+        print("C_python: ", C_python)
+    # print("Error for python: ", python_error)
+    # print("Error for c++:    ", forte_error)
+    assert abs(python_error) < 1e-10
+    assert abs(forte_error) < 1e-10
 
 
 def test_sparse_operator_transform_1():

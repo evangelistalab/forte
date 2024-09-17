@@ -45,10 +45,6 @@ template <typename Real> std::complex<Real> conjugate(const std::complex<Real>& 
     return std::conj(value);
 }
 
-// Defining a concept for arithmetic types
-template <typename F>
-concept Arithmetic = std::is_arithmetic_v<F>;
-
 /// @brief A template class to define a vector space over a field F for a given type T
 /// @tparam Derived The derived class
 /// @tparam T The type of the vector space
@@ -67,7 +63,7 @@ concept Arithmetic = std::is_arithmetic_v<F>;
 ///     // Implement the derived class here
 /// };
 ///
-template <typename Derived, typename T, Arithmetic F, typename Hash = std::hash<T>>
+template <typename Derived, typename T, typename F, typename Hash = std::hash<T>>
 class VectorSpace {
   public:
     using container = std::unordered_map<T, F, Hash>;
@@ -138,12 +134,12 @@ class VectorSpace {
 
     /// @return the norm of the vector space
     /// @param p the norm to calculate (default is 2, -1 is infinity norm)
-    F norm(int p = 2) const {
-        F result{0};
+    double norm(int p = 2) const {
+        double result{0};
         // If p is -1, we calculate the infinity norm
         if (p == -1) {
             for (const auto& [_, c] : elements_) {
-                result = std::max(result, std::abs(c));
+                result = std::max(std::abs(result), std::abs(c));
             }
             return result;
         }
@@ -151,7 +147,7 @@ class VectorSpace {
         for (const auto& [_, c] : elements_) {
             result += std::pow(std::abs(c), p);
         }
-        return std::pow(result, 1. / static_cast<F>(p));
+        return std::pow(result, 1. / static_cast<double>(p));
     }
 
     /// @brief Add an element to the vector space
@@ -166,6 +162,13 @@ class VectorSpace {
         F c = it->second;
         elements_.erase(it);
         return c;
+    }
+
+    /// @brief Negate a vector
+    Derived operator-() const {
+        Derived result = self();
+        result *= -1;
+        return result;
     }
 
     /// @brief Add two vectors
@@ -227,7 +230,7 @@ class VectorSpace {
 
     /// @brief Divide a vector by a scalar
     Derived& operator/=(F scalar) {
-        assert(scalar != 0); // Prevent division by zero
+        assert(scalar != F(0)); // Prevent division by zero
         for (auto& [_, c] : elements_) {
             c /= scalar;
         }
@@ -313,7 +316,7 @@ class VectorSpace {
 ///     // Implement the derived class here
 /// };
 ///
-template <typename Derived, typename T, Arithmetic F> class VectorSpaceList {
+template <typename Derived, typename T, typename F> class VectorSpaceList {
   public:
     using container = std::vector<std::pair<T, F>>;
 
@@ -353,8 +356,8 @@ template <typename Derived, typename T, Arithmetic F> class VectorSpaceList {
 
     /// @return the norm of the vector space
     /// @param p the norm to calculate (default is 2, -1 is infinity norm)
-    F norm(int p = 2) const {
-        F result{zero_};
+    double norm(int p = 2) const {
+        double result{zero_};
         // If p is -1, we calculate the infinity norm
         if (p == -1) {
             for (const auto& [_, c] : elements_) {
@@ -366,7 +369,7 @@ template <typename Derived, typename T, Arithmetic F> class VectorSpaceList {
         for (const auto& [_, c] : elements_) {
             result += std::pow(std::abs(c), p);
         }
-        return std::pow(result, 1. / static_cast<F>(p));
+        return std::pow(result, 1. / static_cast<double>(p));
     }
 
     /// @brief Add an element to the vector space
