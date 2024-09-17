@@ -901,6 +901,36 @@ ambit::Tensor RDMsSpinFree::g3bbb() const {
     g3bbb.set_name("g3bbb");
     return g3bbb;
 }
+ambit::Tensor RDMsSpinFree::g4aaaa() const {
+    // TODO: Implement g4aaaa
+    _test_rdm_level(20, "g4aaaa");
+    ambit::Tensor g4aaaa;
+    return g4aaaa;
+}
+ambit::Tensor RDMsSpinFree::g4aaab() const {
+    // TODO: Implement g4aaab
+    _test_rdm_level(20, "g4aaab");
+    ambit::Tensor g4aaab;
+    return g4aaab;
+}
+ambit::Tensor RDMsSpinFree::g4aabb() const {
+    // TODO: Implement g4aabb
+    _test_rdm_level(20, "g4aabb");
+    ambit::Tensor g4aabb;
+    return g4aabb;
+}
+ambit::Tensor RDMsSpinFree::g4abbb() const {
+    // TODO: Implement g4abbb
+    _test_rdm_level(20, "g4abbb");
+    ambit::Tensor g4abbb;
+    return g4abbb;
+}
+ambit::Tensor RDMsSpinFree::g4bbbb() const {
+    // TODO: Implement g4bbbb
+    _test_rdm_level(20, "g4bbbb");
+    ambit::Tensor g4bbbb;
+    return g4bbbb;
+}
 ambit::Tensor RDMsSpinFree::L1a() const {
     _test_rdm_level(1, "L1a");
     auto L1a = sf1_to_sd1(SF_G1_);
