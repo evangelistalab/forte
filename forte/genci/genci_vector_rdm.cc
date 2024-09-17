@@ -1321,8 +1321,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
     if (max_rdm_level >= 3) {
         auto g3aaa = rdms->g3aaa();
         double error_3rdm_aaa = 0.0;
-        //        for (size_t p = 0; p < no_; ++p){
-        for (size_t p = 0; p < 1; ++p) {
+        for (size_t p = 0; p < ncmo; ++p) {
             for (size_t q = p + 1; q < ncmo; ++q) {
                 for (size_t r = q + 1; r < ncmo; ++r) {
                     for (size_t s = 0; s < ncmo; ++s) {
@@ -1472,9 +1471,9 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
     if (max_rdm_level >= 4) {
         auto g4aaaa = rdms->g4aaaa();
         double error_4rdm_aaaa = 0.0;
-        for (size_t p = 0; p < 1; ++p) {
-            for (size_t q = p + 1; q < 2; ++q) {
-                for (size_t r = q + 1; r < 3; ++r) {
+        for (size_t p = 0; p < ncmo; ++p) {
+            for (size_t q = p + 1; q < ncmo; ++q) {
+                for (size_t r = q + 1; r < ncmo; ++r) {
                     for (size_t s = r + 1; s < ncmo; ++s) {
                         for (size_t t = 0; t < ncmo; ++t) {
                             for (size_t u = t + 1; u < ncmo; ++u) {
@@ -1515,9 +1514,9 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
 
         auto g4aaab = rdms->g4aaab();
         double error_4rdm_aaab = 0.0;
-        for (size_t p = 0; p < 1; ++p) {
-            for (size_t q = p + 1; q < 2; ++q) {
-                for (size_t r = q + 1; r < 3; ++r) {
+        for (size_t p = 0; p < ncmo; ++p) {
+            for (size_t q = p + 1; q < ncmo; ++q) {
+                for (size_t r = q + 1; r < ncmo; ++r) {
                     for (size_t s = 0; s < ncmo; ++s) {
                         for (size_t t = 0; t < ncmo; ++t) {
                             for (size_t u = t + 1; u < ncmo; ++u) {
@@ -1558,8 +1557,8 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
 
         auto g4aabb = rdms->g4aabb();
         double error_4rdm_aabb = 0.0;
-        for (size_t p = 0; p < 1; ++p) {
-            for (size_t q = p + 1; q < 2; ++q) {
+        for (size_t p = 0; p < ncmo; ++p) {
+            for (size_t q = p + 1; q < ncmo; ++q) {
                 for (size_t r = 0; r < ncmo; ++r) {
                     for (size_t s = r + 1; s < ncmo; ++s) {
                         for (size_t t = 0; t < ncmo; ++t) {

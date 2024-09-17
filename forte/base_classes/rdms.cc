@@ -42,11 +42,13 @@ std::shared_ptr<RDMs> RDMs::build(size_t max_rdm_level, size_t n_orbs, RDMsType 
     std::vector<size_t> dims1(2, n_orbs);
     std::vector<size_t> dims2(4, n_orbs);
     std::vector<size_t> dims3(6, n_orbs);
+    std::vector<size_t> dims4(8, n_orbs);
 
     std::shared_ptr<RDMs> rdms;
 
     if (type == RDMsType::spin_dependent) {
-        ambit::Tensor g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb;
+        ambit::Tensor g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb, 
+            g4aaaa, g4aaab, g4aabb, g4abbb, g4bbbb;
         if (max_rdm_level > 0) {
             g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", dims1);
             g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", dims1);
@@ -62,6 +64,13 @@ std::shared_ptr<RDMs> RDMs::build(size_t max_rdm_level, size_t n_orbs, RDMsType 
             g3abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb", dims3);
             g3bbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbb", dims3);
         }
+        if (max_rdm_level > 3) {
+            g4aaaa = ambit::Tensor::build(ambit::CoreTensor, "g4aaaa", dims4);
+            g4aaab = ambit::Tensor::build(ambit::CoreTensor, "g4aaab", dims4);
+            g4aabb = ambit::Tensor::build(ambit::CoreTensor, "g4aabb", dims4);
+            g4abbb = ambit::Tensor::build(ambit::CoreTensor, "g4abbb", dims4);
+            g4bbbb = ambit::Tensor::build(ambit::CoreTensor, "g4bbbb", dims4);
+        }
 
         if (max_rdm_level < 1) {
             rdms = std::make_shared<RDMsSpinDependent>();
@@ -69,9 +78,13 @@ std::shared_ptr<RDMs> RDMs::build(size_t max_rdm_level, size_t n_orbs, RDMsType 
             rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b);
         } else if (max_rdm_level == 2) {
             rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb);
-        } else {
+        } else if (max_rdm_level == 3) {
             rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab,
                                                        g3abb, g3bbb);
+        } else {
+            rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab,
+                                                       g3abb, g3bbb, g4aaaa, g4aaab, g4aabb, g4abbb,
+                                                       g4bbbb);
         }
     } else {
         ambit::Tensor g1, g2, g3;
