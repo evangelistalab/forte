@@ -147,9 +147,11 @@ df-dsrg-mrpt2:
       - diskdf-dsrg-mrpt2-threading1
    unused:
       - df-dsrg-mrpt2-testccvv
-dmrg-dsrg-mrpt2:
+dmrg:
    short:
       - dmrg-dsrg-mrpt2-1
+   medium:
+      - dmrg-ci-1
 dsrg-mrpt2_spin_adapted:
    short:
       - dsrg-mrpt2_spin_adapted-1
