@@ -1,0 +1,751 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.10a1.dev53 
+
+                         Git: Rev {master} 45660d8 dirty
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Wednesday, 18 September 2024 04:13PM
+
+    Process ID: 77294
+    Host:       Brian-Zs-MBA-2.local
+    PSIDATADIR: /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+import forte
+memory 2 gb
+set_num_threads(4)
+
+Eref_scf  = -378.68387981901594
+Eref_dmrg = -378.8621734988314
+# Hachmann et al. (10.1063/1.2768362) reports the following
+# Eref_scf  = -378.68387984
+# Eref_dmrg = -378.86217348
+
+molecule naphthalene{
+0 1
+C -2.433661 0.708302 0.000000
+C -2.433661 -0.708302 0.000000
+H -3.378045 -1.245972 0.000000
+H -3.378045 1.245972 0.000000
+C -1.244629 1.402481 0.000000
+C -1.244629 -1.402481 0.000000
+C -0.000077 0.717168 0.000000
+C -0.000077 -0.717168 0.000000
+H -1.242734 2.490258 0.000000
+H -1.242734 -2.490258 0.000000
+C 1.244779 1.402533 0.000000
+C 1.244779 -1.402533 0.000000
+C 2.433606 0.708405 0.000000
+C 2.433606 -0.708405 0.000000
+H 1.242448 2.490302 0.000000
+H 1.242448 -2.490302 0.000000
+H 3.378224 1.245662 0.000000
+H 3.378224 -1.245662 0.000000
+symmetry c1
+}
+
+set {
+    reference           rhf
+    basis               sto-3g
+    scf_type            pk
+}
+
+set forte {
+    mcscf_reference false
+    orbital_type         local
+    localize_space       [26, 30, 31, 32, 33, 34, 35, 36, 37, 38]
+    subspace             ["C(2p)"]
+    subspace_pi_planes   [["C"]]
+    avas                 true
+    avas_diagonalize     false
+    avas_num_active      10
+    active_space_solver  block2
+    restricted_docc      [29]
+    active               [10]
+}
+
+energy('forte')
+compare_values(Eref_dmrg, variable("CURRENT ENERGY"), 6, "DMRGCI(10,10)/STO-3G energy")--------------------------------------------------------------------------
+
+  Memory set to   1.863 GiB by Python driver.
+  Threads set to 4 by Python driver.
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: simtrans-parallel - git commit: 6520ba24
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  No reference wave function provided for Forte. Computing SCF orbitals using Psi4 ...
+   => Libint2 <=
+
+    Primary   basis highest AM E, G, H:  6, 6, 3
+    Auxiliary basis highest AM E, G, H:  7, 7, 4
+    Onebody   basis highest AM E, G, H:  -, -, -
+    Solid Harmonics ordering:            Gaussian
+
+*** tstart() called on Brian-Zs-MBA-2.local
+*** at Wed Sep 18 16:13:13 2024
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2, 5-8, 11-14  entry C          line    61 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 3-4, 9-10, 15-18 entry H          line    19 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        4 Threads,   1907 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c1
+    Full point group: C2v
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         C            0.000000000000    -0.708302000000    -2.433662689216    12.000000000000
+         C            0.000000000000     0.708302000000    -2.433662689216    12.000000000000
+         H            0.000000000000     1.245972000000    -3.378046689216     1.007825032230
+         H            0.000000000000    -1.245972000000    -3.378046689216     1.007825032230
+         C            0.000000000000    -1.402481000000    -1.244630689216    12.000000000000
+         C            0.000000000000     1.402481000000    -1.244630689216    12.000000000000
+         C            0.000000000000    -0.717168000000    -0.000078689216    12.000000000000
+         C            0.000000000000     0.717168000000    -0.000078689216    12.000000000000
+         H            0.000000000000    -2.490258000000    -1.242735689216     1.007825032230
+         H            0.000000000000     2.490258000000    -1.242735689216     1.007825032230
+         C            0.000000000000    -1.402533000000     1.244777310784    12.000000000000
+         C            0.000000000000     1.402533000000     1.244777310784    12.000000000000
+         C            0.000000000000    -0.708405000000     2.433604310784    12.000000000000
+         C            0.000000000000     0.708405000000     2.433604310784    12.000000000000
+         H            0.000000000000    -2.490302000000     1.242446310784     1.007825032230
+         H            0.000000000000     2.490302000000     1.242446310784     1.007825032230
+         H            0.000000000000    -1.245662000000     3.378222310784     1.007825032230
+         H            0.000000000000     1.245662000000     3.378222310784     1.007825032230
+
+  Running in c1 symmetry.
+
+  Rotational constants: A =      0.10399  B =      0.04103  C =      0.02942 [cm^-1]
+  Rotational constants: A =   3117.64571  B =   1229.99743  C =    882.01724 [MHz]
+  Nuclear repulsion =  457.193311145735322
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 68
+  Nalpha       = 34
+  Nbeta        = 34
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-08
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: STO-3G
+    Blend: STO-3G
+    Number of shells: 38
+    Number of basis functions: 58
+    Number of Cartesian functions: 58
+    Spherical Harmonics?: true
+    Max angular momentum: 1
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                  18
+      Number of AO shells:              38
+      Number of primitives:            114
+      Number of atomic orbitals:        58
+      Number of basis functions:        58
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 4
+
+  Performing in-core PK
+  Using 2929232 doubles for integral storage.
+  We computed 251059 shell quartets total.
+  Whereas there are 274911 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:             1430
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              4
+
+  Minimum eigenvalue in the overlap matrix is 1.7267298816E-01.
+  Reciprocal condition number of the overlap matrix is 6.7879224272E-02.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     A         58      58 
+   -------------------------
+    Total      58      58
+   -------------------------
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter SAD:  -335.86290498184712   -3.35863e+02   0.00000e+00 
+   @RHF iter   1:  -370.97254325976661   -3.51096e+01   5.33519e-02 ADIIS/DIIS
+   @RHF iter   2:  -364.87545860410836    6.09708e+00   6.94795e-02 ADIIS/DIIS
+   @RHF iter   3:  -378.54464433317128   -1.36692e+01   7.32722e-03 ADIIS/DIIS
+   @RHF iter   4:  -378.67063262249121   -1.25988e-01   2.40826e-03 ADIIS/DIIS
+   @RHF iter   5:  -378.68301242297287   -1.23798e-02   5.01265e-04 ADIIS/DIIS
+   @RHF iter   6:  -378.68372562974184   -7.13207e-04   2.12461e-04 ADIIS/DIIS
+   @RHF iter   7:  -378.68386743009978   -1.41800e-04   6.15168e-05 DIIS
+   @RHF iter   8:  -378.68387965462358   -1.22245e-05   5.90664e-06 DIIS
+   @RHF iter   9:  -378.68387979287093   -1.38247e-07   1.55042e-06 DIIS
+   @RHF iter  10:  -378.68387981819274   -2.53218e-08   3.24478e-07 DIIS
+   @RHF iter  11:  -378.68387981896649   -7.73753e-10   1.18809e-07 DIIS
+   @RHF iter  12:  -378.68387981901424   -4.77485e-11   1.89511e-08 DIIS
+   @RHF iter  13:  -378.68387981901611   -1.87583e-12   2.73436e-09 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1A    -11.038789     2A    -11.038716     3A    -11.029662  
+       4A    -11.029657     5A    -11.029565     6A    -11.029558  
+       7A    -11.028362     8A    -11.028334     9A    -11.028315  
+      10A    -11.028274    11A     -1.112452    12A     -1.047110  
+      13A     -0.987535    14A     -0.944976    15A     -0.919330  
+      16A     -0.793097    17A     -0.775007    18A     -0.753706  
+      19A     -0.650414    20A     -0.647487    21A     -0.619783  
+      22A     -0.569646    23A     -0.548670    24A     -0.527704  
+      25A     -0.516357    26A     -0.506419    27A     -0.485639  
+      28A     -0.464658    29A     -0.419105    30A     -0.409856  
+      31A     -0.395705    32A     -0.330616    33A     -0.259798  
+      34A     -0.225258  
+
+    Virtual:                                                              
+
+      35A      0.203585    36A      0.246396    37A      0.330518  
+      38A      0.414855    39A      0.552166    40A      0.578198  
+      41A      0.602215    42A      0.612371    43A      0.667653  
+      44A      0.696544    45A      0.711236    46A      0.714540  
+      47A      0.724312    48A      0.737170    49A      0.805469  
+      50A      0.851077    51A      0.853945    52A      0.870380  
+      53A      0.945603    54A      0.955431    55A      1.023796  
+      56A      1.028831    57A      1.149419    58A      1.168363  
+
+    Final Occupation by Irrep:
+              A 
+    DOCC [    34 ]
+    NA   [    34 ]
+    NB   [    34 ]
+
+  @RHF Final Energy:  -378.68387981901611
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =            457.1933111457353220
+    One-Electron Energy =               -1421.3152612646417765
+    Two-Electron Energy =                 585.4380702998903416
+    Total Energy =                       -378.6838798190160560
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :         -0.0000000            0.0000000           -0.0000000
+ Dipole Y            :         -0.0000000            0.0000000           -0.0000000
+ Dipole Z            :          0.0002115           -0.0002133           -0.0000018
+ Magnitude           :                                                    0.0000018
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on Brian-Zs-MBA-2.local at Wed Sep 18 16:13:14 2024
+Module time:
+	user time   =       3.01 seconds =       0.05 minutes
+	system time =       0.11 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+Total time:
+	user time   =       3.01 seconds =       0.05 minutes
+	system time =       0.11 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space RESTRICTED_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------
+                        A   Sum
+  -------------------------------
+    FROZEN_DOCC         0     0
+    RESTRICTED_DOCC    29    29
+    GAS1               10    10
+    GAS2                0     0
+    GAS3                0     0
+    GAS4                0     0
+    GAS5                0     0
+    GAS6                0     0
+    RESTRICTED_UOCC    19    19
+    FROZEN_UOCC         0     0
+    Total              58    58
+  -------------------------------   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-2, 5-8, 11-14  entry C          line    61 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 3-4, 9-10, 15-18 entry H          line    19 file /Users/brianz98/local/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  ==> List of Planes Requested <==
+
+    Plane  1
+           C
+
+  ==> List of Subspace Orbitals Requested <==
+         C(2P)
+  NOTE: Subspace orbitals may be truncated based on requested planes!
+
+  ==> AO Basis Set Selected By Subspace <==
+
+    =======================================
+      AO  Atom  Label     Type  Coefficient
+    ---------------------------------------
+       2     1     C1      2PZ   0.0000E+00
+       3     1     C1      2PX   1.0000E+00
+       4     1     C1      2PY   0.0000E+00
+       7     2     C2      2PZ   0.0000E+00
+       8     2     C2      2PX   1.0000E+00
+       9     2     C2      2PY   0.0000E+00
+      14     5     C3      2PZ   0.0000E+00
+      15     5     C3      2PX   1.0000E+00
+      16     5     C3      2PY   0.0000E+00
+      19     6     C4      2PZ   0.0000E+00
+      20     6     C4      2PX   1.0000E+00
+      21     6     C4      2PY   0.0000E+00
+      24     7     C5      2PZ   0.0000E+00
+      25     7     C5      2PX   1.0000E+00
+      26     7     C5      2PY   0.0000E+00
+      29     8     C6      2PZ   0.0000E+00
+      30     8     C6      2PX   1.0000E+00
+      31     8     C6      2PY   0.0000E+00
+      36    11     C7      2PZ   0.0000E+00
+      37    11     C7      2PX   1.0000E+00
+      38    11     C7      2PY   0.0000E+00
+      41    12     C8      2PZ   0.0000E+00
+      42    12     C8      2PX   1.0000E+00
+      43    12     C8      2PY   0.0000E+00
+      46    13     C9      2PZ   0.0000E+00
+      47    13     C9      2PX   1.0000E+00
+      48    13     C9      2PY   0.0000E+00
+      51    14    C10      2PZ   0.0000E+00
+      52    14    C10      2PX   1.0000E+00
+      53    14    C10      2PY   0.0000E+00
+    ---------------------------------------
+    Number of subspace orbitals:         10
+    =======================================
+
+  ==> Orbital Overlap with AO Subspace (> 1.00e-03) <==
+
+    =======================
+    Irrep   MO  <phi|P|phi>
+    -----------------------
+       A    27    1.000000
+       A    31    1.000000
+       A    32    1.000000
+       A    33    1.000000
+       A    34    1.000000
+       A    35    1.000000
+       A    36    1.000000
+       A    37    1.000000
+       A    38    1.000000
+       A    39    1.000000
+    ========================
+
+                     --------------------------------------
+                       Atomic Valence Active Space (AVAS)
+                           Chenxi Cai and Chenyang Li
+                     --------------------------------------
+
+
+  ==> AVAS Options <==
+
+    --------------------------------------------------------
+    AVAS selection scheme                       # ACTIVE MOS
+    Diagonalize projected overlap matrices             FALSE
+    AVAS sigma threshold (cumulative)              9.800e-01
+    AVAS sigma direct cutoff                       1.000e+00
+    Nonzero eigenvalue threshold                   1.000e-06
+    Number of doubly occupied MOs                         34
+    Number of singly occupied MOs                          0
+    Number of unoccupied MOs                              24
+    # Active AVAS MOs requested                           10
+    # Active occupied AVAS MOs requested                   0
+    # Active virtual AVAS MOs requested                    0
+    --------------------------------------------------------
+  Skipping diagonalization of the projector matrix.
+  Orbitals will be sorted instead of being rotated.
+  Sum of eigenvalues: 10.00000000
+  AVAS covers 100.00% of the subspace.
+
+  ==> AVAS MOs Information <==
+
+    ---------------------
+                        A
+    ---------------------
+    DOCC INACTIVE      29
+    DOCC ACTIVE         5
+    SOCC ACTIVE         0
+    UOCC ACTIVE         5
+    UOCC INACTIVE      19
+    ---------------------
+    RESTRICTED_DOCC    29
+    ACTIVE             10
+    RESTRICTED_UOCC    19
+    ---------------------
+
+  ==> Atomic Valence MOs (Active Marked by *) <==
+
+    ===============================
+     Irrep    MO  Occ.  <phi|P|phi>
+    -------------------------------
+    *   A     26    2      1.000000
+    *   A     30    2      1.000000
+    *   A     31    2      1.000000
+    *   A     32    2      1.000000
+    *   A     33    2      1.000000
+    *   A     34    0      1.000000
+    *   A     35    0      1.000000
+    *   A     36    0      1.000000
+    *   A     37    0      1.000000
+    *   A     38    0      1.000000
+    ===============================
+
+  ==> Semicanonicalize Subsets of Orbitals <==
+
+  Canonicalizing orbital block INACTIVE DOCC ....... Done
+  Canonicalizing orbital block ACTIVE DOCC ......... Done
+  Canonicalizing orbital block ACTIVE UOCC ......... Done
+  Canonicalizing orbital block INACTIVE UOCC ....... Done
+  State Singlet (Ms = 0) A GAS min: 0 0 0 0 0 0 ; GAS max: 20 0 0 0 0 0 ; weights:
+      1.000000000000
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: STO-3G
+    Blend: STO-3G
+    Number of shells: 38
+    Number of basis functions: 58
+    Number of Cartesian functions: 58
+    Spherical Harmonics?: true
+    Max angular momentum: 1
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                  18
+      Number of AO shells:              38
+      Number of primitives:            114
+      Number of atomic orbitals:        58
+      Number of basis functions:        58
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 4
+
+  Performing in-core PK
+  Using 2929232 doubles for integral storage.
+  We computed 251059 shell quartets total.
+  Whereas there are 274911 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:             1525
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              4
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         58
+  Number of correlated molecular orbitals:              58
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
+
+
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.37762658 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.252943 GB
+  Timing for conventional integral transformation:            1.742 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing conventional integrals:                1.742 s.
+
+  ==> Orbital Localizer <==
+
+  Localize method: PIPEK_MEZEY
+  Localizing orbitals:  26 27 28 29 30
+  ==> Pipek-Mezey Localizer <==
+
+    Convergence =   1.000E-12
+    Maxiter     =         200
+
+    Iteration                   Metric       Residual
+    @PM    0   5.0014407842694264E-01              -
+    @PM    1   6.4562047012710644E-01   2.908690E-01
+    @PM    2   6.4562047012710644E-01   0.000000E+00
+
+    PM Localizer converged.
+
+
+  Localizing orbitals:  31 32
+  ==> Pipek-Mezey Localizer <==
+
+    Convergence =   1.000E-12
+    Maxiter     =         200
+
+    Iteration                   Metric       Residual
+    @PM    0   3.0049575195877165E-01              -
+    @PM    1   3.4975210429769832E-01   1.639170E-01
+    @PM    2   3.4975210429769837E-01   1.587157E-16
+
+    PM Localizer converged.
+
+
+  Localizing orbitals:  33 34
+  ==> Pipek-Mezey Localizer <==
+
+    Convergence =   1.000E-12
+    Maxiter     =         200
+
+    Iteration                   Metric       Residual
+    @PM    0   2.8871596502634123E-01              -
+    @PM    1   5.8329569027190409E-01   1.020310E+00
+    @PM    2   5.8329569027190409E-01   0.000000E+00
+
+    PM Localizer converged.
+
+
+  Localizing orbitals:  35 36
+  ==> Pipek-Mezey Localizer <==
+
+    Convergence =   1.000E-12
+    Maxiter     =         200
+
+    Iteration                   Metric       Residual
+    @PM    0   3.0013693076637926E-01              -
+    @PM    1   3.5112186509695859E-01   1.698722E-01
+    @PM    2   3.5112186509695842E-01   4.742896E-16
+
+    PM Localizer converged.
+
+
+  Localizing orbitals:  37 38
+  ==> Pipek-Mezey Localizer <==
+
+    Convergence =   1.000E-12
+    Maxiter     =         200
+
+    Iteration                   Metric       Residual
+    @PM    0   2.6574960458116104E-01              -
+    @PM    1   3.5064626265839538E-01   3.194611E-01
+    @PM    2   3.5064626265839538E-01   0.000000E+00
+
+    PM Localizer converged.
+
+
+  Integrals are about to be updated.
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.30206629 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.252943 GB
+  Timing for conventional integral transformation:            1.580 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Integrals update took     1.580 s.
+
+  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn
+
+
+                         ------------------------------
+                           block2 DMRG (spin-adapted)
+                                by Huanchen Zhai
+                                Jan 14-16, 2023
+                         ------------------------------
+
+    Reference: H. Zhai & G. K. Chan J. Chem. Phys. 2021, 154, 224116.
+
+  ==> DMRG Settings <==
+
+    N sweeps       = 
+    Bond dims      = 
+    Noises         = 
+    Davidson tols  = 
+    N total sweeps =         16
+    E convergence  =   1.00E-08
+    Cutoff         =   1.00E-20
+    Initial guess  =        new
+    Verbosity      =          2
+    Stack memory   =    2.00 GB
+    Scratch        = /tmp/forte.77294.block2.naphthalene
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -378.862173498714   0.000000
+    --------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+
+  ==> NATURAL ORBITALS <==
+
+        1A      1.948062      2A      1.919319      3A      1.889914  
+        4A      1.855356      5A      1.817115      6A      0.185653  
+        7A      0.146251      8A      0.109185      9A      0.079871  
+       10A      0.049275  
+
+
+  ==> Dipole Moments [e a0] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A    -0.00000000    -0.00000254     0.00001507     0.00001529
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000    -0.00021329     0.00021329
+    --------------------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+
+  ==> NATURAL ORBITALS <==
+
+        1A      1.948062      2A      1.919319      3A      1.889914  
+        4A      1.855356      5A      1.817115      6A      0.185653  
+        7A      0.146251      8A      0.109185      9A      0.079871  
+       10A      0.049275  
+
+
+  ==> Quadrupole Moments [e a0^2] (Nuclear + Electronic) for Singlet (Ms = 0) A <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+          0A   -42.00637439     0.00000000    -0.00000000   -37.62409104    -0.00001261   -37.77147566
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000   344.38331798     0.00000000   825.44428656
+    --------------------------------------------------------------------------------------------------
+
+  Time to prepare integrals:        3.229 seconds
+  Time to run job          :       10.434 seconds
+  Total                    :       13.663 seconds
+    DMRGCI(10,10)/STO-3G energy...........................................................PASSED
+
+    Psi4 stopped on: Wednesday, 18 September 2024 04:13PM
+    Psi4 wall time for execution: 0:00:14.18
+
+*** Psi4 exiting successfully. Buy a developer a beer!
