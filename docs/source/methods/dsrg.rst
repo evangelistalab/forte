@@ -493,7 +493,7 @@ The threshold of considering the BCH expansion converged based on the recursive 
 
 Whether to use an adaptive threshold for the recursive single commutator approximation.
 
-* Type: boolean
+* Type: Boolean
 * Default: false
 
 **DSRG_ADAPTIVE_RSC_THRESHOLD**
@@ -613,7 +613,7 @@ while the unrelaxed version as uDSRG-MRPT.
 .. tip::
   These energies can be conveniently obtained in the input file.
   For example, :code:`Eu = variable("UNRELAXED ENERGY")` puts unrelaxed energy to a variable :code:`Eu`.
-  The avaible keys are :code:`"UNRELAXED ENERGY"`, :code:`PARTIALLY RELAXED ENERGY`,
+  The available keys are :code:`"UNRELAXED ENERGY"`, :code:`PARTIALLY RELAXED ENERGY`,
   :code:`"RELAXED ENERGY"`, and :code:`"FULLY RELAXED ENERGY"`.
 
 2. Orbital Rotations
@@ -1450,6 +1450,209 @@ Automatic Gaussian width cutoff for the density weights.
 
 .. note:: Add options when DWMS is re-enabled.
 
+Frozen-Natural-Orbital Truncated MR-DSRG
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1. Theory
++++++++++
+
+The MRPT3 and LDSRG(2) computations can be accelerated by constructing a
+compact set of virtual orbitals based on the quasi-natural orbitals of DSRG-MRPT2.
+The natural occupations smaller than the user-defined threshold will be discarded
+for MRPT3 or LDSRG(2) computations.
+A second-order correction to the discarded virtual orbitals are considered by default,
+but this correction can be disabled.
+
+The FNO MR-DSRG procedure add the following additional steps before a regular MR-DSRG computation:
+
+  (1) Build natural virtual orbitals by diagonalizing the virtual-virtual block of
+  the unrelaxed DSRG-MRPT2 one-particle reduced density matrix.
+
+  (2) Throw away virtual orbitals whose natural occupations are smaller than the
+  user-defined threshold. Transform integrals to the FNO truncated semicanonical basis.
+
+  (3) Compute the MRPT2 corrections due to FNO truncation by performing a MRPT2 computation
+  in the truncated virtual space. This correction applies to both energy and DSRG Hamiltonian.
+
+.. note::
+  - If option :code:`THREEPDC` is set to :code:`ZERO`, 3-RDM will also be ignored for the
+    1-RDM build of DSRG-MRPT2.
+    The resulting quasi-natural orbitals are thus approximated, but the error is negligible.
+
+  - Because the recommended flow parameter is different between MRPT2 and others,
+    the flow parameter for MRPT2 related steps [i.e., (1) and (3)] is controlled by option
+    :code:`DSRG_FNO_PT2_S`.
+    The default value of :code:`DSRG_FNO_PT2_S` is 0.5.
+
+2. Examples
++++++++++++
+
+The following is an example of FNO SA-DSRG-PT3 to compute the vertical excitation energy of
+acetaldehyde from ground state to the first singlet A'' state (test case "fno-2"). ::
+
+  import forte
+  memory 4 gb
+  molecule acetaldehyde{
+  C -0.00234503  0.00000000  0.87125063
+  C -1.75847785  0.00000000 -1.34973671
+  O  2.27947397  0.00000000  0.71968028
+  H -0.92904537  0.00000000  2.73929404
+  H -2.97955463  1.66046488 -1.25209463
+  H -2.97955463 -1.66046488 -1.25209463
+  H -0.70043433  0.00000000 -3.11066412
+  units bohr
+  nocom
+  noreorient
+  }
+
+  set globals{
+  scf_type      df
+  reference     rhf
+  basis         aug-cc-pvtz
+  df_basis_scf  aug-cc-pvtz-jkfit
+  df_basis_mp2  aug-cc-pvtz-jkfit
+  maxiter       100
+  d_convergence 1.0e-6
+  e_convergence 1.0e-8
+  }
+  escf, wfn = energy('scf', return_wfn=True)
+  wfn_cas = wfn.from_file("../fno-1/wfn_casscf.npy")
+  wfn.Ca().copy(wfn_cas.Ca())
+
+  set forte{
+  int_type            df
+  active_space_solver fci
+  correlation_solver  sa-mrdsrg
+  corr_level          pt3
+  frozen_docc         [3,0]
+  restricted_docc     [5,1]
+  active              [3,2]
+  avg_state           [[0,1,1],[1,1,1]]
+  dsrg_s              2.0
+  calc_type           sa
+  dl_maxiter          500
+  threepdc            zero
+  dsrg_fno            true
+  dsrg_fno_nk         1.0e-4
+  dsrg_fno_pt2_s      0.5
+  }
+  energy('forte', ref_wfn=wfn)
+
+Here, we read converged SA-CASSCF orbitals from test case "fno-1".
+The FNO procedure is activated by :code:`dsrg_fno` and the occupation truncation
+is managed by the option :code:`dsrg_fno_cutoff`.
+Using 1.0e-4 as the FNO cutoff, 82 (out of 134) A' and 50 (out of 82) A'' orbitals are discarded.
+
+.. tip::
+  When computing vertical transition energies using SA-DSRG-PT2, -PT3, or LDSRG(2),
+  there is no need to compute the SA-3RDM in the full basis.
+
+The PT2 corrected FNO SA-DSRG-PT3 energies are ::
+
+  Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+  --------------------------------------------------------
+     1  (  0)    Ap     0     -153.578159792958   0.000000
+  --------------------------------------------------------
+     1  (  0)   App     0     -153.414826866551   0.000000
+  --------------------------------------------------------
+
+For comparison, the PT2 uncorrected (by setting :code:`DSRG_FNO_PT2_CORRECTION` to :code:`False`)
+FNO SA-DSRG-PT3 energies read as ::
+
+  Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+  --------------------------------------------------------
+     1  (  0)    Ap     0     -153.560798429865   0.000000
+  --------------------------------------------------------
+     1  (  0)   App     0     -153.397787755784  -0.000000
+  --------------------------------------------------------
+
+and the untruncated SA-DSRG-PT3 gives ::
+
+  Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+  --------------------------------------------------------
+     1  (  0)    Ap     0     -153.576522878154   0.000000
+  --------------------------------------------------------
+     1  (  0)   App     0     -153.413287040548   0.000000
+  --------------------------------------------------------
+
+The resulting SA-DSRG-PT3 vertical excitation energies are:
+
+============================================  =====================
+Method                                         :math:`\Delta E` / eV
+============================================  =====================
+FNO (PT2 uncorrected, w/o :math:`\lambda_3`)         4.4357
+FNO (PT2 uncorrected, w/  :math:`\lambda_3`)         4.4350
+FNO (PT2 corrected, w/o :math:`\lambda_3`)           4.4445
+FNO (PT2 corrected, w/  :math:`\lambda_3`)           4.4438
+untruncated                                          4.4418
+============================================  =====================
+
+where the PT2 corrected FNO result is in excellent agreement with that of the complete SA-DSRG-PT3.
+
+3. Related Options
+++++++++++++++++++
+
+**DSRG_FNO**
+
+Perform frozen-natural-orbital truncated MR-DSRG based on DSRG-MRPT2 unrelaxed 1-RDM.
+
+* Type: Boolean
+* Default: False
+
+**DSRG_FNO_PT2_CORRECTION**
+
+Perform PT2 corrections to the discarded natural virtual orbitals.
+
+* Type: Boolean
+* Default: True
+
+**DSRG_FNO_PT2_S**
+
+Flow parameter for DSRG-MRPT2 related steps in the FNO procedure.
+
+* Type: double
+* Default: 1.5
+
+**DSRG_FNO_PT2_CU3**
+
+Whether to include the 3-cumulant terms in DSRG-MRPT2 related steps in the FNO procedure.
+
+* Type: Boolean
+* Default: False
+
+**DSRG_FNO_SCHEME**
+
+The FNO truncation scheme. The cutoff value will be read from DSRG_FNO_X (X = PO, PV, NK).
+NK should be used for size-consistent results.
+
+* Type: string
+* Options: PO, PV, NK
+* Default: PO
+
+**DSRG_FNO_PO**
+
+The percentage of the cumulative virtual occupancy kept unfrozen.
+A typical :math:`p_o` value is around 97-99 %.
+
+* Type: double
+* Default: 98.0
+
+**DSRG_FNO_NK**
+
+The virtual orbitals with natural occupations smaller than this cutoff will be discarded.
+A proper value may be determined by run a DSRG_FNO_PO computation first.
+
+* Type: double
+* Default: 1.0e-4
+
+**DSRG_FNO_PV**
+
+The percentage of the number of virtual orbitals kept unfrozen.
+A typical :math:`p_v` value is around 40-60 %.
+
+* Type: double
+* Default: 50.0
+
 TODOs
 ^^^^^
 
@@ -1754,6 +1957,13 @@ The sequential variant of MR-LDSRG(2) and NIVO approximation are described in:
   Approximation", T. Zhang, C. Li, and F. A. Evangelista,
   *J. Chem. Theory Compt.* **15**, 4399-4414 (2019).
   (doi: `10.1021/acs.jctc.9b00353 <http://dx.doi.org/10.1021/acs.jctc.9b00353>`_).
+
+The frozen-natural-orbital truncation of MR-DSRG and benchmarks:
+
+* "Frozen Natural Orbitals for the State-Averaged Driven Similarity Renormalization Group",
+  C. Li, S. Mao, R. Huang, and F. A. Evangelista,
+  *J. Chem. Theory Compt.* **20**, 4170-4181 (2024).
+  (doi: `10.1021/acs.jctc.4c00152 <http://dx.doi.org/10.1021/acs.jctc.4c00152>`_).
 
 Combination between DSRG and adaptive configuration interaction with applications to acenes:
 

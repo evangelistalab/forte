@@ -228,33 +228,7 @@ class ActiveSpaceMethod {
         throw std::runtime_error(
             "ActiveSpaceMethod::eigenvectors(): Not Implemented for this class!");
     }
-    /// Compute permanent dipole moments
-    std::vector<std::vector<double>>
-    compute_permanent_dipole(const std::vector<std::pair<size_t, size_t>>& root_list,
-                             const ambit::Tensor& Ua, const ambit::Tensor& Ub);
-
-    /// Compute permanent dipole moments (electronic + nuclear)
-    std::vector<std::shared_ptr<psi::Vector>>
-    compute_permanent_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
-                             std::vector<std::pair<size_t, size_t>>& root_list);
-
-    /// Compute permanent quadrupole moments (electronic + nuclear)
-    std::vector<std::shared_ptr<psi::Vector>>
-    compute_permanent_quadrupole(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
-                                 const std::vector<std::pair<size_t, size_t>>& root_list);
-
-    /// Compute transition dipole moments assuming same orbitals
-    std::vector<std::shared_ptr<psi::Vector>>
-    compute_transition_dipole_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
-                                        const std::vector<std::pair<size_t, size_t>>& root_list,
-                                        std::shared_ptr<ActiveSpaceMethod> method2);
-
-    /// Compute oscillator strength assuming same orbitals
-    std::vector<double>
-    compute_oscillator_strength_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints,
-                                          const std::vector<std::pair<size_t, size_t>>& root_list,
-                                          std::shared_ptr<ActiveSpaceMethod> method2);
-
+    
     /// Dump the wave function to file
     /// @param file name
     virtual void dump_wave_function(const std::string&) {
