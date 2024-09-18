@@ -32,6 +32,7 @@
 #include <functional>
 #include <vector>
 
+#include "sparse_ci/sparse.h"
 #include "sparse_ci/determinant.h"
 
 namespace forte {
@@ -63,6 +64,12 @@ namespace forte {
  */
 using op_tuple_t = std::vector<std::tuple<bool, bool, int>>;
 
+/// A class enum to encode if two operators
+/// - commute
+/// - anti-commute
+/// - we cannot guarantee they commute (therefore, treat them as non-commuting)
+enum class CommutatorType { Commute, AntiCommute, MayNotCommute };
+
 /**
  * @brief A class to represent a second quantized operator.
  *
@@ -91,11 +98,30 @@ class SQOperatorString {
     Determinant& cre_mod();
     /// @return a Determinant object that represents the annihilation operators
     Determinant& ann_mod();
-    /// @return true if this operator is a number operator (i.e. it contains no creation or
-    /// annihilation  operators)
-    bool is_number() const;
+    /// @return a op_tuple_t that represents the operator
+    op_tuple_t op_tuple() const;
+    /// @return the number component of this operator. Returns a SQOperatorString object with the
+    /// number operators (creation followed by annihilation operator) contained in this operator.
+    /// Note that we ignore any sign associated with the permutation of the operators.
+    /// For example, the number component of the operator
+    ///   a^+_{1,\alpha} a^+_{3,\beta} a_{2,\beta} a_{1,\alpha}
+    /// is
+    ///   a^+_{1,\alpha} a_{1,\alpha}
+    SQOperatorString number_component() const;
+    /// @return the non-number component of this operator. Returns a SQOperatorString object with
+    /// operators (creation or annihilation) that do not have a matching adjoint operator.
+    /// Note that we ignore any sign associated with the permutation of the operators.
+    /// For example, the non-number component of the operator
+    ///   a^+_{1,\alpha} a^+_{3,\beta} a_{2,\beta} a_{1,\alpha}
+    /// is
+    ///   a^+_{3,\beta} a_{2,\beta}
+    SQOperatorString non_number_component() const;
+    /// @return true if this operator is the identity (no creation/annihilation  operators)
+    bool is_identity() const;
+    /// @return true if this operator is such that op = op^dagger (identity or number operator)
+    bool is_self_adjoint() const;
     /// @return true if this operator is such that op^2 = 0.
-    /// Numbers and number operators are not nilpotent.
+    /// The identity and number operators are not nilpotent.
     bool is_nilpotent() const;
     /// @return the number of creation + annihilation operators in this operator
     int count() const;
@@ -107,6 +133,8 @@ class SQOperatorString {
     std::string str() const;
     /// @return a latex representation of this operator
     std::string latex() const;
+    /// @return a compact latex representation of this operator
+    std::string latex_compact() const;
     /// @return a sq_operator that is the adjoint of this operator
     SQOperatorString adjoint() const;
 
@@ -128,10 +156,11 @@ class SQOperatorString {
 class SQOperatorProductComputer {
   public:
     SQOperatorProductComputer() = default;
-    void product(const SQOperatorString& lhs, const SQOperatorString& rhs, double factor,
-                 std::function<void(const SQOperatorString&, const double)> func);
-    void commutator(const SQOperatorString& lhs, const SQOperatorString& rhs, double factor,
-                    std::function<void(const SQOperatorString&, const double)> func);
+    void product(const SQOperatorString& lhs, const SQOperatorString& rhs, sparse_scalar_t factor,
+                 std::function<void(const SQOperatorString&, const sparse_scalar_t)> func);
+    void commutator(const SQOperatorString& lhs, const SQOperatorString& rhs,
+                    sparse_scalar_t factor,
+                    std::function<void(const SQOperatorString&, const sparse_scalar_t)> func);
 
   private:
     constexpr static size_t max_contracted_ops_ = 32;
@@ -142,7 +171,7 @@ class SQOperatorProductComputer {
     Determinant ucon_rhs_cre_;
     Determinant con_rhs_cre_;
     Determinant ucon_rhs_ann_;
-    double phase_;
+    sparse_scalar_t phase_;
     std::vector<short> set_bits_ = std::vector<short>(max_contracted_ops_, 0);
     std::bitset<max_contracted_ops_> sign_;
 };
@@ -175,6 +204,8 @@ double fast_apply_operator_to_det(DeterminantImpl<N>& d, const SQOperatorString&
 }
 
 bool do_ops_commute(const SQOperatorString& lhs, const SQOperatorString& rhs);
+
+CommutatorType commutator_type(const SQOperatorString& lhs, const SQOperatorString& rhs);
 
 std::vector<std::pair<SQOperatorString, double>> commutator_fast(const SQOperatorString& lhs,
                                                                  const SQOperatorString& rhs);

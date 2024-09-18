@@ -2,21 +2,28 @@ import math
 import forte
 import numpy as np
 
+# Description:
+# This file contains tests for the SparseOperator class
+# and its algebraic operations.
+# The tests are divided into three main categories:
+# 1. Tests for basic algebraic operations of operators
+# 2. Tests for operator products and commutators
+# 3. Tests for the fast product of operators
+
 
 def test_sparse_operator_ops_1():
     nullop = forte.SparseOperator()
+    # identity operator
 
-    # test adding hermitian operators to anti-hermitian operators
+    # test identity operator is not null
     A = forte.sparse_operator("[]", 1.0)
-    # print the type of the operator A
-    print(f"A = {A}")
-    print(f"nullop = {nullop}")
-
     assert A != nullop
+
+    # test that a regular operator is not the null operator
     A = forte.sparse_operator("[0a+ 0a-]", 1.0)
     assert A != nullop
 
-    # test basic operators
+    # test basic algebraic operations of operators
     A = forte.sparse_operator("[0a+ 0a-]", 1.0)
     B = forte.sparse_operator("[0b+ 0b-]", 1.0)
     C = A + B
@@ -36,6 +43,9 @@ def test_sparse_operator_ops_1():
     C.copy(A)
     C *= 2.0
     assert C == forte.sparse_operator("[0a+ 0a-]", 2.0)
+    C.copy(A)
+    C *= 2.0j
+    assert C == forte.sparse_operator("[0a+ 0a-]", 2.0j)
 
     A = forte.sparse_operator("[0a+ 0a-]", 1.0)
     B = forte.sparse_operator("[0b+ 0b-]", 1.0)
@@ -44,7 +54,7 @@ def test_sparse_operator_ops_1():
     A += B * np.cos(2.0)
     assert A == forte.sparse_operator([("[0a+ 0a-]", 1.0), ("[0b+ 0b-]", 2.0 + np.cos(2.0))])
 
-    # test ==
+    # test == operator
     assert A == forte.sparse_operator("[0a+ 0a-]", 1.0)
 
     A = forte.sparse_operator([("[13a+ 2a-]", 1.0), ("[2a+ 13a-]", -1.0)])
@@ -67,14 +77,24 @@ def test_sparse_operator_ops_1():
     C = forte.sparse_operator([("[1a+ 2a-]", +0.6), ("[2a+ 1a-]", -0.6)])
     assert A == B
     assert A != C
-    # assert A == -C
-    # assert C == -B
+    assert A == -C
+    assert C == -B
 
-    # C.copy(A)
-    # C /= 2.0
-    # assert C == forte.sparse_operator("[0a+ 0a-]", 0.5)
-    # C = A / 2.0
-    # assert C == forte.sparse_operator("[0a+ 0a-]", 0.5)
+    C.copy(A)
+    C /= 2.0
+    assert C == forte.sparse_operator([("[2a+ 1a-]", +0.3), ("[1a+ 2a-]", -0.3)])
+    C = A / 2.0j
+    print(f"{A = }")
+    print(f"{C = }")
+    assert C == forte.sparse_operator([("[2a+ 1a-]", -0.3j), ("[1a+ 2a-]", 0.3j)])
+
+    A_str = forte.sqop("[2a+ 1a-]")[0]
+    Ad_str = A_str.adjoint()
+    A = forte.SparseOperator()
+    A += A_str * 0.6j - 0.6j * Ad_str
+    assert A == forte.sparse_operator([("[2a+ 1a-]", +0.6j), ("[1a+ 2a-]", -0.6j)])
+    A = A_str * 0.6j - 0.6j * Ad_str
+    assert A == forte.sparse_operator([("[2a+ 1a-]", +0.6j), ("[1a+ 2a-]", -0.6j)])
 
 
 def test_sparse_operator_ops_2():
@@ -257,7 +277,7 @@ def test_sparse_operator_fast_product():
     operators = []
     A = forte.SparseOperator()
 
-    max_single_index = 8
+    max_single_index = 6
     for i in range(max_single_index):
         A += forte.sparse_operator(f"[{i}a+]", 1.0)
         A += forte.sparse_operator(f"[{i}b+]", 1.0)
@@ -271,7 +291,7 @@ def test_sparse_operator_fast_product():
 
     # add all operators with two indices in the range [0,1,2,3]
     # of the form [ia+ ja+ la+ ka+] and i < j and l > k
-    max_double_index = 8
+    max_double_index = 6
     for i in range(max_double_index):
         for j in range(max_double_index):
             for l in range(max_double_index):

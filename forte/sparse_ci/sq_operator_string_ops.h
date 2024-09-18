@@ -30,11 +30,12 @@
 
 #include <vector>
 
+#include "sparse_ci/sparse.h"
 #include "sparse_ci/determinant.h"
 
 namespace forte {
 
 void new_product2(SparseOperator& result, SQOperatorString lhs, SQOperatorString rhs,
-                  double factor);
+                  sparse_scalar_t factor);
 
 } // namespace forte
