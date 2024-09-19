@@ -1754,6 +1754,7 @@ BLOCK2:
     default: 1.0e-14
     help: "Consider those integrals as zero if the absolute value is smaller than this value"
 
+
 DEPRECATED:
   CASSCF_MAXITER:
     type: deprecated
