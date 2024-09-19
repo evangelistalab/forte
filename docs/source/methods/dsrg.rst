@@ -1482,7 +1482,7 @@ The FNO MR-DSRG procedure add the following additional steps before a regular MR
   - Because the recommended flow parameter is different between MRPT2 and others,
     the flow parameter for MRPT2 related steps [i.e., (1) and (3)] is controlled by option
     :code:`DSRG_FNO_PT2_S`.
-    The default value of :code:`DSRG_FNO_PT2_S` is 0.5.
+    The default value of :code:`DSRG_FNO_PT2_S` is 1.5.
 
 2. Examples
 +++++++++++
@@ -1535,12 +1535,13 @@ acetaldehyde from ground state to the first singlet A'' state (test case "fno-2"
   dsrg_fno            true
   dsrg_fno_nk         1.0e-4
   dsrg_fno_pt2_s      0.5
+  mcscf_reference     false
   }
   energy('forte', ref_wfn=wfn)
 
 Here, we read converged SA-CASSCF orbitals from test case "fno-1".
 The FNO procedure is activated by :code:`dsrg_fno` and the occupation truncation
-is managed by the option :code:`dsrg_fno_cutoff`.
+is managed by the option :code:`dsrg_fno_nk`.
 Using 1.0e-4 as the FNO cutoff, 82 (out of 134) A' and 50 (out of 82) A'' orbitals are discarded.
 
 .. tip::
