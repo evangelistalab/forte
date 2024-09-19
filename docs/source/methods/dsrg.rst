@@ -1475,9 +1475,11 @@ The FNO MR-DSRG procedure add the following additional steps before a regular MR
   in the truncated virtual space. This correction applies to both energy and DSRG Hamiltonian.
 
 .. note::
-  - If option :code:`THREEPDC` is set to :code:`ZERO`, 3-RDM will also be ignored for the
-    1-RDM build of DSRG-MRPT2.
-    The resulting quasi-natural orbitals are thus approximated, but the error is negligible.
+  - By default, terms involving 3-cumulant are ignored when building DSRG-MRPT2 1-RDM.
+    The resulting quasi-natural orbitals are thus approximated, but the error is shown to be negligible.
+    This behavior is controlled by the option :code:`DSRG_FNO_PT2_CU3`.
+    If option :code:`THREEPDC` is set to :code:`ZERO`, 3-cumulant terms will be ignored in
+    **both** DSRG-MRPT2 1-RDM build and the subsequent high-level DSRG computations.
 
   - Because the recommended flow parameter is different between MRPT2 and others,
     the flow parameter for MRPT2 related steps [i.e., (1) and (3)] is controlled by option

@@ -30,6 +30,7 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
+#include "forte-def.h"
 #include "helpers/timer.h"
 #include "sadsrg.h"
 
