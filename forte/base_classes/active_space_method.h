@@ -171,7 +171,8 @@ class ActiveSpaceMethod {
     /// @return a list of overlap for every root
     virtual std::vector<double> compute_complementary_H2caa_overlap(
         [[maybe_unused]] const std::vector<size_t>& roots, [[maybe_unused]] ambit::Tensor Tbra,
-        [[maybe_unused]] ambit::Tensor Tket, [[maybe_unused]] const std::vector<int>& p_syms) {
+        [[maybe_unused]] ambit::Tensor Tket, [[maybe_unused]] const std::vector<int>& p_syms,
+        [[maybe_unused]] const std::string& name, [[maybe_unused]] bool load) {
         throw std::runtime_error(
             "ActiveSpaceMethod::compute_complementary_H2caa_overlap: Not yet implemented!");
     }

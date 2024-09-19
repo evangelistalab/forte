@@ -56,6 +56,8 @@ make_orbital_transformation(const std::string& type, std::shared_ptr<SCFInfo> sc
 
     if (type == "LOCAL") {
         orb_t = std::make_unique<Localize>(options, ints, mo_space_info);
+    } else if (type == "CHOLESKY_ACTIVE") {
+        orb_t = std::make_unique<CholeskyLocal>(options, ints, mo_space_info);
     } else if (type == "MP2NO") {
         orb_t = std::make_unique<MP2_NOS>(scf_info, options, ints, mo_space_info);
     } else if (type == "CINO") {

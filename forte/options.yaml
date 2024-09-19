@@ -75,7 +75,7 @@ Driver:
   ORBITAL_TYPE:
     type: str
     default: "CANONICAL"
-    choices: ["CANONICAL", "LOCAL", "MP2NO", "MRPT2NO"]
+    choices: ["CANONICAL", "LOCAL", "CHOLESKY_ACTIVE", "MP2NO", "MRPT2NO"]
     help: "Type of orbitals to use"
   MINAO_BASIS:
     type: str
@@ -1212,6 +1212,10 @@ DSRG:
     default: "EXPLICIT"
     choices: ["EXPLICIT", "DIRECT"]
     help: "Algorithm to compute 3-RDM contributions in fully contracted [H2, T2]"
+  DSRG_3RDM_BLOCK2_CPS_BOND_DIMENSION:
+    type: int
+    default: 1000
+    help: "Bond dimension of the compressed (N-1)-electron wave function"
   DSRG_RDM_MS_AVG:
     type: bool
     default: false
@@ -1382,6 +1386,10 @@ MCSCF:
     type: bool
     default: True
     help: "Ignore frozen orbitals in the input file for MCSCF or not"
+  MCSCF_DMRG_FOCUS_NSWEEPS:
+    type: int
+    default: 20
+    help: "Max number of sweeps in DMRGSCF near convergence (de < 1.0e-3, dg < 1.0e-3)"
   MCSCF_MULTIPLICITY:
     type: int
     default: 0
@@ -1637,7 +1645,11 @@ BLOCK2:
   BLOCK2_INITIAL_GUESS:
     type: double
     default: -1
-    help: "Shift (0 ~ 1) of occupation number for DMRG initial guess. -1 = random initial guess"
+    help: "Shift (0 ~ 1) of occupation number for DMRG initial guess: n + dn for n < 0.75 and n - dn for n > 1.25. dn < 0 for random initial guess"
+  BLOCK2_INITIAL_GUESS_OCC:
+    type: double_list
+    default: []
+    help: "Active occupation numbers (in Pitzer order) for DMRG initial guess; We use Hartree-Fock occupation numbers if not given."
   BLOCK2_CUTOFF:
     type: double
     default: 1E-20
@@ -1678,6 +1690,10 @@ BLOCK2:
     type: bool
     default: True
     help: "Whether to use low memory algorithm to compute RDMs"
+  BLOCK2_INTERGRAL_CUTOFF:
+    type: double
+    default: 1.0e-14
+    help: "Consider those integrals as zero if the absolute value is smaller than this value"
 
 
 

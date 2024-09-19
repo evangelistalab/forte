@@ -25,6 +25,7 @@
  *
  * @END LICENSE
  */
+#include <set>
 #include <algorithm>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -100,7 +101,7 @@ double SADSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alph
 }
 
 std::vector<double> SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2,
-                                     const double& alpha, double& C0) {
+                                     const double& alpha, double& C0, bool load_mps) {
     local_timer timer;
 
     std::vector<double> Eout{0.0, 0.0, 0.0};
@@ -118,7 +119,7 @@ std::vector<double> SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, Block
     Eout[0] += E;
 
     // other terms involving T2 with at least two active indices
-    auto Esmall = H2_T2_C0_T2small(H2, T2, S2);
+    auto Esmall = H2_T2_C0_T2small(H2, T2, S2, load_mps);
 
     for (int i = 0; i < 3; ++i) {
         E += Esmall[i];
@@ -138,7 +139,7 @@ std::vector<double> SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, Block
 }
 
 std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T2,
-                                             BlockedTensor& S2) {
+                                             BlockedTensor& S2, bool load_mps) {
     /**
      * Note the following blocks should be available in memory.
      * H2: vvaa, aacc, avca, avac, vaaa, aaca
@@ -200,8 +201,9 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
     if (do_cu3_) {
         if (store_cu3_) {
             timer t("DSRG [H2, T2] L3");
-            E3 += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * L3_("xyzuwv");
-            E3 -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * L3_("xyzuwv");
+            double E3v = H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * L3_("xyzuwv");
+            double E3c = H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * L3_("xyzuwv");
+            E3 += E3v - E3c;
         } else {
             // direct algorithm for 3RDM: Alex's trick JCTC 16, 6343–6357 (2020)
             // t_{uvez} v_{ewxy} D_{xyzuwv} = - t_{uvez} v_{ezxy} D_{uvxy}
@@ -218,7 +220,7 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
             Tket = ambit::Tensor::build(tensor_type_, "Tket", Tbra.dims());
             Tket("ewuv") = T2.block("aava")("xyez") * Ua("wz") * Ua("ux") * Ua("vy");
             auto E3v_map = as_solver_->compute_complementary_H2caa_overlap(
-                Tbra, Tket, mo_space_info_->symmetry("RESTRICTED_UOCC"));
+                Tket, Tbra, mo_space_info_->symmetry("RESTRICTED_UOCC"), "v", load_mps);
             timer_v.stop();
 
             timer timer_c("DSRG [H2, T2] D3C direct");
@@ -227,7 +229,7 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
             Tbra = ambit::Tensor::build(tensor_type_, "Tbra", Tket.dims());
             Tbra("mwuv") = H2.block("aaca")("xymz") * Ua("wz") * Ua("ux") * Ua("vy");
             auto E3c_map = as_solver_->compute_complementary_H2caa_overlap(
-                Tbra, Tket, mo_space_info_->symmetry("RESTRICTED_DOCC"));
+                Tket, Tbra, mo_space_info_->symmetry("RESTRICTED_DOCC"), "c", load_mps);
             timer_c.stop();
 
             // - 2-RDM contributions
@@ -521,7 +523,7 @@ void SADSRG::V_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha
 }
 
 std::vector<double> SADSRG::V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2,
-                                       const double& alpha, double& C0) {
+                                       const double& alpha, double& C0, bool load_mps) {
     local_timer timer;
 
     std::vector<double> Eout{0.0, 0.0, 0.0};
@@ -540,7 +542,7 @@ std::vector<double> SADSRG::V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, Bloc
     auto H2 = ambit::BlockedTensor::build(tensor_type_, "temp_H2", blocks);
     H2["abij"] = B["gai"] * B["gbj"];
 
-    auto Esmall = H2_T2_C0_T2small(H2, T2, S2);
+    auto Esmall = H2_T2_C0_T2small(H2, T2, S2, load_mps);
 
     for (int i = 0; i < 3; ++i) {
         Eout[i] += Esmall[i];
