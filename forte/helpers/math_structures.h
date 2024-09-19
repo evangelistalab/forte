@@ -198,7 +198,7 @@ class VectorSpace {
     /// @param scalar the scalar to divide by
     /// @return the result of the division
     Derived operator/(F scalar) const {
-        assert(scalar != 0); // Prevent division by zero
+        assert(scalar != F(0)); // Prevent division by zero
         Derived result = self();
         result /= scalar;
         return result;
@@ -389,7 +389,7 @@ template <typename Derived, typename T, typename F> class VectorSpaceList {
     /// @param scalar
     /// @return the result of the division
     Derived& operator/=(F scalar) {
-        assert(scalar != 0); // Prevent division by zero
+        assert(scalar != F(0)); // Prevent division by zero
         for (auto& [e, c] : elements_) {
             c /= scalar;
         }
