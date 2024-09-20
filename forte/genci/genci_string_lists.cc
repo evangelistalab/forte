@@ -189,7 +189,6 @@ void GenCIStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
             ngas_spaces_, nirrep_, gas_size_, gas_mos_, gas_beta_3h_occupations_, string_class_);
         beta_address_3h_ = std::make_shared<StringAddress>(gas_size_, nb_ - 3, beta_3h_strings);
     }
-
     if (na_ >= 4) {
         auto alfa_4h_strings = make_strings_with_occupation(
             ngas_spaces_, nirrep_, gas_size_, gas_mos_, gas_alfa_4h_occupations_, string_class_);
@@ -264,7 +263,6 @@ void GenCIStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         beta_3h_list = make_3h_list(beta_strings_, beta_address_, beta_address_3h_);
         h3_list_timer += t.get();
     }
-
     {
         local_timer t;
         alfa_4h_list = make_4h_list(alfa_strings_, alfa_address_, alfa_address_4h_);

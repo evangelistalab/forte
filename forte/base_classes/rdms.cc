@@ -104,8 +104,11 @@ std::shared_ptr<RDMs> RDMs::build(size_t max_rdm_level, size_t n_orbs, RDMsType 
             rdms = std::make_shared<RDMsSpinFree>(g1);
         } else if (max_rdm_level == 2) {
             rdms = std::make_shared<RDMsSpinFree>(g1, g2);
-        } else {
+        } else if (max_rdm_level == 3) {
             rdms = std::make_shared<RDMsSpinFree>(g1, g2, g3);
+        }
+        else {
+            throw std::runtime_error("RDMs::build: max_rdm_level > 3 not implemented for spin-free RDMs.");
         }
     }
     return rdms;
@@ -657,11 +660,11 @@ std::shared_ptr<RDMs> RDMsSpinDependent::clone() {
         g3bbb = g3bbb_.clone();
     }
     if (max_rdm_ > 3) {
-        g4aaaa_ = g4aaaa_.clone();
-        g4aaab_ = g4aaab_.clone();
-        g4aabb_ = g4aabb_.clone();
-        g4abbb_ = g4abbb_.clone();
-        g4bbbb_ = g4bbbb_.clone();
+        g4aaaa = g4aaaa_.clone();
+        g4aaab = g4aaab_.clone();
+        g4aabb = g4aabb_.clone();
+        g4abbb = g4abbb_.clone();
+        g4bbbb = g4bbbb_.clone();
     }
 
     std::shared_ptr<RDMs> rdms;
@@ -915,32 +918,27 @@ ambit::Tensor RDMsSpinFree::g3bbb() const {
     return g3bbb;
 }
 ambit::Tensor RDMsSpinFree::g4aaaa() const {
-    // TODO: Implement g4aaaa
-    _test_rdm_level(20, "g4aaaa");
+    throw std::runtime_error("RDMsSpinFree::g4aaaa not implemented.");
     ambit::Tensor g4aaaa;
     return g4aaaa;
 }
 ambit::Tensor RDMsSpinFree::g4aaab() const {
-    // TODO: Implement g4aaab
-    _test_rdm_level(20, "g4aaab");
+    throw std::runtime_error("RDMsSpinFree::g4aaab not implemented.");
     ambit::Tensor g4aaab;
     return g4aaab;
 }
 ambit::Tensor RDMsSpinFree::g4aabb() const {
-    // TODO: Implement g4aabb
-    _test_rdm_level(20, "g4aabb");
+    throw std::runtime_error("RDMsSpinFree::g4aabb not implemented.");
     ambit::Tensor g4aabb;
     return g4aabb;
 }
 ambit::Tensor RDMsSpinFree::g4abbb() const {
-    // TODO: Implement g4abbb
-    _test_rdm_level(20, "g4abbb");
+    throw std::runtime_error("RDMsSpinFree::g4abbb not implemented.");
     ambit::Tensor g4abbb;
     return g4abbb;
 }
 ambit::Tensor RDMsSpinFree::g4bbbb() const {
-    // TODO: Implement g4bbbb
-    _test_rdm_level(20, "g4bbbb");
+    throw std::runtime_error("RDMsSpinFree::g4bbbb not implemented.");
     ambit::Tensor g4bbbb;
     return g4bbbb;
 }

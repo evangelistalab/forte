@@ -287,14 +287,13 @@ class GenCIVector {
     }
     static size_t eight_index(size_t p, size_t q, size_t r, size_t s, size_t t, size_t u,
                               size_t v, size_t w, size_t ncmo) {
-        return (ncmo * ncmo * ncmo * ncmo * ncmo * ncmo * ncmo * p + 
-                ncmo * ncmo * ncmo * ncmo * ncmo * ncmo * q +
-                ncmo * ncmo * ncmo * ncmo * ncmo * r + 
-                ncmo * ncmo * ncmo * ncmo * s + 
-                ncmo * ncmo * ncmo * t + 
-                ncmo * ncmo * u + 
-                ncmo * v + 
-                w);
+        size_t ncmo2 = ncmo * ncmo;
+        size_t ncmo4 = ncmo2 * ncmo2;
+        size_t ncmo6 = ncmo4 * ncmo2;
+        return (ncmo6 * ncmo * p + ncmo6 * q +
+                ncmo4 * ncmo * r + ncmo4 * s + 
+                ncmo2 * ncmo * t + ncmo2 * u + 
+                ncmo * v + w);
     }
 
     /// @brief Apply the scalar part of the Hamiltonian to this vector and add it to the result
