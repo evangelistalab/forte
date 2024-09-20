@@ -520,8 +520,10 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space_from_map(
 
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
                                                 const std::string& point_group,
-                                                std::shared_ptr<ForteOptions> options) {
+                                                std::shared_ptr<ForteOptions> options,
+                                                const std::vector<size_t>& reorder) {
     auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi, point_group);
+    mo_space_info->set_reorder(reorder);
     mo_space_info->read_options(options);
     mo_space_info->compute_space_info();
     return mo_space_info;

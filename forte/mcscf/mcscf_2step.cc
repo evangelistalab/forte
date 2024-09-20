@@ -92,12 +92,8 @@ void MCSCF_2STEP::read_options() {
 
     orb_type_redundant_ = options_->get_str("MCSCF_FINAL_ORBITAL");
 
-    ci_type_ = options_->get_str("ACTIVE_SPACE_SOLVER");
-    if (ci_type_ == "") {
-        throw std::runtime_error("ACTIVE_SPACE_SOLVER is not specified!");
-    }
     mci_maxiter_ = options_->get_int("MCSCF_MCI_MAXITER");
-    if (ci_type_ == "BLOCK2")
+    if (as_solver_->solver_type() == "BLOCK2")
         mci_maxiter_ = options_->get_int("BLOCK2_N_TOTAL_SWEEPS");
 
     opt_orbs_ = not options_->get_bool("MCSCF_NO_ORBOPT");
@@ -135,7 +131,7 @@ void MCSCF_2STEP::print_options() {
                              {"Max value for rotation", max_rot_}});
     printer.add_string_data({{"Print level", to_string(print_)},
                              {"Integral type", int_type_},
-                             {"CI solver type", ci_type_},
+                             {"CI solver type", as_solver_->solver_type()},
                              {"Final orbital type", orb_type_redundant_},
                              {"Derivative type", der_type_}});
     printer.add_bool_data({{"Optimize orbitals", opt_orbs_},
@@ -182,7 +178,7 @@ double MCSCF_2STEP::compute_energy() {
     // convergence for final CI
     auto r_conv = options_->get_double("R_CONVERGENCE");
     auto as_maxiter = options_->get_int("DL_MAXITER");
-    if (ci_type_ == "BLOCK2")
+    if (as_solver_->solver_type() == "BLOCK2")
         as_maxiter = options_->get_int("BLOCK2_N_TOTAL_SWEEPS");
 
     auto active_space_ints = cas_grad.active_space_ints();
@@ -246,7 +242,7 @@ double MCSCF_2STEP::compute_energy() {
         }
 
         // CI solver set up
-        bool restart = (ci_type_ == "FCI" or ci_type_ == "DETCI");
+        bool restart = (as_solver_->solver_type() == "FCI" or as_solver_->solver_type() == "DETCI");
         as_solver_->set_maxiter(restart ? mci_maxiter_ : as_maxiter);
 
         // CI convergence criteria along the way
@@ -256,8 +252,8 @@ double MCSCF_2STEP::compute_energy() {
         // start iterations
         lbfgs_param->maxiter = micro_maxiter_;
         int bad_count = 0;
-        bool skip_de_conv = (ci_type_.find("DMRG") != std::string::npos or
-                             ci_type_.find("BLOCK2") != std::string::npos);
+        bool skip_de_conv = (as_solver_->solver_type().find("DMRG") != std::string::npos or
+                             as_solver_->solver_type().find("BLOCK2") != std::string::npos);
 
         std::vector<MCSCF_HISTORY> history;
 
@@ -329,12 +325,12 @@ double MCSCF_2STEP::compute_energy() {
             }
 
             // nail down results for DMRG
-            if (ci_type_ == "BLOCK2" or ci_type_ == "DMRG") {
+            if (as_solver_->solver_type() == "BLOCK2" or as_solver_->solver_type() == "DMRG") {
                 if (std::fabs(de_c) < 1.0e-2 or g_rms < 1.0e-3) {
                     options_->set_bool("READ_ACTIVE_WFN_GUESS", true);
                     mci_maxiter_ = 14;
                     // focus on the last bond dimension
-                    if (ci_type_ == "BLOCK2") {
+                    if (as_solver_->solver_type() == "BLOCK2") {
                         auto nsweeps = options_->get_int_list("BLOCK2_SWEEP_N_SWEEPS");
                         auto bond_dims = options_->get_int_list("BLOCK2_SWEEP_BOND_DIMS");
                         auto noises = options_->get_double_list("BLOCK2_SWEEP_NOISES");

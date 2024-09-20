@@ -60,11 +60,13 @@ using namespace ambit;
 namespace forte {
 
 DistDFIntegrals::DistDFIntegrals(std::shared_ptr<ForteOptions> options,
+                                 std::shared_ptr<SCFInfo> scf_info,
                                  std::shared_ptr<psi::Wavefunction> ref_wfn,
                                  IntegralSpinRestriction restricted,
                                  IntegralFrozenCore resort_frozen_core,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Psi4Integrals(psi::Options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
+    : Psi4Integrals(psi::Options, scf_info, ref_wfn, restricted, resort_frozen_core,
+                    mo_space_info) {
     initialize()
 }
 

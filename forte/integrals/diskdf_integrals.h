@@ -42,7 +42,7 @@ namespace forte {
 class DISKDFIntegrals : public Psi4Integrals {
   public:
     /// Contructor of DISKDFIntegrals
-    DISKDFIntegrals(std::shared_ptr<ForteOptions> options,
+    DISKDFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
                     std::shared_ptr<psi::Wavefunction> ref_wfn,
                     std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 

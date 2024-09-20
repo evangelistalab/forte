@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
+from typing import Optional
 
 from psi4.core import Wavefunction, Molecule
 
@@ -47,12 +48,14 @@ class ForteData:
         The active space solver object.
     rdms: rdms
         The reduced density matrices.
+    results: Results
+        The results object.
     """
 
     options: ForteOptions = None
     state_weights_map: dict[StateInfo] = None
     symmetry: Symmetry = None
-    molecule: Molecule = None
+    molecule: Optional[Molecule] = None
     model: Model = None
     scf_info: SCFInfo = None
     mo_space_info: MOSpaceInfo = None

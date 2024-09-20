@@ -48,7 +48,7 @@ class CustomIntegrals : public ForteIntegrals {
     /// @param tei_aa the alpha-alpha two-electron integrals in MO basis
     /// @param tei_ab the alpha-beta two-electron integrals in MO basis
     /// @param tei_bb the beta-beta two-electron integrals in MO basis
-    CustomIntegrals(std::shared_ptr<ForteOptions> options,
+    CustomIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
                     std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted,
                     double scalar, const std::vector<double>& oei_a,
                     const std::vector<double>& oei_b, const std::vector<double>& tei_aa,

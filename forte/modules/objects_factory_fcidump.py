@@ -28,6 +28,7 @@ def _make_ints_from_fcidump(fcidump, data: ForteData):
 
     ints = forte.make_custom_ints(
         data.options,
+        data.scf_info,
         data.mo_space_info,
         fcidump["enuc"],
         fcidump["hcore"].flatten(),
@@ -94,7 +95,7 @@ def _prepare_forte_objects_from_fcidump(data, filename: str = None):
     nmopi = psi4.core.Dimension(nmopi_list)
 
     # Create the MOSpaceInfo object
-    data.mo_space_info = forte.make_mo_space_info(nmopi, fcidump["pntgrp"], options)
+    data.mo_space_info = forte.make_mo_space_info(nmopi, fcidump["pntgrp"], options, [])
 
     # manufacture a SCFInfo object from the FCIDUMP file (this assumes C1 symmetry)
     nel = fcidump["nelec"]
@@ -140,7 +141,12 @@ def _prepare_forte_objects_from_fcidump(data, filename: str = None):
                     val += eri[i, i, j, j] - eri[i, j, i, j]
             epsilon_b.set(i, val)
 
-    data.scf_info = forte.SCFInfo(nmopi, doccpi, soccpi, 0.0, epsilon_a, epsilon_b)
+    Ca = psi4.core.Matrix("Ca", nmopi, nmopi)
+    Cb = psi4.core.Matrix("Cb", nmopi, nmopi)
+    Ca.identity()
+    Cb.identity()
+
+    data.scf_info = forte.SCFInfo(nmopi, doccpi, soccpi, 0.0, epsilon_a, epsilon_b, Ca, Cb)
 
     state_info = _make_state_info_from_fcidump(fcidump, options)
     data.state_weights_map = {state_info: [1.0]}

@@ -12,7 +12,6 @@ from forte._forte import (
 
 
 class MCSCF(Module):
-
     """
     A module to perform MCSCF calculations.
     """
@@ -42,6 +41,6 @@ class MCSCF(Module):
             data.ints,
         )
         energy = mcscf.compute_energy()
-        data.results.add("energy", energy, "MCSCF energy", "hartree")
+        data.results.add("mcscf energy", energy, "MCSCF energy", "hartree")
 
         return data

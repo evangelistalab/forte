@@ -50,6 +50,7 @@ namespace forte {
 
 class ForteOptions;
 class MOSpaceInfo;
+class SCFInfo;
 
 /**
  * @brief The IntegralSpinRestriction enum
@@ -113,7 +114,7 @@ class ForteIntegrals {
      * @param restricted Select a restricted or unrestricted transformation
      * @param mo_space_info The MOSpaceInfo object
      */
-    ForteIntegrals(std::shared_ptr<ForteOptions> options,
+    ForteIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
                    std::shared_ptr<psi::Wavefunction> ref_wfn,
                    std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
                    IntegralSpinRestriction restricted);
@@ -124,7 +125,7 @@ class ForteIntegrals {
      * @param restricted Select a restricted or unrestricted transformation
      * @param mo_space_info The MOSpaceInfo object
      */
-    ForteIntegrals(std::shared_ptr<ForteOptions> options,
+    ForteIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
                    std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
                    IntegralSpinRestriction restricted);
 
@@ -149,6 +150,10 @@ class ForteIntegrals {
     /// Use the function update_ints_if_needed to re-transform the integrals only if they changed.
     ///
     /// @return the coefficient matrix for the alpha orbitals used to transform the integrals
+    std::shared_ptr<psi::Matrix> _Ca();
+    /// Return Cb
+    std::shared_ptr<psi::Matrix> _Cb();
+
     std::shared_ptr<const psi::Matrix> Ca() const;
     /// Return Cb
     std::shared_ptr<const psi::Matrix> Cb() const;
@@ -392,7 +397,7 @@ class ForteIntegrals {
     /// Orbital coefficients in AO x MO basis where MO is Pitzer order
     virtual std::shared_ptr<psi::Matrix> Ca_AO() const = 0;
     /// Transform SO orbital coefficients to AO x MO basis where MO is Pitzer order
-    std::shared_ptr<psi::Matrix> Ca_SO2AO(std::shared_ptr<psi::Matrix> Ca_SO) const;
+    std::shared_ptr<psi::Matrix> Ca_SO2AO(std::shared_ptr<const psi::Matrix> Ca_SO) const;
 
     /// Obtain AO dipole integrals [X, Y, Z]
     /// Each direction is a std::shared_ptr<psi::Matrix> of dimension nao * nao
@@ -417,6 +422,9 @@ class ForteIntegrals {
     /// The options object
     std::shared_ptr<ForteOptions> options_;
 
+    /// The SCFInfo object (stores the MO coefficients)
+    std::shared_ptr<SCFInfo> scf_info_;
+
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
@@ -429,11 +437,11 @@ class ForteIntegrals {
     /// Are we doing a spin-restricted computation?
     IntegralSpinRestriction spin_restriction_;
 
-    // Ca matrix from psi
-    std::shared_ptr<psi::Matrix> Ca_;
+    // // Ca matrix from psi
+    // std::shared_ptr<psi::Matrix> Ca_;
 
-    // Cb matrix from psi
-    std::shared_ptr<psi::Matrix> Cb_;
+    // // Cb matrix from psi
+    // std::shared_ptr<psi::Matrix> Cb_;
 
     // AO overlap matrix from psi
     std::shared_ptr<psi::Matrix> S_;
@@ -587,7 +595,8 @@ class ForteIntegrals {
  */
 class Psi4Integrals : public ForteIntegrals {
   public:
-    Psi4Integrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+    Psi4Integrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
+                  std::shared_ptr<psi::Wavefunction> ref_wfn,
                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
                   IntegralSpinRestriction restricted);
 

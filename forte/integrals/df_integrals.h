@@ -41,7 +41,8 @@ namespace forte {
 class DFIntegrals : public Psi4Integrals {
   public:
     /// Contructor of DFIntegrals
-    DFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+    DFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
+                std::shared_ptr<psi::Wavefunction> ref_wfn,
                 std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 
     void initialize() override;

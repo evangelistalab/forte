@@ -34,11 +34,14 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/matrix.h"
 
-#include "helpers/blockedtensorfactory.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
+#include "base_classes/scf_info.h"
+
+#include "helpers/blockedtensorfactory.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
+
 #include "integrals.h"
 #include "memory.h"
 
@@ -65,20 +68,22 @@ std::map<IntegralType, std::string> int_type_label{
     {DistDF, "Distributed density fitting"}, {Custom, "Custom"}};
 
 ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
+                               std::shared_ptr<SCFInfo> scf_info,
                                std::shared_ptr<psi::Wavefunction> ref_wfn,
                                std::shared_ptr<MOSpaceInfo> mo_space_info,
                                IntegralType integral_type, IntegralSpinRestriction restricted)
-    : options_(options), mo_space_info_(mo_space_info), wfn_(ref_wfn),
+    : options_(options), scf_info_(scf_info), mo_space_info_(mo_space_info), wfn_(ref_wfn),
       integral_type_(integral_type), spin_restriction_(restricted), frozen_core_energy_(0.0),
       scalar_energy_(0.0) {
     common_initialize();
 }
 
 ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
+                               std::shared_ptr<SCFInfo> scf_info,
                                std::shared_ptr<MOSpaceInfo> mo_space_info,
                                IntegralType integral_type, IntegralSpinRestriction restricted)
-    : options_(options), mo_space_info_(mo_space_info), integral_type_(integral_type),
-      spin_restriction_(restricted) {
+    : options_(options), scf_info_(scf_info), mo_space_info_(mo_space_info),
+      integral_type_(integral_type), spin_restriction_(restricted) {
     common_initialize();
 }
 
@@ -144,15 +149,19 @@ void ForteIntegrals::allocate() {
     }
 }
 
-std::shared_ptr<const psi::Matrix> ForteIntegrals::Ca() const { return Ca_; }
+std::shared_ptr<psi::Matrix> ForteIntegrals::_Ca() { return scf_info_->_Ca(); }
 
-std::shared_ptr<const psi::Matrix> ForteIntegrals::Cb() const { return Cb_; }
+std::shared_ptr<psi::Matrix> ForteIntegrals::_Cb() { return scf_info_->_Cb(); }
+
+std::shared_ptr<const psi::Matrix> ForteIntegrals::Ca() const { return scf_info_->Ca(); }
+
+std::shared_ptr<const psi::Matrix> ForteIntegrals::Cb() const { return scf_info_->Cb(); }
 
 bool ForteIntegrals::update_ints_if_needed() {
     if (ints_consistent_) {
         return false;
     }
-    update_orbitals(Ca_, Cb_, true);
+    update_orbitals(_Ca(), _Cb(), true);
     return true;
 }
 
@@ -394,7 +403,8 @@ bool ForteIntegrals::fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool is_
 
 bool ForteIntegrals::test_orbital_spin_restriction(std::shared_ptr<psi::Matrix> A,
                                                    std::shared_ptr<psi::Matrix> B) const {
-    auto A_minus_B = A->clone();
+    auto A_minus_B = std::make_shared<psi::Matrix>("A - B", A->rowspi(), A->colspi());
+    A_minus_B->add(A);
     A_minus_B->subtract(B);
     return A_minus_B->absmax() < 1.0e-7;
 }
@@ -425,8 +435,6 @@ void ForteIntegrals::print_info() {
 }
 
 void ForteIntegrals::print_ints() {
-    //    Ca_->print();
-    //    Cb_->print();
     outfile->Printf("\n  nmo_ = %zu", nmo_);
 
     outfile->Printf("\n  Nuclear repulsion energy: %20.12f", nucrep_);
@@ -488,7 +496,8 @@ void ForteIntegrals::print_ints() {
     }
 }
 
-std::shared_ptr<psi::Matrix> ForteIntegrals::Ca_SO2AO(std::shared_ptr<psi::Matrix> Ca_SO) const {
+std::shared_ptr<psi::Matrix>
+ForteIntegrals::Ca_SO2AO(std::shared_ptr<const psi::Matrix> Ca_SO) const {
     auto aotoso = wfn_->aotoso();
     auto nao = nso_;
 
@@ -512,8 +521,8 @@ std::shared_ptr<psi::Matrix> ForteIntegrals::Ca_SO2AO(std::shared_ptr<psi::Matri
 void ForteIntegrals::rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
                                      std::shared_ptr<psi::Matrix> Ub, bool re_transform) {
     // 1. Rotate the orbital coefficients and store them in the ForteIntegral object
-    auto Ca_rotated = psi::linalg::doublet(Ca_, Ua);
-    auto Cb_rotated = psi::linalg::doublet(Cb_, Ub);
+    auto Ca_rotated = psi::linalg::doublet(_Ca(), Ua);
+    auto Cb_rotated = psi::linalg::doublet(_Cb(), Ub);
 
     update_orbitals(Ca_rotated, Cb_rotated, re_transform);
 }

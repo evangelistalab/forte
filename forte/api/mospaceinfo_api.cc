@@ -38,10 +38,7 @@ using namespace pybind11::literals;
 
 namespace forte {
 
-/// export MOSpaceInfo
 void export_MOSpaceInfo(py::module& m) {
-
-    // export MOSpaceInfo
     py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")
         .def(py::init<const psi::Dimension&, const std::string&>())
         .def("dimension", &MOSpaceInfo::dimension,

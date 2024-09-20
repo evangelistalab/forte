@@ -32,6 +32,7 @@
 
 namespace psi {
 class Vector;
+class Matrix;
 class Wavefunction;
 } // namespace psi
 
@@ -42,7 +43,8 @@ class SCFInfo {
     /// Constructor
     SCFInfo(const psi::Dimension& nmopi, const psi::Dimension& doccpi, const psi::Dimension& soccpi,
             double reference_energy, std::shared_ptr<psi::Vector> epsilon_a,
-            std::shared_ptr<psi::Vector> epsilon_b);
+            std::shared_ptr<psi::Vector> epsilon_b, std::shared_ptr<psi::Matrix> Ca,
+            std::shared_ptr<psi::Matrix> Cb);
 
     /// Constructor based on Psi4 Wavefunction
     SCFInfo(std::shared_ptr<psi::Wavefunction> wfn);
@@ -65,6 +67,18 @@ class SCFInfo {
     /// beta orbital energy
     std::shared_ptr<psi::Vector> epsilon_b();
 
+    /// @return the alpha orbital coefficients
+    std::shared_ptr<psi::Matrix> _Ca();
+
+    /// @return the beta orbital coefficients
+    std::shared_ptr<psi::Matrix> _Cb();
+
+    /// @return the alpha orbital coefficients (const version)
+    std::shared_ptr<const psi::Matrix> Ca() const;
+
+    /// @return the beta orbital coefficients (const version)
+    std::shared_ptr<const psi::Matrix> Cb() const;
+
   private:
     // Orbitals per irrep
     psi::Dimension nmopi_;
@@ -83,6 +97,12 @@ class SCFInfo {
 
     /// beta orbital energy
     std::shared_ptr<psi::Vector> epsilon_b_;
+
+    // Alpha orbital coefficients (nso x nmo)
+    std::shared_ptr<psi::Matrix> Ca_;
+
+    // Beta orbital coefficients (nso x nmo)
+    std::shared_ptr<psi::Matrix> Cb_;
 };
 
 } // namespace forte

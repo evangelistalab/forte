@@ -29,14 +29,16 @@
 #include <cmath>
 #include <fstream>
 
-#include "psi4/libdpd/dpd.h"
-#include "psi4/libmints/mintshelper.h"
+// #include "psi4/libmints/mintshelper.h"
 #include "psi4/libmints/matrix.h"
-#include "psi4/libpsio/psio.hpp"
+// #include "psi4/libpsio/psio.hpp"
 #include "psi4/psi4-dec.h"
-#include "psi4/psifiles.h"
+// #include "psi4/psifiles.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "base_classes/mo_space_info.h"
+#include "base_classes/scf_info.h"
+
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/string_algorithms.h"
 #include "helpers/timer.h"
@@ -53,24 +55,25 @@ using namespace psi;
 namespace forte {
 
 CustomIntegrals::CustomIntegrals(std::shared_ptr<ForteOptions> options,
+                                 std::shared_ptr<SCFInfo> scf_info,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
                                  IntegralSpinRestriction restricted, double scalar,
                                  const std::vector<double>& oei_a, const std::vector<double>& oei_b,
                                  const std::vector<double>& tei_aa,
                                  const std::vector<double>& tei_ab,
                                  const std::vector<double>& tei_bb)
-    : ForteIntegrals(options, mo_space_info, Custom, restricted), full_aphys_tei_aa_(tei_aa),
-      full_aphys_tei_ab_(tei_ab), full_aphys_tei_bb_(tei_bb) {
+    : ForteIntegrals(options, scf_info, mo_space_info, Custom, restricted),
+      full_aphys_tei_aa_(tei_aa), full_aphys_tei_ab_(tei_ab), full_aphys_tei_bb_(tei_bb) {
     set_nuclear_repulsion(scalar);
     set_oei_all(oei_a, oei_b);
     initialize();
 }
 
 void CustomIntegrals::initialize() {
-    Ca_ = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
-    Cb_ = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
-    Ca_->identity();
-    Cb_->identity();
+    // Ca_ = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
+    // Cb_ = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
+    // Ca_->identity();
+    // Cb_->identity();
     nsopi_ = nmopi_;
     nso_ = nmo_;
 
@@ -471,8 +474,8 @@ void CustomIntegrals::transform_one_electron_integrals() {
     }
 
     // transform the one-electron integrals
-    Ha->transform(Ca_);
-    Hb->transform(Cb_);
+    Ha->transform(scf_info_->_Ca());
+    Hb->transform(scf_info_->_Cb());
 
     OneBody_symm_ = Ha;
 
@@ -518,8 +521,8 @@ void CustomIntegrals::transform_two_electron_integrals() {
             for (int q = 0; q < nmopi_[h]; ++q) {
                 int p_full = p + offset;
                 int q_full = q + offset;
-                Ca_data[p_full * nmo_ + q_full] = Ca_->get(h, p, q);
-                Cb_data[p_full * nmo_ + q_full] = Cb_->get(h, p, q);
+                Ca_data[p_full * nmo_ + q_full] = this->Ca()->get(h, p, q);
+                Cb_data[p_full * nmo_ + q_full] = this->Cb()->get(h, p, q);
             }
         }
         offset += nmopi_[h];
@@ -540,8 +543,8 @@ void CustomIntegrals::transform_two_electron_integrals() {
 void CustomIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
                                       std::shared_ptr<psi::Matrix> Cb, bool re_transform) {
     // 1. Copy orbitals and, if necessary, test they meet the spin restriction condition
-    Ca_->copy(Ca);
-    Cb_->copy(Cb);
+    _Ca()->copy(Ca);
+    _Cb()->copy(Cb);
     ints_consistent_ = false;
 
     if (spin_restriction_ == IntegralSpinRestriction::Restricted) {

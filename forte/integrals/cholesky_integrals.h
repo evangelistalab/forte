@@ -42,7 +42,7 @@ namespace forte {
 class CholeskyIntegrals : public Psi4Integrals {
   public:
     /// Contructor of CholeskyIntegrals
-    CholeskyIntegrals(std::shared_ptr<ForteOptions> options,
+    CholeskyIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
                       std::shared_ptr<psi::Wavefunction> ref_wfn,
                       std::shared_ptr<MOSpaceInfo> mo_space_info,
                       IntegralSpinRestriction restricted);

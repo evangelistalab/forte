@@ -68,7 +68,7 @@ class ActiveSpaceSolver {
     // ==> Class Constructor and Destructor <==
     /**
      * @brief ActiveSpaceMethod Constructor for a multi-state computation
-     * @param method A string that labels the method requested (e.g. "FCI", "ACI", ...)
+     * @param solver_type A string that labels the solver requested (e.g. "FCI", "ACI", ...)
      * @param nroots_map A map of electronic states to the number of roots computed {state_1 : n_1,
      * state_2 : n_2, ...} where state_i specifies the symmetry of a state and n_i is the number of
      * levels computed.
@@ -76,7 +76,7 @@ class ActiveSpaceSolver {
      * @param mo_space_info a MOSpaceInfo object
      * @param as_ints integrals for active space
      */
-    ActiveSpaceSolver(const std::string& method,
+    ActiveSpaceSolver(const std::string& solver_type,
                       const std::map<StateInfo, size_t>& state_nroots_map,
                       std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
                       std::shared_ptr<ForteOptions> options,
@@ -85,6 +85,8 @@ class ActiveSpaceSolver {
     // ==> Class Interface <==
 
     /// Set the print level
+    const std::string& solver_type() const;
+
     /// @param level the print level
     void set_print(PrintLevel level);
 
@@ -206,7 +208,7 @@ class ActiveSpaceSolver {
 
   protected:
     /// a string that specifies the method used (e.g. "FCI", "ACI", ...)
-    std::string method_;
+    std::string solver_type_;
 
     /// A map of electronic states to the number of roots computed
     ///   {state_1 : n_1, state_2 : n_2, ...}
@@ -277,7 +279,7 @@ class ActiveSpaceSolver {
     /// Pairs of state info and the contracted CI eigen vectors
     std::map<StateInfo, std::shared_ptr<psi::Matrix>>
         state_contracted_evecs_map_; // TODO move outside?
-}; // namespace forte
+};                                   // namespace forte
 
 /**
  * @brief Make an active space solver object.

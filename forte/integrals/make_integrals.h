@@ -39,16 +39,17 @@ namespace forte {
  */
 std::shared_ptr<ForteIntegrals> make_forte_integrals_from_psi4(
     std::shared_ptr<psi::Wavefunction> ref_wfn, std::shared_ptr<ForteOptions> options,
-    std::shared_ptr<MOSpaceInfo> mo_space_info, std::string int_type = "");
+    std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
+    std::string int_type = "");
 
 /**
  *  @brief Make a ForteIntegrals object by passing integrals stored in vectors
  */
-std::shared_ptr<ForteIntegrals>
-make_custom_forte_integrals(std::shared_ptr<ForteOptions> options,
-                            std::shared_ptr<MOSpaceInfo> mo_space_info, double scalar,
-                            const std::vector<double>& oei_a, const std::vector<double>& oei_b,
-                            const std::vector<double>& tei_aa, const std::vector<double>& tei_ab,
-                            const std::vector<double>& tei_bb);
+std::shared_ptr<ForteIntegrals> make_custom_forte_integrals(
+    std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
+
+    std::shared_ptr<MOSpaceInfo> mo_space_info, double scalar, const std::vector<double>& oei_a,
+    const std::vector<double>& oei_b, const std::vector<double>& tei_aa,
+    const std::vector<double>& tei_ab, const std::vector<double>& tei_bb);
 
 } // namespace forte

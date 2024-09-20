@@ -107,7 +107,8 @@ PYBIND11_MODULE(_forte, m) {
     m.def("make_custom_ints", &make_custom_forte_integrals,
           "Make a custom Forte integral object from arrays");
     m.def("make_ints_from_psi4", &make_forte_integrals_from_psi4, "ref_wfn"_a, "options"_a,
-          "mo_space_info"_a, "int_type"_a = "", "Make a Forte integral object from psi4");
+          "scf_info"_a, "mo_space_info"_a, "int_type"_a = "",
+          "Make a Forte integral object from psi4");
     m.def("make_active_space_method", &make_active_space_method, "Make an active space method");
     m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver",
           "method"_a, "state_nroots_map"_a, "scf_info"_a, "mo_space_info"_a, "options"_a,
@@ -238,17 +239,7 @@ PYBIND11_MODULE(_forte, m) {
 
     export_DavidsonLiuSolver(m);
 
-    // export SCFInfo
-    py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
-        .def(py::init<psi::SharedWavefunction>())
-        .def(py::init<const psi::Dimension&, const psi::Dimension&, const psi::Dimension&, double,
-                      std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>>())
-        .def("nmopi", &SCFInfo::nmopi, "the number of orbitals per irrep")
-        .def("doccpi", &SCFInfo::doccpi, "the number of doubly occupied orbitals per irrep")
-        .def("soccpi", &SCFInfo::soccpi, "the number of singly occupied orbitals per irrep")
-        .def("reference_energy", &SCFInfo::reference_energy, "the reference energy")
-        .def("epsilon_a", &SCFInfo::epsilon_a, "a vector of alpha orbital energy (psi::Vector)")
-        .def("epsilon_b", &SCFInfo::epsilon_b, "a vector of beta orbital energy (psi::Vector)");
+    export_SCFInfo(m);
 
     // export DynamicCorrelationSolver
     py::class_<DynamicCorrelationSolver, std::shared_ptr<DynamicCorrelationSolver>>(

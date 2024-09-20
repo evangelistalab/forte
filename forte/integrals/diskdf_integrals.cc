@@ -56,10 +56,11 @@ using namespace psi;
 namespace forte {
 
 DISKDFIntegrals::DISKDFIntegrals(std::shared_ptr<ForteOptions> options,
+                                 std::shared_ptr<SCFInfo> scf_info,
                                  std::shared_ptr<psi::Wavefunction> ref_wfn,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
                                  IntegralSpinRestriction restricted)
-    : Psi4Integrals(options, ref_wfn, mo_space_info, DiskDF, restricted) {
+    : Psi4Integrals(options, scf_info, ref_wfn, mo_space_info, DiskDF, restricted) {
     initialize();
 }
 

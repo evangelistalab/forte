@@ -26,7 +26,7 @@ class OptionsFactory(Module):
             data = ForteData()
         data.options = forte.forte_options
         # if no options dict is provided then read from psi4
-        if self.options is None:
+        if self._options is None:
             # Get the option object
             psi4_options = psi4.core.get_options()
             psi4_options.set_current_module("FORTE")
@@ -39,6 +39,6 @@ class OptionsFactory(Module):
             )
             data.options = forte.ForteOptions()
             register_forte_options(data.options)
-            data.options.set_from_dict(self.options)
+            data.options.set_from_dict(self._options)
 
         return data

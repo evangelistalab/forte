@@ -53,13 +53,13 @@
 
 namespace forte {
 
-ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
+ActiveSpaceSolver::ActiveSpaceSolver(const std::string& solver_type,
                                      const std::map<StateInfo, size_t>& state_nroots_map,
                                      std::shared_ptr<SCFInfo> scf_info,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info,
                                      std::shared_ptr<ForteOptions> options,
                                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : method_(method), state_nroots_map_(state_nroots_map), scf_info_(scf_info),
+    : solver_type_(solver_type), state_nroots_map_(state_nroots_map), scf_info_(scf_info),
       mo_space_info_(mo_space_info), options_(options), as_ints_(as_ints) {
 
     print_ = int_to_print_level(options->get_int("PRINT"));
@@ -81,6 +81,8 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
         Ub_data[i * nactv + i] = 1.0;
     }
 }
+
+const std::string& ActiveSpaceSolver::solver_type() const { return solver_type_; }
 
 void ActiveSpaceSolver::set_print(PrintLevel level) { print_ = level; }
 
@@ -126,16 +128,16 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         size_t nroot = state_nroot.second;
 
         // so far only FCI and DETCI supports restarting from a previous wavefunction
-        if ((method_ == "FCI") or (method_ == "DETCI")) {
+        if ((solver_type_ == "FCI") or (solver_type_ == "DETCI")) {
             auto [it, inserted] = state_method_map_.try_emplace(state);
             if (inserted) {
-                it->second = make_active_space_method(method_, state, nroot, scf_info_,
+                it->second = make_active_space_method(solver_type_, state, nroot, scf_info_,
                                                       mo_space_info_, as_ints_, options_);
             }
             auto method = it->second;
         } else {
-            state_method_map_[state] = make_active_space_method(method_, state, nroot, scf_info_,
-                                                                mo_space_info_, as_ints_, options_);
+            state_method_map_[state] = make_active_space_method(
+                solver_type_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
         }
         auto method = state_method_map_[state];
         // set the convergence criteria

@@ -117,10 +117,11 @@ def prepare_psi4_ref_wfn(options, **kwargs):
 
     # create a MOSpaceInfo object
     nmopi = ref_wfn.nmopi()
+    reorder = []
     if kwargs.get("mo_spaces", None) is None:
-        mo_space_info = make_mo_space_info(nmopi, point_group, options)
+        mo_space_info = make_mo_space_info(nmopi, point_group, options, reorder)
     else:
-        mo_space_info = make_mo_space_info_from_map(nmopi, point_group, kwargs.get("mo_spaces"), [])
+        mo_space_info = make_mo_space_info_from_map(nmopi, point_group, kwargs.get("mo_spaces"), reorder)
 
     # do we need to check MO overlap?
     if not need_orbital_check:
@@ -276,6 +277,6 @@ class ObjectsFromPsi4(Module):
         else:
             psi4.core.print_out("\n  Forte will use psi4 integrals")
             # Make an integral object from the psi4 wavefunction object
-            data.ints = make_ints_from_psi4(data.psi_wfn, data.options, data.mo_space_info)
+            data.ints = make_ints_from_psi4(data.psi_wfn, data.options, data.scf_info, data.mo_space_info)
 
         return data

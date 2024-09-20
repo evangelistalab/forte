@@ -214,7 +214,8 @@ class MOSpaceInfo {
     /// Read the space info from a map of space name-dimension_vector
     void read_from_map(const std::map<std::string, std::vector<size_t>>& mo_space_map);
 
-    /// Reorder MOs according to the input indexing vector
+    /// Reorder MOs according to the input indexing vector. This vector specifies the
+    /// new order of the orbitals in the full orbital space.
     void set_reorder(const std::vector<size_t>& reorder);
 
     const std::vector<size_t>& reorder() const;
@@ -289,7 +290,8 @@ class MOSpaceInfo {
 /// Make MOSpaceInfo from input (options)
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
                                                 const std::string& point_group,
-                                                std::shared_ptr<ForteOptions> options);
+                                                std::shared_ptr<ForteOptions> options,
+                                                const std::vector<size_t>& reorder);
 
 /// Make MOSpaceInfo from a map of spacename-dimension_vector ("ACTIVE", [size_t, size_t, ...])
 std::shared_ptr<MOSpaceInfo>

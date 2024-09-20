@@ -93,6 +93,7 @@ api/mospaceinfo_api.cc
 api/rdms_api.cc
 api/options_api.cc
 api/orbital_api.cc
+api/scf_info_api.cc
 api/state_info_api.cc
 api/string_api.cc
 api/sq_operator_string_api.cc
