@@ -367,16 +367,18 @@ void ActiveSpaceSolver::compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIn
     // generate root list
     std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>
         root_lists_map;
-    std::vector<StateInfo> _states;
+    std::vector<StateInfo> _states; // keep track of states already computed
     for (auto& [state1, roots1] : state_trans_map) {
         std::stable_sort(roots1.begin(), roots1.end());
         std::vector<std::pair<size_t, size_t>> state_ids;
+        std::vector<size_t> _roots1; // keep track of roots already computed
         for (auto i : roots1) {
             for (size_t j = 0, jsize = state_nroots_map_[state1]; j < jsize; ++j) {
-                if (i == j)
+                if (i == j or std::find(_roots1.begin(), _roots1.end(), j) != _roots1.end())
                     continue;
                 state_ids.emplace_back(i, j);
             }
+            _roots1.push_back(i);
         }
         if (!state_ids.empty())
             root_lists_map[{state1, state1}] = state_ids;
