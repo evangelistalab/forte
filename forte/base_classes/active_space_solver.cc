@@ -355,7 +355,7 @@ void ActiveSpaceSolver::compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIn
         }
         int irrep = py::cast<int>(integer_triplet[0]);
         int multi = py::cast<int>(integer_triplet[1]);
-        int iroot = py::cast<int>(integer_triplet[2]);
+        size_t iroot = py::cast<size_t>(integer_triplet[2]);
         for (const auto& [state, nroot] : state_nroots_map_) {
             if (state.irrep() == irrep and state.multiplicity() == multi and iroot < nroot) {
                 state_trans_map[state].push_back(iroot);
@@ -367,6 +367,7 @@ void ActiveSpaceSolver::compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIn
     // generate root list
     std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>
         root_lists_map;
+    std::vector<StateInfo> _states;
     for (auto& [state1, roots1] : state_trans_map) {
         std::stable_sort(roots1.begin(), roots1.end());
         std::vector<std::pair<size_t, size_t>> state_ids;
@@ -381,7 +382,7 @@ void ActiveSpaceSolver::compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIn
             root_lists_map[{state1, state1}] = state_ids;
 
         for (const auto& [state2, nroot2] : state_nroots_map_) {
-            if (state1 == state2)
+            if (state1 == state2 or std::find(_states.begin(), _states.end(), state2) != _states.end())
                 continue;
             // skip for different multiplicity (no spin-orbit coupling)
             if (state1.multiplicity() != state2.multiplicity())
@@ -400,6 +401,7 @@ void ActiveSpaceSolver::compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIn
             if (!state_ids.empty())
                 root_lists_map[{state1, state2}] = state_ids;
         }
+        _states.push_back(state1);
     }
 
     // figure out ground state for a given multiplicity
@@ -524,6 +526,8 @@ void ActiveSpaceSolver::compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIn
             psi::outfile->Printf("%15.8f%15.8f%15.8f%15.8f", dx, dy, dz, dm);
 
             std::string prefix = "TRANS " + upper_string(multi_label);
+            name1 = std::to_string(root1) + upper_string(state1.irrep_label());
+            name2 = std::to_string(root2) + upper_string(state2.irrep_label());
             push_to_psi4_env_globals(dx, prefix + " <" + name1 + "|DM_X|" + name2 + ">");
             push_to_psi4_env_globals(dy, prefix + " <" + name1 + "|DM_Y|" + name2 + ">");
             push_to_psi4_env_globals(dz, prefix + " <" + name1 + "|DM_Z|" + name2 + ">");

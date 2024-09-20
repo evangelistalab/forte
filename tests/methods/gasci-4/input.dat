@@ -37,7 +37,7 @@ set forte {
   GAS1MAX             [2,1]
   GAS1MIN             [0,0]
   avg_state           [[0,1,1],[2,1,1]]
-  transition_dipoles  true
+  transition_dipoles  [[0,1,0]]
   mcscf_reference    false
 }
 
