@@ -643,7 +643,8 @@ ambit::Tensor RDMsSpinDependent::L3bbb() const {
 }
 
 std::shared_ptr<RDMs> RDMsSpinDependent::clone() {
-    ambit::Tensor g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb;
+    ambit::Tensor g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb, g4aaaa, g4aaab, g4aabb,
+        g4abbb, g4bbbb;
     if (max_rdm_ > 0) {
         g1a = g1a_.clone();
         g1b = g1b_.clone();
