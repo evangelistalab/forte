@@ -252,7 +252,6 @@ class ProcedureDSRG:
             if self.fno_pt2_Heff_shift is not None:
                 ints_dressed.add(self.fno_pt2_Heff_shift, 1.0)
                 psi4.core.print_out("\n\n  Applied DSRG-MRPT2 FNO corrections to dressed integrals.")
-            print(f"Meff avai: {self.Meff_implemented}, dp level: {self.max_dipole_level}, qp level: {self.max_quadrupole_level}")
             if self.Meff_implemented and (self.max_dipole_level > 0 or self.max_quadrupole_level > 0):
                 asmpints = self.dsrg_solver.compute_mp_eff_actv()
 
@@ -307,7 +306,7 @@ class ProcedureDSRG:
                 else:
                     if self.max_dipole_level > 0:
                         self.active_space_solver.compute_multipole_moment(asmpints, 1)
-                if self.max_dipole_level > 0:
+                if self.max_dipole_level > 0 and self.options.get_list("TRANSITION_DIPOLES"):
                     self.active_space_solver.compute_fosc_same_orbs(asmpints)
 
             # Reorder weights if needed
