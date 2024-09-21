@@ -52,7 +52,7 @@ def test_detci_3():
         hf, type='detci', states={
             ag_state: 3,
             bu_state: 1
-        }, mo_spaces=mo_spaces, options={'transition_dipoles': True}
+        }, mo_spaces=mo_spaces, options={'transition_dipoles': [[0,1,0],[0,1,1],[0,1,2]]}
     )
     fci.run()
 

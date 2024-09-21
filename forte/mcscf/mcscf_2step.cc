@@ -326,9 +326,12 @@ double MCSCF_2STEP::compute_energy() {
 
             // nail down results for DMRG
             if (as_solver_->solver_type() == "BLOCK2" or as_solver_->solver_type() == "DMRG") {
-                if (std::fabs(de_c) < 1.0e-2 or g_rms < 1.0e-3) {
+                if (std::fabs(de_c) < 1.0e-3 or g_rms < 1.0e-3) {
                     options_->set_bool("READ_ACTIVE_WFN_GUESS", true);
-                    mci_maxiter_ = 14;
+                    mci_maxiter_ = options_->get_int("MCSCF_DMRG_FOCUS_NSWEEPS");
+                    as_solver_->set_maxiter(mci_maxiter_);
+                    int n_steady = mci_maxiter_ / 2;
+                    int n_warmup1 = n_steady / 2, n_warmup2 = mci_maxiter_ - n_steady - n_warmup1;
                     // focus on the last bond dimension
                     if (as_solver_->solver_type() == "BLOCK2") {
                         auto nsweeps = options_->get_int_list("BLOCK2_SWEEP_N_SWEEPS");
@@ -337,17 +340,18 @@ double MCSCF_2STEP::compute_energy() {
                         auto dltols = options_->get_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS");
                         if (bond_dims.size() == 0) {
                             options_->set_int_list("BLOCK2_SWEEP_BOND_DIMS", {500});
-                            options_->set_int_list("BLOCK2_SWEEP_N_SWEEPS", {10});
+                            options_->set_int_list("BLOCK2_SWEEP_N_SWEEPS", {mci_maxiter_});
                             options_->set_double_list("BLOCK2_SWEEP_NOISES", {0.0});
-                            options_->set_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS", {1.0e-8});
+                            options_->set_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS", {1.0e-10});
                         } else {
                             auto bond_dim = bond_dims.back();
                             options_->set_int_list("BLOCK2_SWEEP_BOND_DIMS",
                                                    {bond_dim, bond_dim, bond_dim});
-                            options_->set_int_list("BLOCK2_SWEEP_N_SWEEPS", {4, 4, 6});
-                            options_->set_double_list("BLOCK2_SWEEP_NOISES", {1.0e-6, 1.0e-7, 0.0});
+                            options_->set_int_list("BLOCK2_SWEEP_N_SWEEPS",
+                                                   {n_warmup1, n_warmup2, n_steady});
+                            options_->set_double_list("BLOCK2_SWEEP_NOISES", {1.0e-5, 1.0e-7, 0.0});
                             options_->set_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS",
-                                                      {1.0e-7, 1.0e-8, 1.0e-9});
+                                                      {1.0e-8, 1.0e-9, 1.0e-10});
                         }
                     } else {
                         auto nsweeps = options_->get_int_list("DMRG_SWEEP_MAX_SWEEPS");
@@ -358,15 +362,14 @@ double MCSCF_2STEP::compute_energy() {
                         auto bond_dim = bond_dims.back();
                         options_->set_int_list("DMRG_SWEEP_MAX_SWEEPS",
                                                {bond_dim, bond_dim, bond_dim});
-                        options_->set_int_list("DMRG_SWEEP_MAX_SWEEPS", {4, 4, 6});
+                        options_->set_int_list("DMRG_SWEEP_MAX_SWEEPS",
+                                               {n_warmup1, n_warmup2, n_steady});
                         options_->set_double_list("DMRG_SWEEP_NOISE_PREFAC", {1.0e-2, 5.0e-3, 0.0});
                         options_->set_double_list("DMRG_SWEEP_DVDSON_RTOL",
-                                                  {1.0e-5, 1.0e-6, 1.0e-7});
+                                                  {1.0e-6, 1.0e-7, 1.0e-8});
                         options_->set_double_list("DMRG_SWEEP_ENERGY_CONV",
                                                   {1.0e-6, 1.0e-7, 1.0e-8});
                     }
-                } else {
-                    as_solver_->set_maxiter(++mci_maxiter_);
                 }
             }
 

@@ -38,7 +38,7 @@ class MCSCF(Module):
             data.scf_info,
             data.options,
             data.mo_space_info,
-            data.ints,
+            data.ints
         )
         energy = mcscf.compute_energy()
         data.results.add("mcscf energy", energy, "MCSCF energy", "hartree")

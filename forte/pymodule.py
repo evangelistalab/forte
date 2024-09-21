@@ -60,6 +60,7 @@ from forte.proc.external_active_space_solver import (
     make_hamiltonian,
 )
 from forte.proc.dsrg import ProcedureDSRG
+from forte.proc.orbital_helpers import dump_orbitals
 
 
 def forte_driver(data: ForteData):

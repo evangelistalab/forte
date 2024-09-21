@@ -255,7 +255,7 @@ void DFIntegrals::gather_integrals() {
     Bpq = df->get_tensor("B");
 
     // Store as transpose for now
-    ThreeIntegral_ = Bpq->transpose()->clone();
+    ThreeIntegral_ = Bpq->transpose()->clone(); // why not call pqQ order?
 }
 
 void DFIntegrals::resort_three(std::shared_ptr<psi::Matrix>& threeint, std::vector<size_t>& map) {

@@ -93,14 +93,8 @@ class ActiveSpaceSolver {
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::map<StateInfo, std::vector<double>>& compute_energy();
 
-    /// Compute permanent dipole moments
-    void compute_dipole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
-
-    /// Compute permanent quadrupole moments
-    void compute_quadrupole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
-
-    /// Compute transition dipole moments
-    void compute_transition_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
+    /// Compute permanent dipole and quadrupole moments
+    void compute_multipole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints, int level = 1);
 
     /// Compute the oscillator strengths assuming same orbitals
     void compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
@@ -159,7 +153,8 @@ class ActiveSpaceSolver {
     /// \sum_{puvwxyzστθ} v_{pwxy} t_{pzuv} <Ψ(N)| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ(N)>
     std::map<StateInfo, std::vector<double>>
     compute_complementary_H2caa_overlap(ambit::Tensor Tbra, ambit::Tensor Tket,
-                                        const std::vector<int>& p_syms);
+                                        const std::vector<int>& p_syms, const std::string& name,
+                                        bool load = false);
 
     /// Print a summary of the computation information
     void print_options();
