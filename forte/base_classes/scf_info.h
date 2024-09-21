@@ -105,4 +105,9 @@ class SCFInfo {
     std::shared_ptr<psi::Matrix> Cb_;
 };
 
+std::shared_ptr<SCFInfo>
+reorder_orbitals(std::shared_ptr<SCFInfo> scf_info,
+                 const std::vector<std::vector<size_t>>& new_order,
+                 std::shared_ptr<psi::Wavefunction> wfn = std::shared_ptr<psi::Wavefunction>());
+
 } // namespace forte

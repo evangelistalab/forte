@@ -27,6 +27,9 @@
  */
 
 #include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
+
 #include "scf_info.h"
 
 namespace forte {
@@ -61,5 +64,51 @@ std::shared_ptr<psi::Matrix> SCFInfo::_Cb() { return Cb_; }
 std::shared_ptr<const psi::Matrix> SCFInfo::Ca() const { return Ca_; }
 
 std::shared_ptr<const psi::Matrix> SCFInfo::Cb() const { return Cb_; }
+
+std::shared_ptr<SCFInfo> reorder_orbitals(std::shared_ptr<SCFInfo> scf_info,
+                                          const std::vector<std::vector<size_t>>& new_order,
+                                          std::shared_ptr<psi::Wavefunction> wfn) {
+    auto Ca_old = scf_info->_Ca();
+    auto Cb_old = scf_info->_Cb();
+    auto Ca_new = std::make_shared<psi::Matrix>("Ca", Ca_old->rowspi(), Ca_old->colspi());
+    auto Cb_new = std::make_shared<psi::Matrix>("Cb", Cb_old->rowspi(), Cb_old->colspi());
+
+    auto eps_a_old = scf_info->epsilon_a();
+    auto eps_b_old = scf_info->epsilon_b();
+    auto eps_a_new = std::make_shared<psi::Vector>("eps_a", eps_a_old->dimpi());
+    auto eps_b_new = std::make_shared<psi::Vector>("eps_b", eps_b_old->dimpi());
+
+    size_t nirrep = scf_info->nmopi().n();
+
+    if (new_order.size() != nirrep) {
+        throw std::runtime_error("The number of MOs in the new order does not match the number of "
+                                 "MOs in the old order.");
+    }
+    for (size_t h = 0; h < nirrep; ++h) {
+        size_t nmo_h = scf_info->nmopi()[h];
+        if (new_order[h].size() != nmo_h) {
+            throw std::runtime_error(
+                "The number of MOs in the new order does not match the number of "
+                "MOs in the old order.");
+        }
+        for (size_t p = 0; p < nmo_h; ++p) {
+            auto p_new = new_order[h][p];
+            Ca_new->set_column(h, p_new, Ca_old->get_column(h, p));
+            Cb_new->set_column(h, p_new, Cb_old->get_column(h, p));
+            eps_a_new->set(h, p_new, eps_a_old->get(h, p));
+            eps_b_new->set(h, p_new, eps_b_old->get(h, p));
+        }
+    }
+    // Copy to psi::Wavefunction
+    if (wfn) {
+        wfn->Ca()->copy(Ca_new);
+        wfn->Cb()->copy(Cb_new);
+    }
+
+    // Make a new SCFInfo object
+    return std::make_shared<SCFInfo>(scf_info->nmopi(), scf_info->doccpi(), scf_info->soccpi(),
+                                     scf_info->reference_energy(), scf_info->epsilon_a(),
+                                     scf_info->epsilon_b(), Ca_new, Cb_new);
+}
 
 } // namespace forte
