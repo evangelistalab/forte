@@ -604,10 +604,10 @@ ambit::Tensor RDMs::make_cumulant_L4aabb(const ambit::Tensor& L1a, const ambit::
     return L4aabb;
 }
 
-ambit::Tensor RDMs::make_cumulat_L4abbb(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
-                                        const ambit::Tensor& L2ab, const ambit::Tensor& L2bb,
-                                        const ambit::Tensor& L3abb, const ambit::Tensor& L3bbb,
-                                        const ambit::Tensor& g4abbb) {
+ambit::Tensor RDMs::make_cumulant_L4abbb(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
+                                         const ambit::Tensor& L2ab, const ambit::Tensor& L2bb,
+                                         const ambit::Tensor& L3abb, const ambit::Tensor& L3bbb,
+                                         const ambit::Tensor& g4abbb) {
     timer t("make_cumulant_L4abbb");
 
     auto L4abbb = g4abbb.clone();
@@ -993,7 +993,7 @@ ambit::Tensor RDMsSpinDependent::L4aaaa() const {
     auto _L1a = L1a();
     auto _L2aa = L2aa();
     auto _L3aaa = L3aaa();
-    auto _L4aaaa = make_cumulant_L4aaaa(_L1a, _L2aa, _L3aaa, g4aaaa_);
+    auto L4aaaa = make_cumulant_L4aaaa(_L1a, _L2aa, _L3aaa, g4aaaa_);
     L4aaaa.set_name("L4aaaa");
     return L4aaaa;
 }
@@ -1025,7 +1025,7 @@ ambit::Tensor RDMsSpinDependent::L4aabb() const {
     return L4aabb;
 }
 
-ambit::Tensor RDMSpinDependent::L4abbb() const {
+ambit::Tensor RDMsSpinDependent::L4abbb() const {
     _test_rdm_level(4, "L4abbb");
     auto _L1a = L1a();
     auto _L1b = L1b();
@@ -1040,13 +1040,12 @@ ambit::Tensor RDMSpinDependent::L4abbb() const {
 
 ambit::Tensor RDMsSpinDependent::L4bbbb() const {
     _test_rdm_level(4, "L4bbbb");
-    auto L1b = L1b();
-    auto L2bb = L2bb();
-    auto L3bbb = L3bbb();
-    auto g4bbbb = g4bbbb();
-    auto L4bbbb = make_cumulant_L4aaaa(L1b, L2bb, L3bbb, g4bbbb);
+    auto _L1b = L1b();
+    auto _L2bb = L2bb();
+    auto _L3bbb = L3bbb();
+    auto L4bbbb = make_cumulant_L4aaaa(_L1b, _L2bb, _L3bbb, g4bbbb_);
     L4bbbb.set_name("L4bbbb");
-    return L4aaaa;
+    return L4bbbb;
 }
 
 std::shared_ptr<RDMs> RDMsSpinDependent::clone() {
@@ -1086,7 +1085,7 @@ std::shared_ptr<RDMs> RDMsSpinDependent::clone() {
     else if (max_rdm_ == 3)
         rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb,
                                                    g3bbb);
-    else:
+    else
         rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb,
                                                    g3bbb, g4aaaa, g4aaab, g4aabb, g4abbb, g4bbbb);
 

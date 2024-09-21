@@ -187,10 +187,11 @@ class RDMs {
                                               const ambit::Tensor& L3abb,
                                               const ambit::Tensor& g4aabb);
     /// Make alpha-beta-beta-beta 4-RDC from 4-RDMs
-    static ambit::Tensor make_cumulat_L4abbb(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
-                                             const ambit::Tensor& L2ab, const ambit::Tensor& L2bb,
-                                             const ambit::Tensor& L3abb, const ambit::Tensor& L3bbb,
-                                             const ambit::Tensor& g4abbb);
+    static ambit::Tensor make_cumulant_L4abbb(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
+                                              const ambit::Tensor& L2ab, const ambit::Tensor& L2bb,
+                                              const ambit::Tensor& L3abb,
+                                              const ambit::Tensor& L3bbb,
+                                              const ambit::Tensor& g4abbb);
 
     /// Spin-free 1-body to spin-dependent 1-body subject to Ms averaging
     static ambit::Tensor sf1_to_sd1(const ambit::Tensor& G1);
