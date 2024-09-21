@@ -121,7 +121,8 @@ std::shared_ptr<RDMs> RDMs::build_from_disk(size_t max_rdm_level, RDMsType type,
     std::string prefix = (filename_prefix.empty() ? "" : filename_prefix + ".");
 
     if (type == RDMsType::spin_dependent) {
-        ambit::Tensor g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb;
+        ambit::Tensor g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb, g4aaaa, g4aaab,
+            g4aabb, g4abbb, g4bbbb;
         if (max_rdm_level > 0) {
             g1a = ambit::load_tensor(prefix + "g1a.bin");
             g1b = ambit::load_tensor(prefix + "g1b.bin");
@@ -137,6 +138,13 @@ std::shared_ptr<RDMs> RDMs::build_from_disk(size_t max_rdm_level, RDMsType type,
             g3abb = ambit::load_tensor(prefix + "g3abb.bin");
             g3bbb = ambit::load_tensor(prefix + "g3bbb.bin");
         }
+        if (max_rdm_level > 3) {
+            g4aaaa = ambit::load_tensor(prefix + "g4aaaa.bin");
+            g4aaab = ambit::load_tensor(prefix + "g4aaab.bin");
+            g4aabb = ambit::load_tensor(prefix + "g4aabb.bin");
+            g4abbb = ambit::load_tensor(prefix + "g4abbb.bin");
+            g4bbbb = ambit::load_tensor(prefix + "g4bbbb.bin");
+        }
 
         if (max_rdm_level < 1) {
             rdms = std::make_shared<RDMsSpinDependent>();
@@ -144,9 +152,13 @@ std::shared_ptr<RDMs> RDMs::build_from_disk(size_t max_rdm_level, RDMsType type,
             rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b);
         } else if (max_rdm_level == 2) {
             rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb);
-        } else {
+        } else if (max_rdm_level == 3) {
             rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab,
                                                        g3abb, g3bbb);
+        } else {
+            rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab,
+                                                       g3abb, g3bbb, g4aaaa, g4aaab, g4aabb, g4abbb,
+                                                       g4bbbb);
         }
     } else {
         ambit::Tensor g1, g2, g3;
@@ -158,6 +170,10 @@ std::shared_ptr<RDMs> RDMs::build_from_disk(size_t max_rdm_level, RDMsType type,
         }
         if (max_rdm_level > 2) {
             g3 = ambit::load_tensor(prefix + "g3.bin");
+        }
+        if (max_rdm_level > 3) {
+            throw std::runtime_error(
+                "RDMs::build_from_disk: max_rdm_level > 3 not implemented for spin-free RDMs.");
         }
 
         if (max_rdm_level < 1) {
@@ -1212,8 +1228,30 @@ void RDMsSpinDependent::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub)
     if (max_rdm_ == 3)
         return;
 
+    // Transform the 4-rdms
+    auto g4T = ambit::Tensor::build(ambit::CoreTensor, "g4T", g4aaaa_.dims());
+    g4T("pqrstuvw") = Ua("ap") * Ua("bq") * Ua("cr") * Ua("ds") * g4aaaa_("abcdijkl") * Ua("it") *
+                      Ua("ju") * Ua("kv") * Ua("lw");
+    g4aaaa_("pqrstuvw") = g4T("pqrstuvw");
+
+    g4T("pqrStuvW") = Ua("ap") * Ua("bq") * Ua("cr") * Ub("DS") * g4aaab_("abcDijkL") * Ua("it") *
+                      Ua("ju") * Ua("kv") * Ub("LW");
+    g4aaab_("pqrStuvW") = g4T("pqrStuvW");
+    g4T("pqRStuVW") = Ua("ap") * Ua("bq") * Ub("CR") * Ub("DS") * g4aabb_("abCDijkL") * Ua("it") *
+                      Ua("ju") * Ub("KV") * Ub("LW");
+    g4aabb_("pqRStuVW") = g4T("pqRStuVW");
+    g4T("pQRStUVW") = Ua("ap") * Ub("BQ") * Ub("CR") * Ub("DS") * g4abbb_("aBCDiJKL") * Ua("it") *
+                      Ub("JU") * Ub("KV") * Ub("LW");
+    g4abbb_("pQRStUVW") = g4T("pQRStUVW");
+
+    g4T("PQRSTUVW") = Ub("AP") * Ub("BQ") * Ub("CR") * Ub("DS") * g4bbbb_("ABCDIJKL") * Ub("IT") *
+                      Ub("JU") * Ub("KV") * Ub("LW");
+    g4bbbb_("PQRSTUVW") = g4T("PQRSTUVW");
+
+    psi::outfile->Printf("\n    Transformed 4 RDMs.");
+
     if (max_rdm_ == 4)
-        throw std::runtime_error("RDMs rotation not implemented for 4-RDMs.");
+        return;
 }
 
 void RDMsSpinDependent::dump_to_disk(const std::string& filename_prefix) const {
