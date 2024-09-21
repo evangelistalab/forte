@@ -170,6 +170,27 @@ class RDMs {
     static ambit::Tensor make_cumulant_L3abb(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
                                              const ambit::Tensor& g2ab, const ambit::Tensor& g2bb,
                                              const ambit::Tensor& g3abb);
+    /// Make alpha-alpha-alpha-alpha or beta-beta-beta-beta 4-RDC from 4-RDMs
+    static ambit::Tensor make_cumulant_L4aaaa(const ambit::Tensor& L1a, const ambit::Tensor& L2aa,
+                                              const ambit::Tensor& L3aaa,
+                                              const ambit::Tensor& g4aaaa);
+    /// Make alpha-alpha-alpha-beta 4-RDC from 4-RDMs
+    static ambit::Tensor make_cumulant_L4aaab(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
+                                              const ambit::Tensor& L2aa, const ambit::Tensor& L2ab,
+                                              const ambit::Tensor& L3aaa,
+                                              const ambit::Tensor& L3aab,
+                                              const ambit::Tensor& g4aaab);
+    /// Make alpha-alpha-beta-beta 4-RDC from 4-RDMs
+    static ambit::Tensor make_cumulant_L4aabb(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
+                                              const ambit::Tensor& L2aa, const ambit::Tensor& L2ab,
+                                              const ambit::Tensor& L2bb, const ambit::Tensor& L3aab,
+                                              const ambit::Tensor& L3abb,
+                                              const ambit::Tensor& g4aabb);
+    /// Make alpha-beta-beta-beta 4-RDC from 4-RDMs
+    static ambit::Tensor make_cumulat_L4abbb(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
+                                             const ambit::Tensor& L2ab, const ambit::Tensor& L2bb,
+                                             const ambit::Tensor& L3abb, const ambit::Tensor& L3bbb,
+                                             const ambit::Tensor& g4abbb);
 
     /// Spin-free 1-body to spin-dependent 1-body subject to Ms averaging
     static ambit::Tensor sf1_to_sd1(const ambit::Tensor& G1);
@@ -246,6 +267,16 @@ class RDMs {
     virtual ambit::Tensor L3abb() const = 0;
     /// @return the beta-beta-beta 3-RDC
     virtual ambit::Tensor L3bbb() const = 0;
+    /// @return the alpha-alpha-alpha-alpha 4-RDC
+    virtual ambit::Tensor L4aaaa() const = 0;
+    /// @return the alpha-alpha-alpha-beta 4-RDC
+    virtual ambit::Tensor L4aaab() const = 0;
+    /// @return the alpha-alpha-beta-beta 4-RDC
+    virtual ambit::Tensor L4aabb() const = 0;
+    /// @return the alpha-beta-beta-beta 4-RDC
+    virtual ambit::Tensor L4abbb() const = 0;
+    /// @return the beta-beta-beta-beta 4-RDC
+    virtual ambit::Tensor L4bbbb() const = 0;
 
     // Spin-free density cumulants
 
@@ -355,6 +386,16 @@ class RDMsSpinDependent : public RDMs {
     ambit::Tensor L3abb() const override;
     /// @return the beta-beta-beta 3-RDC
     ambit::Tensor L3bbb() const override;
+    /// @return the alpha-alpha-alpha-alpha 4-RDC
+    ambit::Tensor L4aaaa() const override;
+    /// @return the alpha-alpha-alpha-beta 4-RDC
+    ambit::Tensor L4aaab() const override;
+    /// @return the alpha-alpha-beta-beta 4-RDC
+    ambit::Tensor L4aabb() const override;
+    /// @return the alpha-beta-beta-beta 4-RDC
+    ambit::Tensor L4abbb() const override;
+    /// @return the beta-beta-beta-beta 4-RDC
+    ambit::Tensor L4bbbb() const override;
 
     // class methods
 
@@ -472,6 +513,16 @@ class RDMsSpinFree : public RDMs {
     ambit::Tensor L3abb() const override;
     /// @return the beta-beta-beta 3-RDC
     ambit::Tensor L3bbb() const override;
+    /// @return the alpha-alpha-alpha-alpha 4-RDC
+    ambit::Tensor L4aaaa() const override;
+    /// @return the alpha-alpha-alpha-beta 4-RDC
+    ambit::Tensor L4aaab() const override;
+    /// @return the alpha-alpha-beta-beta 4-RDC
+    ambit::Tensor L4aabb() const override;
+    /// @return the alpha-beta-beta-beta 4-RDC
+    ambit::Tensor L4abbb() const override;
+    /// @return the beta-beta-beta-beta 4-RDC
+    ambit::Tensor L4bbbb() const override;
 
     // class methods
 
