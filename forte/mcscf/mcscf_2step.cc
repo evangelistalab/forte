@@ -353,7 +353,7 @@ double MCSCF_2STEP::compute_energy() {
                                                    {bond_dim, bond_dim, bond_dim});
                             options_->set_int_list("BLOCK2_SWEEP_N_SWEEPS",
                                                    {n_warmup1, n_warmup2, n_steady});
-                            options_->set_double_list("BLOCK2_SWEEP_NOISES", {1.0e-4, 1.0e-5, 0.0});
+                            options_->set_double_list("BLOCK2_SWEEP_NOISES", {1.0e-5, 1.0e-7, 0.0});
                             options_->set_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS",
                                                       {1.0e-8, 1.0e-9, 1.0e-10});
                         }
