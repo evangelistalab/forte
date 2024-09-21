@@ -23,7 +23,8 @@ set forte {
   gas2            [0,0,0,0,0,1,0,0]
   avg_state       [[0,1,2],[5,1,1],[5,3,1]]
   fci_test_rdms   true
-  transition_dipoles    true
+  transition_dipoles [[0,1,0],[0,1,1],[5,1,0],[5,3,0]]
+  MULTIPOLE_MOMENT_LEVEL 2
 }
 
 energy('forte')
