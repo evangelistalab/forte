@@ -67,7 +67,6 @@ void export_Localize(py::module& m) {
         .def("get_Ub", &Localize::get_Ub, "Get Ub rotation");
 }
 
-/// export SemiCanonical class
 void export_SemiCanonical(py::module& m) {
     py::class_<SemiCanonical>(m, "SemiCanonical")
         .def(py::init<std::shared_ptr<MOSpaceInfo>, std::shared_ptr<ForteIntegrals>,

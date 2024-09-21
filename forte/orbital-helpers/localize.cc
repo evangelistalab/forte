@@ -138,4 +138,34 @@ void Localize::compute_transformation() {
     }
 }
 
+CholeskyLocal::CholeskyLocal(std::shared_ptr<ForteOptions> options,
+                             std::shared_ptr<ForteIntegrals> ints,
+                             std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : OrbitalTransform(ints, mo_space_info) {}
+
+void CholeskyLocal::compute_transformation() {
+    psi::outfile->Printf("\n\n    Forming Cholesky orbitals ...");
+    auto Ca = ints_->Ca()->clone();
+
+    auto dim_c = mo_space_info_->dimension("INACTIVE_DOCC");
+    auto dim_a = mo_space_info_->dimension("ACTIVE");
+    auto slice_a = psi::Slice(dim_c, dim_c + dim_a);
+    auto slice = psi::Slice(psi::Dimension(mo_space_info_->nirrep()), Ca->rowspi());
+
+    auto C = Ca->get_block(slice, slice_a);
+    auto D = psi::linalg::doublet(C, C, false, true);
+    auto X = D->partial_cholesky_factorize(1.0e-8);
+
+    auto Uactv = psi::linalg::triplet(C, ints_->wfn()->S(), X, true, false, false);
+
+    Ua_ = std::make_shared<psi::Matrix>("Ua", Ca->colspi(), Ca->colspi());
+    Ua_->identity();
+    Ua_->set_block(slice_a, *Uactv);
+
+    Ub_ = std::make_shared<psi::Matrix>("Ub", Ca->colspi(), Ca->colspi());
+    Ub_->identity();
+    Ub_->set_block(slice_a, *Uactv);
+    psi::outfile->Printf(" Done.\n");
+}
+
 } // namespace forte

@@ -1579,7 +1579,7 @@ std::shared_ptr<psi::Matrix> SA_MRPT2::build_1rdm_cc() {
 
     print_done(t.get());
 
-    return tensor_to_matrix(D1_.block("cc"), mo_space_info_->dimension("RESTRICTED_DOCC"));
+    return tensor_to_matrix(D1c, mo_space_info_->dimension("RESTRICTED_DOCC"));
 }
 
 std::shared_ptr<psi::Matrix> SA_MRPT2::build_1rdm_vv() {
@@ -1654,12 +1654,170 @@ std::shared_ptr<psi::Matrix> SA_MRPT2::build_1rdm_vv() {
 
     print_done(t.get());
 
-    return tensor_to_matrix(D1_.block("vv"), mo_space_info_->dimension("RESTRICTED_UOCC"));
+    return tensor_to_matrix(D1v, mo_space_info_->dimension("RESTRICTED_UOCC"));
+}
+
+std::shared_ptr<psi::Matrix> SA_MRPT2::build_1rdm_aa(bool build_aa_large_t2) {
+    timer tvv("1RDM-AA");
+
+    auto D1a = D1_.block("aa");
+
+    auto temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1 1rdm aa", {"aa"});
+    auto temp2 = ambit::BlockedTensor::build(tensor_type_, "temp2 1rdm aa", {"aaaa"});
+
+    if (eri_df_) {
+        if (build_aa_large_t2) {
+            auto D1temp = BTF_->build(tensor_type_, "D1temp", {"cc", "aa", "vv"});
+            compute_1rdm_aa_vv_CCAV_DF(D1temp, {});
+            compute_1rdm_cc_aa_CAVV_DF(D1temp, {});
+            D1a("pq") += D1temp.block("aa")("pq");
+        }
+    } else {
+        auto L1 = L1_.block("aa");
+        auto E1 = Eta1_.block("aa");
+        auto X1 = temp1.block("aa");
+
+        X1("yu") = 0.5 * T2_.block("ccav")("ijya") * S2_.block("ccav")("ijua");
+        D1a("vy") += X1("yu") * E1("uv");
+        D1a("vy") += X1("vu") * E1("uy");
+
+        X1("xv") = 0.5 * T2_.block("cavv")("ixab") * S2_.block("cavv")("ivab");
+        D1a("xu") -= X1("xv") * L1("uv");
+        D1a("xu") -= X1("uv") * L1("xv");
+    }
+
+    local_timer t;
+    print_contents("Computing T1 contr. to 1RDM AA part");
+
+    D1_["uv"] += T1_["mu"] * T1_["my"] * Eta1_["yv"];
+    D1_["uv"] -= T1_["ve"] * T1_["xe"] * L1_["ux"];
+
+    D1_["uv"] -= T1_["ve"] * T2_["xyez"] * L2_["uzxy"];
+    D1_["uv"] -= T1_["mu"] * T2_["mzxy"] * L2_["xyvz"];
+
+    temp1["xu"] = S2_["xmue"] * T1_["me"];
+    temp1["xu"] += 0.5 * S2_["mxzu"] * T1_["mw"] * Eta1_["zw"];
+    temp1["xu"] += 0.5 * S2_["wxeu"] * T1_["ze"] * L1_["wz"];
+
+    temp1["wu"] += 0.5 * S2_["a0,w,e,u"] * T2_["xyez"] * L2_["a0,z,x,y"];
+    temp1["wu"] -= 0.5 * S2_["m,w,a0,u"] * T2_["mzxy"] * L2_["x,y,a0,z"];
+
+    D1_["uv"] += temp1["xu"] * L1_["vx"];
+    D1_["uv"] -= temp1["vx"] * L1_["xu"];
+
+    D1_["uv"] += T2_["xyeu"] * T1_["ze"] * L2_["xyzv"];
+    D1_["uv"] += T2_["mvxy"] * T1_["mw"] * L2_["wuxy"];
+
+    D1_["uv"] -= T2_["vzey"] * T1_["xe"] * L2_["uzxy"];
+    D1_["uv"] -= T2_["zvey"] * T1_["xe"] * L2_["zuxy"];
+    D1_["uv"] -= T2_["myuw"] * T1_["mx"] * L2_["xyvw"];
+    D1_["uv"] -= T2_["mywu"] * T1_["mx"] * L2_["xywv"];
+    print_done(t.get());
+
+    t.reset();
+    print_contents("Computing T2 contr. to 1RDM AA part");
+
+    temp2["yzxw"] = L2_["yzxw"];
+    temp2["yzxw"] += 0.5 * L1_["zx"] * Eta1_["yw"];
+
+    temp1["u,a0"] = 0.5 * S2_["mnux"] * T2_["m,n,a0,z"] * Eta1_["zx"];
+    temp1["u,a0"] += 0.5 * S2_["xmue"] * T2_["z,m,a0,e"] * L1_["xz"];
+    temp1["u,a0"] += 0.5 * S2_["mxue"] * T2_["m,z,a0,e"] * L1_["xz"];
+
+    temp1["u,a0"] += 0.25 * S2_["yxeu"] * T2_["z,w,e,a0"] * L1_["xw"] * L1_["yz"];
+    temp1["u,a0"] += 0.25 * S2_["mxyu"] * T2_["m,w,z,a0"] * L1_["xw"] * Eta1_["zy"];
+
+    temp1["u,a0"] += 0.5 * S2_["mzuw"] * T2_["m,x,a0,y"] * temp2["yzxw"];
+    temp1["u,a0"] += 0.5 * T2_["xyeu"] * T2_["w,z,e,a0"] * L2_["xywz"];
+    temp1["u,a0"] -= 0.5 * T2_["mzuw"] * T2_["m,x,y,a0"] * L2_["yzxw"];
+    temp1["u,a0"] -= 0.5 * T2_["mzwu"] * T2_["m,x,y,a0"] * L2_["zyxw"];
+
+    D1_["uv"] += temp1["u,a0"] * Eta1_["a0,v"];
+
+    temp1["a0,v"] = 0.5 * S2_["vxef"] * T2_["a0,z,e,f"] * L1_["xz"];
+    temp1["a0,v"] += 0.5 * S2_["vmxe"] * T2_["a0,m,y,e"] * Eta1_["yx"];
+    temp1["a0,v"] += 0.5 * S2_["mvxe"] * T2_["m,a0,y,e"] * Eta1_["yx"];
+
+    temp1["a0,v"] += 0.25 * S2_["mvxy"] * T2_["m,a0,w,z"] * Eta1_["wx"] * Eta1_["zy"];
+    temp1["a0,v"] += 0.25 * S2_["yvex"] * T2_["z,a0,e,w"] * Eta1_["wx"] * L1_["yz"];
+
+    temp1["a0,v"] += 0.5 * S2_["vzew"] * T2_["a0,x,e,y"] * temp2["yzxw"];
+    temp1["a0,v"] += 0.5 * T2_["mvxy"] * T2_["m,a0,w,z"] * L2_["wzxy"];
+    temp1["a0,v"] -= 0.5 * T2_["vzew"] * T2_["x,a0,e,y"] * L2_["yzxw"];
+    temp1["a0,v"] -= 0.5 * T2_["zvew"] * T2_["x,a0,e,y"] * L2_["zyxw"];
+
+    D1_["uv"] -= temp1["a0,v"] * L1_["u,a0"];
+
+    temp2["uyzx"] = T2_["mnux"] * T2_["mnzy"];
+    temp2["uyzx"] += 0.5 * T2_["m,a0,u,x"] * T2_["mwzy"] * L1_["a0,w"];
+    temp2["uyzx"] += 0.5 * T2_["m,a0,x,u"] * T2_["mwyz"] * L1_["a0,w"];
+
+    temp2["uyzx"] += T2_["zmue"] * S2_["xmye"];
+    temp2["uyzx"] -= T2_["mzue"] * T2_["xmye"];
+    temp2["uyzx"] -= T2_["myue"] * T2_["mxze"];
+
+    temp2["uyzx"] += 0.5 * S2_["mzwu"] * T2_["m,x,a0,y"] * Eta1_["a0,w"];
+    temp2["uyzx"] -= 0.5 * T2_["mzwu"] * T2_["m,x,y,a0"] * Eta1_["a0,w"];
+    temp2["uyzx"] -= 0.5 * T2_["myuw"] * T2_["m,x,z,a0"] * Eta1_["a0,w"];
+
+    temp2["uyzx"] += 0.5 * S2_["a0,z,e,u"] * T2_["wxey"] * L1_["a0,w"];
+    temp2["uyzx"] -= 0.5 * T2_["a0,z,e,u"] * T2_["xwey"] * L1_["a0,w"];
+    temp2["uyzx"] -= 0.5 * T2_["y,a0,e,u"] * T2_["xwez"] * L1_["a0,w"];
+
+    D1_["uv"] += temp2["uyzx"] * L2_["yzxv"];
+
+    temp2["yzxv"] = T2_["vyef"] * T2_["zxef"];
+    temp2["yzxv"] += 0.5 * T2_["v,y,e,a0"] * T2_["zxew"] * Eta1_["w,a0"];
+    temp2["yzxv"] += 0.5 * T2_["y,v,e,a0"] * T2_["xzew"] * Eta1_["w,a0"];
+
+    temp2["yzxv"] += T2_["vmze"] * S2_["xmye"];
+    temp2["yzxv"] -= T2_["mvze"] * T2_["xmye"];
+    temp2["yzxv"] -= T2_["mvxe"] * T2_["mzye"];
+
+    temp2["yzxv"] += 0.5 * S2_["mvwz"] * T2_["m,x,a0,y"] * Eta1_["a0,w"];
+    temp2["yzxv"] -= 0.5 * T2_["mvwz"] * T2_["m,x,y,a0"] * Eta1_["a0,w"];
+    temp2["yzxv"] -= 0.5 * T2_["mvxw"] * T2_["m,z,y,a0"] * Eta1_["a0,w"];
+
+    temp2["yzxv"] += 0.5 * S2_["a0,v,e,z"] * T2_["wxey"] * L1_["a0,w"];
+    temp2["yzxv"] -= 0.5 * T2_["a0,v,e,z"] * T2_["xwey"] * L1_["a0,w"];
+    temp2["yzxv"] -= 0.5 * T2_["v,a0,e,x"] * T2_["zwey"] * L1_["a0,w"];
+
+    D1_["uv"] -= temp2["yzxv"] * L2_["uyzx"];
+
+    if (do_cu3_) {
+        if (store_cu3_) {
+            temp2 = ambit::BlockedTensor::build(tensor_type_, "temp3 1rdm aa", {"aaaaaa"});
+            auto X3 = temp2.block("aaaaaa");
+            auto T2c = T2_.block("caaa");
+            auto T2v = T2_.block("aava");
+
+            X3("u,y,z,x,w,a0") = T2v("yxeu") * T2v("w,a0,e,z");
+            X3("u,y,z,x,w,a0") -= T2c("mxwu") * T2c("m,a0,y,z");
+            X3("u,y,z,x,w,a0") -= T2c("m,z,u,a0") * T2c("mwxy");
+            D1a("uv") += X3("u,y,z,x,w,a0") * L3_("y,z,x,w,a0,v");
+
+            X3("y,z,w,x,a0,v") = T2c("mvxw") * T2c("m,a0,y,z");
+            X3("y,z,w,x,a0,v") -= T2v("yvew") * T2v("x,a0,e,z");
+            X3("y,z,w,x,a0,v") -= T2v("vyex") * T2v("w,a0,e,z");
+            D1a("uv") += X3("y,z,w,x,a0,v") * L3_("u,y,z,w,x,a0");
+        } else {
+            throw std::runtime_error("Direct algorithm for D1 AA not available!");
+        }
+    }
+    print_done(t.get());
+
+    // symmetrize D1a
+    temp1["uv"] = D1_["uv"];
+    D1_["uv"] += temp1["vu"];
+    D1a.scale(0.5);
+
+    return tensor_to_matrix(D1a, mo_space_info_->dimension("ACTIVE"));
 }
 
 void SA_MRPT2::build_1rdm_unrelaxed(std::shared_ptr<psi::Matrix>& D1c,
-                                    std::shared_ptr<psi::Matrix>& D1v) {
-    print_h2("Build Spin-Summed Unrelaxed 1-RDM (CC and VV)");
+                                    std::shared_ptr<psi::Matrix>& D1v,
+                                    std::shared_ptr<psi::Matrix>& D1a) {
+    print_h2("Build Spin-Summed Unrelaxed 1-RDM");
 
     D1_ = BTF_->build(tensor_type_, "D1u", {"cc", "aa", "vv"});
     D1_.block("cc").iterate([&](const std::vector<size_t> i, double& value) {
@@ -1670,6 +1828,17 @@ void SA_MRPT2::build_1rdm_unrelaxed(std::shared_ptr<psi::Matrix>& D1c,
 
     D1c = build_1rdm_cc();
     D1v = build_1rdm_vv();
+    D1a = build_1rdm_aa(false);
+}
+
+psi::SharedMatrix SA_MRPT2::build_1rdm_unrelaxed_virt() {
+    D1_ = BTF_->build(tensor_type_, "D1u", {"cc", "aa", "vv"});
+    D1_.block("cc").iterate([&](const std::vector<size_t> i, double& value) {
+        if (i[0] == i[1])
+            value = 2.0;
+    });
+    D1_["uv"] = L1_["uv"];
+    return build_1rdm_vv();
 }
 
 } // namespace forte

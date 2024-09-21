@@ -57,8 +57,9 @@
 #include "mcscf/mcscf_2step.h"
 #include "fci/fci_solver.h"
 #include "mrdsrg-helper/run_dsrg.h"
-#include "mrdsrg-spin-integrated/master_mrdsrg.h"
 #include "mrdsrg-spin-adapted/sadsrg.h"
+#include "mrdsrg-spin-adapted/sa_mrpt2.h"
+#include "mrdsrg-spin-integrated/master_mrdsrg.h"
 #include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
 #include "integrals/one_body_integrals.h"
 #include "sci/tdci.h"
@@ -257,17 +258,6 @@ PYBIND11_MODULE(_forte, m) {
         .def("set_ci_vectors", &DynamicCorrelationSolver::set_ci_vectors,
              "Set the CI eigenvectors for DSRG-MRPT2 analytic gradients");
 
-    // export ActiveMultipoleIntegrals
-    py::class_<ActiveMultipoleIntegrals, std::shared_ptr<ActiveMultipoleIntegrals>>(
-        m, "ActiveMultipoleIntegrals")
-        .def("compute_electronic_dipole", &ActiveMultipoleIntegrals::compute_electronic_dipole)
-        .def("compute_electronic_quadrupole",
-             &ActiveMultipoleIntegrals::compute_electronic_quadrupole)
-        .def("nuclear_dipole", &ActiveMultipoleIntegrals::nuclear_dipole)
-        .def("nuclear_quadrupole", &ActiveMultipoleIntegrals::nuclear_quadrupole)
-        .def("set_dipole_name", &ActiveMultipoleIntegrals::set_dp_name)
-        .def("set_quadrupole_name", &ActiveMultipoleIntegrals::set_qp_name);
-
     // export MASTER_DSRG
     py::class_<MASTER_DSRG>(m, "MASTER_DSRG")
         .def("compute_energy", &MASTER_DSRG::compute_energy, "Compute the DSRG energy")
@@ -311,6 +301,13 @@ PYBIND11_MODULE(_forte, m) {
              "Set if reading amplitudes in the current directory or not")
         .def("converged", &SADSRG::converged, "Return if amplitudes are converged or not")
         .def("clean_checkpoints", &SADSRG::clean_checkpoints, "Delete amplitudes checkpoint files");
+
+    // export spin-adapted DSRG-MRPT2
+    py::class_<SA_MRPT2, SADSRG>(m, "SA_MRPT2")
+        .def(
+            py::init<std::shared_ptr<RDMs>, std::shared_ptr<SCFInfo>, std::shared_ptr<ForteOptions>,
+                     std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
+        .def("build_fno", &SA_MRPT2::build_fno, "Build DSRG-MRPT2 frozen natural orbitals");
 
     // export MRDSRG_SO
     py::class_<MRDSRG_SO>(m, "MRDSRG_SO")

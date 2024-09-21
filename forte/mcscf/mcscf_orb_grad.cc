@@ -44,6 +44,7 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/lib3index/dfhelper.h"
 
+#include "forte-def.h"
 #include "helpers/helpers.h"
 #include "helpers/lbfgs/lbfgs.h"
 #include "helpers/printing.h"

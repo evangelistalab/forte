@@ -927,4 +927,142 @@ void SA_MRPT2::compute_hbar() {
         Hbar1_.block("aa")("vu") -= 0.5 * C1_VT2_CCAV_("uv");
     }
 }
+
+std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
+    print_h2("DSRG-MRPT2 Frozen Natural Orbitals");
+
+    // patch 3-cumulant term before forming D1v
+    bool do_cu3 = do_cu3_;
+    do_cu3_ = do_cu3 && foptions_->get_bool("DSRG_FNO_PT2_CU3");
+    auto D1v = build_1rdm_unrelaxed_virt();
+    do_cu3_ = do_cu3;
+
+    auto dim_virt = D1v->rowspi();
+    auto nirrep = dim_virt.n();
+    auto nvirt = dim_virt.sum();
+    auto D1v_evals = std::make_shared<psi::Vector>("D1v_evals", dim_virt);
+    auto D1v_evecs = std::make_shared<psi::Matrix>("D1v_evecs", dim_virt, dim_virt);
+    D1v->diagonalize(D1v_evecs, D1v_evals, descending);
+
+    // sum of occupation numbers of virtuals
+    double virt_on = 0.0;
+    for (int h = 0; h < nirrep; ++h) {
+        for (int i = 0; i < dim_virt[h]; ++i) {
+            virt_on += D1v_evals->get(h, i);
+        }
+    }
+
+    // determine natural occupation cutoff
+    auto scheme = foptions_->get_str("DSRG_FNO_SCHEME");
+    auto nk = foptions_->get_double("DSRG_FNO_NK");
+    auto pv = foptions_->get_double("DSRG_FNO_PV") * 0.01;
+    auto po = foptions_->get_double("DSRG_FNO_PO") * 0.01;
+
+    if (scheme != "NK") {
+        // sort natural occupation numbers
+        std::vector<double> occ_list(nvirt);
+        for (int h = 0, m = 0; h < nirrep; ++h) {
+            for (int i = 0; i < dim_virt[h]; ++i) {
+                occ_list[m++] = D1v_evals->get(h, i);
+            }
+        }
+        std::sort(occ_list.rbegin(), occ_list.rend()); // in descending order
+
+        // determine virtual index to be truncated for PV/PO schemes
+        auto nv_p = nvirt;
+        if (scheme == "PV") {
+            nv_p = nvirt - static_cast<int>(nvirt * (1.0 - pv));
+        } else {
+            auto nf_target = (1.0 - po) * virt_on;
+            auto nf_temp = 0.0;
+            for (int i = nvirt - 1; i >= 0; --i) {
+                auto n = nf_temp + occ_list[i];
+                if (n <= nf_target) {
+                    nf_temp = n;
+                } else {
+                    nv_p = i + 1;
+                    break;
+                }
+            }
+        }
+
+        // include orbital degeneracy
+        nk = occ_list[nv_p - 1];
+        for (int i = nv_p; i < nvirt; ++i) {
+            auto ntemp = occ_list[i];
+            if (nk - ntemp < 0.01 * nk)
+                nk = ntemp;
+            else
+                break;
+        }
+    }
+
+    // actual dimension for frozen virtuals
+    psi::Dimension dim_frzv(nirrep, "FNO");
+    auto frzv_on = 0.0;
+    for (int h = 0; h < nirrep; ++h) {
+        for (int i = 0; i < dim_virt[h]; ++i) {
+            if (D1v_evals->get(h, i) < nk) {
+                dim_frzv[h] += 1;
+                frzv_on += D1v_evals->get(h, i);
+            }
+        }
+    }
+    auto nfno = dim_frzv.sum();
+
+    // printing
+    if (scheme == "PV") {
+        outfile->Printf("\n\n    FNO selection scheme: Percentage of number of virtual orbitals");
+        outfile->Printf("\n    Input PV cutoff: %.4f %%", pv * 100.0);
+        outfile->Printf("\n    Occupation number cutoff: %.4e", nk);
+    } else if (scheme == "PO") {
+        outfile->Printf("\n\n    FNO selection scheme: Percentage of cumulative virtual occupancy");
+        outfile->Printf("\n    Input PO cutoff: %.4f %%", po * 100.0);
+        outfile->Printf("\n    Occupation number cutoff: %.4e", nk);
+    } else {
+        outfile->Printf("\n\n    FNO selection scheme: Direct occupancy cutoff");
+        outfile->Printf("\n    Input occupation number cutoff: %.4E", nk);
+    }
+    outfile->Printf("\n    Total Number of FNOs: %d (%d / %d = %.4f %%)", nfno, nfno, nvirt,
+                    100.0 * nfno / nvirt);
+    outfile->Printf("\n    Cumulative occupancy of FNOs: %.4E (%.4E / %.4E = %.4f %%)", frzv_on,
+                    frzv_on, virt_on, 100.0 * frzv_on / virt_on);
+
+    push_to_psi4_env_globals(nk, "DSRG FNO NK");
+    push_to_psi4_env_globals(100.0 - 100.0 * nfno / nvirt, "DSRG FNO PV");
+    push_to_psi4_env_globals(100.0 - 100.0 * frzv_on / virt_on, "DSRG FNO PO");
+
+    // build transformation matrix to FNO
+    auto dim_virt_small = dim_virt - dim_frzv;
+    auto Va = std::make_shared<psi::Matrix>("Va", dim_virt, dim_virt_small);
+    for (int h = 0; h < nirrep; ++h) {
+        for (int i = 0; i < dim_virt_small[h]; ++i) {
+            Va->set_column(h, i, D1v_evecs->get_column(h, i));
+        }
+    }
+
+    // canonicalize truncated virtual space
+    auto F = tensor_to_matrix(F_.block("vv"), dim_virt);
+    auto Ft = psi::linalg::triplet(Va, F, Va, true, false, false);
+    auto Ft_evals = std::make_shared<psi::Vector>("Ft_evals", dim_virt_small);
+    auto Ft_evecs = std::make_shared<psi::Matrix>("Ft_evecs", dim_virt_small, dim_virt_small);
+    Ft->diagonalize(Ft_evecs, Ft_evals, ascending);
+    auto Wa = psi::linalg::doublet(Va, Ft_evecs, false, false);
+
+    // build final transformation matrix
+    auto nmopi = mo_space_info_->dimension("ALL");
+    auto ncmopi = mo_space_info_->dimension("CORRELATED");
+    auto frzcpi = mo_space_info_->dimension("FROZEN_DOCC");
+    auto holepi = mo_space_info_->dimension("INACTIVE_DOCC") + mo_space_info_->dimension("ACTIVE");
+
+    auto Ua = std::make_shared<psi::Matrix>("Ua", nmopi, nmopi);
+    Ua->identity();
+
+    Slice slice_row(holepi, holepi + dim_virt);
+    Slice slice_col(holepi, holepi + dim_virt_small);
+    Ua->set_block(slice_row, slice_col, Wa);
+
+    write_psi_vector("NAT_OCC_VIRT", *D1v_evals, holepi);
+    return std::make_tuple(dim_frzv, Ua);
+}
 } // namespace forte

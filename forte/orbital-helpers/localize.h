@@ -64,4 +64,11 @@ class Localize : public OrbitalTransform {
     // Pipek-Mezey or Boys
     std::string local_method_;
 };
+
+class CholeskyLocal : public OrbitalTransform {
+  public:
+    CholeskyLocal(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+                  std::shared_ptr<MOSpaceInfo> mo_space_info);
+    void compute_transformation() override;
+};
 } // namespace forte
