@@ -238,7 +238,7 @@ def prepare_forte_objects(
     if mo_spaces is None:
         mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
     else:
-        mo_space_info = forte.make_mo_space_info_from_map(nmopi, point_group, mo_spaces, [])
+        mo_space_info = forte.make_mo_space_info_from_map(nmopi, point_group, mo_spaces)
 
     state_weights_map = forte.make_state_weights_map(options, mo_space_info)
 
@@ -267,7 +267,9 @@ def prepare_forte_objects(
     }
 
 
-def prepare_ints_rdms(wfn, mo_spaces, rdm_level=3, rdm_type=forte.RDMsType.spin_dependent, mix_inactive=False, mix_active=False):
+def prepare_ints_rdms(
+    wfn, mo_spaces, rdm_level=3, rdm_type=forte.RDMsType.spin_dependent, mix_inactive=False, mix_active=False
+):
     """
     Preparation step for DSRG: compute a CAS and its RDMs.
     :param wfn: reference wave function from psi4

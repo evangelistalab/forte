@@ -69,31 +69,25 @@ std::map<IntegralType, std::string> int_type_label{
 
 ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
                                std::shared_ptr<SCFInfo> scf_info,
-                               std::shared_ptr<psi::Wavefunction> ref_wfn,
                                std::shared_ptr<MOSpaceInfo> mo_space_info,
                                IntegralType integral_type, IntegralSpinRestriction restricted)
-    : options_(options), scf_info_(scf_info), mo_space_info_(mo_space_info), wfn_(ref_wfn),
+    : options_(options), scf_info_(scf_info), mo_space_info_(mo_space_info),
       integral_type_(integral_type), spin_restriction_(restricted), frozen_core_energy_(0.0),
       scalar_energy_(0.0) {
     common_initialize();
 }
 
-ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
-                               std::shared_ptr<SCFInfo> scf_info,
-                               std::shared_ptr<MOSpaceInfo> mo_space_info,
-                               IntegralType integral_type, IntegralSpinRestriction restricted)
-    : options_(options), scf_info_(scf_info), mo_space_info_(mo_space_info),
-      integral_type_(integral_type), spin_restriction_(restricted) {
-    common_initialize();
-}
-
 void ForteIntegrals::common_initialize() {
+    // Register as an observer of the SCFInfo object
+    // scf_info_->attach_observer(shared_from_this(), "ForteIntegrals");
+
     read_information();
 
     if (not skip_build_) {
         allocate();
     }
 }
+
 void ForteIntegrals::read_information() {
     // Extract information from options
     print_ = options_->get_int("PRINT");
@@ -168,20 +162,7 @@ bool ForteIntegrals::update_ints_if_needed() {
 
 double ForteIntegrals::nuclear_repulsion_energy() const { return nucrep_; }
 
-std::shared_ptr<psi::Wavefunction> ForteIntegrals::wfn() { return wfn_; }
-
-std::shared_ptr<psi::JK> ForteIntegrals::jk() { return JK_; }
-
 ForteIntegrals::JKStatus ForteIntegrals::jk_status() { return JK_status_; }
-
-void ForteIntegrals::jk_finalize() {
-    if (JK_status_ == JKStatus::initialized) {
-        JK_->finalize();
-        // nothing done in finalize() for PKJK and MemDFJK
-        if (integral_type_ == DiskDF or integral_type_ == Cholesky)
-            JK_status_ = JKStatus::finalized;
-    }
-}
 
 size_t ForteIntegrals::nso() const { return nso_; }
 
@@ -316,15 +297,6 @@ std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::ao_dipole_ints() const
 std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::ao_quadrupole_ints() const {
     return quadrupole_ints_ao_;
 }
-
-// void ForteIntegrals::set_oei(double** ints, bool alpha) {
-//    std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
-//    for (size_t p = 0; p < aptei_idx_; ++p) {
-//        for (size_t q = 0; q < aptei_idx_; ++q) {
-//            p_oei[p * aptei_idx_ + q] = ints[p][q];
-//        }
-//    }
-//}
 
 void ForteIntegrals::set_oei(size_t p, size_t q, double value, bool alpha) {
     std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
@@ -497,28 +469,6 @@ void ForteIntegrals::print_ints() {
     }
 }
 
-std::shared_ptr<psi::Matrix>
-ForteIntegrals::Ca_SO2AO(std::shared_ptr<const psi::Matrix> Ca_SO) const {
-    auto aotoso = wfn_->aotoso();
-    auto nao = nso_;
-
-    auto Ca_ao = std::make_shared<psi::Matrix>("Ca_AO", nao, nmo_);
-
-    // Transform from the SO to the AO basis
-    for (int h = 0, index = 0; h < nirrep_; ++h) {
-        auto nso = nsopi_[h];
-        if (nso == 0)
-            continue;
-
-        for (int i = 0, nmo_this = nmopi_[h]; i < nmo_this; ++i) {
-            // notes: LDA value is nso (not nao, see libqt/blas_intfc23.cc)
-            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Ca_SO->pointer(h)[0][i],
-                    nmo_this, 0.0, &Ca_ao->pointer()[0][index++], nmo_);
-        }
-    }
-    return Ca_ao;
-}
-
 void ForteIntegrals::rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
                                      std::shared_ptr<psi::Matrix> Ub, bool re_transform) {
     // 1. Rotate the orbital coefficients and store them in the ForteIntegral object
@@ -534,6 +484,23 @@ void ForteIntegrals::update_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_
 }
 
 // The following functions throw an error by default
+
+std::shared_ptr<psi::Wavefunction> ForteIntegrals::wfn() {
+    _undefined_function("wfn");
+    return nullptr;
+}
+
+std::shared_ptr<psi::JK> ForteIntegrals::jk() {
+    _undefined_function("jk");
+    return nullptr;
+}
+
+void ForteIntegrals::jk_finalize() { _undefined_function("jk_finalize"); }
+
+std::shared_ptr<psi::Matrix> ForteIntegrals::Ca_SO2AO(std::shared_ptr<const psi::Matrix>) const {
+    _undefined_function("Ca_SO2AO");
+    return nullptr;
+}
 
 void ForteIntegrals::update_orbitals(std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>,
                                      bool) {
@@ -567,6 +534,8 @@ double** ForteIntegrals::three_integral_pointer() {
     _undefined_function("three_integral_pointer");
     return nullptr;
 }
+
+void ForteIntegrals::update(const std::string& message) { _undefined_function("update"); }
 
 void ForteIntegrals::rotate_mos() { _undefined_function("rotate_mos"); }
 

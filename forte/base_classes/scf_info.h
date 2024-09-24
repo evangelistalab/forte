@@ -30,6 +30,8 @@
 
 #include "psi4/libmints/dimension.h"
 
+#include "forte/helpers/observer.h"
+
 namespace psi {
 class Vector;
 class Matrix;
@@ -37,8 +39,9 @@ class Wavefunction;
 } // namespace psi
 
 namespace forte {
+class Observer;
 
-class SCFInfo {
+class SCFInfo : public Subject {
   public:
     /// Constructor
     SCFInfo(const psi::Dimension& nmopi, const psi::Dimension& doccpi, const psi::Dimension& soccpi,
@@ -103,6 +106,9 @@ class SCFInfo {
 
     // Beta orbital coefficients (nso x nmo)
     std::shared_ptr<psi::Matrix> Cb_;
+
+    // List of observers
+    std::vector<std::pair<std::string, std::weak_ptr<Observer>>> observers_;
 };
 
 std::shared_ptr<SCFInfo>

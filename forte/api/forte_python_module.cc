@@ -96,10 +96,6 @@ PYBIND11_MODULE(_forte, m) {
     m.def("banner", &banner, "Print forte banner");
     m.def("print_method_banner", &print_method_banner, "text"_a, "separator"_a = "-",
           "Print a method banner");
-    m.def("make_mo_space_info", &make_mo_space_info, "Make a MOSpaceInfo object");
-    m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map, "nmopi"_a, "point_group"_a,
-          "mo_space_map"_a, "reorder"_a = std::vector<size_t>(),
-          "Make a MOSpaceInfo object using a dictionary");
     m.def("make_aosubspace_projector", &make_aosubspace_projector, "Make a AOSubspace projector");
     m.def("make_avas", &make_avas, "Make AVAS orbitals");
     m.def("make_fragment_projector", &make_fragment_projector,

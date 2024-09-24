@@ -16,7 +16,7 @@ units bohr
 set {
   basis cc-pVDZ
   scf_type pk
-  e_convergence 14
+  e_convergence 12
 }
 
 set forte {

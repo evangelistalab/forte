@@ -35,6 +35,8 @@
 #include "psi4/libmints/dimension.h"
 #include "ambit/blocked_tensor.h"
 
+#include "forte/helpers/observer.h"
+
 class Tensor;
 
 namespace psi {
@@ -103,21 +105,9 @@ enum ThreeIntsBlockOrder { Qpq, pqQ };
  * defined in 'make_integrals.h'
  *
  */
-class ForteIntegrals {
+class ForteIntegrals : public Observer, public std::enable_shared_from_this<ForteIntegrals> {
   public:
     // ==> Class Constructor and Destructor <==
-
-    /**
-     * @brief Class constructor
-     * @param options The main options object
-     * @param ref_wfn The reference wave function object
-     * @param restricted Select a restricted or unrestricted transformation
-     * @param mo_space_info The MOSpaceInfo object
-     */
-    ForteIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
-                   std::shared_ptr<psi::Wavefunction> ref_wfn,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
-                   IntegralSpinRestriction restricted);
 
     /**
      * @brief Class constructor
@@ -138,6 +128,9 @@ class ForteIntegrals {
     void common_initialize();
 
     virtual void initialize() = 0;
+
+    // Observer interface
+    void update(const std::string& message) override;
 
     /// Skip integral transformation
     bool skip_build_;
@@ -162,17 +155,17 @@ class ForteIntegrals {
     double nuclear_repulsion_energy() const;
 
     /// temporary solution for not having a Wavefunction
-    std::shared_ptr<psi::Wavefunction> wfn();
+    virtual std::shared_ptr<psi::Wavefunction> wfn();
 
     /// Return the Psi4 JK object
-    std::shared_ptr<psi::JK> jk();
+    virtual std::shared_ptr<psi::JK> jk();
 
     /// Enum class for the status of Psi4 JK
     enum class JKStatus { empty, initialized, finalized };
     /// Return the status of Psi4 JK object
     JKStatus jk_status();
     /// Finalize Psi4 JK object
-    void jk_finalize();
+    virtual void jk_finalize();
 
     // The number of symmetry-adapted orbitals
     // see https://github.com/psi4/psi4/wiki/OrbitalDimensions
@@ -401,7 +394,7 @@ class ForteIntegrals {
     /// Orbital coefficients in AO x MO basis where MO in Pitzer order
     virtual std::shared_ptr<psi::Matrix> Ca_AO() const = 0;
     /// Transform SO orbital coefficients to AO x MO basis where MO is Pitzer order
-    std::shared_ptr<psi::Matrix> Ca_SO2AO(std::shared_ptr<const psi::Matrix> Ca_SO) const;
+    virtual std::shared_ptr<psi::Matrix> Ca_SO2AO(std::shared_ptr<const psi::Matrix> Ca_SO) const;
 
     /// Obtain AO dipole integrals [X, Y, Z]
     /// Each direction is a std::shared_ptr<psi::Matrix> of dimension nao * nao
@@ -432,20 +425,11 @@ class ForteIntegrals {
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
-    /// The Wavefunction object
-    std::shared_ptr<psi::Wavefunction> wfn_;
-
     /// The integral_type
     IntegralType integral_type_;
 
     /// Are we doing a spin-restricted computation?
     IntegralSpinRestriction spin_restriction_;
-
-    // // Ca matrix from psi
-    // std::shared_ptr<psi::Matrix> Ca_;
-
-    // // Cb matrix from psi
-    // std::shared_ptr<psi::Matrix> Cb_;
 
     // AO overlap matrix from psi
     std::shared_ptr<psi::Matrix> S_;
@@ -518,9 +502,6 @@ class ForteIntegrals {
     std::vector<double> one_electron_integrals_a_;
     std::vector<double> one_electron_integrals_b_;
 
-    /// JK object from Psi4
-    std::shared_ptr<psi::JK> JK_;
-
     /// Status of the JK object
     JKStatus JK_status_ = JKStatus::empty;
 
@@ -592,75 +573,6 @@ class ForteIntegrals {
     /// Remove the doubly occupied and virtual orbitals and resort the rest so
     /// that we are left only with ncmo = nmo - nfzc - nfzv
     virtual void resort_integrals_after_freezing() = 0;
-};
-
-/**
- * @brief Interface to integrals read from psi4
- */
-class Psi4Integrals : public ForteIntegrals {
-  public:
-    Psi4Integrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
-                  std::shared_ptr<psi::Wavefunction> ref_wfn,
-                  std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
-                  IntegralSpinRestriction restricted);
-
-    /// Make the generalized Fock matrix using Psi4 JK object
-    void make_fock_matrix(ambit::Tensor Da, ambit::Tensor Db) override;
-
-    /// Make the closed-shell Fock matrix using Psi4 JK object
-    std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>, double>
-    make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) override;
-
-    /// Make the active Fock matrix using Psi4 JK object
-    std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>
-    make_fock_active(ambit::Tensor Da, ambit::Tensor Db) override;
-
-    /// Make the active Fock matrix using restricted equation
-    std::shared_ptr<psi::Matrix>
-    make_fock_active_restricted(std::shared_ptr<psi::Matrix> D) override;
-
-    /// Make the active Fock matrix using unrestricted equation
-    std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>
-    make_fock_active_unrestricted(std::shared_ptr<psi::Matrix> Da,
-                                  std::shared_ptr<psi::Matrix> Db) override;
-
-    /// Orbital coefficients in AO x MO basis, where MO is in Pitzer order
-    std::shared_ptr<psi::Matrix> Ca_AO() const override;
-
-    /// Build and return MO dipole integrals (X, Y, Z) in Pitzer order
-    std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints() const override;
-
-    /// Build and return MO quadrupole integrals (XX, XY, XZ, YY, YZ, ZZ) in Pitzer order
-    std::vector<std::shared_ptr<psi::Matrix>> mo_quadrupole_ints() const override;
-
-  private:
-    void base_initialize_psi4();
-    void setup_psi4_ints();
-    void transform_one_electron_integrals();
-    void compute_frozen_one_body_operator() override;
-    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb,
-                         bool re_transform = true) override;
-    void rotate_mos() override;
-
-    /// Build AO dipole and quadrupole integrals
-    void build_multipole_ints_ao() override;
-
-    /// Make a shared pointer to a Psi4 JK object
-    void make_psi4_JK();
-    /// Call JK intialize
-    void jk_initialize(double mem_percentage = 0.8, int print_level = 1);
-
-    /// AO Fock control
-    enum class FockAOStatus { none, inactive, generalized };
-    FockAOStatus fock_ao_level_ = FockAOStatus::none;
-
-  protected:
-    void freeze_core_orbitals() override;
-
-    // threshold for DF fitting condition (Psi4)
-    double df_fitting_cutoff_;
-    // threshold for Schwarz cutoff (Psi4)
-    double schwarz_cutoff_;
 };
 
 } // namespace forte

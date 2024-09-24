@@ -79,6 +79,8 @@ make_forte_integrals_from_psi4(std::shared_ptr<psi::Wavefunction> ref_wfn,
         throw std::runtime_error("INT_TYPE is not correct.  Check options");
     }
 
+    // ints->initialize();
+
     if (options->exists("PRINT_INTS"))
         if (options->get_bool("PRINT_INTS")) {
             ints->print_ints();

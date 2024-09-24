@@ -93,7 +93,9 @@ void MASTER_DSRG::startup() {
 void MASTER_DSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints) {
     outfile->Printf("\n    Computing Fock matrix and cleaning JK ........... ");
     ints->make_fock_matrix(rdms_->g1a(), rdms_->g1b());
-    ints->jk_finalize();
+    if (ints_->integral_type() != IntegralType::Custom) {
+        ints_->jk_finalize();
+    }
     outfile->Printf("Done");
 }
 

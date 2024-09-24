@@ -29,7 +29,7 @@
 
 #pragma once
 
-#include "integrals.h"
+#include "psi4_integrals.h"
 
 namespace forte {
 

@@ -30,7 +30,8 @@
 #pragma once
 
 #include "psi4/lib3index/dfhelper.h"
-#include "integrals.h"
+
+#include "psi4_integrals.h"
 
 namespace forte {
 

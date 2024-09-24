@@ -147,7 +147,9 @@ void SADSRG::build_fock_from_ints() {
     local_timer lt;
     print_contents("Computing Fock matrix and cleaning JK");
     ints_->make_fock_matrix(rdms_->g1a(), rdms_->g1b());
-    ints_->jk_finalize();
+    if (ints_->integral_type() != IntegralType::Custom) {
+        ints_->jk_finalize();
+    }
     print_done(lt.get());
 }
 

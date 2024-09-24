@@ -78,7 +78,9 @@ void MCSCF_ORB_GRAD::startup() {
     nonredundant_pairs();
 
     // setup JK
-    JK_ = ints_->jk();
+    if (ints_->integral_type() != IntegralType::Custom) {
+        JK_ = ints_->jk();
+    }
     if (ints_->integral_type() == IntegralType::DF or
         ints_->integral_type() == IntegralType::DiskDF) {
         tei_alg_ = options_->get_bool("MCSCF_DF_TEIALG") ? TEIALG::DF : TEIALG::JK;

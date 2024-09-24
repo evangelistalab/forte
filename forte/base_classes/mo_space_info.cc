@@ -337,10 +337,6 @@ void MOSpaceInfo::read_from_map(const std::map<std::string, std::vector<size_t>>
     }
 }
 
-const std::vector<size_t>& MOSpaceInfo::reorder() const { return reorder_; }
-
-void MOSpaceInfo::set_reorder(const std::vector<size_t>& reorder) { reorder_ = reorder; }
-
 void MOSpaceInfo::compute_space_info() {
     outfile->Printf("\n\n  ==> MO Space Information <==\n");
     // Handle frozen core
@@ -390,12 +386,7 @@ void MOSpaceInfo::compute_space_info() {
         for (std::string space : elementary_spaces_) {
             size_t n = mo_spaces_[space].first[h];
             for (size_t q = 0; q < n; ++q) {
-                size_t p_order = p_abs;
-                // If a reordering array is provided, use it to determine the index
-                if (reorder_.size() > 0) {
-                    p_order = reorder_[p_order];
-                }
-                mo_spaces_[space].second.push_back(std::make_tuple(p_order, h, p_rel));
+                mo_spaces_[space].second.push_back(std::make_tuple(p_abs, h, p_rel));
                 p_abs += 1;
                 p_rel += 1;
             }
@@ -520,10 +511,8 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space_from_map(
 
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
                                                 const std::string& point_group,
-                                                std::shared_ptr<ForteOptions> options,
-                                                const std::vector<size_t>& reorder) {
+                                                std::shared_ptr<ForteOptions> options) {
     auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi, point_group);
-    mo_space_info->set_reorder(reorder);
     mo_space_info->read_options(options);
     mo_space_info->compute_space_info();
     return mo_space_info;
@@ -531,11 +520,9 @@ std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
 
 std::shared_ptr<MOSpaceInfo>
 make_mo_space_info_from_map(const psi::Dimension& nmopi, const std::string& point_group,
-                            const std::map<std::string, std::vector<size_t>>& mo_space_map,
-                            const std::vector<size_t>& reorder) {
+                            const std::map<std::string, std::vector<size_t>>& mo_space_map) {
 
     auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi, point_group);
-    mo_space_info->set_reorder(reorder);
     mo_space_info->read_from_map(mo_space_map);
     mo_space_info->compute_space_info();
     return mo_space_info;

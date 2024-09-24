@@ -281,8 +281,7 @@ class Solver(Node):
         """
         nmopi = self.data.scf_info.nmopi()
         point_group = self.model.point_group
-        reorder = []  # TODO: enable reorder
-        self.data.mo_space_info = forte.make_mo_space_info_from_map(nmopi, point_group, mo_spaces, reorder)
+        self.data.mo_space_info = forte.make_mo_space_info_from_map(nmopi, point_group, mo_spaces)
 
     def prepare_forte_options(self):
         """

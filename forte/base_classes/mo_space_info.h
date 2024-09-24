@@ -214,12 +214,6 @@ class MOSpaceInfo {
     /// Read the space info from a map of space name-dimension_vector
     void read_from_map(const std::map<std::string, std::vector<size_t>>& mo_space_map);
 
-    /// Reorder MOs according to the input indexing vector. This vector specifies the
-    /// new order of the orbitals in the full orbital space.
-    void set_reorder(const std::vector<size_t>& reorder);
-
-    const std::vector<size_t>& reorder() const;
-
     /// Process current MOSpaceInfo: calculate frozen core, count, and assign orbitals
     void compute_space_info();
 
@@ -272,9 +266,6 @@ class MOSpaceInfo {
     /// The map from all MO to the correlated MOs (excludes frozen core/virtual)
     std::vector<size_t> mo_to_cmo_;
 
-    /// The index vector used to reorder the orbitals
-    std::vector<size_t> reorder_;
-
     // ==> Class functions <==
 
     /// Read information about each elementary space from the psi Options object
@@ -290,13 +281,11 @@ class MOSpaceInfo {
 /// Make MOSpaceInfo from input (options)
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
                                                 const std::string& point_group,
-                                                std::shared_ptr<ForteOptions> options,
-                                                const std::vector<size_t>& reorder);
+                                                std::shared_ptr<ForteOptions> options);
 
 /// Make MOSpaceInfo from a map of spacename-dimension_vector ("ACTIVE", [size_t, size_t, ...])
 std::shared_ptr<MOSpaceInfo>
 make_mo_space_info_from_map(const psi::Dimension& nmopi, const std::string& point_group,
-                            const std::map<std::string, std::vector<size_t>>& mo_space_map,
-                            const std::vector<size_t>& reorder);
+                            const std::map<std::string, std::vector<size_t>>& mo_space_map);
 
 } // namespace forte
