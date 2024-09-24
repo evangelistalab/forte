@@ -1691,6 +1691,10 @@ DMRG:
     type: bool
     default: False
     help: "Whether or not to print the correlation functions after the DMRG calculation"
+  DMRG_ORDERING_FIEDLER:
+    type: bool
+    default: True
+    help: "Whether or not to use the ordering of active orbitals based on the Fiedler vector"
 
 BLOCK2:
   BLOCK2_STACK_MEM:
