@@ -21,7 +21,7 @@ from forte._forte import (
 from forte.data import ForteData
 from forte.register_forte_options import register_forte_options
 from forte.proc.orbital_helpers import orbital_projection
-from forte.proc.orbital_helpers import read_orbitals, dump_orbitals, ortho_orbs_forte
+from forte.proc.orbital_helpers import read_orbitals, dmrg_initial_orbitals, ortho_orbs_forte
 from forte.proc.external_active_space_solver import (
     write_external_active_space_file,
     write_external_rdm_file,
@@ -202,6 +202,10 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn, mo_space_info):
 
     # Call methods that project the orbitals (AVAS, embedding)
     mo_space_info = orbital_projection(wfn, options, mo_space_info)
+
+    # patch DMRG
+    if options.get_str("ACTIVE_SPACE_SOLVER") in ["DMRG", "BLOCK2"]:
+        dmrg_initial_orbitals(wfn, mo_space_info)
 
     # Build Forte SCFInfo object
     scf_info = SCFInfo(wfn)
