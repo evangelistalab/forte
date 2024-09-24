@@ -27,6 +27,9 @@
  */
 
 #include "sparse_operator.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 namespace forte {
 
@@ -225,7 +228,13 @@ void sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
     Determinant nn_Op_cre;
     Determinant nn_Op_ann;
 
-    for (const auto& [O_op, O_c] : O.elements()) {
+    SparseOperatorList O_list;
+    for (const auto& [sqop, c] : O.elements()) {
+        O_list.add(sqop, c);
+    }
+
+    #pragma omp parallel for reduction(+ : T) private(c1, c2) schedule(dynamic, 10)
+    for (const auto& [O_op, O_c] : O_list.elements()) {
         const auto O_T_commutator_type = commutator_type(O_op, T_op);
         const auto O_Td_commutator_type = commutator_type(O_op, Td_op);
         // if both commutators are zero, then we can skip this term

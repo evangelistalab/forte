@@ -88,6 +88,7 @@ class SparseOperator : public VectorSpace<SparseOperator, SQOperatorString, spar
 
     /// @return a latex representation of this operator
     std::string latex() const;
+    // SparseOperatorList to_list() const;
 };
 
 class NormalOrderedSparseOperator
