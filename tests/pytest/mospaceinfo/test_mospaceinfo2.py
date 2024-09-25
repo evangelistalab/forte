@@ -35,7 +35,7 @@ def test_mospaceinfo2():
     nmopi = psi4.core.Dimension([5,5,2,2])
     point_group = 'C2V'
 
-    mo_space_info = forte.make_mo_space_info_from_map(nmopi,point_group,mos_spaces,[])
+    mo_space_info = forte.make_mo_space_info_from_map(nmopi,point_group,mos_spaces)
 
     space_names = ['FROZEN_DOCC','RESTRICTED_DOCC','GAS1','GAS2','GAS3','GAS4','GAS5','GAS6','RESTRICTED_UOCC','FROZEN_UOCC']
 
