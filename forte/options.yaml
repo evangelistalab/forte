@@ -86,7 +86,7 @@ Driver:
   ORBITAL_TYPE:
     type: str
     default: "CANONICAL"
-    choices: ["CANONICAL", "LOCAL", "CHOLESKY_ACTIVE", "MP2NO", "MRPT2NO"]
+    choices: ["CANONICAL", "LOCAL", "MP2NO", "MRPT2NO"]
     help: "Type of orbitals to use"
   MINAO_BASIS:
     type: str
@@ -1347,7 +1347,7 @@ Localize:
   LOCALIZE:
     type: str
     default: "PIPEK_MEZEY"
-    choices: ["PIPEK_MEZEY", "BOYS"]
+    choices: ["PIPEK_MEZEY", "BOYS", "CHOLESKY"]
     help: "The method used to localize the orbitals"
   LOCALIZE_SPACE:
     type: int_list
@@ -1691,10 +1691,10 @@ DMRG:
     type: bool
     default: False
     help: "Whether or not to print the correlation functions after the DMRG calculation"
-  DMRG_ORDERING_FIEDLER:
+  DMRG_REORDER_INIT_ORBS:
     type: bool
     default: True
-    help: "Whether or not to use the ordering of active orbitals based on the Fiedler vector"
+    help: "Whether or not to automatically reorder active orbitals (localize + Fiedler, C1 symmetry only)"
 
 BLOCK2:
   BLOCK2_STACK_MEM:

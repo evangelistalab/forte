@@ -47,24 +47,21 @@ namespace forte {
 void export_OrbitalTransform(py::module& m) {
     py::class_<OrbitalTransform>(m, "OrbitalTransform")
         .def("compute_transformation", &OrbitalTransform::compute_transformation)
+        .def("set_print", &OrbitalTransform::set_print, "Set printing level")
         .def("get_Ua", &OrbitalTransform::get_Ua, "Get Ua rotation")
         .def("get_Ub", &OrbitalTransform::get_Ub, "Get Ub rotation");
 }
 
 void export_Localize(py::module& m) {
-    py::class_<Localize>(m, "Localize")
+    py::class_<Localize, OrbitalTransform>(m, "Localize")
         .def(py::init<std::shared_ptr<ForteOptions>, std::shared_ptr<ForteIntegrals>,
                       std::shared_ptr<MOSpaceInfo>>())
-        .def("compute_transformation", &Localize::compute_transformation,
-             "Compute the transformation")
         .def("set_orbital_space",
              (void(Localize::*)(std::vector<int>&)) & Localize::set_orbital_space,
              "Compute the transformation")
         .def("set_orbital_space",
              (void(Localize::*)(std::vector<std::string>&)) & Localize::set_orbital_space,
-             "Compute the transformation")
-        .def("get_Ua", &Localize::get_Ua, "Get Ua rotation")
-        .def("get_Ub", &Localize::get_Ub, "Get Ub rotation");
+             "Compute the transformation");
 }
 
 void export_SemiCanonical(py::module& m) {

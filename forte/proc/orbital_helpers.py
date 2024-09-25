@@ -90,7 +90,7 @@ def orbital_projection(ref_wfn, options, mo_space_info):
         return mo_space_info
 
 
-def dmrg_initial_orbitals(wfn, mo_space_info):
+def dmrg_initial_orbitals(wfn, options, mo_space_info):
     """
     Initial orbital guess for DMRG CI/SCF computations by
     1. localize active orbitals using Cholesky
@@ -98,10 +98,11 @@ def dmrg_initial_orbitals(wfn, mo_space_info):
 
     Args:
         wfn (psi4.Wavefunction): current Psi4 Wavefunction
+        options (forte.Options): the Forte Options object
         mo_space_info (forte.MOSpaceInfo): the Forte MOSpaceInfo object
     """
     # TODO: enable irrep
-    if wfn.nirrep() > 1:
+    if wfn.nirrep() > 1 or not options.get_bool("DMRG_REORDER_INIT_ORBS"):
         return
 
     psi4.core.print_out("\n\n  ==> Initialize Active Orbitals for DMRG <==\n")
@@ -109,23 +110,34 @@ def dmrg_initial_orbitals(wfn, mo_space_info):
     Ca = wfn.Ca().clone().to_array()
     S = wfn.S().to_array()
     bs = wfn.basisset()
-    bs_aux = psi4.core.BasisSet.build(wfn.molecule(), "DF_BASIS_SCF",
-                                      psi4.core.get_option("SCF", "DF_BASIS_SCF"),
-                                      "JKFIT", psi4.core.get_global_option('BASIS'),
-                                      puream=bs.has_puream())
     ndocc = mo_space_info.size("INACTIVE_DOCC")
     nactv = mo_space_info.size("ACTIVE")
 
     # localize orbitals
-    psi4.core.print_out("\n    Forming Cholesky orbitals ...")
+    local_method = options.get_str("LOCALIZE")
+    psi4.core.print_out(f"\n    Localizing orbitals using {local_method} ...")
     Ca_actv = Ca[:, ndocc : ndocc + nactv]
-    D = Ca_actv @ Ca_actv.T
-    X = (psi4.core.Matrix.from_array(D)).partial_cholesky_factorize(1.0e-6).to_array()
-    Ca_actv = D @ S @ X
+    if local_method == "CHOLESKY":
+        D = Ca_actv @ Ca_actv.T
+        X = (psi4.core.Matrix.from_array(D)).partial_cholesky_factorize(1.0e-6).to_array()
+        Ca_actv = D @ S @ X
+    else:
+        localizer = psi4.core.Localizer.build(local_method, bs, psi4.core.Matrix.from_array(Ca_actv))
+        # localizer.set_print(0)
+        localizer.localize()
+        Ca_actv = Ca_actv @ localizer.U.to_array()
     psi4.core.print_out(" Done")
 
+
     # form K_ij = (ij|ji) matrix
-    psi4.core.print_out("\n    Forming exchange integrals ...")
+    psi4.core.print_out("\n    Forming exchange integrals using DF ...")
+    try:
+        bs_aux = wfn.get_basisset("DF_BASIS_SCF")
+    except:
+        bs_aux = psi4.core.BasisSet.build(wfn.molecule(), "DF_BASIS_SCF",
+                                          psi4.core.get_option("SCF", "DF_BASIS_SCF"),
+                                          "JKFIT", psi4.core.get_global_option('BASIS'),
+                                          puream=bs.has_puream())
     df_helper = psi4.core.DFHelper(bs, bs_aux)
     df_helper.set_memory(psi4.get_memory())
     df_helper.set_nthreads(psi4.core.get_num_threads())
@@ -152,6 +164,7 @@ def dmrg_initial_orbitals(wfn, mo_space_info):
     # copy back to wave function
     Ca[:, ndocc : ndocc + nactv] = Ca_actv[:, order]
     wfn.Ca().copy(psi4.core.Matrix.from_array(Ca))
+    psi4.core.print_out("\n")
 
 
 def ortho_orbs_forte(wfn, mo_space_info, Cold):

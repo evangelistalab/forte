@@ -204,8 +204,8 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn, mo_space_info):
     mo_space_info = orbital_projection(wfn, options, mo_space_info)
 
     # patch DMRG
-    if options.get_str("ACTIVE_SPACE_SOLVER") in ["DMRG", "BLOCK2"] and options.get_bool("DMRG_ORDERING_FIEDLER"):
-        dmrg_initial_orbitals(wfn, mo_space_info)
+    if options.get_str("ACTIVE_SPACE_SOLVER") in ["DMRG", "BLOCK2"]:
+        dmrg_initial_orbitals(wfn, options, mo_space_info)
 
     # Build Forte SCFInfo object
     scf_info = SCFInfo(wfn)
