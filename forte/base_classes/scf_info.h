@@ -82,6 +82,10 @@ class SCFInfo : public Subject {
     /// @return the beta orbital coefficients (const version)
     std::shared_ptr<const psi::Matrix> Cb() const;
 
+    void
+    reorder_orbitals(const std::vector<std::vector<size_t>>& new_order,
+                     std::shared_ptr<psi::Wavefunction> wfn = std::shared_ptr<psi::Wavefunction>());
+
   private:
     // Orbitals per irrep
     psi::Dimension nmopi_;
@@ -110,10 +114,5 @@ class SCFInfo : public Subject {
     // List of observers
     std::vector<std::pair<std::string, std::weak_ptr<Observer>>> observers_;
 };
-
-std::shared_ptr<SCFInfo>
-reorder_orbitals(std::shared_ptr<SCFInfo> scf_info,
-                 const std::vector<std::vector<size_t>>& new_order,
-                 std::shared_ptr<psi::Wavefunction> wfn = std::shared_ptr<psi::Wavefunction>());
 
 } // namespace forte

@@ -77,7 +77,7 @@ ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
 
 void ForteIntegrals::common_initialize() {
     // Register as an observer of the SCFInfo object
-    // scf_info_->attach_observer(shared_from_this(), "ForteIntegrals");
+    scf_info_->attach_observer(shared_from_this(), "ForteIntegrals");
 
     read_information();
 
@@ -533,7 +533,9 @@ double** ForteIntegrals::three_integral_pointer() {
     return nullptr;
 }
 
-void ForteIntegrals::update(const std::string& message) { _undefined_function("update"); }
+void ForteIntegrals::update(const std::string& message) {
+    psi::outfile->Printf("\n  ForteIntegrals::update: %s", message.c_str());
+}
 
 void ForteIntegrals::rotate_mos() { _undefined_function("rotate_mos"); }
 

@@ -2,7 +2,6 @@ from typing import List, Union, Dict
 from .module import Module
 from forte.data import ForteData
 from forte.modules.validators import Feature, module_validation
-from forte._forte import reorder_orbitals
 
 
 class ActiveSpaceSelector(Module):
@@ -174,9 +173,9 @@ class ActiveSpaceSelector(Module):
         data.options.set_int_list("RESTRICTED_DOCC", docc_per_irrep)
         data.options.set_int_list("ACTIVE", active_per_irrep)
         if data.psi_wfn is None:
-            data.scf_info = reorder_orbitals(data.scf_info, reorder)
+            data.scf_info.reorder_orbitals(reorder)
         else:
-            data.scf_info = reorder_orbitals(data.scf_info, reorder, data.psi_wfn)
+            data.scf_info.reorder_orbitals(reorder, data.psi_wfn)
 
     def select_mos_active(self, data, active_space):
         """

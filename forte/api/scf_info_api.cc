@@ -54,10 +54,9 @@ void export_SCFInfo(py::module& m) {
         .def("epsilon_a", &SCFInfo::epsilon_a, "a vector of alpha orbital energy (psi::Vector)")
         .def("epsilon_b", &SCFInfo::epsilon_b, "a vector of beta orbital energy (psi::Vector)")
         .def("Ca", &SCFInfo::Ca, "the alpha MO coefficient matrix (psi::Matrix)")
-        .def("Cb", &SCFInfo::Cb, "the beta MO coefficient matrix (psi::Matrix)");
-
-    m.def("reorder_orbitals", &reorder_orbitals,
-          "Reorder orbitals based on the given permutation (uses symmetry of the molecule)");
+        .def("Cb", &SCFInfo::Cb, "the beta MO coefficient matrix (psi::Matrix)")
+        .def("reorder_orbitals", &SCFInfo::reorder_orbitals, "perm"_a, "wfn"_a = nullptr,
+             "Reorder orbitals based on the given permutation (uses symmetry of the molecule)");
 }
 
 } // namespace forte
