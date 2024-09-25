@@ -32,10 +32,11 @@ symmetry c1
 }
 
 set {
-scf_type     df
-reference    rhf
-basis        cc-pvdz
-df_basis_scf cc-pvdz-jkfit
+scf_type          df
+reference         rhf
+basis             cc-pvdz
+df_basis_scf      cc-pvdz-jkfit
+local_convergence 1.0e-8
 }
 escf, wfn = energy('scf', return_wfn=True)
 compare_values(eref_scf, escf, 6, "RHF/cc-pVDZ on H20")
