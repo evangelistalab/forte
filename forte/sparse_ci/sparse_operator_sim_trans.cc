@@ -25,10 +25,14 @@
  *
  * @END LICENSE
  */
-
+#include <numeric>
 #include "sparse_operator.h"
 #ifdef _OPENMP
 #include <omp.h>
+#else
+#define omp_get_max_threads() 1
+#define omp_get_thread_num() 0
+#define omp_get_num_threads() 1
 #endif
 
 namespace forte {
@@ -223,7 +227,9 @@ void sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
     auto Td_n = Td_op.number_component();
     auto Td_nn = Td_op.non_number_component();
 
-    SparseOperator T;
+    int nthreads = omp_get_max_threads();
+
+    std::vector<SparseOperator> T(nthreads);
     sparse_scalar_t c1, c2;
     Determinant nn_Op_cre;
     Determinant nn_Op_ann;
@@ -233,7 +239,10 @@ void sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
         O_list.add(sqop, c);
     }
 
-    #pragma omp parallel for reduction(+ : T) private(c1, c2) schedule(dynamic, 10)
+#pragma omp parallel private(c1, c2) num_threads(nthreads)
+    {
+    int ithread = omp_get_thread_num();
+    #pragma omp for schedule(dynamic, 10) 
     for (const auto& [O_op, O_c] : O_list.elements()) {
         const auto O_T_commutator_type = commutator_type(O_op, T_op);
         const auto O_Td_commutator_type = commutator_type(O_op, Td_op);
@@ -299,18 +308,18 @@ void sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
             for (const auto& [cOT_op, cOT_c] : cOT) {
                 // + c1 [O, T]
                 if (do_c1) {
-                    T.add(cOT_op, cOT_c * c1);
+                    T.at(ithread).add(cOT_op, cOT_c * c1);
                 }
                 if (do_c2) {
                     auto ccOTT = commutator_fast(cOT_op, T_op);
                     for (const auto& [ccOTT_op, ccOTT_c] : ccOTT) {
                         // + c2 [[O, T], T]
-                        T.add(ccOTT_op, ccOTT_c * cOT_c * c2);
+                        T.at(ithread).add(ccOTT_op, ccOTT_c * cOT_c * c2);
                     }
                     auto ccOTTd = commutator_fast(cOT_op, Td_op);
                     for (const auto& [ccOTTd_op, ccOTTd_c] : ccOTTd) {
                         // sigma * c2 [[O, T], T^dagger]
-                        T.add(ccOTTd_op, sigma * ccOTTd_c * cOT_c * c2);
+                        T.at(ithread).add(ccOTTd_op, sigma * ccOTTd_c * cOT_c * c2);
                     }
                 }
             }
@@ -321,27 +330,29 @@ void sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
             for (const auto& [cOTd_op, cOTd_c] : cOTd) {
                 // sigma * c1 [O, T^dagger]
                 if (do_c1) {
-                    T.add(cOTd_op, sigma * cOTd_c * c1);
+                    T.at(ithread).add(cOTd_op, sigma * cOTd_c * c1);
                 }
                 if (do_c2) {
                     auto ccOTdT = commutator_fast(cOTd_op, T_op);
                     for (const auto& [ccOTdT_op, ccOTdT_c] : ccOTdT) {
                         // sigma * c2 [[O, T^dagger], T]
-                        T.add(ccOTdT_op, sigma * ccOTdT_c * cOTd_c * c2);
+                        T.at(ithread).add(ccOTdT_op, sigma * ccOTdT_c * cOTd_c * c2);
                     }
                     auto ccOTdTd = commutator_fast(cOTd_op, Td_op);
                     for (const auto& [ccOTdTd_op, ccOTdTd_c] : ccOTdTd) {
                         // +c2 [[O, T^dagger], T^dagger]
-                        T.add(ccOTdTd_op, ccOTdTd_c * cOTd_c * c2);
+                        T.at(ithread).add(ccOTdTd_op, ccOTdTd_c * cOTd_c * c2);
                     }
                 }
             }
         }
     }
+    }
+    SparseOperator T_sum = std::accumulate(T.begin(), T.end(), SparseOperator());
     if (add) {
-        O += T;
+        O += T_sum;
     } else {
-        O = T;
+        O = T_sum;
     }
 }
 

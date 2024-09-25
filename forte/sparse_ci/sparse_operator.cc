@@ -151,14 +151,6 @@ SparseOperator commutator(const SparseOperator& lhs, const SparseOperator& rhs) 
     return C;
 }
 
-// SparseOperatorList SparseOperatorList::to_list() const {
-//     SparseOperatorList list;
-//     for (const auto& [sqop, c] : elements()) {
-//         list.add(sqop, c);
-//     }
-//     return list;
-// }
-
 void SparseOperatorList::add_term_from_str(std::string str, sparse_scalar_t coefficient,
                                            bool allow_reordering) {
     auto [sqop, phase] = make_sq_operator_string(str, allow_reordering);
