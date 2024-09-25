@@ -41,56 +41,47 @@ namespace forte {
  */
 class CholeskyIntegrals : public Psi4Integrals {
   public:
-    /// Contructor of CholeskyIntegrals
+    /// Constructor
     CholeskyIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
                       std::shared_ptr<psi::Wavefunction> ref_wfn,
                       std::shared_ptr<MOSpaceInfo> mo_space_info,
                       IntegralSpinRestriction restricted);
 
+    // See base class for documentation
     void initialize() override;
-
-    /// aptei_x will grab antisymmetriced integrals and creates DF/CD integrals
-    /// on the fly
     double aptei_aa(size_t p, size_t q, size_t r, size_t s) override;
     double aptei_ab(size_t p, size_t q, size_t r, size_t s) override;
     double aptei_bb(size_t p, size_t q, size_t r, size_t s) override;
 
-    /// Return the antisymmetrized alpha-alpha chunck as an ambit::Tensor
     ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                  const std::vector<size_t>& r,
                                  const std::vector<size_t>& s) override;
-    /// Return the antisymmetrized alpha-beta chunck as an ambit::Tensor
     ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                  const std::vector<size_t>& r,
                                  const std::vector<size_t>& s) override;
-    /// Return the antisymmetrized beta-beta chunck as an ambit::Tensor
     ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                  const std::vector<size_t>& r,
                                  const std::vector<size_t>& s) override;
 
-    double three_integral(size_t A, size_t p, size_t q) const;
-
-    double** three_integral_pointer() override;
     ambit::Tensor three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p,
                                        const std::vector<size_t>& q,
                                        ThreeIntsBlockOrder order = Qpq) override;
     ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t,
                                                  const std::vector<size_t>&) override;
-    /// Do not use this if you are using CD/DF integrals
-    void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
-                 bool alpha2) override;
+    double** three_integral_pointer() override;
 
     size_t nthree() const override;
-    std::shared_ptr<psi::Matrix> L_ao_;
 
   private:
     // ==> Class data <==
 
     std::shared_ptr<psi::Matrix> ThreeIntegral_;
+    std::shared_ptr<psi::Matrix> L_ao_;
     size_t nthree_ = 0;
 
     // ==> Class private functions <==
 
+    double three_integral(size_t A, size_t p, size_t q) const;
     void resort_three(std::shared_ptr<psi::Matrix>& threeint, std::vector<size_t>& map);
     void transform_integrals();
 

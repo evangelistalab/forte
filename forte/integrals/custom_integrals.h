@@ -54,6 +54,7 @@ class CustomIntegrals : public ForteIntegrals {
                     const std::vector<double>& oei_b, const std::vector<double>& tei_aa,
                     const std::vector<double>& tei_ab, const std::vector<double>& tei_bb);
 
+    /// Class initializer
     void initialize() override;
 
     /// Grabs the antisymmetriced TEI - assumes storage in aphy_tei_*
@@ -97,28 +98,27 @@ class CustomIntegrals : public ForteIntegrals {
 
     size_t nthree() const override { throw std::runtime_error("Wrong Integral type"); }
 
-    void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
-                 bool alpha2) override;
-
   private:
     // ==> Class private data <==
 
     /// Full two-electron integrals stored as a vector with redundant elements (no permutational
     /// symmetry) (includes frozen orbitals)
-    std::vector<double> full_aphys_tei_aa_;
-    std::vector<double> full_aphys_tei_ab_;
-    std::vector<double> full_aphys_tei_bb_;
 
     std::vector<double> original_full_one_electron_integrals_a_;
     std::vector<double> original_full_one_electron_integrals_b_;
+
+    std::vector<double> original_full_aphys_tei_aa_;
+    std::vector<double> original_full_aphys_tei_ab_;
+    std::vector<double> original_full_aphys_tei_bb_;
+
+    std::vector<double> full_aphys_tei_aa_;
+    std::vector<double> full_aphys_tei_ab_;
+    std::vector<double> full_aphys_tei_bb_;
 
     bool save_original_tei_ = false;
     ambit::Tensor original_V_aa_;
     ambit::Tensor original_V_ab_;
     ambit::Tensor original_V_bb_;
-    std::vector<double> original_full_aphys_tei_aa_;
-    std::vector<double> original_full_aphys_tei_ab_;
-    std::vector<double> original_full_aphys_tei_bb_;
 
     // ==> Class private functions <==
 

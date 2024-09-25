@@ -60,7 +60,6 @@
 #include "mrdsrg-spin-adapted/sadsrg.h"
 #include "mrdsrg-spin-adapted/sa_mrpt2.h"
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
-#include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
 #include "integrals/one_body_integrals.h"
 #include "sci/tdci.h"
 #include "genci/ci_occupation.h"
@@ -314,11 +313,6 @@ PYBIND11_MODULE(_forte, m) {
                       std::shared_ptr<ForteOptions>, std::shared_ptr<MOSpaceInfo>,
                       std::shared_ptr<ActiveSpaceIntegrals>>())
         .def("compute_energy", &TDCI::compute_energy, "Compute TD-ACI");
-
-    py::class_<MCSRGPT2_MO>(m, "MCSRGPT2_MO")
-        .def(py::init<std::shared_ptr<RDMs>, std::shared_ptr<ForteOptions>,
-                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
-        .def("compute_energy", &MCSRGPT2_MO::compute_energy, "Compute DSRG energy");
 
     // export DressedQuantity for dipole moments
     py::class_<DressedQuantity>(m, "DressedQuantity")

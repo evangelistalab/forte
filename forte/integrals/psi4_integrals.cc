@@ -67,9 +67,7 @@ Psi4Integrals::Psi4Integrals(std::shared_ptr<ForteOptions> options,
                              std::shared_ptr<psi::Wavefunction> ref_wfn,
                              std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
                              IntegralSpinRestriction restricted)
-    : ForteIntegrals(options, scf_info, mo_space_info, integral_type, restricted), wfn_(ref_wfn) {
-    base_initialize_psi4();
-}
+    : ForteIntegrals(options, scf_info, mo_space_info, integral_type, restricted), wfn_(ref_wfn) {}
 
 std::shared_ptr<psi::Wavefunction> Psi4Integrals::wfn() { return wfn_; }
 
@@ -107,6 +105,8 @@ Psi4Integrals::Ca_SO2AO(std::shared_ptr<const psi::Matrix> Ca_SO) const {
 }
 
 void Psi4Integrals::base_initialize_psi4() {
+    ForteIntegrals::common_initialize();
+
     schwarz_cutoff_ = options_->get_double("INTS_TOLERANCE");
     df_fitting_cutoff_ = options_->get_double("DF_FITTING_CONDITION");
 

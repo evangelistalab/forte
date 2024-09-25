@@ -60,11 +60,11 @@ DISKDFIntegrals::DISKDFIntegrals(std::shared_ptr<ForteOptions> options,
                                  std::shared_ptr<psi::Wavefunction> ref_wfn,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
                                  IntegralSpinRestriction restricted)
-    : Psi4Integrals(options, scf_info, ref_wfn, mo_space_info, DiskDF, restricted) {
-    initialize();
-}
+    : Psi4Integrals(options, scf_info, ref_wfn, mo_space_info, DiskDF, restricted) {}
 
 void DISKDFIntegrals::initialize() {
+    Psi4Integrals::base_initialize_psi4();
+
     print_info();
 
     int my_proc = 0;
@@ -509,11 +509,6 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
     }
 
     return out;
-}
-
-void DISKDFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
-    outfile->Printf("\n  DISKDFIntegrals::set_tei : DISKDF integrals are read only");
-    throw psi::PSIEXCEPTION("DISKDFIntegrals::set_tei : DISKDF integrals are read only");
 }
 
 void DISKDFIntegrals::gather_integrals() {

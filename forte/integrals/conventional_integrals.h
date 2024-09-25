@@ -69,9 +69,6 @@ class ConventionalIntegrals : public Psi4Integrals {
                                  const std::vector<size_t>& r,
                                  const std::vector<size_t>& s) override;
 
-    void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
-                 bool alpha2) override;
-
   private:
     // ==> Class data <==
 

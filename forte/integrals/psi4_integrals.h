@@ -100,7 +100,6 @@ class Psi4Integrals : public ForteIntegrals {
     std::vector<std::shared_ptr<psi::Matrix>> mo_quadrupole_ints() const override;
 
   private:
-    void base_initialize_psi4();
     void setup_psi4_ints();
     void transform_one_electron_integrals();
     void compute_frozen_one_body_operator() override;
@@ -121,6 +120,7 @@ class Psi4Integrals : public ForteIntegrals {
     FockAOStatus fock_ao_level_ = FockAOStatus::none;
 
   protected:
+    void base_initialize_psi4();
     void freeze_core_orbitals() override;
 
     /// The Wavefunction object

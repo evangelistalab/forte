@@ -1000,7 +1000,7 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
     // actual dimension for frozen virtuals
     psi::Dimension dim_frzv(nirrep, "FNO");
     auto frzv_on = 0.0;
-    for (int h = 0; h < nirrep; ++h) {
+    for (size_t h = 0; h < nirrep; ++h) {
         for (int i = 0; i < dim_virt[h]; ++i) {
             if (D1v_evals->get(h, i) < nk) {
                 dim_frzv[h] += 1;

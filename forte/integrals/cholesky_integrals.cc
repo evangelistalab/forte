@@ -57,11 +57,10 @@ CholeskyIntegrals::CholeskyIntegrals(std::shared_ptr<ForteOptions> options,
                                      std::shared_ptr<psi::Wavefunction> ref_wfn,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info,
                                      IntegralSpinRestriction restricted)
-    : Psi4Integrals(options, scf_info, ref_wfn, mo_space_info, Cholesky, restricted) {
-    initialize();
-}
+    : Psi4Integrals(options, scf_info, ref_wfn, mo_space_info, Cholesky, restricted) {}
 
 void CholeskyIntegrals::initialize() {
+    Psi4Integrals::base_initialize_psi4();
     print_info();
 
     if (not skip_build_) {
@@ -313,11 +312,6 @@ void CholeskyIntegrals::resort_three(std::shared_ptr<psi::Matrix>& threeint,
     // This copies the resorted integrals and the data is changed to the sorted
     // matrix
     threeint->copy(temp_threeint);
-}
-
-void CholeskyIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
-    outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
-    throw psi::PSIEXCEPTION("Don't use DF/CD if you use set_tei");
 }
 
 size_t CholeskyIntegrals::nthree() const { return nthree_; }

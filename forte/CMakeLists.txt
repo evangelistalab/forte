@@ -226,7 +226,6 @@ mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_gradient.cc
 mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
 mrdsrg-spin-integrated/dsrg_mrpt3.cc
 mrdsrg-spin-integrated/master_mrdsrg.cc
-mrdsrg-spin-integrated/mcsrgpt2_mo.cc
 mrdsrg-spin-integrated/mrdsrg.cc
 mrdsrg-spin-integrated/mrdsrg_amplitude.cc
 mrdsrg-spin-integrated/mrdsrg_commutator.cc

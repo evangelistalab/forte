@@ -62,11 +62,11 @@ DFIntegrals::DFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<
                          std::shared_ptr<psi::Wavefunction> ref_wfn,
                          std::shared_ptr<MOSpaceInfo> mo_space_info,
                          IntegralSpinRestriction restricted)
-    : Psi4Integrals(options, scf_info, ref_wfn, mo_space_info, DF, restricted) {
-    initialize();
-}
+    : Psi4Integrals(options, scf_info, ref_wfn, mo_space_info, DF, restricted) {}
 
 void DFIntegrals::initialize() {
+    Psi4Integrals::base_initialize_psi4();
+
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it
     print_info();
@@ -149,7 +149,7 @@ ambit::Tensor DFIntegrals::aptei_bb_block(const std::vector<size_t>& p,
     return ReturnTensor;
 }
 
-double DFIntegrals::three_integral(size_t A, size_t p, size_t q) {
+double DFIntegrals::three_integral(size_t A, size_t p, size_t q) const {
     return ThreeIntegral_->get(p * aptei_idx_ + q, A);
 }
 
@@ -178,11 +178,6 @@ ambit::Tensor DFIntegrals::three_integral_block_two_index(const std::vector<size
                                                           const std::vector<size_t>&) {
     outfile->Printf("\n Oh no! this isn't here");
     throw psi::PSIEXCEPTION("INT_TYPE=DISKDF");
-}
-
-void DFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
-    outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
-    throw psi::PSIEXCEPTION("Don't use DF/CD if you use set_tei");
 }
 
 void DFIntegrals::gather_integrals() {

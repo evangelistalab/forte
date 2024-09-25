@@ -107,17 +107,14 @@ enum ThreeIntsBlockOrder { Qpq, pqQ };
  */
 class ForteIntegrals : public Observer, public std::enable_shared_from_this<ForteIntegrals> {
   public:
-    // ==> Class Constructor and Destructor <==
-
-    /**
-     * @brief Class constructor
-     * @param options The main options object
-     * @param restricted Select a restricted or unrestricted transformation
-     * @param mo_space_info The MOSpaceInfo object
-     */
-    ForteIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
-                   IntegralSpinRestriction restricted);
+    // Template function to create a derived class instance as a shared pointer
+    // Derived class objects should be created using this function only
+    template <typename Derived, typename... Args>
+    static std::shared_ptr<Derived> create(Args&&... args) {
+        auto ptr = std::shared_ptr<Derived>(new Derived(std::forward<Args>(args)...));
+        ptr->initialize();
+        return ptr;
+    }
 
     /// Virtual destructor to enable deletion of a Derived* through a Base*
     virtual ~ForteIntegrals() = default;
@@ -127,6 +124,7 @@ class ForteIntegrals : public Observer, public std::enable_shared_from_this<Fort
     /// Common initializer for all types of integrals
     void common_initialize();
 
+    /// Initialize function to be implemented by derived classes
     virtual void initialize() = 0;
 
     // Observer interface
@@ -340,10 +338,6 @@ class ForteIntegrals : public Observer, public std::enable_shared_from_this<Fort
     /// @param alpha the spin type of the integrals
     void set_oei(size_t p, size_t q, double value, bool alpha);
 
-    /// Set the value of the two-electron integrals
-    virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
-                         bool alpha2) = 0;
-
     /// Rotate the MO coefficients, update psi::Wavefunction, and re-transform integrals
     /// @param Ua the alpha unitary transformation matrix
     /// @param Ub the beta unitary transformation matrix
@@ -414,6 +408,17 @@ class ForteIntegrals : public Observer, public std::enable_shared_from_this<Fort
     virtual std::vector<std::shared_ptr<psi::Matrix>> mo_quadrupole_ints() const;
 
   protected:
+    // ==> Class constructor <==
+    /**
+     * @brief Class constructor
+     * @param options The main options object
+     * @param restricted Select a restricted or unrestricted transformation
+     * @param mo_space_info The MOSpaceInfo object
+     */
+    ForteIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
+                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
+                   IntegralSpinRestriction restricted);
+
     // ==> Class data <==
 
     /// The options object
@@ -485,14 +490,14 @@ class ForteIntegrals : public Observer, public std::enable_shared_from_this<Fort
     /// notation <pq||rs>
     size_t num_aptei_;
 
-    // Nuclear repulsion energy
-    double nucrep_ = 0.0;
-
     /// Frozen-core energy
     double frozen_core_energy_ = 0.0;
 
     /// Scalar energy term
     double scalar_energy_ = 0.0;
+
+    // Nuclear repulsion energy
+    double nucrep_ = 0.0;
 
     /// Full one-electron integrals stored as a vector (includes frozen orbitals)
     std::vector<double> full_one_electron_integrals_a_;

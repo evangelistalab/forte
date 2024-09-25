@@ -95,7 +95,7 @@ def _prepare_forte_objects_from_fcidump(data, filename: str = None):
     nmopi = psi4.core.Dimension(nmopi_list)
 
     # Create the MOSpaceInfo object
-    data.mo_space_info = forte.make_mo_space_info(nmopi, fcidump["pntgrp"], options, [])
+    data.mo_space_info = forte.make_mo_space_info(nmopi, fcidump["pntgrp"], options)
 
     # manufacture a SCFInfo object from the FCIDUMP file (this assumes C1 symmetry)
     nel = fcidump["nelec"]

@@ -78,9 +78,6 @@ class DISKDFIntegrals : public Psi4Integrals {
     ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
                                                  const std::vector<size_t>& q) override;
 
-    void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
-                 bool alpha2) override;
-
     /// Make a Fock matrix computed with respect to a given determinant
     size_t nthree() const override;
 

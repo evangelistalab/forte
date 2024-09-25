@@ -45,26 +45,21 @@ class DFIntegrals : public Psi4Integrals {
                 std::shared_ptr<psi::Wavefunction> ref_wfn,
                 std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 
+    // See base class for documentation
     void initialize() override;
-
     double aptei_aa(size_t p, size_t q, size_t r, size_t s) override;
     double aptei_ab(size_t p, size_t q, size_t r, size_t s) override;
     double aptei_bb(size_t p, size_t q, size_t r, size_t s) override;
 
-    /// Return the antisymmetrized alpha-alpha chunck as an ambit::Tensor
     ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                  const std::vector<size_t>& r,
                                  const std::vector<size_t>& s) override;
-    /// Return the antisymmetrized alpha-beta chunck as an ambit::Tensor
     ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                  const std::vector<size_t>& r,
                                  const std::vector<size_t>& s) override;
-    /// Return the antisymmetrized beta-beta chunck as an ambit::Tensor
     ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                  const std::vector<size_t>& r,
                                  const std::vector<size_t>& s) override;
-
-    double three_integral(size_t A, size_t p, size_t q);
 
     ambit::Tensor three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p,
                                        const std::vector<size_t>& q,
@@ -72,19 +67,23 @@ class DFIntegrals : public Psi4Integrals {
     ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t,
                                                  const std::vector<size_t>&) override;
     double** three_integral_pointer() override;
-    void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
-                 bool alpha2) override;
 
     size_t nthree() const override;
 
   private:
     // ==> Class data <==
 
+    /// @brief The three-index integrals stored as a matrix
+    /// The three index integrals are stored in the following order:
+    /// Apq, where A is the auxiliary index and pq are the MO indices
+    /// <pq|A> = matrix[p * aptei_idx_ + q, A]
     std::shared_ptr<psi::Matrix> ThreeIntegral_;
+
     size_t nthree_ = 0;
 
     // ==> Class private functions <==
 
+    double three_integral(size_t A, size_t p, size_t q) const;
     void resort_three(std::shared_ptr<psi::Matrix>& threeint, std::vector<size_t>& map);
 
     // ==> Class private virtual functions <==

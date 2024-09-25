@@ -73,9 +73,7 @@ ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
                                IntegralType integral_type, IntegralSpinRestriction restricted)
     : options_(options), scf_info_(scf_info), mo_space_info_(mo_space_info),
       integral_type_(integral_type), spin_restriction_(restricted), frozen_core_energy_(0.0),
-      scalar_energy_(0.0) {
-    common_initialize();
-}
+      scalar_energy_(0.0) {}
 
 void ForteIntegrals::common_initialize() {
     // Register as an observer of the SCFInfo object

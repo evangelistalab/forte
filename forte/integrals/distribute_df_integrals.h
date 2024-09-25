@@ -77,11 +77,6 @@ class DistDFIntegrals : public Psi4Integrals {
                                                          size_t /*p*/,
                                                          const std::vector<size_t>& /*q*/) {}
 
-    virtual void set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
-        outfile->Printf("DistributedDF will not work with set_tei");
-        throw psi::PSIEXCEPTION("DistDF can not use set_tei");
-    }
-
     /// Make a Fock matrix computed with respect to a given determinant
     virtual size_t nthree() const { return nthree_; }
     virtual int ga_handle() { return DistDF_ga_; }

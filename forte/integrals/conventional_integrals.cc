@@ -55,11 +55,10 @@ ConventionalIntegrals::ConventionalIntegrals(std::shared_ptr<ForteOptions> optio
                                              std::shared_ptr<psi::Wavefunction> ref_wfn,
                                              std::shared_ptr<MOSpaceInfo> mo_space_info,
                                              IntegralSpinRestriction restricted)
-    : Psi4Integrals(options, scf_info, ref_wfn, mo_space_info, Conventional, restricted) {
-    initialize();
-}
+    : Psi4Integrals(options, scf_info, ref_wfn, mo_space_info, Conventional, restricted) {}
 
 void ConventionalIntegrals::initialize() {
+    Psi4Integrals::base_initialize_psi4();
     print_info();
 
     if (not skip_build_) {
@@ -153,17 +152,6 @@ ambit::Tensor ConventionalIntegrals::aptei_bb_block(const std::vector<size_t>& p
         value = aptei_bb(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
     });
     return ReturnTensor;
-}
-
-void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double value,
-                                    bool alpha1, bool alpha2) {
-    size_t index = aptei_index(p, q, r, s);
-    if (alpha1 == true and alpha2 == true)
-        aphys_tei_aa_[index] = value;
-    if (alpha1 == true and alpha2 == false)
-        aphys_tei_ab_[index] = value;
-    if (alpha1 == false and alpha2 == false)
-        aphys_tei_bb_[index] = value;
 }
 
 void ConventionalIntegrals::gather_integrals() {

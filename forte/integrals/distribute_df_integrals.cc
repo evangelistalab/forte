@@ -66,11 +66,11 @@ DistDFIntegrals::DistDFIntegrals(std::shared_ptr<ForteOptions> options,
                                  IntegralFrozenCore resort_frozen_core,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Psi4Integrals(psi::Options, scf_info, ref_wfn, restricted, resort_frozen_core,
-                    mo_space_info) {
-    initialize()
-}
+                    mo_space_info) {}
 
 void DistDFIntegrals::initialize() {
+
+    Psi4Integrals::base_initialize_psi4();
 
     wfn_ = ref_wfn;
 
