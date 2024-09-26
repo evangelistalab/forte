@@ -119,7 +119,8 @@ def dmrg_initial_orbitals(wfn, options, mo_space_info):
     Ca_actv = Ca[:, ndocc : ndocc + nactv]
     if local_method == "CHOLESKY":
         D = Ca_actv @ Ca_actv.T
-        X = (psi4.core.Matrix.from_array(D)).partial_cholesky_factorize(1.0e-6).to_array()
+        chol_cutoff = options.get_double("CHOLESKY_TOLERANCE")
+        X = (psi4.core.Matrix.from_array(D)).partial_cholesky_factorize(chol_cutoff).to_array()
         Ca_actv = D @ S @ X
     else:
         localizer = psi4.core.Localizer.build(local_method, bs, psi4.core.Matrix.from_array(Ca_actv))

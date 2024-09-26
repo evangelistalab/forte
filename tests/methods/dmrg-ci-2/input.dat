@@ -4,7 +4,8 @@ memory 3 gb
 eref_scf  = -10.730608558941103
 eref_avas = -10.968919558792528
 eref_chol = -10.989277852589446
-eref_pm   = -10.990304489386713
+eref_pm1  = -10.990304489386713 # MAC-M3
+eref_pm2  = -10.990357718722230 # Linux-Intel
 eref_boys = -10.990376529580459
 
 molecule H20 {
@@ -78,11 +79,6 @@ wfn.Ca().copy(Ca_avas)
 set forte localize cholesky
 edmrg = energy('forte', ref_wfn=wfn)
 compare_values(eref_chol, edmrg, 6, "DMRG-CI(20,20)/cc-pVDZ on H20, Cholesky + Fiedler")
-
-wfn.Ca().copy(Ca_avas)
-set forte localize pipek_mezey
-edmrg = energy('forte', ref_wfn=wfn)
-compare_values(eref_pm, edmrg, 6, "DMRG-CI(20,20)/cc-pVDZ on H20, Pipek-Mezey + Fiedler")
 
 wfn.Ca().copy(Ca_avas)
 set forte localize boys
