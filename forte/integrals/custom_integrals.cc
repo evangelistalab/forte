@@ -536,17 +536,12 @@ void CustomIntegrals::transform_two_electron_integrals() {
     full_aphys_tei_bb_ = T.data();
 }
 
-void CustomIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
-                                      std::shared_ptr<psi::Matrix> Cb, bool re_transform) {
-    // 1. Copy orbitals and, if necessary, test they meet the spin restriction condition
-    _Ca()->copy(Ca);
-    _Cb()->copy(Cb);
+void CustomIntegrals::__update_orbitals(bool transform_ints) {
     ints_consistent_ = false;
-
     if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
-        if (not test_orbital_spin_restriction(Ca, Cb)) {
-            Ca->print();
-            Cb->print();
+        if (not test_orbital_spin_restriction(_Ca(), _Cb())) {
+            Ca()->print();
+            Cb()->print();
             auto msg = "CustomIntegrals::update_orbitals was passed two different sets of orbitals"
                        "\n  but the integral object assumes restricted orbitals";
             throw std::runtime_error(msg);
@@ -554,7 +549,7 @@ void CustomIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
     }
 
     // 2. Re-transform the integrals
-    if (re_transform) {
+    if (transform_ints) {
         ints_consistent_ = true;
         aptei_idx_ = nmo_;
         local_timer int_timer;

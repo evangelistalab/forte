@@ -42,16 +42,16 @@ namespace forte {
 class ForteOptions;
 
 /// @brief The SemiCanonical class
-/// This class computes semi-canonical orbitals from the 1RDM and optionally transforms the integrals and RDMs
-/// Semi-canonical orbitals are obtained by diagonalizing the Fock matrix in each orbital space separately
-/// The class can also produce natural orbitals. These differ by the semi-canonical orbital only in the active space
-/// where they are defined to be eigenvectors of the 1RDM
-/// 
-/// The final orbitals are ordered by increasing energy within each irrep and space. Natural orbitals are ordered
-/// by decreasing occupation number
+/// This class computes semi-canonical orbitals from the 1RDM and optionally transforms the
+/// integrals and RDMs Semi-canonical orbitals are obtained by diagonalizing the Fock matrix in each
+/// orbital space separately The class can also produce natural orbitals. These differ by the
+/// semi-canonical orbital only in the active space where they are defined to be eigenvectors of the
+/// 1RDM
+///
+/// The final orbitals are ordered by increasing energy within each irrep and space. Natural
+/// orbitals are ordered by decreasing occupation number
 class SemiCanonical {
   public:
-    
     /// @brief SemiCanonical Constructor
     /// @param mo_space_info The MOSpaceInfo object
     /// @param ints The ForteIntegrals object
@@ -60,8 +60,8 @@ class SemiCanonical {
     /// @param active_mix Mix all GAS orbitals together?
     /// @param quiet_banner Method banner is not printed if set to true
     SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
-                  std::shared_ptr<ForteOptions> options, bool inactive_mix, bool active_mix,
-                  bool quiet_banner = false);
+                  std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
+                  bool inactive_mix, bool active_mix, bool quiet_banner = false);
 
     /// Transforms integrals and RDMs
     /// @brief Semicanonicalize the orbitals and transform the integrals and RDMs
@@ -99,6 +99,9 @@ class SemiCanonical {
 
     /// Forte integral
     std::shared_ptr<ForteIntegrals> ints_;
+
+    /// SCF information
+    std::shared_ptr<SCFInfo> scf_info_;
 
     /// Print level
     int print_;

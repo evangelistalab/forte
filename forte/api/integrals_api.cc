@@ -43,11 +43,8 @@ namespace forte {
 void export_ForteIntegrals(py::module& m) {
     py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
         .def("wfn", &ForteIntegrals::wfn, "Psi4 Wavefunction")
-        .def("update_mo_space_info", &ForteIntegrals::update_mo_space_info,
+        .def("update_mo_space_info", &ForteIntegrals::__update_mo_space_info,
              "Update MOSpaceInfo and orbital countings")
-        .def("update_orbitals", &ForteIntegrals::update_orbitals,
-             "Update orbitals for given orbital coefficients")
-        .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals, "Rotate MOs during contructor")
         .def("Ca", &ForteIntegrals::Ca, "Return the alpha MO coefficients")
         .def("Cb", &ForteIntegrals::Cb, "Return the beta MO coefficients")
         .def("nmo", &ForteIntegrals::nmo, "Return the total number of moleuclar orbitals")

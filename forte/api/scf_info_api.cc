@@ -55,7 +55,13 @@ void export_SCFInfo(py::module& m) {
         .def("epsilon_b", &SCFInfo::epsilon_b, "a vector of beta orbital energy (psi::Vector)")
         .def("Ca", &SCFInfo::Ca, "the alpha MO coefficient matrix (psi::Matrix)")
         .def("Cb", &SCFInfo::Cb, "the beta MO coefficient matrix (psi::Matrix)")
-        .def("reorder_orbitals", &SCFInfo::reorder_orbitals, "perm"_a, "wfn"_a = nullptr,
+        .def("update_orbitals", &SCFInfo::update_orbitals, "Ca"_a, "Cb"_a,
+             "transform_ints"_a = true, "Update orbitals for given orbital coefficients")
+        .def("rotate_orbitals", &SCFInfo::rotate_orbitals, "Ua"_a, "Ub"_a,
+             "transform_ints"_a = true,
+             "Update orbitals with given unitary "
+             "transformation matrices")
+        .def("reorder_orbitals", &SCFInfo::reorder_orbitals, "perm"_a,
              "Reorder orbitals based on the given permutation (uses symmetry of the molecule)");
 }
 

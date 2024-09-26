@@ -154,7 +154,7 @@ bool ForteIntegrals::update_ints_if_needed() {
     if (ints_consistent_) {
         return false;
     }
-    update_orbitals(_Ca(), _Cb(), true);
+    __update_orbitals(true);
     return true;
 }
 
@@ -467,22 +467,28 @@ void ForteIntegrals::print_ints() {
     }
 }
 
-void ForteIntegrals::rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
-                                     std::shared_ptr<psi::Matrix> Ub, bool re_transform) {
-    // 1. Rotate the orbital coefficients and store them in the ForteIntegral object
-    auto Ca_rotated = psi::linalg::doublet(_Ca(), Ua);
-    auto Cb_rotated = psi::linalg::doublet(_Cb(), Ub);
-
-    update_orbitals(Ca_rotated, Cb_rotated, re_transform);
-}
-
-void ForteIntegrals::update_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info) {
+void ForteIntegrals::__update_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info) {
     mo_space_info_ = mo_space_info;
     common_initialize();
 }
 
-// The following functions throw an error by default
+std::shared_ptr<SCFInfo> ForteIntegrals::scf_info() { return scf_info_; }
 
+void ForteIntegrals::update(const std::vector<std::string>& messages) {
+    // psi::outfile->Printf("\n  ForteIntegrals::update: %s", message.c_str());
+    bool update_orbitals =
+        std::find(messages.begin(), messages.end(), "update_orbitals") != messages.end();
+    bool transform_ints =
+        std::find(messages.begin(), messages.end(), "transform_ints") != messages.end();
+    if (update_orbitals) {
+        __update_orbitals(transform_ints);
+    }
+}
+
+//
+// The following functions throw an error by default because they are not implemented in the base
+// class
+//
 std::shared_ptr<psi::Wavefunction> ForteIntegrals::wfn() {
     _undefined_function("wfn");
     return nullptr;
@@ -500,10 +506,7 @@ std::shared_ptr<psi::Matrix> ForteIntegrals::Ca_SO2AO(std::shared_ptr<const psi:
     return nullptr;
 }
 
-void ForteIntegrals::update_orbitals(std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>,
-                                     bool) {
-    _undefined_function("update_orbitals");
-}
+void ForteIntegrals::__update_orbitals(bool) { _undefined_function("__update_orbitals"); }
 
 void ForteIntegrals::compute_frozen_one_body_operator() {
     _undefined_function("compute_frozen_one_body_operator");
@@ -531,10 +534,6 @@ ambit::Tensor ForteIntegrals::three_integral_block_two_index(const std::vector<s
 double** ForteIntegrals::three_integral_pointer() {
     _undefined_function("three_integral_pointer");
     return nullptr;
-}
-
-void ForteIntegrals::update(const std::string& message) {
-    psi::outfile->Printf("\n  ForteIntegrals::update: %s", message.c_str());
 }
 
 void ForteIntegrals::rotate_mos() { _undefined_function("rotate_mos"); }

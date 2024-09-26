@@ -37,6 +37,8 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "base_classes/forte_options.h"
+#include "base_classes/scf_info.h"
+
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/helpers.h"
 #include "helpers/printing.h"
@@ -51,10 +53,11 @@ using namespace ambit;
 
 SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
                              std::shared_ptr<ForteIntegrals> ints,
-                             std::shared_ptr<ForteOptions> options, bool inactive_mix,
-                             bool active_mix, bool quiet)
-    : mo_space_info_(mo_space_info), ints_(ints), print_(not quiet), inactive_mix_(inactive_mix),
-      active_mix_(active_mix), fix_orbital_success_(true) {
+                             std::shared_ptr<ForteOptions> options,
+                             std::shared_ptr<SCFInfo> scf_info, bool inactive_mix, bool active_mix,
+                             bool quiet)
+    : mo_space_info_(mo_space_info), ints_(ints), scf_info_(scf_info), print_(not quiet),
+      inactive_mix_(inactive_mix), active_mix_(active_mix), fix_orbital_success_(true) {
     read_options(options);
     // initialize the dimension objects
     startup();
@@ -150,7 +153,8 @@ void SemiCanonical::semicanonicalize(std::shared_ptr<RDMs> rdms, const bool& bui
     bool already_semi = check_orbitals(rdms, nat_orb);
     build_transformation_matrices(already_semi);
     if (transform and (not already_semi)) {
-        ints_->rotate_orbitals(Ua_, Ub_);
+        scf_info_->rotate_orbitals(Ua_, Ub_);
+        // ints_->rotate_orbitals(Ua_, Ub_);
         rdms->rotate(Ua_t_, Ub_t_);
     }
     if (print_)

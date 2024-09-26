@@ -172,10 +172,7 @@ class ActiveSpaceSelector(Module):
 
         data.options.set_int_list("RESTRICTED_DOCC", docc_per_irrep)
         data.options.set_int_list("ACTIVE", active_per_irrep)
-        if data.psi_wfn is None:
-            data.scf_info.reorder_orbitals(reorder)
-        else:
-            data.scf_info.reorder_orbitals(reorder, data.psi_wfn)
+        data.scf_info.reorder_orbitals(reorder)
 
     def select_mos_active(self, data, active_space):
         """

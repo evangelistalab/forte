@@ -165,7 +165,7 @@ double MCSCF_2STEP::compute_energy() {
 
     // prepare for orbital gradients
     const bool ignore_frozen = options_->get_bool("MCSCF_IGNORE_FROZEN_ORBS");
-    MCSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_, ignore_frozen);
+    MCSCF_ORB_GRAD cas_grad(options_, scf_info_, mo_space_info_, ints_, ignore_frozen);
     auto nrot = cas_grad.nrot();
     auto dG = std::make_shared<psi::Vector>("dG", nrot);
 
@@ -449,7 +449,8 @@ double MCSCF_2STEP::compute_energy() {
             auto active_mix = options_->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
 
             psi::outfile->Printf("\n  Canonicalizing final MCSCF orbitals");
-            SemiCanonical semi(mo_space_info_, ints_, options_, inactive_mix, active_mix);
+            SemiCanonical semi(mo_space_info_, ints_, options_, scf_info_, inactive_mix,
+                               active_mix);
             semi.semicanonicalize(rdms, false, final_orbs == "NATURAL", false);
 
             cas_grad.canonicalize_final(semi.Ua());

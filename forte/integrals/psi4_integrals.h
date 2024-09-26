@@ -103,8 +103,7 @@ class Psi4Integrals : public ForteIntegrals {
     void setup_psi4_ints();
     void transform_one_electron_integrals();
     void compute_frozen_one_body_operator() override;
-    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb,
-                         bool re_transform = true) override;
+    void __update_orbitals(bool transform_ints = true) override;
     void rotate_mos() override;
 
     /// Build AO dipole and quadrupole integrals

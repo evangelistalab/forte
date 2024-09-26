@@ -50,7 +50,7 @@ class SCFInfo : public Subject {
             std::shared_ptr<psi::Matrix> Cb);
 
     /// Constructor based on Psi4 Wavefunction
-    SCFInfo(std::shared_ptr<psi::Wavefunction> wfn);
+    SCFInfo(std::shared_ptr<psi::Wavefunction> psi4_wfn);
 
     /// return the number of orbitals per irrep
     psi::Dimension nmopi();
@@ -82,11 +82,31 @@ class SCFInfo : public Subject {
     /// @return the beta orbital coefficients (const version)
     std::shared_ptr<const psi::Matrix> Cb() const;
 
-    void
-    reorder_orbitals(const std::vector<std::vector<size_t>>& new_order,
-                     std::shared_ptr<psi::Wavefunction> wfn = std::shared_ptr<psi::Wavefunction>());
+    /// Update the MO coefficients, update psi::Wavefunction, and re-transform integrals
+    /// @param Ca the alpha MO coefficients
+    /// @param Cb the beta MO coefficients
+    /// @param re_transform re-transform integrals if true
+    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb,
+                         bool transform_ints = true);
+
+    /// Reorder the orbitals according to the new order
+    /// @param new_order the new order of the orbitals. This is a vector of vectors, where the first
+    /// index corresponds to the irrep and the second index corresponds to the orbital index (zero
+    /// based) within the irrep.
+    /// @param wfn the wavefunction to update
+    void reorder_orbitals(const std::vector<std::vector<size_t>>& new_order);
+
+    /// Rotate the MO coefficients, update psi::Wavefunction, and re-transform integrals
+    /// @param Ua the alpha unitary transformation matrix
+    /// @param Ub the beta unitary transformation matrix
+    /// @param re_transform re-transform integrals if true
+    void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub,
+                         bool transform_ints = true);
 
   private:
+    // A psi4 Wavefunction object. Stored only if the constructor based on Wavefunction is used.
+    std::shared_ptr<psi::Wavefunction> psi4_wfn_;
+
     // Orbitals per irrep
     psi::Dimension nmopi_;
 
@@ -105,14 +125,22 @@ class SCFInfo : public Subject {
     /// beta orbital energy
     std::shared_ptr<psi::Vector> epsilon_b_;
 
-    // Alpha orbital coefficients (nso x nmo)
+    /// Alpha orbital coefficients (nso x nmo)
     std::shared_ptr<psi::Matrix> Ca_;
 
-    // Beta orbital coefficients (nso x nmo)
+    /// Beta orbital coefficients (nso x nmo)
     std::shared_ptr<psi::Matrix> Cb_;
 
-    // List of observers
+    /// List of observers
     std::vector<std::pair<std::string, std::weak_ptr<Observer>>> observers_;
+
+    /// Common initialization function
+    void initialize(const psi::Dimension& nmopi, const psi::Dimension& doccpi,
+                    const psi::Dimension& soccpi, double reference_energy,
+                    std::shared_ptr<psi::Vector> epsilon_a, std::shared_ptr<psi::Vector> epsilon_b,
+                    std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb);
+
+    void update_psi4_wavefunction();
 };
 
 } // namespace forte

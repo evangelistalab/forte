@@ -37,7 +37,7 @@ namespace forte {
 class Observer {
   public:
     virtual ~Observer() = default;
-    virtual void update(const std::string& message) = 0;
+    virtual void update(const std::vector<std::string>& messages) = 0;
 };
 
 class Subject {
@@ -48,12 +48,12 @@ class Subject {
     }
 
   protected:
-    void notify_observers(const std::string& message = std::string()) {
+    void notify_observers(const std::vector<std::string>& messages = std::vector<std::string>()) {
         std::scoped_lock lock(mutex_);
         for (auto& [name, observer] : observers_) {
             // if the observer is still alive, notify it
             if (auto obs = observer.lock()) {
-                obs->update(message);
+                obs->update(messages);
             }
         }
     }

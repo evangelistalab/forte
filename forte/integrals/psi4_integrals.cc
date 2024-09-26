@@ -311,19 +311,16 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
     }
 }
 
-void Psi4Integrals::update_orbitals(std::shared_ptr<psi::Matrix> new_Ca,
-                                    std::shared_ptr<psi::Matrix> new_Cb, bool re_transform) {
+void Psi4Integrals::__update_orbitals(bool transform_ints) {
     // 1. Copy orbitals and set the invalid flag
-    _Ca()->copy(new_Ca);
-    _Cb()->copy(new_Cb);
     ints_consistent_ = false;
 
     // if necessary, test they meet the spin restriction condition
     if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
-        if (not test_orbital_spin_restriction(new_Ca, new_Cb)) {
-            new_Ca->print();
-            new_Cb->print();
-            auto overlap = psi::linalg::triplet(new_Ca, S_, new_Cb, true, false, false);
+        if (not test_orbital_spin_restriction(_Ca(), _Cb())) {
+            _Ca()->print();
+            _Cb()->print();
+            auto overlap = psi::linalg::triplet(_Ca(), S_, _Cb(), true, false, false);
             overlap->set_name("Overlap <psi_alpha_i|psi_beta_j>");
             overlap->print();
             auto msg = "Psi4Integrals::update_orbitals was passed two different sets of orbitals"
@@ -337,7 +334,7 @@ void Psi4Integrals::update_orbitals(std::shared_ptr<psi::Matrix> new_Ca,
     wfn_->Cb()->copy(_Cb());
 
     // 3. Re-transform the integrals
-    if (re_transform) {
+    if (transform_ints) {
         ints_consistent_ = true;
         aptei_idx_ = nmo_;
         transform_one_electron_integrals();

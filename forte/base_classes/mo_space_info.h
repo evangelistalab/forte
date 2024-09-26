@@ -32,6 +32,7 @@
 #include "psi4/libmints/dimension.h"
 
 #include "helpers/symmetry.h"
+
 #include "base_classes/forte_options.h"
 
 namespace psi {

@@ -127,8 +127,10 @@ class ForteIntegrals : public Observer, public std::enable_shared_from_this<Fort
     /// Initialize function to be implemented by derived classes
     virtual void initialize() = 0;
 
-    // Observer interface
-    void update(const std::string& message) override;
+    // Observer interface function. This function is called by the object being observed by
+    // ForteIntegrals. The object being observed is responsible for calling this function when a
+    // change occurs that might impact the consistency of the integrals.
+    void update(const std::vector<std::string>& messages) override;
 
     /// Skip integral transformation
     bool skip_build_;
@@ -148,6 +150,8 @@ class ForteIntegrals : public Observer, public std::enable_shared_from_this<Fort
     std::shared_ptr<const psi::Matrix> Ca() const;
     /// Return Cb
     std::shared_ptr<const psi::Matrix> Cb() const;
+
+    std::shared_ptr<SCFInfo> scf_info();
 
     /// Return nuclear repulsion energy
     double nuclear_repulsion_energy() const;
@@ -338,24 +342,13 @@ class ForteIntegrals : public Observer, public std::enable_shared_from_this<Fort
     /// @param alpha the spin type of the integrals
     void set_oei(size_t p, size_t q, double value, bool alpha);
 
-    /// Rotate the MO coefficients, update psi::Wavefunction, and re-transform integrals
-    /// @param Ua the alpha unitary transformation matrix
-    /// @param Ub the beta unitary transformation matrix
-    /// @param re_transform re-transform integrals if true
-    void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub,
-                         bool re_transform = true);
-
-    /// Copy these MO coeffs to class variables, update psi::Wavefunction, and re-transform
-    /// integrals
-    /// @param Ca the alpha MO coefficients
-    /// @param Cb the beta MO coefficients
-    /// @param re_transform re-transform integrals if true
-    virtual void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb,
-                                 bool re_transform = true);
+    /// Function used when orbital coefficients are updated
+    /// @param transform_ints re-transform integrals if true
+    virtual void __update_orbitals(bool transform_ints = true);
 
     /// Update the MOSpaceInfo and re-initialize the size of orbital spaces
     /// @param mo_space_info the MOSpaceInfo object
-    void update_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info);
+    void __update_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Update the integrals if the MO coefficients have changed but the integrals were not
     /// re-transformed

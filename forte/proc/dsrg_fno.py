@@ -32,9 +32,8 @@ import psi4
 import forte
 
 
-def dsrg_fno_procrouting(state_weights_map, scf_info, options, ints, mo_space_info,
-                         active_space_solver, rdms, Ua):
-    """ Driver for frozen-natural-orbital truncated DSRG. """
+def dsrg_fno_procrouting(state_weights_map, scf_info, options, ints, mo_space_info, active_space_solver, rdms, Ua):
+    """Driver for frozen-natural-orbital truncated DSRG."""
     # read options
     pt2_correction = options.get_bool("DSRG_FNO_PT2_CORRECTION")
     dsrg_s = options.get_double("DSRG_S")
@@ -67,8 +66,10 @@ def dsrg_fno_procrouting(state_weights_map, scf_info, options, ints, mo_space_in
     # transform integrals to FNO semicanonical basis
     Ca = ints.wfn().Ca()
     Ca.copy(psi4.core.doublet(Ca, Va, False, False))
+    # update the MO space info and SCF info with the new Ca
+    # the order here is important, as the SCF info will update
     ints.update_mo_space_info(mo_space_info)
-    ints.update_orbitals(Ca, Ca, True)
+    scf_info.update_orbitals(Ca, Ca, True)
 
     # run DSRG-MRPT2 in truncated basis
     if pt2_correction:

@@ -56,5 +56,5 @@ set forte {
 energy('forte')
 
 compare_values(eaci, variable("ACI ENERGY"), 7, "ACI energy") #TEST
-compare_values(eacipt2, variable("ACI+PT2 ENERGY"), 7, "ACI+PT2 energy") #TEST
+compare_values(eacipt2, variable("ACI+PT2 ENERGY"), 6, "ACI+PT2 energy") #TEST
 

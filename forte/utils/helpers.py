@@ -250,7 +250,7 @@ def prepare_forte_objects(
         localizer.set_orbital_space(localize_spaces)
         localizer.compute_transformation()
         Ua = localizer.get_Ua()
-        ints.rotate_orbitals(Ua, Ua)
+        scf_info.rotate_orbitals(Ua, Ua)
 
     # the space that defines the active orbitals. We select only the 'ACTIVE' part
     # the space(s) with non-active doubly occupied orbitals
@@ -308,7 +308,7 @@ def prepare_ints_rdms(
     rdms = as_solver.compute_average_rdms(state_weights_map, rdm_level, rdm_type)
 
     # semicanonicalize orbitals
-    semi = forte.SemiCanonical(mo_space_info, ints, forte.forte_options, mix_inactive, mix_active)
+    semi = forte.SemiCanonical(mo_space_info, ints, forte.forte_options, scf_info, mix_inactive, mix_active)
     semi.semicanonicalize(rdms, rdm_level)
 
     return {"reference_energy": Eref, "mo_space_info": mo_space_info, "ints": ints, "rdms": rdms}
