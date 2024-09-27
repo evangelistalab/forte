@@ -93,7 +93,7 @@ def orbital_projection(ref_wfn, options, mo_space_info):
 def dmrg_initial_orbitals(wfn, options, mo_space_info):
     """
     Initial orbital guess for DMRG CI/SCF computations by
-    1. localize active orbitals using Cholesky
+    1. localize active orbitals
     2. order based on Fiedler vector (J. Chem. Phys. 142, 034102)
 
     Args:
@@ -168,7 +168,7 @@ def dmrg_initial_orbitals(wfn, options, mo_space_info):
     psi4.core.print_out("\n")
 
 
-def ortho_orbs_forte(wfn, mo_space_info, Cold):
+def ortho_orbs_forte(wfn, mo_space_info, Cold, semi):
     """
     Read the set of orbitals from file and
     pass it to the current wave function as initial guess
@@ -176,6 +176,7 @@ def ortho_orbs_forte(wfn, mo_space_info, Cold):
     :param wfn: current Psi4 Wavefunction
     :param mo_space_info: the Forte MOSpaceInfo object
     :param Cold: MO coefficients from previous calculations
+    :param semi: whether semicanonicalize final orbitals
     :return: orthonormalized orbital coefficients
     """
     orbital_spaces = mo_space_info.space_names()
@@ -193,8 +194,6 @@ def ortho_orbs_forte(wfn, mo_space_info, Cold):
     occ_end.append(wfn.nmopi())
 
     slices = [psi4.core.Slice(b, e) for b, e in zip(occ_start, occ_end)]
-
-    semi = True if wfn.Fa() else False  # Forte make_fock passes to wfn.Fa()
 
     return ortho_orbs_impl(Cold, wfn, slices, semi)
 
