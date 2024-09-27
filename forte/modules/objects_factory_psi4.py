@@ -147,8 +147,7 @@ def prepare_psi4_ref_wfn(options, **kwargs):
             wfn_new = ref_wfn
             wfn_new.Ca().copy(Ca)
         else:
-            semi = True if wfn_new.Fa() else False  # Forte make_fock passes to wfn.Fa()
-            semi &= options.get_str("ACTIVE_SPACE_SOLVER") not in ["DMRG", "BLOCK2"]  # keep original order for DMRG
+            semi = options.get_str("ACTIVE_SPACE_SOLVER") not in ["DMRG", "BLOCK2"]  # keep original order for DMRG
             if fresh_ref_wfn:
                 wfn_new = ref_wfn
                 wfn_new.Ca().copy(ortho_orbs_forte(wfn_new, mo_space_info, Ca, semi))
