@@ -311,7 +311,7 @@ void DavidsonLiuSolver::setup_guesses() {
         }
         basis_size_ += added;
     } else if (basis_size_ >= nroot_) {
-        // psi::outfile->Printf("\n\n  Davidson-Liu solver: restarting from previous calculation.");
+        psi::outfile->Printf("\n\n  Davidson-Liu solver: restarting from previous calculation.");
         basis_size_ = nroot_; // first nroot_ vectors from the previous calculation
         sigma_size_ = 0;      // trigger computation of all sigma vectors
     } else {

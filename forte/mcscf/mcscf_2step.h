@@ -145,12 +145,10 @@ class MCSCF_2STEP {
     double energy_;
 
     /// Solve CI coefficients for the current orbitals
-    /// @param as_solver the pointer of ActiveSpaceSolver
     /// @param fci_ints the pointer of ActiveSpaceIntegrals
     /// @param params the parameters <print level, e_conv, r_conv, dump_wfn>
     /// @return averaged energy
-    double diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver,
-                                   std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+    double diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                    const std::tuple<PrintLevel, double, double, bool>& params);
 
     /// Test if we are doing a single-reference orbital optimization
