@@ -2,6 +2,7 @@ from typing import List, Union, Dict
 from .module import Module
 from forte.data import ForteData
 from forte.modules.validators import Feature, module_validation
+from forte._forte import make_mo_space_info_from_map
 
 
 class ActiveSpaceSelector(Module):
@@ -10,7 +11,7 @@ class ActiveSpaceSelector(Module):
     """
 
     # accept as input a dictionary of string,int list pairs or a list of integers
-    def __init__(self, active_space: Union[Dict[str, List[int]], List[int]]):
+    def __init__(self, active_space: Union[Dict[str, List[int]], List[int]] = None):
         """
         Parameters
         ----------
@@ -18,13 +19,20 @@ class ActiveSpaceSelector(Module):
             The active space to be used for the calculation
         """
         super().__init__()
-        assert isinstance(active_space, dict) or isinstance(active_space, list)
+        # assert isinstance(active_space, dict) or isinstance(active_space, list)
 
         self.active_space = active_space
 
     @module_validation(needs=[Feature.SCF_INFO])
     def _run(self, data: ForteData) -> ForteData:
-        print(self.active_space)
+        """
+        Selects the active space based on the input
+        """
+
+        # in the case where we have no active space selection, we just assemble this object from the options
+        self.active_space = self.active_space or self.make_dict_from_data(data)
+
+        # select the active space using the information in the active_space dictionary
         if isinstance(self.active_space, dict):
             if "nel" in self.active_space and "norb" in self.active_space:
                 self.select_norb_nel(data, self.active_space["nel"], self.active_space["norb"])
@@ -34,11 +42,22 @@ class ActiveSpaceSelector(Module):
                 self.select_mos_active(data, self.active_space)
             else:
                 raise ValueError("Invalid active space selection")
-        elif isinstance(self.active_space, list):
-            self.select_mos_active_indices(data, self.active_space)
         else:
-            raise ValueError("Invalid active space selection")
+            raise ValueError("Invalid active space selection is not a dictionary")
         return data
+
+    def make_dict_from_data(self, data: ForteData) -> Dict:
+        options = data.options
+        active_space = {}
+        if options.get_int("NACT_EL") and options.get_int("NACT_ORB"):
+            active_space["nel"] = options.get_int("NACT_EL")
+            active_space["norb"] = options.get_int("NACT_ORB")
+        elif options.get_int("NACT_EL") and options.get("ACTIVE_ORBITALS"):
+            active_space["nel"] = options.get_int("NACT_EL")
+            active_space["active_orbitals"] = options.get("ACTIVE_ORBITALS")
+        elif options.get_int("ACTIVE"):
+            active_space["active"] = options.get_int("ACTIVE")
+        return active_space
 
     def select_norb_nel(self, data, nel, norb):
         """
