@@ -2,7 +2,7 @@
  * @BEGIN LICENSE
  *
  * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
- * t    hat implements a variety of quantum chemistry methods for strongly
+ * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
  * Copyright (c) 2012-2024 by its authors (see LICENSE, AUTHORS).
@@ -36,8 +36,6 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace forte {
-
-/// Export the RDMs class
 void export_RDMs(py::module& m) {
     py::enum_<RDMsType>(m, "RDMsType")
         .value("spin_dependent", RDMsType::spin_dependent)

@@ -169,9 +169,7 @@ def test_det_sorting():
     d3 = det("--")
     d4 = det("22")
     list = [d1, d2, d3, d4]
-    print(list)
     sorted_list = sorted(list)
-    print(sorted_list)
     assert sorted_list[0] == d2
     assert sorted_list[1] == d3
     assert sorted_list[2] == d1
@@ -271,7 +269,7 @@ def test_det_slater_sign():
 
     if forte.Determinant.norb() >= 128:
         print("Testing determinant Slater sign functions")
-        d = det("2"*128)
+        d = det("2" * 128)
         for i in range(128):
             assert d.slater_sign(i) == (-1) ** (i)
         for i in range(128):

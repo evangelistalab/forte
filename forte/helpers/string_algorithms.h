@@ -28,6 +28,7 @@
 
 #pragma once
 
+#include <complex>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -61,14 +62,20 @@ template <typename T> std::string to_string_with_precision(const T val, const in
     return s;
 }
 
-inline std::string double_to_string_latex(double value) {
-    if (value == -1.0) {
+template <typename T> inline std::string to_string_latex(T value) {
+    if (value == T(-1)) {
         return "-";
     }
-    if (value == 1.0) {
+    if (value == T(1)) {
         return "+";
     }
-    return (value > 0.0 ? "+" : "") + std::to_string(value);
+    if constexpr (std::is_same_v<T, std::complex<double>>) {
+        return "(" + std::to_string(std::real(value)) + " + " + std::to_string(std::imag(value)) +
+               " i)";
+    }
+    if constexpr (std::is_same_v<T, double>) {
+        return std::to_string(value);
+    }
 }
 
 /// Find a string in a vector of strings in a case insensitive

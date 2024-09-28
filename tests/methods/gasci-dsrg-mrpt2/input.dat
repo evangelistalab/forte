@@ -32,7 +32,7 @@ set forte {
   gas2                  [5,0,2,2]
   gas1max               [2,1,1]
   gas1min               [2,1,1]
-  transition_dipoles    true
+  transition_dipoles    [[0,1,0]]
   e_convergence         8
   r_convergence         7
   mcscf_reference      false
