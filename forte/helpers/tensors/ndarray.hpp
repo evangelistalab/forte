@@ -14,10 +14,12 @@
 
 namespace py = pybind11;
 
-constexpr bool epictensors_debug = false;
+constexpr bool ndarray_debug = true;
+
+namespace forte {
 
 /// @brief Class to represent a tensor
-template <typename T> class Tensor {
+template <typename T> class ndarray {
     /// @brief Shape of tensor
     using shape_t = std::vector<size_t>;
     /// @brief Strides of tensor
@@ -26,12 +28,12 @@ template <typename T> class Tensor {
     using container_t = std::vector<T>;
 
   public:
-    Tensor() = default;
+    ndarray() = default;
 
-    /// @brief Construct a new Tensor object from a shape. This will allocate
-    /// the data and the Tensor object will own it.
+    /// @brief Construct a new ndarray object from a shape. This will allocate
+    /// the data and the ndarray object will own it.
     /// @param shape
-    Tensor(const shape_t& shape) : shape_(shape) {
+    ndarray(const shape_t& shape) : shape_(shape) {
         size_t size = size_from_shape(shape);
         owned_data_ = std::make_shared<container_t>(size);
         data_span_ = std::span<T>(owned_data_->data(), size);
@@ -39,11 +41,11 @@ template <typename T> class Tensor {
     }
 
     /// @brief Construct from raw pointer, size, and shape. In this case the
-    /// data is not owned by the Tensor object.
+    /// data is not owned by the ndarray object.
     /// @param data pointer to data
     /// @param size size of data
     /// @param shape shape of tensor
-    Tensor(T* data, size_t size, shape_t shape_list) : shape_(shape_list), data_span_(data, size) {
+    ndarray(T* data, size_t size, shape_t shape_list) : shape_(shape_list), data_span_(data, size) {
         compute_strides();
     }
 
@@ -60,20 +62,31 @@ template <typename T> class Tensor {
     /// @param indices indices of the data to return
     /// @return A reference to the data at the given indices
     T& at(const std::vector<size_t>& indices) {
+        if constexpr (ndarray_debug) {
+            if (indices.size() != shape_.size()) {
+                throw std::out_of_range("Incorrect number of indices");
+            }
+        }
         size_t index = 0;
-        size_t multiplier = 1;
         for (int i = indices.size() - 1; i >= 0; --i) {
-            index += indices[i] * multiplier;
-            multiplier *= shape_[i];
+            if constexpr (ndarray_debug) {
+                if (indices[i] >= shape_[i]) {
+                    throw std::out_of_range("Index " + std::to_string(indices[i]) +
+                                            " out of bounds for dimension " + std::to_string(i) +
+                                            " with size " + std::to_string(shape_[i]));
+                }
+            }
+            index += indices[i] * strides_[i];
         }
         return data_span_[index];
     }
 
     T& operator[](size_t index) { return data_span_[index]; }
 
-    /// @brief Set
+    /// @brief Set the value of a tensor element at the given indices
     void set_at(const std::vector<size_t>& indices, T value) { at(indices) = value; }
 
+    /// @brief Set the values of the tensor to another set of values
     void set_to(const std::vector<T>& values) {
         if (values.size() != data_span_.size()) {
             throw std::runtime_error("Incorrect number of values");
@@ -81,6 +94,7 @@ template <typename T> class Tensor {
         std::copy(values.begin(), values.end(), data_span_.begin());
     }
 
+    /// @brief Fill the tensor with a value
     void fill(const T& value) { std::fill(data_span_.begin(), data_span_.end(), value); }
 
     /// @brief Return a numpy array view of the tensor
@@ -110,16 +124,28 @@ template <typename T> class Tensor {
         return py::array_t<T>(shape_, data_span_.data(), py::cast(this));
     }
 
-    /// @brief Construct a Tensor object from a numpy array
-    static Tensor<T> from_numpy(py::array_t<T> array) {
-        std::vector<size_t> shape(array.shape(), array.shape() + array.ndim());
-        Tensor<T> tensor(const_cast<T*>(array.data()), array.size(), shape);
+    // static ndarray<T> from_numpy(py::array_t<T> array) {
+    //     std::vector<size_t> shape(array.shape(), array.shape() + array.ndim());
+    //     ndarray<T> tensor(const_cast<T*>(array.data()), array.size(), shape);
+    //     return tensor;
+    // }
+
+    /// @brief Construct a ndarray object from a numpy array
+    static ndarray<T> from_numpy(py::array_t<T> array) {
+        // Request buffer info
+        py::buffer_info info = array.request();
+        if (info.readonly) {
+            throw std::runtime_error("Cannot create ndarray from a read-only NumPy array.");
+        }
+        std::vector<size_t> shape(info.shape.begin(), info.shape.end());
+        T* data_ptr = static_cast<T*>(info.ptr);
+        ndarray<T> tensor(data_ptr, array.size(), shape);
         return tensor;
     }
 
     std::string to_string() const {
         std::ostringstream oss;
-        oss << "Tensor(shape=[";
+        oss << "ndarray(shape=[";
         for (size_t i = 0; i < shape_.size(); ++i) {
             oss << shape_[i];
             if (i != shape_.size() - 1) {
@@ -145,7 +171,7 @@ template <typename T> class Tensor {
         return oss.str();
     }
 
-    static Tensor<T> einsum(const std::string& equation, const std::vector<Tensor<T>>& tensors) {
+    static ndarray<T> einsum(const std::string& equation, const std::vector<ndarray<T>>& tensors) {
         if (tensors.empty()) {
             throw std::runtime_error("No tensors provided to einsum.");
         }
@@ -162,7 +188,7 @@ template <typename T> class Tensor {
         py::array_t<T> result =
             numpy.attr("einsum")(equation, *numpy_tensors.data()).template cast<py::array_t<T>>();
 
-        return Tensor<T>::from_numpy(result);
+        return ndarray<T>::from_numpy(result);
     }
 
   private:
@@ -178,7 +204,11 @@ template <typename T> class Tensor {
     std::span<T> data_span_;
 
     /// @brief Compute the size of a tensor from its shape
-    [[nodiscard]] auto size_from_shape(const shape_t& shape) const -> size_t {
+    /// @param shape Shape of the tensor
+    /// @return Size of the tensor
+    /// @note This function can even handle zero dimensional tensors (empty shapes), in which case
+    /// the returned size is 1.
+    [[nodiscard]] auto static size_from_shape(const shape_t& shape) -> size_t {
         return std::accumulate(shape.begin(), shape.end(), 1u, std::multiplies<>());
     }
 
@@ -197,7 +227,7 @@ template <typename T> class Tensor {
     }
 
     template <typename... Indices> size_t offset(Indices... indices) const {
-        if constexpr (epictensors_debug) {
+        if constexpr (ndarray_debug) {
             if (sizeof...(indices) != shape_.size()) {
                 throw std::out_of_range("Incorrect number of indices");
             }
@@ -209,7 +239,7 @@ template <typename T> class Tensor {
 
     template <typename First, typename... Rest>
     size_t offset_impl(size_t dim, First first, Rest... rest) const {
-        if constexpr (epictensors_debug) {
+        if constexpr (ndarray_debug) {
             if (first >= shape_[dim]) {
                 throw std::out_of_range("Index out of bounds for dimension");
             }
@@ -219,29 +249,49 @@ template <typename T> class Tensor {
 
   public:
     static void bind(py::module& m, const std::string& name) {
-        py::class_<Tensor<T>>(m, name.c_str())
+        py::class_<ndarray<T>>(m, name.c_str())
             .def(py::init<const std::vector<size_t>&>())
-            .def("__str__", &Tensor<T>::to_string)
-            .def("at", &Tensor<T>::at)
-            .def("set_at", &Tensor<T>::set_at)
-            .def("set_to", &Tensor<T>::set_to)
-            .def("fill", &Tensor<T>::fill)
-            // .def("get", &Tensor<T>::get)
-            .def("numpy_array", &Tensor<T>::numpy_array)
-            .def("__repr__", &Tensor<T>::to_string)
-            .def("__str__", &Tensor<T>::to_string)
+            .def("__str__", &ndarray<T>::to_string)
+            .def("at", &ndarray<T>::at)
+            .def("set_at", &ndarray<T>::set_at)
+            .def("set_to", &ndarray<T>::set_to)
+            .def("fill", &ndarray<T>::fill)
+            // .def("get", &ndarray<T>::get)
+            .def("numpy_array", &ndarray<T>::numpy_array)
+            .def("__repr__", &ndarray<T>::to_string)
+            .def("__str__", &ndarray<T>::to_string)
             // TODO: this is dangerous because we ignore the args and kwargs
             .def("__array__",
-                 [](Tensor<T>& self, py::args, py::kwargs) { return self.numpy_array(); })
+                 [](ndarray<T>& self, py::args, py::kwargs) { return self.numpy_array(); })
 
-            .def_property_readonly("shape", &Tensor<T>::shape)
-            .def_static("from_numpy", &Tensor<T>::from_numpy)
-            .def_property_readonly_static("dtype", [](py::object) { return Tensor<T>::dtype; })
-            .def_static("einsum", &Tensor<T>::einsum);
+            .def_property_readonly("shape", &ndarray<T>::shape)
+            .def_property_readonly("size", &ndarray<T>::size)
+            .def_property_readonly("strides", &ndarray<T>::strides)
+
+            .def_static("from_numpy", &ndarray<T>::from_numpy)
+            .def_property_readonly_static("dtype", [](py::object) { return ndarray<T>::dtype; })
+            .def_static("einsum", &ndarray<T>::einsum)
+            .def("__getitem__",
+                 [](ndarray<T>& self, py::tuple index) -> T& {
+                     std::vector<size_t> indices;
+                     for (auto item : index) {
+                         indices.push_back(item.cast<size_t>());
+                     }
+                     return self.at(indices);
+                 })
+            .def("__setitem__", [](ndarray<T>& self, py::tuple index, T value) {
+                std::vector<size_t> indices;
+                for (auto item : index) {
+                    indices.push_back(item.cast<size_t>());
+                }
+                self.set_at(indices, value);
+            });
     }
 };
 
-template <typename T> std::ostream& operator<<(std::ostream& os, const Tensor<T>& tensor) {
+template <typename T> std::ostream& operator<<(std::ostream& os, const ndarray<T>& tensor) {
     os << tensor.to_string();
     return os;
 }
+
+} // namespace forte

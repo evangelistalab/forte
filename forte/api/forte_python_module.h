@@ -31,7 +31,7 @@
 namespace forte {
 
 // see the files in src/api for the implementation of the following methods
-void export_EPICTensors(py::module& m);
+void export_ndarray(py::module& m);
 
 // Base classes
 void export_ForteIntegrals(py::module& m);
