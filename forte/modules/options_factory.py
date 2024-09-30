@@ -24,10 +24,10 @@ class OptionsFactory(Module):
     def _run(self, data: ForteData = None) -> ForteData:
         if data is None:
             data = ForteData()
-        data.options = forte.forte_options
         # if no options dict is provided then read from psi4
         if self.options is None:
-            # Get the option object
+            # Copy globals into a new object
+            data.options = forte.ForteOptions(forte.forte_options)
             psi4_options = psi4.core.get_options()
             psi4_options.set_current_module("FORTE")
 
