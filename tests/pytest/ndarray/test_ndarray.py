@@ -1,16 +1,7 @@
 import pytest
 import numpy as np
 
-# Import the module where the ndarray class is defined
-from forte import ndarray, ndarray_from_numpy
-
-# test_ndarray.py
-
-import pytest
-import numpy as np
-
-# Import the module where the ndarray class is defined
-from forte import ndarray, DataType
+from forte import ndarray, ndarray_from_numpy, DataType
 
 
 def test_ndarray_creation():

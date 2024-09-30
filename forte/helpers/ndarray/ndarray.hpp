@@ -13,6 +13,7 @@
 #include "datatype.hpp"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 constexpr bool ndarray_debug = true;
 
@@ -58,6 +59,9 @@ template <typename T> class ndarray {
     /// @brief Return the strides of the tensor
     const auto& strides() const { return strides_; }
 
+    /// @brief Return the rank of the tensor
+    size_t rank() const { return shape_.size(); }
+
     /// @brief Return the data of the tensor at the given indices
     /// @param indices indices of the data to return
     /// @return A reference to the data at the given indices
@@ -81,12 +85,36 @@ template <typename T> class ndarray {
         return data_span_[index];
     }
 
+    template <typename... Indices> T& at(Indices... indices) {
+        // return data_span_[offset(indices...)];
+        size_t index = calculate_index_variadic(0, indices...);
+        return data_span_[index];
+    }
+
+    template <typename First, typename... Rest>
+    size_t calculate_index_variadic(size_t dim, First first, Rest... rest) const {
+        if constexpr (ndarray_debug) {
+            if (dim >= shape_.size()) {
+                throw std::out_of_range("Too many indices");
+            }
+            if (first >= shape_[dim]) {
+                throw std::out_of_range("Index out of bounds");
+            }
+        }
+        size_t offset = first * strides_[dim];
+        if constexpr (sizeof...(rest) == 0) {
+            return offset;
+        } else {
+            return offset + calculate_index_variadic(dim + 1, rest...);
+        }
+    }
+
     T& operator[](size_t index) { return data_span_[index]; }
 
     /// @brief Set the value of a tensor element at the given indices
     void set_at(const std::vector<size_t>& indices, T value) { at(indices) = value; }
 
-    /// @brief Set the values of the tensor to another set of values
+    /// @brief Set the values of the tensor to a vector of values
     void set_to(const std::vector<T>& values) {
         if (values.size() != data_span_.size()) {
             throw std::runtime_error("Incorrect number of values");
@@ -222,10 +250,6 @@ template <typename T> class ndarray {
         }
     }
 
-    template <typename... Indices> T& get(Indices... indices) {
-        return data_span_[offset(indices...)];
-    }
-
     template <typename... Indices> size_t offset(Indices... indices) const {
         if constexpr (ndarray_debug) {
             if (sizeof...(indices) != shape_.size()) {
@@ -251,26 +275,24 @@ template <typename T> class ndarray {
     static void bind(py::module& m, const std::string& name) {
         py::class_<ndarray<T>>(m, name.c_str())
             .def(py::init<const std::vector<size_t>&>())
-            .def("__str__", &ndarray<T>::to_string)
-            .def("at", &ndarray<T>::at)
-            .def("set_at", &ndarray<T>::set_at)
-            .def("set_to", &ndarray<T>::set_to)
-            .def("fill", &ndarray<T>::fill)
-            // .def("get", &ndarray<T>::get)
-            .def("numpy_array", &ndarray<T>::numpy_array)
-            .def("__repr__", &ndarray<T>::to_string)
-            .def("__str__", &ndarray<T>::to_string)
+            .def_static("from_numpy", &ndarray<T>::from_numpy)
+            .def_static("einsum", &ndarray<T>::einsum)
+            .def("__repr__", &ndarray<T>::to_string, "Return a string representation of the tensor")
+            .def("__str__", &ndarray<T>::to_string, "Return a string representation of the tensor")
+            .def_property_readonly_static("dtype", [](py::object) { return ndarray<T>::dtype; })
+            .def_property_readonly("rank", &ndarray<T>::rank, "Return the rank of the tensor")
+            .def_property_readonly(
+                "shape", &ndarray<T>::shape,
+                "Return the shape of the tensor (number of elements in each dimension)")
+            .def_property_readonly("size", &ndarray<T>::size,
+                                   "Return the size of the tensor (number of elements)")
+            .def_property_readonly("strides", &ndarray<T>::strides,
+                                   "Return the strides of the tensor")
+            .def("fill", &ndarray<T>::fill, "value"_a, "Fill the tensor with a value")
+            .def("numpy_array", &ndarray<T>::numpy_array, "Return a numpy array view of the tensor")
             // TODO: this is dangerous because we ignore the args and kwargs
             .def("__array__",
                  [](ndarray<T>& self, py::args, py::kwargs) { return self.numpy_array(); })
-
-            .def_property_readonly("shape", &ndarray<T>::shape)
-            .def_property_readonly("size", &ndarray<T>::size)
-            .def_property_readonly("strides", &ndarray<T>::strides)
-
-            .def_static("from_numpy", &ndarray<T>::from_numpy)
-            .def_property_readonly_static("dtype", [](py::object) { return ndarray<T>::dtype; })
-            .def_static("einsum", &ndarray<T>::einsum)
             .def("__getitem__",
                  [](ndarray<T>& self, py::tuple index) -> T& {
                      std::vector<size_t> indices;
@@ -279,13 +301,93 @@ template <typename T> class ndarray {
                      }
                      return self.at(indices);
                  })
-            .def("__setitem__", [](ndarray<T>& self, py::tuple index, T value) {
-                std::vector<size_t> indices;
-                for (auto item : index) {
-                    indices.push_back(item.cast<size_t>());
-                }
-                self.set_at(indices, value);
-            });
+            .def("__getitem__",
+                 [](ndarray<T>& self, size_t index) -> T& { return self.at({index}); })
+            .def("__setitem__",
+                 [](ndarray<T>& self, py::tuple index, T value) {
+                     std::vector<size_t> indices;
+                     for (auto item : index) {
+                         indices.push_back(item.cast<size_t>());
+                     }
+                     self.set_at(indices, value);
+                 })
+            .def("__setitem__",
+                 [](ndarray<T>& self, size_t index, T value) { self.set_at({index}, value); })
+            .def("at",
+                 [](ndarray<T>& self, const std::vector<size_t>& indices) -> T& {
+                     return self.at(indices);
+                 })
+            .def(
+                "at", [](ndarray<T>& self, size_t i1) -> T& { return self.at(i1); },
+                "Get the value at the given index")
+            .def(
+                "at", [](ndarray<T>& self, size_t i1, size_t i2) -> T& { return self.at(i1, i2); },
+                "Get the value at the given indices")
+            .def(
+                "at",
+                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3) -> T& {
+                    return self.at(i1, i2, i3);
+                },
+                "Get the value at the given indices")
+            .def(
+                "at",
+                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4) -> T& {
+                    return self.at(i1, i2, i3, i4);
+                },
+                "Get the value at the given indices")
+            .def(
+                "at",
+                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5) -> T& {
+                    return self.at(i1, i2, i3, i4, i5);
+                },
+                "Get the value at the given indices")
+            .def(
+                "at",
+                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
+                   size_t i6) -> T& { return self.at(i1, i2, i3, i4, i5, i6); },
+                "Get the value at the given indices")
+            .def(
+                "at",
+                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
+                   size_t i6, size_t i7) -> T& { return self.at(i1, i2, i3, i4, i5, i6, i7); },
+                "Get the value at the given indices")
+            .def(
+                "at",
+                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
+                   size_t i6, size_t i7,
+                   size_t i8) -> T& { return self.at(i1, i2, i3, i4, i5, i6, i7, i8); },
+                "Get the value at the given indices")
+            .def(
+                "at",
+                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
+                   size_t i6, size_t i7, size_t i8,
+                   size_t i9) -> T& { return self.at(i1, i2, i3, i4, i5, i6, i7, i8, i9); },
+                "Get the value at the given indices")
+            .def(
+                "at",
+                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
+                   size_t i6, size_t i7, size_t i8, size_t i9,
+                   size_t i10) -> T& { return self.at(i1, i2, i3, i4, i5, i6, i7, i8, i9, i10); },
+                "Get the value at the given indices")
+            .def(
+                "at",
+                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
+                   size_t i6, size_t i7, size_t i8, size_t i9, size_t i10, size_t i11) -> T& {
+                    return self.at(i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11);
+                },
+                "Get the value at the given indices")
+            .def(
+                "at",
+                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
+                   size_t i6, size_t i7, size_t i8, size_t i9, size_t i10, size_t i11,
+                   size_t i12) -> T& {
+                    return self.at(i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12);
+                },
+                "Get the value at the given indices")
+            .def("set_at", &ndarray<T>::set_at, "indices"_a, "value"_a,
+                 "Set the value at the given indices (passed as a list)")
+            .def("set_to", &ndarray<T>::set_to, "values"_a,
+                 "Set the values of the tensor to a vector of values");
     }
 };
 

@@ -27,44 +27,25 @@
  */
 
 #include <variant>
+#include <complex>
+#include <type_traits>
 
-#include "helpers/tensors/ndarray.hpp"
+#include "helpers/ndarray/ndarray.hpp"
 
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
 namespace forte {
-// Template specializations of ndarray<T>::dtype
-// template <> const DataType ndarray<float>::dtype("float32", 'f', sizeof(float));
-
-// template <> const DataType ndarray<double>::dtype("float64", 'f', sizeof(double));
-
-// template <>
-// const DataType ndarray<std::complex<float>>::dtype("complex64", 'c',
-// sizeof(std::complex<float>));
-
-// template <>
-// const DataType ndarray<std::complex<double>>::dtype("complex128", 'c',
-//                                                     sizeof(std::complex<double>));
-
-// Include necessary headers for type traits
-#include <complex>
-#include <type_traits>
 
 // Define a helper struct to map C++ types to DataType
 template <typename T> struct DataTypeTraits;
 
-template <> struct DataTypeTraits<int> {
-    static DataType dtype() { return DataType("int32", 'i', sizeof(int)); }
-};
-
-template <> struct DataTypeTraits<double> {
-    static DataType dtype() { return DataType("float64", 'f', sizeof(double)); }
-};
-
 template <> struct DataTypeTraits<float> {
     static DataType dtype() { return DataType("float32", 'f', sizeof(float)); }
+};
+template <> struct DataTypeTraits<double> {
+    static DataType dtype() { return DataType("float64", 'f', sizeof(double)); }
 };
 
 template <> struct DataTypeTraits<std::complex<float>> {
@@ -102,6 +83,21 @@ DataTypeEnum string_to_dtype(const std::string& dtype) {
     }
 }
 
+std::variant<ndarray<float>, ndarray<double>, ndarray<std::complex<float>>,
+             ndarray<std::complex<double>>>
+make_ndarray(std::vector<size_t> shape, DataTypeEnum dtype) {
+    if (dtype == DataTypeEnum::Float32) {
+        return ndarray<float>(shape);
+    } else if (dtype == DataTypeEnum::Complex64) {
+        return ndarray<std::complex<float>>(shape);
+    } else if (dtype == DataTypeEnum::Float64) {
+        return ndarray<double>(shape);
+    } else if (dtype == DataTypeEnum::Complex128) {
+        return ndarray<std::complex<double>>(shape);
+    }
+    throw std::runtime_error("Unknown dtype");
+}
+
 void export_ndarray(py::module& m) {
     ndarray<float>::bind(m, "ftensor");
     ndarray<std::complex<float>>::bind(m, "cftensor");
@@ -122,20 +118,11 @@ void export_ndarray(py::module& m) {
 
     m.def(
         "ndarray",
-        [](std::vector<size_t> shape, std::string dtype)
+        [](std::vector<size_t> shape, const std::string& dtype_str)
             -> std::variant<ndarray<float>, ndarray<double>, ndarray<std::complex<float>>,
                             ndarray<std::complex<double>>> {
-            if (dtype == "float32") {
-                return ndarray<float>(shape);
-            } else if (dtype == "complex64") {
-                return ndarray<std::complex<float>>(shape);
-            } else if (dtype == "float64") {
-                return ndarray<double>(shape);
-            } else if (dtype == "complex128") {
-                return ndarray<std::complex<double>>(shape);
-            } else {
-                throw std::runtime_error("Unknown dtype");
-            }
+            auto dtype = string_to_dtype(dtype_str);
+            return make_ndarray(shape, dtype);
         },
         py::arg("shape"), py::arg("dtype") = "float64");
 
@@ -143,19 +130,7 @@ void export_ndarray(py::module& m) {
         "ndarray",
         [](std::vector<size_t> shape, DataTypeEnum dtype)
             -> std::variant<ndarray<float>, ndarray<double>, ndarray<std::complex<float>>,
-                            ndarray<std::complex<double>>> {
-            if (dtype == DataTypeEnum::Float32) {
-                return ndarray<float>(shape);
-            } else if (dtype == DataTypeEnum::Complex64) {
-                return ndarray<std::complex<float>>(shape);
-            } else if (dtype == DataTypeEnum::Float64) {
-                return ndarray<double>(shape);
-            } else if (dtype == DataTypeEnum::Complex128) {
-                return ndarray<std::complex<double>>(shape);
-            } else {
-                throw std::runtime_error("Unknown dtype");
-            }
-        },
+                            ndarray<std::complex<double>>> { return make_ndarray(shape, dtype); },
         py::arg("shape"), py::arg("dtype") = DataTypeEnum::Float64);
 
     m.def(
