@@ -12,8 +12,8 @@
 #include "psi4/lib3index/3index.h"
 #include "psi4/libmints/mintshelper.h"
 #include "base_classes/mo_space_info.h"
-#include "psi4/libmints/molecule.h"
 #include "psi4/libmints/vector.h"
+#include "integrals/one_body_integrals.h"
 
 using namespace ambit;
 using namespace psi;
@@ -113,8 +113,8 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     std::map<char, std::vector<size_t>> idxmap_abs;
     idxmap_abs = {{'c', core_all_}, {'a', actv_all_}, {'v', virt_all_}};
     std::vector<double> dipole(4, 0.0);
-    Vector3 dm_nuc =
-        psi::Process::environment.molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
+    MultipoleIntegrals dm_ints(ints_, mo_space_info_);
+    auto dm_nuc = dm_ints.nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
 
     for (int i = 0; i < 3; ++i) {
         auto dm_ints = mo_dipole_ints[i];
@@ -127,7 +127,7 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
             });
         }
         dipole[i] = 2.0 * D1_temp["pq"] * dipole_ints["pq"];
-        dipole[i] += dm_nuc[i];
+        dipole[i] += (*dm_nuc)[i];
         dipole[3] += dipole[i] * dipole[i];
     }
     dipole[3] = std::sqrt(dipole[3]);

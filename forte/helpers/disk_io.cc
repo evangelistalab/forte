@@ -30,6 +30,7 @@
 #include <iostream>
 #include <fstream>
 #include <sys/stat.h>
+#include <iomanip>
 
 #include "psi4/psi4-dec.h"
 
