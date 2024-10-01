@@ -101,7 +101,7 @@ make_forte_integrals_from_psi4(std::shared_ptr<psi::Wavefunction> ref_wfn,
 
     if (options->exists("PRINT_INTS"))
         if (options->get_bool("PRINT_INTS")) {
-            ints->print_ints();
+            psi::outfile->Printf("%s", ints->repr().c_str());
         }
 
     return ints;

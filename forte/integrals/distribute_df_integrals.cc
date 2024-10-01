@@ -332,17 +332,17 @@ void DistDFIntegrals::allocate() {
     diagonal_aphys_tei_ab = new double[nmo_ * nmo_];
     diagonal_aphys_tei_bb = new double[nmo_ * nmo_];
 }
-// double DistDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s)
+// double DistDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) const
 //{
 //    ambit::Tensor pqrs = aptei_aa_block({p}, {q}, {r}, {s});
 //    return pqrs.data()[0];
 //}
-// double DistDFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s)
+// double DistDFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) const
 //{
 //    ambit::Tensor pqrs = aptei_ab_block({p}, {q}, {r}, {s});
 //    return pqrs.data()[0];
 //}
-// double DistDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s)
+// double DistDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) const
 //{
 //    ambit::Tensor pqrs = aptei_bb_block({p}, {q}, {r}, {s});
 //    return pqrs.data()[0];

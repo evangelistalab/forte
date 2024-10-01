@@ -71,7 +71,7 @@ void CholeskyIntegrals::initialize() {
     }
 }
 
-double CholeskyIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
+double CholeskyIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) const {
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
     vpqrsalphaC = C_DDOT(nthree_, &(ThreeIntegral_->pointer()[p * aptei_idx_ + r][0]), 1,
@@ -82,14 +82,14 @@ double CholeskyIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     return (vpqrsalphaC - vpqrsalphaE);
 }
 
-double CholeskyIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
+double CholeskyIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) const {
     double vpqrsalphaC = 0.0;
     vpqrsalphaC = C_DDOT(nthree_, &(ThreeIntegral_->pointer()[p * aptei_idx_ + r][0]), 1,
                          &(ThreeIntegral_->pointer()[q * aptei_idx_ + s][0]), 1);
     return (vpqrsalphaC);
 }
 
-double CholeskyIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
+double CholeskyIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) const {
     double vpqrsalphaC = 0.0, vpqrsalphaE = 0.0;
     vpqrsalphaC = C_DDOT(nthree_, &(ThreeIntegral_->pointer()[p * aptei_idx_ + r][0]), 1,
                          &(ThreeIntegral_->pointer()[q * aptei_idx_ + s][0]), 1);

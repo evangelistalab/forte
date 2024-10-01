@@ -106,15 +106,15 @@ std::shared_ptr<psi::IntegralTransform> ConventionalIntegrals::transform_integra
     return integral_transform;
 }
 
-double ConventionalIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
+double ConventionalIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) const {
     return aphys_tei_aa_[aptei_index(p, q, r, s)];
 }
 
-double ConventionalIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
+double ConventionalIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) const {
     return aphys_tei_ab_[aptei_index(p, q, r, s)];
 }
 
-double ConventionalIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
+double ConventionalIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) const {
     return aphys_tei_bb_[aptei_index(p, q, r, s)];
 }
 

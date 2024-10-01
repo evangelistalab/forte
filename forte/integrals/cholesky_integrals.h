@@ -49,9 +49,9 @@ class CholeskyIntegrals : public Psi4Integrals {
 
     // See base class for documentation
     void initialize() override;
-    double aptei_aa(size_t p, size_t q, size_t r, size_t s) override;
-    double aptei_ab(size_t p, size_t q, size_t r, size_t s) override;
-    double aptei_bb(size_t p, size_t q, size_t r, size_t s) override;
+    double aptei_aa(size_t p, size_t q, size_t r, size_t s) const override;
+    double aptei_ab(size_t p, size_t q, size_t r, size_t s) const override;
+    double aptei_bb(size_t p, size_t q, size_t r, size_t s) const override;
 
     ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                  const std::vector<size_t>& r,

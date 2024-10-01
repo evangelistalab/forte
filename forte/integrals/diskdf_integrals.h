@@ -52,9 +52,9 @@ class DISKDFIntegrals : public Psi4Integrals {
 
     // ==> Class public virtual functions <==
 
-    double aptei_aa(size_t p, size_t q, size_t r, size_t s) override;
-    double aptei_ab(size_t p, size_t q, size_t r, size_t s) override;
-    double aptei_bb(size_t p, size_t q, size_t r, size_t s) override;
+    double aptei_aa(size_t p, size_t q, size_t r, size_t s) const override;
+    double aptei_ab(size_t p, size_t q, size_t r, size_t s) const override;
+    double aptei_bb(size_t p, size_t q, size_t r, size_t s) const override;
 
     /// Return the antisymmetrized alpha-alpha chunck as an ambit::Tensor
     ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,

@@ -201,7 +201,7 @@ class ForteIntegrals : public Observer, public std::enable_shared_from_this<Fort
     virtual size_t nthree() const;
 
     /// Return the frozen core energy
-    double frozen_core_energy();
+    double frozen_core_energy() const;
 
     /// Scalar component of the Hamiltonian
     double scalar() const;
@@ -235,11 +235,11 @@ class ForteIntegrals : public Observer, public std::enable_shared_from_this<Fort
     std::shared_ptr<psi::Matrix> get_fock_b(bool corr = true) const;
 
     /// The antisymmetrixed alpha-alpha two-electron integrals in physicist notation <pq||rs>
-    virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s) = 0;
+    virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s) const = 0;
     /// The antisymmetrixed alpha-beta two-electron integrals in physicist notation <pq|rs>
-    virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s) = 0;
+    virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s) const = 0;
     /// The antisymmetrixed beta-beta two-electron integrals in physicist notation <pq||rs>
-    virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s) = 0;
+    virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s) const = 0;
 
     /// @return a tensor with a block of the alpha one-electron integrals
     ambit::Tensor oei_a_block(const std::vector<size_t>& p, const std::vector<size_t>& q);
@@ -375,8 +375,8 @@ class ForteIntegrals : public Observer, public std::enable_shared_from_this<Fort
 
     /// Print the details of the integral transformation
     void print_info();
-    /// Print the one- and two-electron integrals to the output
-    void print_ints();
+    /// A string representation of the one- and two-electron integrals to the output
+    std::string repr() const;
 
     /// Orbital coefficients in AO x MO basis where MO in Pitzer order
     virtual std::shared_ptr<psi::Matrix> Ca_AO() const = 0;
@@ -546,7 +546,7 @@ class ForteIntegrals : public Observer, public std::enable_shared_from_this<Fort
 
     /// An addressing function to for two-electron integrals
     /// @return the address of the integral <pq|rs> or <pq||rs>
-    size_t aptei_index(size_t p, size_t q, size_t r, size_t s) {
+    size_t aptei_index(size_t p, size_t q, size_t r, size_t s) const {
         return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q +
                aptei_idx_ * r + s;
     }

@@ -82,6 +82,9 @@ class SCFInfo : public Subject {
     /// @return the beta orbital coefficients (const version)
     std::shared_ptr<const psi::Matrix> Cb() const;
 
+    /// @return the string representation of the SCFInfo object
+    std::string to_string() const;
+
     /// Update the MO coefficients, update psi::Wavefunction, and re-transform integrals
     /// @param Ca the alpha MO coefficients
     /// @param Cb the beta MO coefficients

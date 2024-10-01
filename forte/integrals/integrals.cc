@@ -45,6 +45,9 @@
 #include "integrals.h"
 #include "memory.h"
 
+#define FMT_HEADER_ONLY
+#include "lib/fmt/core.h"
+
 #ifdef HAVE_GA
 #include <ga.h>
 #include <macdecls.h>
@@ -182,7 +185,7 @@ const std::vector<size_t>& ForteIntegrals::cmotomo() const { return cmotomo_; }
 
 void ForteIntegrals::set_print(int print) { print_ = print; }
 
-double ForteIntegrals::frozen_core_energy() { return frozen_core_energy_; }
+double ForteIntegrals::frozen_core_energy() const { return frozen_core_energy_; }
 
 double ForteIntegrals::scalar() const { return scalar_energy_; }
 
@@ -405,66 +408,135 @@ void ForteIntegrals::print_info() {
     }
 }
 
-void ForteIntegrals::print_ints() {
-    outfile->Printf("\n  nmo_ = %zu", nmo_);
+std::string ForteIntegrals::repr() const {
+    std::string str = "ForteIntegrals object\n";
+    str += fmt::format("  Number of molecular orbitals:            {:>15d}\n", nmo_);
+    str += fmt::format("  Nuclear repulsion energy:                {:>15.8f}\n", nucrep_);
+    str += fmt::format("  Scalar energy:                          {:>15.8f}\n", scalar_energy_);
+    str +=
+        fmt::format("  Frozen-core energy:                     {:>15.8f}\n", frozen_core_energy_);
+    str += fmt::format("  Two-electron integral type:              {:>15s}\n",
+                       int_type_label.at(integral_type_));
 
-    outfile->Printf("\n  Nuclear repulsion energy: %20.12f", nucrep_);
-    outfile->Printf("\n  Scalar energy:            %20.12f", scalar_energy_);
-    outfile->Printf("\n  Frozen-core energt:       %20.12f", frozen_core_energy_);
-    outfile->Printf("\n  Alpha one-electron integrals (T + V_{en})");
-    Matrix ha(" Alpha one-electron integrals (T + V_{en})", nmo_, nmo_);
+    if ((integral_type_ != IntegralType::Conventional) and
+        (integral_type_ != IntegralType::Custom)) {
+        return str;
+    }
+
+    str += fmt::format("  Alpha one-electron integrals (T + V_en)\n");
     for (size_t p = 0; p < nmo_; ++p) {
         for (size_t q = 0; q < nmo_; ++q) {
             if (std::abs(oei_a(p, q)) >= 1e-14)
-                outfile->Printf("\n  h[%6d][%6d] = %20.12f", p, q, oei_a(p, q));
+                str += fmt::format("  h[{:>6d}][{:>6d}] = {:>20.12f}\n", p, q, oei_a(p, q));
         }
     }
 
-    outfile->Printf("\n  Beta one-electron integrals (T + V_{en})");
+    str += fmt::format("  Beta one-electron integrals (T + V_en)\n");
     for (size_t p = 0; p < nmo_; ++p) {
         for (size_t q = 0; q < nmo_; ++q) {
             if (std::abs(oei_b(p, q)) >= 1e-14)
-                outfile->Printf("\n  h[%6d][%6d] = %20.12f", p, q, oei_b(p, q));
+                str += fmt::format("  h[{:>6d}][{:>6d}] = {:>20.12f}\n", p, q, oei_b(p, q));
         }
     }
 
-    outfile->Printf("\n  Alpha-alpha two-electron integrals <pq||rs>");
+    str += fmt::format("  Alpha-alpha two-electron integrals <pq||rs>\n");
     for (size_t p = 0; p < nmo_; ++p) {
         for (size_t q = 0; q < nmo_; ++q) {
             for (size_t r = 0; r < nmo_; ++r) {
                 for (size_t s = 0; s < nmo_; ++s) {
                     if (std::abs(aptei_aa(p, q, r, s)) >= 1e-14)
-                        outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q, r, s,
-                                        aptei_aa(p, q, r, s));
+                        str += fmt::format("  v[{:>6d}][{:>6d}][{:>6d}][{:>6d}] = {:>20.12f}\n", p,
+                                           q, r, s, aptei_aa(p, q, r, s));
                 }
             }
         }
     }
 
-    outfile->Printf("\n  Alpha-beta two-electron integrals <pq||rs>");
+    str += fmt::format("  Alpha-beta two-electron integrals <pq||rs>\n");
     for (size_t p = 0; p < nmo_; ++p) {
         for (size_t q = 0; q < nmo_; ++q) {
             for (size_t r = 0; r < nmo_; ++r) {
                 for (size_t s = 0; s < nmo_; ++s) {
                     if (std::abs(aptei_ab(p, q, r, s)) >= 1e-14)
-                        outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q, r, s,
-                                        aptei_ab(p, q, r, s));
+                        str += fmt::format("  v[{:>6d}][{:>6d}][{:>6d}][{:>6d}] = {:>20.12f}\n", p,
+                                           q, r, s, aptei_ab(p, q, r, s));
                 }
             }
         }
     }
-    outfile->Printf("\n  Beta-beta two-electron integrals <pq||rs>");
+
+    str += fmt::format("  Beta-beta two-electron integrals <pq||rs>\n");
     for (size_t p = 0; p < nmo_; ++p) {
         for (size_t q = 0; q < nmo_; ++q) {
             for (size_t r = 0; r < nmo_; ++r) {
                 for (size_t s = 0; s < nmo_; ++s) {
                     if (std::abs(aptei_bb(p, q, r, s)) >= 1e-14)
-                        outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q, r, s,
-                                        aptei_bb(p, q, r, s));
+                        str += fmt::format("  v[{:>6d}][{:>6d}][{:>6d}][{:>6d}] = {:>20.12f}\n", p,
+                                           q, r, s, aptei_bb(p, q, r, s));
                 }
             }
         }
     }
+    return str;
+    // outfile->Printf("\n  nmo_ = %zu", nmo_);
+
+    // outfile->Printf("\n  Nuclear repulsion energy: %20.12f", nucrep_);
+    // outfile->Printf("\n  Scalar energy:            %20.12f", scalar_energy_);
+    // outfile->Printf("\n  Frozen-core energt:       %20.12f", frozen_core_energy_);
+    // outfile->Printf("\n  Alpha one-electron integrals (T + V_{en})");
+    // Matrix ha(" Alpha one-electron integrals (T + V_{en})", nmo_, nmo_);
+    // for (size_t p = 0; p < nmo_; ++p) {
+    //     for (size_t q = 0; q < nmo_; ++q) {
+    //         if (std::abs(oei_a(p, q)) >= 1e-14)
+    //             outfile->Printf("\n  h[%6d][%6d] = %20.12f", p, q, oei_a(p, q));
+    //     }
+    // }
+
+    // outfile->Printf("\n  Beta one-electron integrals (T + V_{en})");
+    // for (size_t p = 0; p < nmo_; ++p) {
+    //     for (size_t q = 0; q < nmo_; ++q) {
+    //         if (std::abs(oei_b(p, q)) >= 1e-14)
+    //             outfile->Printf("\n  h[%6d][%6d] = %20.12f", p, q, oei_b(p, q));
+    //     }
+    // }
+
+    // outfile->Printf("\n  Alpha-alpha two-electron integrals <pq||rs>");
+    // for (size_t p = 0; p < nmo_; ++p) {
+    //     for (size_t q = 0; q < nmo_; ++q) {
+    //         for (size_t r = 0; r < nmo_; ++r) {
+    //             for (size_t s = 0; s < nmo_; ++s) {
+    //                 if (std::abs(aptei_aa(p, q, r, s)) >= 1e-14)
+    //                     outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q, r, s,
+    //                                     aptei_aa(p, q, r, s));
+    //             }
+    //         }
+    //     }
+    // }
+
+    // outfile->Printf("\n  Alpha-beta two-electron integrals <pq||rs>");
+    // for (size_t p = 0; p < nmo_; ++p) {
+    //     for (size_t q = 0; q < nmo_; ++q) {
+    //         for (size_t r = 0; r < nmo_; ++r) {
+    //             for (size_t s = 0; s < nmo_; ++s) {
+    //                 if (std::abs(aptei_ab(p, q, r, s)) >= 1e-14)
+    //                     outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q, r, s,
+    //                                     aptei_ab(p, q, r, s));
+    //             }
+    //         }
+    //     }
+    // }
+    // outfile->Printf("\n  Beta-beta two-electron integrals <pq||rs>");
+    // for (size_t p = 0; p < nmo_; ++p) {
+    //     for (size_t q = 0; q < nmo_; ++q) {
+    //         for (size_t r = 0; r < nmo_; ++r) {
+    //             for (size_t s = 0; s < nmo_; ++s) {
+    //                 if (std::abs(aptei_bb(p, q, r, s)) >= 1e-14)
+    //                     outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q, r, s,
+    //                                     aptei_bb(p, q, r, s));
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 void ForteIntegrals::__update_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info) {

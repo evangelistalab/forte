@@ -98,15 +98,15 @@ std::shared_ptr<psi::Matrix> CustomIntegrals::Ca_AO() const {
     return Ca_ao;
 }
 
-double CustomIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
+double CustomIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) const {
     return aphys_tei_aa_[aptei_index(p, q, r, s)];
 }
 
-double CustomIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
+double CustomIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) const {
     return aphys_tei_ab_[aptei_index(p, q, r, s)];
 }
 
-double CustomIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
+double CustomIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) const {
     return aphys_tei_bb_[aptei_index(p, q, r, s)];
 }
 

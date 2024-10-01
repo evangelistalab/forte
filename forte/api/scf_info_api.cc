@@ -47,6 +47,7 @@ void export_SCFInfo(py::module& m) {
         .def(py::init<const psi::Dimension&, const psi::Dimension&, const psi::Dimension&, double,
                       std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>,
                       std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>())
+        .def("__repr__", &SCFInfo::to_string)
         .def("nmopi", &SCFInfo::nmopi, "the number of orbitals per irrep")
         .def("doccpi", &SCFInfo::doccpi, "the number of doubly occupied orbitals per irrep")
         .def("soccpi", &SCFInfo::soccpi, "the number of singly occupied orbitals per irrep")

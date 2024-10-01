@@ -30,6 +30,8 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 
+#include "helpers/printing.h"
+
 #include "scf_info.h"
 
 namespace forte {
@@ -80,6 +82,14 @@ std::shared_ptr<psi::Matrix> SCFInfo::_Cb() { return Cb_; }
 std::shared_ptr<const psi::Matrix> SCFInfo::Ca() const { return Ca_; }
 
 std::shared_ptr<const psi::Matrix> SCFInfo::Cb() const { return Cb_; }
+
+std::string SCFInfo::to_string() const {
+    std::string str = "SCFInfo(\n";
+    str += matrix_to_string(*Ca_);
+    str += matrix_to_string(*Cb_);
+    str += ")";
+    return str;
+}
 
 void SCFInfo::update_psi4_wavefunction() {
     if (psi4_wfn_) {

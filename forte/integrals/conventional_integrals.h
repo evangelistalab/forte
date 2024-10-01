@@ -54,9 +54,9 @@ class ConventionalIntegrals : public Psi4Integrals {
     void initialize() override;
 
     /// Grabs the antisymmetriced TEI - assumes storage in aphy_tei_*
-    double aptei_aa(size_t p, size_t q, size_t r, size_t s) override;
-    double aptei_ab(size_t p, size_t q, size_t r, size_t s) override;
-    double aptei_bb(size_t p, size_t q, size_t r, size_t s) override;
+    double aptei_aa(size_t p, size_t q, size_t r, size_t s) const override;
+    double aptei_ab(size_t p, size_t q, size_t r, size_t s) const override;
+    double aptei_bb(size_t p, size_t q, size_t r, size_t s) const override;
 
     /// Grabs the antisymmetrized TEI - assumes storage of ambit tensor
     ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,

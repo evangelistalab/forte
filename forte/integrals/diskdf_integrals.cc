@@ -79,7 +79,7 @@ void DISKDFIntegrals::initialize() {
     }
 }
 
-double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
+double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) const {
     size_t pn, qn, rn, sn;
 
     if (frzcpi_.sum() > 0 && ncmo_ == aptei_idx_) {
@@ -122,7 +122,7 @@ double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     return (vpqrsalphaC - vpqrsalphaE);
 }
 
-double DISKDFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
+double DISKDFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) const {
     size_t pn, qn, rn, sn;
     if (frzcpi_.sum() > 0 && ncmo_ == aptei_idx_) {
         pn = cmotomo_[p];
@@ -153,7 +153,7 @@ double DISKDFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
     return (vpqrsalphaC);
 }
 
-double DISKDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
+double DISKDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) const {
     size_t pn, qn, rn, sn;
 
     if (frzcpi_.sum() > 0 && ncmo_ == aptei_idx_) {
