@@ -379,7 +379,8 @@ def get_orbitals(options, ref_wfn):
     """
     if options.get_bool("READ_ORBITALS"):
         Ca = read_orbitals()
-    Ca = ref_wfn.Ca().clone()
+    else:
+        Ca = ref_wfn.Ca().clone()
 
     nmopi = ref_wfn.nmopi()
     # test if input Ca has the correct dimension
@@ -474,11 +475,11 @@ def prepare_forte_objects_from_wavefunction(data, options, ref_wfn, mo_space_inf
     """
     Prepare Forte objects from the Psi4 wavefunction and MO space info.
     """
-    # Call methods that project the orbitals (AVAS, embedding)
-    mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
-
     # Build Forte SCFInfo object
     scf_info = SCFInfo(ref_wfn)
+
+    # Call methods that project the orbitals (AVAS, embedding)
+    mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
 
     # Build a map from Forte StateInfo to the weights
     state_weights_map = make_state_weights_map(options, mo_space_info)

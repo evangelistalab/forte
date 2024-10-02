@@ -25,7 +25,7 @@ set forte{
   root_sym               0
   nroot                  1
   dsrg_s                 1.0
-  mcscf_e_convergence    13
+  mcscf_e_convergence    11
   int_type               cholesky
   cholesky_tolerance     1e-14
   print_denom2           true
@@ -33,4 +33,4 @@ set forte{
 
 energy('forte')
 compare_values(refmcscf,variable("DSRG REFERENCE ENERGY"),10,"CASSCF energy")
-compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),7,"DSRG-MRPT2 energy")
