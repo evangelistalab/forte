@@ -29,6 +29,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "psi4/libmints/dimension.h"
 
 #include "helpers/symmetry.h"
