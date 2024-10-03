@@ -33,11 +33,6 @@
 
 #include "helpers/symmetry.h"
 
-namespace psi {
-// class Wavefunction;
-// class Options;
-} // namespace psi
-
 namespace forte {
 
 /// MOInfo stores information about an orbital: (absolute index,irrep,relative
@@ -219,6 +214,8 @@ class MOSpaceInfo {
     static const std::vector<std::string>& composite_spaces();
     /// @return The definition of the composite orbital spaces
     static const std::map<std::string, std::vector<std::string>>& composite_spaces_def();
+    /// @return The priority used to assign orbitals to elementary spaces
+    static const std::vector<std::string>& elementary_spaces_priority();
 
   private:
     // ==> Static Class Data <==
@@ -229,6 +226,9 @@ class MOSpaceInfo {
     static const std::vector<std::string> composite_spaces_;
     static const std::map<std::string, std::vector<std::string>> composite_spaces_def_;
 
+    /// The priority used to assign orbitals to elementary spaces
+    static const std::vector<std::string> elementary_spaces_priority_;
+
     // ==> Class Data <==
     Symmetry symmetry_;
     /// The number of irreducible representations
@@ -237,17 +237,6 @@ class MOSpaceInfo {
     psi::Dimension nmopi_;
     /// Information about each elementary space stored in a map
     std::map<std::string, SpaceInfo> mo_spaces_;
-    /// The priority used to assign orbitals to elementary spaces
-    std::vector<std::string> elementary_spaces_priority_{"GAS1",
-                                                         "RESTRICTED_UOCC",
-                                                         "RESTRICTED_DOCC",
-                                                         "FROZEN_DOCC",
-                                                         "FROZEN_UOCC",
-                                                         "GAS2",
-                                                         "GAS3",
-                                                         "GAS4",
-                                                         "GAS5",
-                                                         "GAS6"};
 
     /// The map from all MO to the correlated MOs (excludes frozen core/virtual)
     std::vector<size_t> mo_to_cmo_;

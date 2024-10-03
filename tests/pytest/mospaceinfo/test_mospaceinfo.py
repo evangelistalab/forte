@@ -54,7 +54,7 @@ def test_mospaceinfo():
     assert mo_space_info.dimension("RESTRICTED_UOCC").to_tuple() == (0, 0, 0, 0, 0, 0, 0, 0)
     assert mo_space_info.dimension("FROZEN_UOCC").to_tuple() == (1, 0, 0, 0, 0, 0, 0, 0)
 
-    assert mo_space_info.space_names() == [
+    assert mo_space_info.elementary_spaces == [
         "FROZEN_DOCC",
         "RESTRICTED_DOCC",
         "GAS1",

@@ -82,6 +82,17 @@ const std::map<std::string, std::vector<std::string>> MOSpaceInfo::composite_spa
     {"GAS5", {"GAS5"}},
     {"GAS6", {"GAS6"}}};
 
+const std::vector<std::string> MOSpaceInfo::elementary_spaces_priority_{"GAS1",
+                                                                        "RESTRICTED_UOCC",
+                                                                        "RESTRICTED_DOCC",
+                                                                        "FROZEN_DOCC",
+                                                                        "FROZEN_UOCC",
+                                                                        "GAS2",
+                                                                        "GAS3",
+                                                                        "GAS4",
+                                                                        "GAS5",
+                                                                        "GAS6"};
+
 MOSpaceInfo::MOSpaceInfo(const psi::Dimension& nmopi, const std::string& point_group)
     : symmetry_(point_group), nirrep_(nmopi.n()), nmopi_(nmopi) {}
 
@@ -359,13 +370,6 @@ void MOSpaceInfo::read_from_map(const std::map<std::string, std::vector<size_t>>
     if (result.second) {
         mo_spaces_["GAS1"] = result.first;
     }
-
-    // for (const auto& [space,space_list]] : composite_spaces_def) {
-    //     std::pair<SpaceInfo, bool> result = read_mo_space_from_map(space,
-    //     mo_space_map_capitalized); if (result.second) {
-    //         mo_spaces_[space_list[0]] = result.first;
-    //     }
-    // }
 }
 
 void MOSpaceInfo::compute_space_info() {
@@ -380,12 +384,12 @@ void MOSpaceInfo::compute_space_info() {
 
     for (size_t h = 0; h < nirrep_; ++h) {
         if (unassigned[h] < 0) {
-            // Throw and exception if there are more orbitals assigned to an irrep than there are
-            // available
-            auto msg = fmt::format(
-                "There is an error in the definition of the orbital spaces.  Total assigned MOs "
-                "for irrep {} is {} leaving {} orbitals unassigned.",
-                h, nmopi_[h], unassigned[h]);
+            // Throw and exception if there are more orbitals assigned to an irrep than there
+            // are available
+            auto msg = fmt::format("There is an error in the definition of the orbital spaces. "
+                                   " Total assigned MOs "
+                                   "for irrep {} is {} leaving {} orbitals unassigned.",
+                                   h, nmopi_[h], unassigned[h]);
             outfile->Printf("\n%s", msg.c_str());
 
             // generate a runtime error and use the fmt library to print the error message
@@ -477,7 +481,8 @@ void MOSpaceInfo::compute_space_info() {
 }
 
 // std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
-//                                                       std::shared_ptr<ForteOptions> options) {
+//                                                       std::shared_ptr<ForteOptions> options)
+//                                                       {
 //     bool read = false;
 //     psi::Dimension space_dim(nirrep_);
 //     std::vector<MOInfo> vec_mo_info;
@@ -493,7 +498,8 @@ void MOSpaceInfo::compute_space_info() {
 //         read = true;
 //         outfile->Printf("\n  Read options for space %s", space.c_str());
 //     } else if (vec_size > 0) {
-//         std::string msg = "\n  The size of space " + space + " (" + std::to_string(vec_size) +
+//         std::string msg = "\n  The size of space " + space + " (" + std::to_string(vec_size)
+//         +
 //                           ") does not match the number of irreducible representations (" +
 //                           std::to_string(nirrep_) + ").";
 //         outfile->Printf("\n%s", msg.c_str());
