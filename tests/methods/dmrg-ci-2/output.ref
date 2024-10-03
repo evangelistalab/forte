@@ -1,0 +1,1494 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.10a1.dev55 
+
+                         Git: Rev {master} dfebe5b 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Wednesday, 25 September 2024 11:51PM
+
+    Process ID: 19605
+    Host:       Chenyangs-MacBook-Pro.local
+    PSIDATADIR: /Users/york/src/psi4-build/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    4
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+import forte
+memory 3 gb
+
+eref_scf  = -10.730608558941103
+eref_avas = -10.968919558792528
+eref_chol = -10.989277852589446
+eref_pm   = -10.990304489386713
+eref_boys = -10.990376529580459
+
+molecule H20 {
+H  0.0 0.0  0.0
+H  0.0 0.0  1.0
+H  0.0 0.0  2.0
+H  0.0 0.0  3.0
+H  0.0 0.0  4.0
+H  0.0 0.0  5.0
+H  0.0 0.0  6.0
+H  0.0 0.0  7.0
+H  0.0 0.0  8.0
+H  0.0 0.0  9.0
+H  0.0 0.0 10.0
+H  0.0 0.0 11.0
+H  0.0 0.0 12.0
+H  0.0 0.0 13.0
+H  0.0 0.0 14.0
+H  0.0 0.0 15.0
+H  0.0 0.0 16.0
+H  0.0 0.0 17.0
+H  0.0 0.0 18.0
+H  0.0 0.0 19.0
+symmetry c1
+}
+
+set {
+scf_type     df
+reference    rhf
+basis        cc-pvdz
+df_basis_scf cc-pvdz-jkfit
+}
+escf, wfn = energy('scf', return_wfn=True)
+compare_values(eref_scf, escf, 6, "RHF/cc-pVDZ on H20")
+
+set forte {
+job_type        none
+subspace        ["H(1s)"]
+avas            true
+mcscf_reference false
+avas_cutoff     0.4
+}
+_, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+Ca_avas = wfn.Ca().clone()
+
+set forte {
+job_type                   newdriver
+subspace                   []
+avas                       false
+int_type                   df
+restricted_docc            [0]
+active                     [20]
+active_space_solver        block2
+block2_sweep_energy_conv   1.0e-7
+block2_sweep_bond_dims     [50,100,100,100]
+block2_sweep_n_sweeps      [4,6,6,8]
+block2_n_total_sweeps      24
+block2_sweep_noises        [1e-4,1e-5,1e-6,0.0]
+block2_sweep_davidson_tols [1e-9,1e-9,1e-9,1e-10]
+block2_stack_mem           2
+block2_verbose             2
+dmrg_reorder_init_orbs     false
+}
+edmrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(eref_avas, edmrg, 2, "DMRG-CI(20,20)/cc-pVDZ on H20, AVAS canonical orbitals")
+
+set forte dmrg_reorder_init_orbs true
+
+wfn.Ca().copy(Ca_avas)
+set forte localize cholesky
+edmrg = energy('forte', ref_wfn=wfn)
+compare_values(eref_chol, edmrg, 6, "DMRG-CI(20,20)/cc-pVDZ on H20, Cholesky + Fiedler")
+
+wfn.Ca().copy(Ca_avas)
+set forte localize pipek_mezey
+edmrg = energy('forte', ref_wfn=wfn)
+compare_values(eref_pm, edmrg, 6, "DMRG-CI(20,20)/cc-pVDZ on H20, Pipek-Mezey + Fiedler")
+
+wfn.Ca().copy(Ca_avas)
+set forte localize boys
+edmrg = energy('forte', ref_wfn=wfn)
+compare_values(eref_boys, edmrg, 6, "DMRG-CI(20,20)/cc-pVDZ on H20, Boys + Fiedler")
+--------------------------------------------------------------------------
+
+  Memory set to   2.794 GiB by Python driver.
+
+Scratch directory: /Users/york/scratch/psi4/
+   => Libint2 <=
+
+    Primary   basis highest AM E, G, H:  5, 4, 3
+    Auxiliary basis highest AM E, G, H:  6, 5, 4
+    Onebody   basis highest AM E, G, H:  6, 5, 4
+    Solid Harmonics ordering:            Gaussian
+
+*** tstart() called on Chenyangs-MacBook-Pro.local
+*** at Wed Sep 25 23:51:39 2024
+
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-20 entry H          line    22 file /Users/york/src/psi4-build/stage/share/psi4/basis/cc-pvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        4 Threads,   2861 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c1
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         H            0.000000000000     0.000000000000    -9.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000    -8.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000    -7.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000    -6.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000    -5.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000    -4.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000    -3.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000    -2.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000    -1.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000    -0.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000     0.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000     1.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000     2.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000     3.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000     4.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000     5.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000     6.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000     7.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000     8.500000000000     1.007825032230
+         H            0.000000000000     0.000000000000     9.500000000000     1.007825032230
+
+  Running in c1 symmetry.
+
+  Rotational constants: A = ************  B =      0.02515  C =      0.02515 [cm^-1]
+  Rotational constants: A = ************  B =    754.06783  C =    754.06783 [MHz]
+  Nuclear repulsion =   27.493292516282743
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 20
+  Nalpha       = 10
+  Nbeta        = 10
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is DF.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-06
+  Density threshold  = 1.00e-06
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 60
+    Number of basis functions: 100
+    Number of Cartesian functions: 100
+    Spherical Harmonics?: true
+    Max angular momentum: 1
+
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ-JKFIT
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1-20 entry H          line    51 file /Users/york/src/psi4-build/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
+
+  ==> Integral Setup <==
+
+  DFHelper Memory: AOs need 0.021 GiB; user supplied 2.095 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               4
+    Memory [MiB]:              2145
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):      47.5800
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: CC-PVDZ-JKFIT
+    Blend: CC-PVDZ-JKFIT
+    Number of shells: 180
+    Number of basis functions: 460
+    Number of Cartesian functions: 500
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+  Minimum eigenvalue in the overlap matrix is 8.9459174174E-05.
+  Reciprocal condition number of the overlap matrix is 1.7894664466E-05.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     A        100     100 
+   -------------------------
+    Total     100     100
+   -------------------------
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+   @DF-RHF iter SAD:   -10.92706789344622   -1.09271e+01   0.00000e+00 
+   @DF-RHF iter   1:    -9.69129474513984    1.23577e+00   7.87711e-03 ADIIS/DIIS
+   @DF-RHF iter   2:   -10.16285525324297   -4.71561e-01   5.50945e-03 ADIIS/DIIS
+   @DF-RHF iter   3:   -10.66467432322355   -5.01819e-01   1.59762e-03 ADIIS/DIIS
+   @DF-RHF iter   4:   -10.71611429997647   -5.14400e-02   6.17179e-04 ADIIS/DIIS
+   @DF-RHF iter   5:   -10.72676835235136   -1.06541e-02   3.12354e-04 ADIIS/DIIS
+   @DF-RHF iter   6:   -10.73025838295835   -3.49003e-03   1.00723e-04 ADIIS/DIIS
+   @DF-RHF iter   7:   -10.73058589630826   -3.27513e-04   2.76616e-05 DIIS
+   @DF-RHF iter   8:   -10.73060691446483   -2.10182e-05   7.78784e-06 DIIS
+   @DF-RHF iter   9:   -10.73060853823145   -1.62377e-06   1.07105e-06 DIIS
+   @DF-RHF iter  10:   -10.73060855894112   -2.07097e-08   1.44690e-07 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1A     -0.735317     2A     -0.720951     3A     -0.697685  
+       4A     -0.665448     5A     -0.624069     6A     -0.573328  
+       7A     -0.512996     8A     -0.442984     9A     -0.364178  
+      10A     -0.282808  
+
+    Virtual:                                                              
+
+      11A     -0.019789    12A      0.068044    13A      0.159255  
+      14A      0.246445    15A      0.330305    16A      0.415174  
+      17A      0.494603    18A      0.505882    19A      0.506029  
+      20A      0.525572    21A      0.547510    22A      0.583741  
+      23A      0.605789    24A      0.631966    25A      0.665972  
+      26A      0.723325    27A      0.730532    28A      0.791491  
+      29A      0.830456    30A      0.886155    31A      0.915184  
+      32A      0.998277    33A      1.003522    34A      1.073526  
+      35A      1.091264    36A      1.091264    37A      1.102944  
+      38A      1.102944    39A      1.121869    40A      1.121869  
+      41A      1.144258    42A      1.148058    43A      1.148058  
+      44A      1.181634    45A      1.181634    46A      1.222775  
+      47A      1.222775    48A      1.244096    49A      1.271707  
+      50A      1.271707    51A      1.328725    52A      1.328725  
+      53A      1.355545    54A      1.394150    55A      1.394150  
+      56A      1.468374    57A      1.468374    58A      1.477257  
+      59A      1.552310    60A      1.552310    61A      1.602685  
+      62A      1.603844    63A      1.645232    64A      1.645232  
+      65A      1.646939    66A      1.747436    67A      1.747436  
+      68A      1.835399    69A      1.857992    70A      1.857992  
+      71A      1.865062    72A      1.952757    73A      1.975074  
+      74A      1.975074    75A      2.095229    76A      2.095229  
+      77A      2.098862    78A      2.212853    79A      2.212853  
+      80A      2.261721    81A      2.319992    82A      2.319992  
+      83A      2.406893    84A      2.406893    85A      2.435288  
+      86A      2.463729    87A      2.463729    88A      2.617563  
+      89A      2.806451    90A      3.001451    91A      3.199704  
+      92A      3.409347    93A      3.619894    94A      3.838097  
+      95A      4.067097    96A      4.314143    97A      4.589307  
+      98A      4.902946    99A      5.246574   100A      5.553385  
+
+    Final Occupation by Irrep:
+              A 
+    DOCC [    10 ]
+    NA   [    10 ]
+    NB   [    10 ]
+
+  @DF-RHF Final Energy:   -10.73060855894112
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =             27.4932925162827431
+    One-Electron Energy =                 -65.2082811509004472
+    Two-Electron Energy =                  26.9843800756765866
+    Total Energy =                        -10.7306085589411175
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :         -0.0000000            0.0000000           -0.0000000
+ Dipole Z            :          0.0000000           -0.0000000            0.0000000
+ Magnitude           :                                                    0.0000000
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on Chenyangs-MacBook-Pro.local at Wed Sep 25 23:51:39 2024
+Module time:
+	user time   =       0.50 seconds =       0.01 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.50 seconds =       0.01 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+    RHF/cc-pVDZ on H20....................................................................PASSED
+
+Scratch directory: /Users/york/scratch/psi4/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: dmrg_init - git commit: 4f13a3be
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+
+  Preparing forte objects from a Psi4 Wavefunction object
+
+  ==> MO Space Information <==
+
+  -------------------------------
+                        A   Sum
+  -------------------------------
+    FROZEN_DOCC         0     0
+    RESTRICTED_DOCC     0     0
+    GAS1              100   100
+    GAS2                0     0
+    GAS3                0     0
+    GAS4                0     0
+    GAS5                0     0
+    GAS6                0     0
+    RESTRICTED_UOCC     0     0
+    FROZEN_UOCC         0     0
+    Total             100   100
+  -------------------------------   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-20 entry H          line    22 file /Users/york/src/psi4-build/stage/share/psi4/basis/cc-pvdz.gbs 
+
+
+  Checking orbital orthonormality against current geometry ... Done (OK)
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-20 entry H          line    19 file /Users/york/src/psi4-build/stage/share/psi4/basis/sto-3g.gbs 
+
+
+
+  ==> List of Subspace Orbitals Requested <==
+         H(1S)
+
+
+  ==> AO Basis Set Selected By Subspace <==
+
+    =======================================
+      AO  Atom  Label     Type  Coefficient
+    ---------------------------------------
+       0     1     H1       1S   1.0000E+00
+       1     2     H2       1S   1.0000E+00
+       2     3     H3       1S   1.0000E+00
+       3     4     H4       1S   1.0000E+00
+       4     5     H5       1S   1.0000E+00
+       5     6     H6       1S   1.0000E+00
+       6     7     H7       1S   1.0000E+00
+       7     8     H8       1S   1.0000E+00
+       8     9     H9       1S   1.0000E+00
+       9    10    H10       1S   1.0000E+00
+      10    11    H11       1S   1.0000E+00
+      11    12    H12       1S   1.0000E+00
+      12    13    H13       1S   1.0000E+00
+      13    14    H14       1S   1.0000E+00
+      14    15    H15       1S   1.0000E+00
+      15    16    H16       1S   1.0000E+00
+      16    17    H17       1S   1.0000E+00
+      17    18    H18       1S   1.0000E+00
+      18    19    H19       1S   1.0000E+00
+      19    20    H20       1S   1.0000E+00
+    ---------------------------------------
+    Number of subspace orbitals:         20
+    =======================================
+
+  ==> Orbital Overlap with AO Subspace (> 1.00e-03) <==
+
+    =======================
+    Irrep   MO  <phi|P|phi>
+    -----------------------
+       A     1    0.999415
+       A     2    0.999352
+       A     3    0.999132
+       A     4    0.998565
+       A     5    0.997371
+       A     6    0.995176
+       A     7    0.991501
+       A     8    0.985797
+       A     9    0.977720
+       A    10    0.968786
+       A    11    0.942330
+       A    12    0.897590
+       A    13    0.824019
+       A    14    0.720300
+       A    15    0.623362
+       A    16    0.575582
+       A    17    0.009721
+       A    18    0.002514
+       A    19    0.510385
+       A    20    0.055036
+       A    21    0.026529
+       A    22    0.032472
+       A    23    0.379592
+       A    24    0.227421
+       A    25    0.063092
+       A    26    0.054103
+       A    27    0.524224
+       A    28    0.117172
+       A    29    0.307339
+       A    30    0.373411
+       A    31    0.217989
+       A    32    0.380544
+       A    33    0.421659
+       A    34    0.413470
+       A    41    0.166223
+       A    48    0.157387
+       A    53    0.154544
+       A    58    0.177214
+       A    61    0.211401
+       A    62    0.023322
+       A    65    0.139236
+       A    68    0.013010
+       A    71    0.076895
+       A    72    0.045058
+       A    77    0.052229
+       A    80    0.044352
+       A    85    0.033301
+       A    88    0.023379
+       A    89    0.015590
+       A    90    0.010056
+       A    91    0.006506
+       A    92    0.003601
+       A    93    0.002119
+       A    94    0.001216
+    ========================
+
+                     --------------------------------------
+                       Atomic Valence Active Space (AVAS)
+                           Chenxi Cai and Chenyang Li
+                     --------------------------------------
+
+
+  ==> AVAS Options <==
+
+    --------------------------------------------------------
+    AVAS selection scheme                             CUTOFF
+    Diagonalize projected overlap matrices              TRUE
+    AVAS sigma threshold (cumulative)              9.800e-01
+    AVAS sigma direct cutoff                       4.000e-01
+    Nonzero eigenvalue threshold                   1.000e-06
+    Number of doubly occupied MOs                         10
+    Number of singly occupied MOs                          0
+    Number of unoccupied MOs                              90
+    # Active AVAS MOs requested                            0
+    # Active occupied AVAS MOs requested                   0
+    # Active virtual AVAS MOs requested                    0
+    --------------------------------------------------------
+  Diagonalizing the doubly occupied projected overlap matrix ... Done
+  Diagonalizing the unoccupied projected overlap matrix ........ Done
+  Sum of eigenvalues: 19.97074049
+  AVAS covers 99.60% of the subspace.
+
+  ==> AVAS MOs Information <==
+
+    ---------------------
+                        A
+    ---------------------
+    DOCC INACTIVE       0
+    DOCC ACTIVE        10
+    SOCC ACTIVE         0
+    UOCC ACTIVE        10
+    UOCC INACTIVE      80
+    ---------------------
+    RESTRICTED_DOCC     0
+    ACTIVE             20
+    RESTRICTED_UOCC    80
+    ---------------------
+
+  ==> Atomic Valence MOs (Active Marked by *) <==
+
+    ===============================
+     Irrep    MO  Occ.  <phi|P|phi>
+    -------------------------------
+    *   A      0    2      0.999415
+    *   A      1    2      0.999354
+    *   A      2    2      0.999137
+    *   A      3    2      0.998578
+    *   A      4    2      0.997406
+    *   A      5    2      0.995266
+    *   A      6    2      0.991666
+    *   A      7    2      0.986057
+    *   A      8    2      0.977516
+    *   A      9    2      0.968422
+    *   A     10    0      0.998676
+    *   A     11    0      0.998485
+    *   A     12    0      0.998268
+    *   A     13    0      0.998072
+    *   A     14    0      0.997895
+    *   A     15    0      0.997786
+    *   A     16    0      0.997687
+    *   A     17    0      0.997652
+    *   A     18    0      0.996756
+    *   A     19    0      0.996748
+        A     20    0      0.030429
+        A     21    0      0.021500
+        A     22    0      0.013092
+        A     23    0      0.007591
+        A     24    0      0.004068
+        A     25    0      0.001979
+        A     26    0      0.000838
+        A     27    0      0.000295
+        A     28    0      0.000084
+        A     29    0      0.000025
+    ===============================
+
+  ==> Semicanonicalize Subsets of Orbitals <==
+
+  Canonicalizing orbital block INACTIVE DOCC ....... Done
+  Canonicalizing orbital block ACTIVE DOCC ......... Done
+  Canonicalizing orbital block ACTIVE UOCC ......... Done
+  Canonicalizing orbital block INACTIVE UOCC ....... Done
+  State Singlet (Ms = 0) A GAS min: 0 0 0 0 0 0 ; GAS max: 200 0 0 0 0 0 ; weights:
+      1.000000000000
+
+  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn
+
+Scratch directory: /Users/york/scratch/psi4/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: dmrg_init - git commit: 4f13a3be
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space RESTRICTED_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------
+                        A   Sum
+  -------------------------------
+    FROZEN_DOCC         0     0
+    RESTRICTED_DOCC     0     0
+    GAS1               20    20
+    GAS2                0     0
+    GAS3                0     0
+    GAS4                0     0
+    GAS5                0     0
+    GAS6                0     0
+    RESTRICTED_UOCC    80    80
+    FROZEN_UOCC         0     0
+    Total             100   100
+  -------------------------------   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-20 entry H          line    22 file /Users/york/src/psi4-build/stage/share/psi4/basis/cc-pvdz.gbs 
+
+
+  Checking orbital orthonormality against current geometry ... Done (OK)
+
+   => Loading Basis Set <=
+
+    Name: (CC-PVDZ AUX)
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1-20 entry H          line    19 file /Users/york/src/psi4-build/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-20 entry H          line    19 file /Users/york/src/psi4-build/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  State Singlet (Ms = 0) A GAS min: 0 0 0 0 0 0 ; GAS max: 40 0 0 0 0 0 ; weights:
+      1.000000000000
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 60
+    Number of basis functions: 100
+    Number of Cartesian functions: 100
+    Spherical Harmonics?: true
+    Max angular momentum: 1
+
+
+  JK created using MemDF integrals
+  DFHelper Memory: AOs need 0.013 GiB; user supplied 2.235 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               4
+    Memory [MiB]:              2288
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):      47.5800
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: (CC-PVDZ AUX)
+    Blend: CC-PVDZ-RI
+    Number of shells: 120
+    Number of basis functions: 280
+    Number of Cartesian functions: 300
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                        100
+  Number of correlated molecular orbitals:             100
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:              Density fitting
+
+
+  Computing density fitted integrals
+
+  Number of auxiliary basis functions:  280
+  Need 22.40 MB to store DF integrals
+  DFHelper Memory: AOs need 0.013 GiB; user supplied 2.502 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> DFHelper <==
+    NBF:                             100
+    NAux:                            280
+    Schwarz Cutoff:                1E-12
+    Mask sparsity (%):                48
+    DFH Avail. Memory [GiB]:       2.502
+    OpenMP threads:                    4
+    Algorithm:                     STORE
+    AO Core:                        True
+    MO Core:                       False
+    Hold Metric:                   False
+    Metric Power:                 -0.500
+    Fitting Condition:             1E-10
+    Q Shell Max:                       5
+
+
+
+  Transforming DF Integrals
+  Timing for density-fitting transformation:                  0.012 s.
+
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing density-fitted integrals:              0.052 s.
+
+  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn
+
+
+                         ------------------------------
+                           block2 DMRG (spin-adapted)
+                                by Huanchen Zhai
+                                Jan 14-16, 2023
+                         ------------------------------
+
+    Reference: H. Zhai & G. K. Chan J. Chem. Phys. 2021, 154, 224116.
+
+  ==> DMRG Settings <==
+
+    N sweeps       =          4         6         6         8
+    Bond dims      =         50       100       100       100
+    Noises         =   1.00E-04  1.00E-05  1.00E-06  0.00E+00
+    Davidson tols  =   1.00E-09  1.00E-09  1.00E-09  1.00E-10
+    N total sweeps =         24
+    E convergence  =   1.00E-07
+    Cutoff         =   1.00E-20
+    Initial guess  =        new
+    Verbosity      =          2
+    Stack memory   =    2.00 GB
+    Scratch        = /Users/york/scratch/psi4/forte.19605.block2.H20
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0      -10.968949621225   0.000000
+    --------------------------------------------------------
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000     0.00126230     0.00126230
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000    -0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  Time to prepare integrals:        0.235 seconds
+  Time to run job          :       19.683 seconds
+  Total                    :       19.918 seconds
+    DMRG-CI(20,20)/cc-pVDZ on H20, AVAS canonical orbitals................................PASSED
+
+Scratch directory: /Users/york/scratch/psi4/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: dmrg_init - git commit: 4f13a3be
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space RESTRICTED_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------
+                        A   Sum
+  -------------------------------
+    FROZEN_DOCC         0     0
+    RESTRICTED_DOCC     0     0
+    GAS1               20    20
+    GAS2                0     0
+    GAS3                0     0
+    GAS4                0     0
+    GAS5                0     0
+    GAS6                0     0
+    RESTRICTED_UOCC    80    80
+    FROZEN_UOCC         0     0
+    Total             100   100
+  -------------------------------   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-20 entry H          line    22 file /Users/york/src/psi4-build/stage/share/psi4/basis/cc-pvdz.gbs 
+
+
+  Checking orbital orthonormality against current geometry ... Done (OK)
+
+   => Loading Basis Set <=
+
+    Name: (CC-PVDZ AUX)
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1-20 entry H          line    19 file /Users/york/src/psi4-build/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-20 entry H          line    19 file /Users/york/src/psi4-build/stage/share/psi4/basis/sto-3g.gbs 
+
+
+
+  ==> Initialize Active Orbitals for DMRG <==
+
+    Localizing orbitals using CHOLESKY ... Done
+    Forming exchange integrals using DF ...  DFHelper Memory: AOs need 0.021 GiB; user supplied 22.352 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+ Done
+    Sorting based on Fiedler vector ... Done
+
+  State Singlet (Ms = 0) A GAS min: 0 0 0 0 0 0 ; GAS max: 40 0 0 0 0 0 ; weights:
+      1.000000000000
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 60
+    Number of basis functions: 100
+    Number of Cartesian functions: 100
+    Spherical Harmonics?: true
+    Max angular momentum: 1
+
+
+  JK created using MemDF integrals
+  DFHelper Memory: AOs need 0.013 GiB; user supplied 2.235 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               4
+    Memory [MiB]:              2288
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):      47.5800
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: (CC-PVDZ AUX)
+    Blend: CC-PVDZ-RI
+    Number of shells: 120
+    Number of basis functions: 280
+    Number of Cartesian functions: 300
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                        100
+  Number of correlated molecular orbitals:             100
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:              Density fitting
+
+
+  Computing density fitted integrals
+
+  Number of auxiliary basis functions:  280
+  Need 22.40 MB to store DF integrals
+  DFHelper Memory: AOs need 0.013 GiB; user supplied 2.502 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> DFHelper <==
+    NBF:                             100
+    NAux:                            280
+    Schwarz Cutoff:                1E-12
+    Mask sparsity (%):                48
+    DFH Avail. Memory [GiB]:       2.502
+    OpenMP threads:                    4
+    Algorithm:                     STORE
+    AO Core:                        True
+    MO Core:                       False
+    Hold Metric:                   False
+    Metric Power:                 -0.500
+    Fitting Condition:             1E-10
+    Q Shell Max:                       5
+
+
+
+  Transforming DF Integrals
+  Timing for density-fitting transformation:                  0.010 s.
+
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing density-fitted integrals:              0.054 s.
+
+  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn
+
+
+                         ------------------------------
+                           block2 DMRG (spin-adapted)
+                                by Huanchen Zhai
+                                Jan 14-16, 2023
+                         ------------------------------
+
+    Reference: H. Zhai & G. K. Chan J. Chem. Phys. 2021, 154, 224116.
+
+  ==> DMRG Settings <==
+
+    N sweeps       =          4         6         6         8
+    Bond dims      =         50       100       100       100
+    Noises         =   1.00E-04  1.00E-05  1.00E-06  0.00E+00
+    Davidson tols  =   1.00E-09  1.00E-09  1.00E-09  1.00E-10
+    N total sweeps =         24
+    E convergence  =   1.00E-07
+    Cutoff         =   1.00E-20
+    Initial guess  =        new
+    Verbosity      =          2
+    Stack memory   =    2.00 GB
+    Scratch        = /Users/york/scratch/psi4/forte.19605.block2.H20
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0      -10.989277852589   0.000000
+    --------------------------------------------------------
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000    -0.00001056     0.00001056
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  Time to prepare integrals:        0.323 seconds
+  Time to run job          :       26.057 seconds
+  Total                    :       26.380 seconds
+    DMRG-CI(20,20)/cc-pVDZ on H20, Cholesky + Fiedler.....................................PASSED
+
+Scratch directory: /Users/york/scratch/psi4/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: dmrg_init - git commit: 4f13a3be
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space RESTRICTED_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------
+                        A   Sum
+  -------------------------------
+    FROZEN_DOCC         0     0
+    RESTRICTED_DOCC     0     0
+    GAS1               20    20
+    GAS2                0     0
+    GAS3                0     0
+    GAS4                0     0
+    GAS5                0     0
+    GAS6                0     0
+    RESTRICTED_UOCC    80    80
+    FROZEN_UOCC         0     0
+    Total             100   100
+  -------------------------------   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-20 entry H          line    22 file /Users/york/src/psi4-build/stage/share/psi4/basis/cc-pvdz.gbs 
+
+
+  Checking orbital orthonormality against current geometry ... Done (OK)
+
+   => Loading Basis Set <=
+
+    Name: (CC-PVDZ AUX)
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1-20 entry H          line    19 file /Users/york/src/psi4-build/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-20 entry H          line    19 file /Users/york/src/psi4-build/stage/share/psi4/basis/sto-3g.gbs 
+
+
+
+  ==> Initialize Active Orbitals for DMRG <==
+
+    Localizing orbitals using PIPEK_MEZEY ...  ==> Pipek-Mezey Localizer <==
+
+    Convergence =   1.000E-12
+    Maxiter     =        1000
+
+    Iteration                   Metric       Residual
+    @PM    0   1.4276594956467901E+00              -
+    @PM    1   1.2889718486100904E+01   8.028566E+00
+    @PM    2   1.7849710563031955E+01   3.848022E-01
+    @PM    3   1.8119887345606795E+01   1.513620E-02
+    @PM    4   1.8251583933025948E+01   7.268069E-03
+    @PM    5   1.8409901366628723E+01   8.674175E-03
+    @PM    6   1.8500476405682882E+01   4.919909E-03
+    @PM    7   1.8536842903397417E+01   1.965706E-03
+    @PM    8   1.8547586539143950E+01   5.795828E-04
+    @PM    9   1.8551015553808487E+01   1.848766E-04
+    @PM   10   1.8551980933086771E+01   5.203916E-05
+    @PM   11   1.8552335978295734E+01   1.913786E-05
+    @PM   12   1.8552488129986219E+01   8.201215E-06
+    @PM   13   1.8552556722988655E+01   3.697240E-06
+    @PM   14   1.8552587550395184E+01   1.661626E-06
+    @PM   15   1.8552600507815022E+01   6.984158E-07
+    @PM   16   1.8552606629377969E+01   3.299571E-07
+    @PM   17   1.8552609343606790E+01   1.462991E-07
+    @PM   18   1.8552610623901824E+01   6.900889E-08
+    @PM   19   1.8552611149602964E+01   2.833570E-08
+    @PM   20   1.8552611405651778E+01   1.380123E-08
+    @PM   21   1.8552611536929803E+01   7.075986E-09
+    @PM   22   1.8552611602535922E+01   3.536220E-09
+    @PM   23   1.8552611632832047E+01   1.632984E-09
+    @PM   24   1.8552611646037480E+01   7.117830E-10
+    @PM   25   1.8552611651937646E+01   3.180235E-10
+    @PM   26   1.8552611654806846E+01   1.546521E-10
+    @PM   27   1.8552611655956582E+01   6.197167E-11
+    @PM   28   1.8552611656502211E+01   2.940984E-11
+    @PM   29   1.8552611656748098E+01   1.325349E-11
+    @PM   30   1.8552611656859451E+01   6.001996E-12
+    @PM   31   1.8552611656910976E+01   2.777237E-12
+    @PM   32   1.8552611656936172E+01   1.358075E-12
+    @PM   33   1.8552611656947448E+01   6.078019E-13
+
+    PM Localizer converged.
+
+ Done
+    Forming exchange integrals using DF ...  DFHelper Memory: AOs need 0.021 GiB; user supplied 22.352 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+ Done
+    Sorting based on Fiedler vector ... Done
+
+  State Singlet (Ms = 0) A GAS min: 0 0 0 0 0 0 ; GAS max: 40 0 0 0 0 0 ; weights:
+      1.000000000000
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 60
+    Number of basis functions: 100
+    Number of Cartesian functions: 100
+    Spherical Harmonics?: true
+    Max angular momentum: 1
+
+
+  JK created using MemDF integrals
+  DFHelper Memory: AOs need 0.013 GiB; user supplied 2.235 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               4
+    Memory [MiB]:              2288
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):      47.5800
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: (CC-PVDZ AUX)
+    Blend: CC-PVDZ-RI
+    Number of shells: 120
+    Number of basis functions: 280
+    Number of Cartesian functions: 300
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                        100
+  Number of correlated molecular orbitals:             100
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:              Density fitting
+
+
+  Computing density fitted integrals
+
+  Number of auxiliary basis functions:  280
+  Need 22.40 MB to store DF integrals
+  DFHelper Memory: AOs need 0.013 GiB; user supplied 2.502 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> DFHelper <==
+    NBF:                             100
+    NAux:                            280
+    Schwarz Cutoff:                1E-12
+    Mask sparsity (%):                48
+    DFH Avail. Memory [GiB]:       2.502
+    OpenMP threads:                    4
+    Algorithm:                     STORE
+    AO Core:                        True
+    MO Core:                       False
+    Hold Metric:                   False
+    Metric Power:                 -0.500
+    Fitting Condition:             1E-10
+    Q Shell Max:                       5
+
+
+
+  Transforming DF Integrals
+  Timing for density-fitting transformation:                  0.009 s.
+
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing density-fitted integrals:              0.052 s.
+
+  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn
+
+
+                         ------------------------------
+                           block2 DMRG (spin-adapted)
+                                by Huanchen Zhai
+                                Jan 14-16, 2023
+                         ------------------------------
+
+    Reference: H. Zhai & G. K. Chan J. Chem. Phys. 2021, 154, 224116.
+
+  ==> DMRG Settings <==
+
+    N sweeps       =          4         6         6         8
+    Bond dims      =         50       100       100       100
+    Noises         =   1.00E-04  1.00E-05  1.00E-06  0.00E+00
+    Davidson tols  =   1.00E-09  1.00E-09  1.00E-09  1.00E-10
+    N total sweeps =         24
+    E convergence  =   1.00E-07
+    Cutoff         =   1.00E-20
+    Initial guess  =        new
+    Verbosity      =          2
+    Stack memory   =    2.00 GB
+    Scratch        = /Users/york/scratch/psi4/forte.19605.block2.H20
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0      -10.990304488793   0.000000
+    --------------------------------------------------------
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000     0.00030984     0.00030984
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  Time to prepare integrals:        0.323 seconds
+  Time to run job          :       23.499 seconds
+  Total                    :       23.822 seconds
+    DMRG-CI(20,20)/cc-pVDZ on H20, Pipek-Mezey + Fiedler..................................PASSED
+
+Scratch directory: /Users/york/scratch/psi4/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: dmrg_init - git commit: 4f13a3be
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space RESTRICTED_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------
+                        A   Sum
+  -------------------------------
+    FROZEN_DOCC         0     0
+    RESTRICTED_DOCC     0     0
+    GAS1               20    20
+    GAS2                0     0
+    GAS3                0     0
+    GAS4                0     0
+    GAS5                0     0
+    GAS6                0     0
+    RESTRICTED_UOCC    80    80
+    FROZEN_UOCC         0     0
+    Total             100   100
+  -------------------------------   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-20 entry H          line    22 file /Users/york/src/psi4-build/stage/share/psi4/basis/cc-pvdz.gbs 
+
+
+  Checking orbital orthonormality against current geometry ... Done (OK)
+
+   => Loading Basis Set <=
+
+    Name: (CC-PVDZ AUX)
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1-20 entry H          line    19 file /Users/york/src/psi4-build/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-20 entry H          line    19 file /Users/york/src/psi4-build/stage/share/psi4/basis/sto-3g.gbs 
+
+
+
+  ==> Initialize Active Orbitals for DMRG <==
+
+    Localizing orbitals using BOYS ...  ==> Boys Localizer <==
+
+    Convergence =   1.000E-12
+    Maxiter     =        1000
+
+    Iteration                   Metric       Residual
+    @Boys    0   1.7188961328034384E-21              -
+    @Boys    1   1.7281043310123114E+03   1.005357E+24
+    @Boys    2   2.3015444417900171E+03   3.318319E-01
+    @Boys    3   2.3708884673352704E+03   3.012934E-02
+    @Boys    4   2.3847709711013822E+03   5.855401E-03
+    @Boys    5   2.3849431554912189E+03   7.220165E-05
+    @Boys    6   2.3849431635637825E+03   3.384803E-09
+    @Boys    7   2.3849431635637825E+03   0.000000E+00
+
+    Boys Localizer converged.
+
+ Done
+    Forming exchange integrals using DF ...  DFHelper Memory: AOs need 0.021 GiB; user supplied 22.352 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+ Done
+    Sorting based on Fiedler vector ... Done
+
+  State Singlet (Ms = 0) A GAS min: 0 0 0 0 0 0 ; GAS max: 40 0 0 0 0 0 ; weights:
+      1.000000000000
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 60
+    Number of basis functions: 100
+    Number of Cartesian functions: 100
+    Spherical Harmonics?: true
+    Max angular momentum: 1
+
+
+  JK created using MemDF integrals
+  DFHelper Memory: AOs need 0.013 GiB; user supplied 2.235 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               4
+    Memory [MiB]:              2288
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):      47.5800
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: (CC-PVDZ AUX)
+    Blend: CC-PVDZ-RI
+    Number of shells: 120
+    Number of basis functions: 280
+    Number of Cartesian functions: 300
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                        100
+  Number of correlated molecular orbitals:             100
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:              Density fitting
+
+
+  Computing density fitted integrals
+
+  Number of auxiliary basis functions:  280
+  Need 22.40 MB to store DF integrals
+  DFHelper Memory: AOs need 0.013 GiB; user supplied 2.502 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> DFHelper <==
+    NBF:                             100
+    NAux:                            280
+    Schwarz Cutoff:                1E-12
+    Mask sparsity (%):                48
+    DFH Avail. Memory [GiB]:       2.502
+    OpenMP threads:                    4
+    Algorithm:                     STORE
+    AO Core:                        True
+    MO Core:                       False
+    Hold Metric:                   False
+    Metric Power:                 -0.500
+    Fitting Condition:             1E-10
+    Q Shell Max:                       5
+
+
+
+  Transforming DF Integrals
+  Timing for density-fitting transformation:                  0.010 s.
+
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing density-fitted integrals:              0.055 s.
+
+  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn
+
+
+                         ------------------------------
+                           block2 DMRG (spin-adapted)
+                                by Huanchen Zhai
+                                Jan 14-16, 2023
+                         ------------------------------
+
+    Reference: H. Zhai & G. K. Chan J. Chem. Phys. 2021, 154, 224116.
+
+  ==> DMRG Settings <==
+
+    N sweeps       =          4         6         6         8
+    Bond dims      =         50       100       100       100
+    Noises         =   1.00E-04  1.00E-05  1.00E-06  0.00E+00
+    Davidson tols  =   1.00E-09  1.00E-09  1.00E-09  1.00E-10
+    N total sweeps =         24
+    E convergence  =   1.00E-07
+    Cutoff         =   1.00E-20
+    Initial guess  =        new
+    Verbosity      =          2
+    Stack memory   =    2.00 GB
+    Scratch        = /Users/york/scratch/psi4/forte.19605.block2.H20
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0      -10.990376529498   0.000000
+    --------------------------------------------------------
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A     0.00000000    -0.00000000     0.00000220     0.00000220
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  Time to prepare integrals:        0.328 seconds
+  Time to run job          :       19.378 seconds
+  Total                    :       19.706 seconds
+    DMRG-CI(20,20)/cc-pVDZ on H20, Boys + Fiedler.........................................PASSED
+
+    Psi4 stopped on: Wednesday, 25 September 2024 11:53PM
+    Psi4 wall time for execution: 0:01:31.06
+
+*** Psi4 exiting successfully. Buy a developer a beer!

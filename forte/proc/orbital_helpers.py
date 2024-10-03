@@ -90,7 +90,85 @@ def orbital_projection(ref_wfn, options, mo_space_info):
         return mo_space_info
 
 
-def ortho_orbs_forte(wfn, mo_space_info, Cold):
+def dmrg_initial_orbitals(wfn, options, mo_space_info):
+    """
+    Initial orbital guess for DMRG CI/SCF computations by
+    1. localize active orbitals
+    2. order based on Fiedler vector (J. Chem. Phys. 142, 034102)
+
+    Args:
+        wfn (psi4.Wavefunction): current Psi4 Wavefunction
+        options (forte.Options): the Forte Options object
+        mo_space_info (forte.MOSpaceInfo): the Forte MOSpaceInfo object
+    """
+    # TODO: enable irrep
+    if wfn.nirrep() > 1 or not options.get_bool("DMRG_REORDER_INIT_ORBS"):
+        return
+
+    psi4.core.print_out("\n\n  ==> Initialize Active Orbitals for DMRG <==\n")
+
+    Ca = wfn.Ca().clone().to_array()
+    S = wfn.S().to_array()
+    bs = wfn.basisset()
+    ndocc = mo_space_info.size("INACTIVE_DOCC")
+    nactv = mo_space_info.size("ACTIVE")
+
+    # localize orbitals
+    local_method = options.get_str("LOCALIZE")
+    psi4.core.print_out(f"\n    Localizing orbitals using {local_method} ...")
+    Ca_actv = Ca[:, ndocc : ndocc + nactv]
+    if local_method == "CHOLESKY":
+        D = Ca_actv @ Ca_actv.T
+        chol_cutoff = options.get_double("CHOLESKY_TOLERANCE")
+        X = (psi4.core.Matrix.from_array(D)).partial_cholesky_factorize(chol_cutoff).to_array()
+        Ca_actv = D @ S @ X
+    else:
+        localizer = psi4.core.Localizer.build(local_method, bs, psi4.core.Matrix.from_array(Ca_actv))
+        # localizer.set_print(0)
+        localizer.localize()
+        Ca_actv = Ca_actv @ localizer.U.to_array()
+    psi4.core.print_out(" Done")
+
+
+    # form K_ij = (ij|ji) matrix
+    psi4.core.print_out("\n    Forming exchange integrals using DF ...")
+    try:
+        bs_aux = wfn.get_basisset("DF_BASIS_SCF")
+    except:
+        bs_aux = psi4.core.BasisSet.build(wfn.molecule(), "DF_BASIS_SCF",
+                                          psi4.core.get_option("SCF", "DF_BASIS_SCF"),
+                                          "JKFIT", psi4.core.get_global_option('BASIS'),
+                                          puream=bs.has_puream())
+    df_helper = psi4.core.DFHelper(bs, bs_aux)
+    df_helper.set_memory(psi4.get_memory())
+    df_helper.set_nthreads(psi4.core.get_num_threads())
+    # df_helper.set_print_lvl(0)
+    df_helper.initialize()
+
+    df_helper.add_space("ACT", psi4.core.Matrix.from_array(Ca_actv));
+    df_helper.add_transformation("B", "ACT", "ACT", "Qpq")
+    df_helper.transform()
+    psi4.core.print_out(" Done")
+
+    # find ordering based on Fiedler vector
+    psi4.core.print_out("\n    Sorting based on Fiedler vector ...")
+    B = df_helper.get_tensor("B").to_array()
+    K = np.abs(np.einsum("Qij,Qji->ij", B, B))
+    D = np.diag(np.einsum("ij->i", K))
+    L = D - K
+    evals, evecs = np.linalg.eigh(L)
+    order = np.argsort(evecs[:, 1])
+    psi4.core.print_out(" Done")
+
+    df_helper.clear_all()
+
+    # copy back to wave function
+    Ca[:, ndocc : ndocc + nactv] = Ca_actv[:, order]
+    wfn.Ca().copy(psi4.core.Matrix.from_array(Ca))
+    psi4.core.print_out("\n")
+
+
+def ortho_orbs_forte(wfn, mo_space_info, Cold, semi):
     """
     Read the set of orbitals from file and
     pass it to the current wave function as initial guess
@@ -98,6 +176,7 @@ def ortho_orbs_forte(wfn, mo_space_info, Cold):
     :param wfn: current Psi4 Wavefunction
     :param mo_space_info: the Forte MOSpaceInfo object
     :param Cold: MO coefficients from previous calculations
+    :param semi: whether semicanonicalize final orbitals
     :return: orthonormalized orbital coefficients
     """
     orbital_spaces = mo_space_info.space_names()
@@ -115,8 +194,6 @@ def ortho_orbs_forte(wfn, mo_space_info, Cold):
     occ_end.append(wfn.nmopi())
 
     slices = [psi4.core.Slice(b, e) for b, e in zip(occ_start, occ_end)]
-
-    semi = True if wfn.Fa() else False  # Forte make_fock passes to wfn.Fa()
 
     return ortho_orbs_impl(Cold, wfn, slices, semi)
 

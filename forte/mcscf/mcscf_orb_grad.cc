@@ -99,7 +99,7 @@ void MCSCF_ORB_GRAD::startup() {
             outfile->Printf("\n  %s", msg.c_str());
             throw std::runtime_error(msg);
         }
-        df_helper_->set_schwarz_cutoff(options_->get_double("INTS_TOLERANCE"));
+        df_helper_->set_schwarz_cutoff(ints_cutoff_);
         df_helper_->set_fitting_condition(options_->get_double("DF_FITTING_CONDITION"));
         df_helper_->set_memory(static_cast<size_t>(mem));
         df_helper_->set_nthreads(omp_get_max_threads());
@@ -197,6 +197,8 @@ void MCSCF_ORB_GRAD::setup_mos() {
 void MCSCF_ORB_GRAD::read_options() {
     print_ = options_->get_int("PRINT");
     debug_print_ = options_->get_bool("MCSCF_DEBUG_PRINTING");
+
+    ints_cutoff_ = options_->get_double("INTS_TOLERANCE");
 
     internal_rot_ = options_->get_bool("MCSCF_INTERNAL_ROT");
 
@@ -939,6 +941,14 @@ void MCSCF_ORB_GRAD::compute_orbital_grad() {
     A_["ri"] = 2.0 * F_["ri"];
     A_["ru"] = Fc_["rt"] * D1_["tu"];
     A_["ru"] += V_["rtvw"] * D2_["tuvw"];
+
+    // screen small gradients to prevent symmetry breaking
+    for (const auto& block : A_.block_labels()) {
+        A_.block(block).iterate([&](const std::vector<size_t>&, double& value) {
+            if (std::fabs(value) < ints_cutoff_)
+                value = 0.0;
+        });
+    }
 
     // build orbital gradients
     g_["pq"] = 2.0 * A_["pq"];

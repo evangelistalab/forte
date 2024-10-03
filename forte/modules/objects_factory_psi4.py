@@ -21,7 +21,7 @@ from forte._forte import (
 from forte.data import ForteData
 from forte.register_forte_options import register_forte_options
 from forte.proc.orbital_helpers import orbital_projection
-from forte.proc.orbital_helpers import read_orbitals, dump_orbitals, ortho_orbs_forte
+from forte.proc.orbital_helpers import read_orbitals, dmrg_initial_orbitals, ortho_orbs_forte
 from forte.proc.external_active_space_solver import (
     write_external_active_space_file,
     write_external_rdm_file,
@@ -147,9 +147,10 @@ def prepare_psi4_ref_wfn(options, **kwargs):
             wfn_new = ref_wfn
             wfn_new.Ca().copy(Ca)
         else:
+            semi = options.get_str("ACTIVE_SPACE_SOLVER") not in ["DMRG", "BLOCK2"]  # keep original order for DMRG
             if fresh_ref_wfn:
                 wfn_new = ref_wfn
-                wfn_new.Ca().copy(ortho_orbs_forte(wfn_new, mo_space_info, Ca))
+                wfn_new.Ca().copy(ortho_orbs_forte(wfn_new, mo_space_info, Ca, semi))
             else:
                 p4print("\n  Perform new SCF at current geometry ...\n")
 
@@ -157,7 +158,7 @@ def prepare_psi4_ref_wfn(options, **kwargs):
                 wfn_new = run_psi4_ref("scf", molecule, False, **kwargs_copy)
 
                 # orthonormalize orbitals
-                wfn_new.Ca().copy(ortho_orbs_forte(wfn_new, mo_space_info, Ca))
+                wfn_new.Ca().copy(ortho_orbs_forte(wfn_new, mo_space_info, Ca, semi))
 
                 # copy wfn_new to ref_wfn
                 ref_wfn.shallow_copy(wfn_new)
@@ -202,6 +203,10 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn, mo_space_info):
 
     # Call methods that project the orbitals (AVAS, embedding)
     mo_space_info = orbital_projection(wfn, options, mo_space_info)
+
+    # Reorder active orbitals for DMRG after AVAS
+    if options.get_str("ACTIVE_SPACE_SOLVER") in ["DMRG", "BLOCK2"]:
+        dmrg_initial_orbitals(wfn, options, mo_space_info)
 
     # Build Forte SCFInfo object
     scf_info = SCFInfo(wfn)
