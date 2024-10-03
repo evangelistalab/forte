@@ -199,13 +199,10 @@ class MOSpaceInfo {
     std::vector<size_t> pos_in_space(const std::string& space, const std::string& composite_space);
     /// @return The psi::Slice for a space counting started at absolute zero
     psi::Slice range(const std::string& space);
-
     /// Read the space info from a map of space name-dimension_vector
     void read_from_map(const std::map<std::string, std::vector<size_t>>& mo_space_map);
-
     /// Process current MOSpaceInfo: calculate frozen core, count, and assign orbitals
     void compute_space_info();
-
     /// @return The number of irreps
     size_t nirrep() const;
 
@@ -223,15 +220,16 @@ class MOSpaceInfo {
     // ==> Static Class Data <==
     /// The list of elementary orbital spaces
     static const std::vector<std::string> elementary_spaces_;
-
-    /// The list of composite orbital spaces
+    /// The list of composite orbital spaces (this includes all elementary spaces)
     static const std::vector<std::string> composite_spaces_;
+    /// The definition of the composite orbital spaces (this includes all elementary spaces)
     static const std::map<std::string, std::vector<std::string>> composite_spaces_def_;
 
     /// The priority used to assign orbitals to elementary spaces
     static const std::vector<std::string> elementary_spaces_priority_;
 
-    // ==> Class Data <==
+    // ==> Private Class Data <==
+    /// The molecular point group information
     Symmetry symmetry_;
     /// The number of irreducible representations
     size_t nirrep_;
@@ -239,15 +237,10 @@ class MOSpaceInfo {
     psi::Dimension nmopi_;
     /// Information about each elementary space stored in a map
     std::map<std::string, SpaceInfo> mo_spaces_;
-
     /// The map from all MO to the correlated MOs (excludes frozen core/virtual)
     std::vector<size_t> mo_to_cmo_;
 
-    // ==> Class functions <==
-
-    // /// Read information about each elementary space from the psi Options object
-    // std::pair<SpaceInfo, bool> read_mo_space(const std::string& space,
-    //                                          std::shared_ptr<ForteOptions> options);
+    // ==> Private Class Functions <==
 
     /// Read information about each elementary space from a map
     std::pair<SpaceInfo, bool>
