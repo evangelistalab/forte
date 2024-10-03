@@ -108,14 +108,6 @@ void MRDSRG_SO::startup() {
 
     source_ = foptions_->get_str("SOURCE");
 
-    dsrg_trans_type_ = foptions_->get_str("DSRG_TRANS_TYPE");
-    if (dsrg_trans_type_ == "CC" && foptions_->get_str("CORR_LEVEL") == "QDSRG2") {
-        outfile->Printf(
-            "\n  Warning: DSRG_TRANS_TYPE option CC is not supported with CORR_LEVEL QDSRG2.");
-        outfile->Printf("\n  Changed DSRG_TRANS_TYPE option to UNITARY");
-        dsrg_trans_type_ = "UNITARY";
-    }
-
     ntamp_ = foptions_->get_int("NTAMP");
     intruder_tamp_ = foptions_->get_double("INTRUDER_TAMP");
 
@@ -775,8 +767,6 @@ void MRDSRG_SO::compute_hbar() {
     BlockedTensor C1 = ambit::BlockedTensor::build(tensor_type_, "C1", {"gg"});
     BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
 
-    bool do_wicked = foptions_->get_bool("DO_WICKED");
-
     // compute Hbar recursively
     for (int n = 1; n <= maxn; ++n) {
         // prefactor before n-nested commutator
@@ -786,6 +776,7 @@ void MRDSRG_SO::compute_hbar() {
         double C0 = 0.0;
         C1.zero();
         C2.zero();
+
         // zero-body
         H1_T1_C0(O1, T1, factor, C0);
         H1_T2_C0(O1, T2, factor, C0);
@@ -808,21 +799,12 @@ void MRDSRG_SO::compute_hbar() {
         //        outfile->Printf("\n  |H2| = %20.12f", C2.norm(1));
         //        outfile->Printf("\n  --------------------------------");
 
-        if (dsrg_trans_type_ == "UNITARY") {
-            // [H, A] = [H, T] + [H, T]^dagger
-            C0 *= 2.0;
-            O1["pq"] = C1["pq"];
-            C1["pq"] += O1["qp"];
-            O2["pqrs"] = C2["pqrs"];
-            C2["pqrs"] += O2["rspq"];
-        }
-
-        if (do_wicked) {
-            O2["pqrs"] = C2["pqrs"];
-            C2["pqrs"] -= O2["qprs"];
-            C2["pqrs"] -= O2["pqsr"];
-            C2["pqrs"] += O2["qpsr"];
-        }
+        // [H, A] = [H, T] + [H, T]^dagger
+        C0 *= 2.0;
+        O1["pq"] = C1["pq"];
+        C1["pq"] += O1["qp"];
+        O2["pqrs"] = C2["pqrs"];
+        C2["pqrs"] += O2["rspq"];
 
         // Hbar += C
         Hbar0 += C0;
