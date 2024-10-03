@@ -103,6 +103,7 @@ void ForteIntegrals::read_information() {
     ncmo_ = ncmopi_.sum();
 
     // Create an array that maps the CMOs to the MOs (cmotomo_).
+    cmotomo_.clear();
     for (int h = 0, q = 0; h < nirrep_; ++h) {
         q += frzcpi_[h]; // skip the frozen core
         for (int r = 0; r < ncmopi_[h]; ++r) {
@@ -488,6 +489,27 @@ void ForteIntegrals::print_ints() {
     }
 }
 
+std::shared_ptr<psi::Matrix> ForteIntegrals::Ca_SO2AO(std::shared_ptr<psi::Matrix> Ca_SO) const {
+    auto aotoso = wfn_->aotoso();
+    auto nao = nso_;
+
+    auto Ca_ao = std::make_shared<psi::Matrix>("Ca_AO", nao, nmo_);
+
+    // Transform from the SO to the AO basis
+    for (int h = 0, index = 0; h < nirrep_; ++h) {
+        auto nso = nsopi_[h];
+        if (nso == 0)
+            continue;
+
+        for (int i = 0, nmo_this = nmopi_[h]; i < nmo_this; ++i) {
+            // notes: LDA value is nso (not nao, see libqt/blas_intfc23.cc)
+            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Ca_SO->pointer(h)[0][i],
+                    nmo_this, 0.0, &Ca_ao->pointer()[0][index++], nmo_);
+        }
+    }
+    return Ca_ao;
+}
+
 void ForteIntegrals::rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
                                      std::shared_ptr<psi::Matrix> Ub, bool re_transform) {
     // 1. Rotate the orbital coefficients and store them in the ForteIntegral object
@@ -495,6 +517,11 @@ void ForteIntegrals::rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
     auto Cb_rotated = psi::linalg::doublet(Cb_, Ub);
 
     update_orbitals(Ca_rotated, Cb_rotated, re_transform);
+}
+
+void ForteIntegrals::update_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info) {
+    mo_space_info_ = mo_space_info;
+    common_initialize();
 }
 
 // The following functions throw an error by default

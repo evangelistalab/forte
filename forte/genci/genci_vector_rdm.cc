@@ -51,6 +51,13 @@ std::shared_ptr<RDMs> GenCIVector::compute_rdms(GenCIVector& C_left, GenCIVector
     ambit::Tensor g1a, g1b;
     ambit::Tensor g2aa, g2ab, g2bb;
     ambit::Tensor g3aaa, g3aab, g3abb, g3bbb;
+    ambit::Tensor g4aaaa, g4aaab, g4aabb, g4abbb, g4bbbb;
+
+    if (max_rdm_level >= 5) {
+        throw std::runtime_error(
+            "RDMs of order 5 or higher are not implemented in GenCISolver (and "
+            "more generally in Forte).");
+    }
 
     if (max_rdm_level >= 1) {
         local_timer t;
@@ -110,6 +117,56 @@ std::shared_ptr<RDMs> GenCIVector::compute_rdms(GenCIVector& C_left, GenCIVector
         rdm_timing.push_back(t.get());
     }
 
+    if (max_rdm_level >= 4) {
+        local_timer t;
+        if (na >= 4) {
+            local_timer t_aaaa;
+            g4aaaa = compute_4rdm_aaaa_same_irrep(C_left, C_right, true);
+            psi::outfile->Printf("\n    Timing for 4-RDM (aaaa): %.3f s", t_aaaa.get());
+        } else {
+            g4aaaa = ambit::Tensor::build(ambit::CoreTensor, "g4aaaa",
+                                          {nmo, nmo, nmo, nmo, nmo, nmo, nmo, nmo});
+            g4aaaa.zero();
+        }
+        if (nb >= 4) {
+            local_timer t_bbbb;
+            g4bbbb = compute_4rdm_aaaa_same_irrep(C_left, C_right, false);
+            psi::outfile->Printf("\n    Timing for 4-RDM (bbbb): %.3f s", t_bbbb.get());
+        } else {
+            g4bbbb = ambit::Tensor::build(ambit::CoreTensor, "g4bbbb",
+                                          {nmo, nmo, nmo, nmo, nmo, nmo, nmo, nmo});
+            g4bbbb.zero();
+        }
+        if ((na >= 3) and (nb >= 1)) {
+            local_timer t_aaab;
+            g4aaab = compute_4rdm_aaab_same_irrep(C_left, C_right);
+            psi::outfile->Printf("\n    Timing for 4-RDM (aaab): %.3f s", t_aaab.get());
+        } else {
+            g4aaab = ambit::Tensor::build(ambit::CoreTensor, "g4aaab",
+                                          {nmo, nmo, nmo, nmo, nmo, nmo, nmo, nmo});
+            g4aaab.zero();
+        }
+        if ((na >= 2) and (nb >= 2)) {
+            local_timer t_aabb;
+            g4aabb = compute_4rdm_aabb_same_irrep(C_left, C_right);
+            psi::outfile->Printf("\n    Timing for 4-RDM (aabb): %.3f s", t_aabb.get());
+        } else {
+            g4aabb = ambit::Tensor::build(ambit::CoreTensor, "g4aabb",
+                                          {nmo, nmo, nmo, nmo, nmo, nmo, nmo, nmo});
+            g4aabb.zero();
+        }
+        if ((na >= 1) and (nb >= 3)) {
+            local_timer t_abbb;
+            g4abbb = compute_4rdm_abbb_same_irrep(C_left, C_right);
+            psi::outfile->Printf("\n    Timing for 4-RDM (abbb): %.3f s", t_abbb.get());
+        } else {
+            g4abbb = ambit::Tensor::build(ambit::CoreTensor, "g4abbb",
+                                          {nmo, nmo, nmo, nmo, nmo, nmo, nmo, nmo});
+            g4abbb.zero();
+        }
+        rdm_timing.push_back(t.get());
+    }
+
     // for (size_t n = 0; n < rdm_timing.size(); ++n) {
     //     psi::outfile->Printf("\n    Timing for %d-RDM: %.3f s", n + 1, rdm_timing[n]);
     // }
@@ -125,7 +182,16 @@ std::shared_ptr<RDMs> GenCIVector::compute_rdms(GenCIVector& C_left, GenCIVector
             return std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab,
                                                        g3abb, g3bbb);
         }
+        if (max_rdm_level == 4) {
+            return std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab,
+                                                       g3abb, g3bbb, g4aaaa, g4aaab, g4aabb, g4abbb,
+                                                       g4bbbb);
+        }
     } else {
+        if (max_rdm_level == 4) {
+            throw std::runtime_error(
+                "Spin-free RDMs of order 4 or higher are not implemented in GenCISolver");
+        }
         g1a("pq") += g1b("pq");
 
         if (max_rdm_level > 1) {
@@ -143,12 +209,6 @@ std::shared_ptr<RDMs> GenCIVector::compute_rdms(GenCIVector& C_left, GenCIVector
             return std::make_shared<RDMsSpinFree>(g1a, g2aa);
         if (max_rdm_level == 3)
             return std::make_shared<RDMsSpinFree>(g1a, g2aa, g3aaa);
-    }
-
-    if (max_rdm_level >= 4) {
-        throw std::runtime_error(
-            "RDMs of order 4 or higher are not implemented in GenCISolver (and "
-            "more generally in Forte).");
     }
     return std::make_shared<RDMsSpinDependent>();
 }
@@ -620,6 +680,475 @@ ambit::Tensor GenCIVector::compute_3rdm_abb_same_irrep(GenCIVector& C_left, GenC
     return rdm;
 }
 
+ambit::Tensor GenCIVector::compute_4rdm_aaaa_same_irrep(GenCIVector& C_left, GenCIVector& C_right,
+                                                        bool alfa) {
+    size_t ncmo = C_left.ncmo_;
+    const auto& alfa_address = C_left.alfa_address_;
+    const auto& beta_address = C_left.beta_address_;
+    const auto& lists = C_left.lists_;
+
+    auto rdm = ambit::Tensor::build(ambit::CoreTensor, alfa ? "4RDM_AAAA" : "4RDM_BBBB",
+                                    {ncmo, ncmo, ncmo, ncmo, ncmo, ncmo, ncmo, ncmo});
+
+    auto na = alfa_address->nones();
+    auto nb = beta_address->nones();
+    if ((alfa and (na < 4)) or ((!alfa) and (nb < 4)))
+        return rdm;
+
+    auto& rdm_data = rdm.data();
+
+    int num_4h_classes =
+        alfa ? lists->alfa_address_4h()->nclasses() : lists->beta_address_4h()->nclasses();
+
+    for (int class_K = 0; class_K < num_4h_classes; ++class_K) {
+        size_t maxK = alfa ? lists->alfa_address_4h()->strpcls(class_K)
+                           : lists->beta_address_4h()->strpcls(class_K);
+
+        // loop over blocks of matrix C
+        for (const auto& [nI, class_Ia, class_Ib] : lists->determinant_classes()) {
+            if (lists->detpblk(nI) == 0)
+                continue;
+
+            auto Cr = C_right.gather_C_block(CR, alfa, alfa_address, beta_address, class_Ia,
+                                             class_Ib, false);
+
+            for (const auto& [nJ, class_Ja, class_Jb] : lists->determinant_classes()) {
+                // The string class on which we don't act must be the same for I and J
+                if ((alfa and (class_Ib != class_Jb)) or (not alfa and (class_Ia != class_Ja)))
+                    continue;
+                if (lists->detpblk(nJ) == 0)
+                    continue;
+
+                // Get a pointer to the correct block of matrix C
+                auto Cl = C_left.gather_C_block(CL, alfa, alfa_address, beta_address, class_Ja,
+                                                class_Jb, false);
+
+                size_t maxL =
+                    alfa ? beta_address->strpcls(class_Ib) : alfa_address->strpcls(class_Ia);
+                if (maxL > 0) {
+                    for (size_t K = 0; K < maxK; ++K) {
+                        std::vector<H4StringSubstitution>& Krlist =
+                            alfa ? lists->get_alfa_4h_list(class_K, K, class_Ia)
+                                 : lists->get_beta_4h_list(class_K, K, class_Ib);
+                        std::vector<H4StringSubstitution>& Kllist =
+                            alfa ? lists->get_alfa_4h_list(class_K, K, class_Ja)
+                                 : lists->get_beta_4h_list(class_K, K, class_Jb);
+                        for (const auto& [sign_K, p, q, r, s, I] : Krlist) {
+                            for (const auto& [sign_L, t, u, v, w, J] : Kllist) {
+                                rdm_data[eight_index(p, q, r, s, t, u, v, w, ncmo)] +=
+                                    sign_K * sign_L * psi::C_DDOT(maxL, Cl[J], 1, Cr[I], 1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return rdm;
+}
+
+ambit::Tensor GenCIVector::compute_4rdm_aaab_same_irrep(GenCIVector& C_left, GenCIVector& C_right) {
+    size_t ncmo = C_left.ncmo_;
+    const auto& lists = C_left.lists_;
+
+    auto rdm = ambit::Tensor::build(ambit::CoreTensor, "4RDM_AAAB",
+                                    {ncmo, ncmo, ncmo, ncmo, ncmo, ncmo, ncmo, ncmo});
+    rdm.zero();
+    auto& rdm_data = rdm.data();
+
+    int num_3h_class_Ka = lists->alfa_address_3h()->nclasses();
+    int num_1h_class_Kb = lists->beta_address_1h()->nclasses();
+
+    for (int class_Ka = 0; class_Ka < num_3h_class_Ka; ++class_Ka) {
+        size_t maxKa = lists->alfa_address_3h()->strpcls(class_Ka);
+
+        for (int class_Kb = 0; class_Kb < num_1h_class_Kb; ++class_Kb) {
+            size_t maxKb = lists->beta_address_1h()->strpcls(class_Kb);
+
+            // loop over blocks of matrix C
+            for (const auto& [nI, class_Ia, class_Ib] : lists->determinant_classes()) {
+                if (lists->detpblk(nI) == 0)
+                    continue;
+
+                const auto Cr = C_right.C_[nI]->pointer();
+
+                for (const auto& [nJ, class_Ja, class_Jb] : lists->determinant_classes()) {
+                    if (lists->detpblk(nJ) == 0)
+                        continue;
+
+                    // Get a pointer to the correct block of matrix C
+                    const auto Cl = C_left.C_[nJ]->pointer();
+
+                    for (size_t Ka = 0; Ka < maxKa; ++Ka) {
+                        auto& Ka_right_list = lists->get_alfa_3h_list(class_Ka, Ka, class_Ia);
+                        auto& Ka_left_list = lists->get_alfa_3h_list(class_Ka, Ka, class_Ja);
+                        for (size_t Kb = 0; Kb < maxKb; ++Kb) {
+                            auto& Kb_right_list = lists->get_beta_1h_list(class_Kb, Kb, class_Ib);
+                            auto& Kb_left_list = lists->get_beta_1h_list(class_Kb, Kb, class_Jb);
+                            for (const auto& [sign_pqr, p, q, r, Ja] : Ka_left_list) {
+                                for (const auto& [sign_s, s, Jb] : Kb_left_list) {
+                                    const double ClJ = sign_pqr * sign_s * Cl[Ja][Jb];
+                                    for (const auto& [sign_tuv, t, u, v, Ia] : Ka_right_list) {
+                                        const auto CrIa = Cr[Ia];
+                                        for (const auto& [sign_w, w, Ib] : Kb_right_list) {
+                                            rdm_data[eight_index(p, q, r, s, t, u, v, w, ncmo)] +=
+                                                sign_tuv * sign_w * ClJ * CrIa[Ib];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for (size_t p = 0; p < ncmo; ++p) {
+        for (size_t q = 0; q < p; ++q) {
+            for (size_t r = 0; r < q; ++r) {
+                for (size_t s = 0; s < ncmo; ++s) {
+                    for (size_t t = 0; t < ncmo; ++t) {
+                        for (size_t u = 0; u < t; ++u) {
+                            for (size_t v = 0; v < u; ++v) {
+                                for (size_t w = 0; w < ncmo; ++w) {
+                                    const double rdm_element =
+                                        rdm_data[eight_index(p, q, r, s, t, u, v, w, ncmo)];
+                                    rdm_data[eight_index(p, q, r, s, t, v, u, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, q, r, s, u, t, v, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, q, r, s, u, v, t, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, q, r, s, v, t, u, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, q, r, s, v, u, t, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, r, q, s, t, u, v, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, r, q, s, t, v, u, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, r, q, s, u, t, v, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, r, q, s, u, v, t, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, r, q, s, v, t, u, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, r, q, s, v, u, t, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(q, p, r, s, t, u, v, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(q, p, r, s, t, v, u, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(q, p, r, s, u, t, v, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(q, p, r, s, u, v, t, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(q, p, r, s, v, t, u, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(q, p, r, s, v, u, t, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(q, r, p, s, t, u, v, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(q, r, p, s, t, v, u, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(q, r, p, s, u, t, v, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(q, r, p, s, u, v, t, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(q, r, p, s, v, t, u, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(q, r, p, s, v, u, t, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(r, p, q, s, t, u, v, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(r, p, q, s, t, v, u, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(r, p, q, s, u, t, v, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(r, p, q, s, u, v, t, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(r, p, q, s, v, t, u, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(r, p, q, s, v, u, t, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(r, q, p, s, t, u, v, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(r, q, p, s, t, v, u, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(r, q, p, s, u, t, v, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(r, q, p, s, u, v, t, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(r, q, p, s, v, t, u, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(r, q, p, s, v, u, t, w, ncmo)] =
+                                        rdm_element;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return rdm;
+}
+
+ambit::Tensor GenCIVector::compute_4rdm_aabb_same_irrep(GenCIVector& C_left, GenCIVector& C_right) {
+    size_t ncmo = C_left.ncmo_;
+    const auto& lists = C_left.lists_;
+
+    auto rdm = ambit::Tensor::build(ambit::CoreTensor, "4RDM_AABB",
+                                    {ncmo, ncmo, ncmo, ncmo, ncmo, ncmo, ncmo, ncmo});
+    rdm.zero();
+    auto& rdm_data = rdm.data();
+
+    int num_2h_class_Ka = lists->alfa_address_2h()->nclasses();
+    int num_2h_class_Kb = lists->beta_address_2h()->nclasses();
+
+    for (int class_Ka = 0; class_Ka < num_2h_class_Ka; ++class_Ka) {
+        size_t maxKa = lists->alfa_address_2h()->strpcls(class_Ka);
+
+        for (int class_Kb = 0; class_Kb < num_2h_class_Kb; ++class_Kb) {
+            size_t maxKb = lists->beta_address_2h()->strpcls(class_Kb);
+
+            // loop over blocks of matrix C
+            for (const auto& [nI, class_Ia, class_Ib] : lists->determinant_classes()) {
+                if (lists->detpblk(nI) == 0)
+                    continue;
+
+                const auto Cr = C_right.C_[nI]->pointer();
+
+                for (const auto& [nJ, class_Ja, class_Jb] : lists->determinant_classes()) {
+                    if (lists->detpblk(nJ) == 0)
+                        continue;
+
+                    // Get a pointer to the correct block of matrix C
+                    const auto Cl = C_left.C_[nJ]->pointer();
+
+                    for (size_t Ka = 0; Ka < maxKa; ++Ka) {
+                        auto& Ka_right_list = lists->get_alfa_2h_list(class_Ka, Ka, class_Ia);
+                        auto& Ka_left_list = lists->get_alfa_2h_list(class_Ka, Ka, class_Ja);
+                        for (size_t Kb = 0; Kb < maxKb; ++Kb) {
+                            auto& Kb_right_list = lists->get_beta_2h_list(class_Kb, Kb, class_Ib);
+                            auto& Kb_left_list = lists->get_beta_2h_list(class_Kb, Kb, class_Jb);
+                            for (const auto& [sign_pq, p, q, Ja] : Ka_left_list) {
+                                for (const auto& [sign_rs, r, s, Jb] : Kb_left_list) {
+                                    const double ClJ = sign_pq * sign_rs * Cl[Ja][Jb];
+                                    for (const auto& [sign_tu, t, u, Ia] : Ka_right_list) {
+                                        const auto CrIa = Cr[Ia];
+                                        for (const auto& [sign_vw, v, w, Ib] : Kb_right_list) {
+                                            rdm_data[eight_index(p, q, r, s, t, u, v, w, ncmo)] +=
+                                                sign_tu * sign_vw * ClJ * CrIa[Ib];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for (size_t p = 0; p < ncmo; ++p) {
+        for (size_t q = 0; q < p; ++q) {
+            for (size_t r = 0; r < ncmo; ++r) {
+                for (size_t s = 0; s < r; ++s) {
+                    for (size_t t = 0; t < ncmo; ++t) {
+                        for (size_t u = 0; u < t; ++u) {
+                            for (size_t v = 0; v < ncmo; ++v) {
+                                for (size_t w = 0; w < v; ++w) {
+                                    const double rdm_element =
+                                        rdm_data[eight_index(p, q, r, s, t, u, v, w, ncmo)];
+                                    rdm_data[eight_index(p, q, r, s, t, u, w, v, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, q, r, s, u, t, v, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, q, r, s, u, t, w, v, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, q, s, r, t, u, v, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, q, s, r, t, u, w, v, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, q, s, r, u, t, v, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, q, s, r, u, t, w, v, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(q, p, r, s, t, u, v, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(q, p, r, s, t, u, w, v, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(q, p, r, s, u, t, v, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(q, p, r, s, u, t, w, v, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(q, p, s, r, t, u, v, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(q, p, s, r, t, u, w, v, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(q, p, s, r, u, t, v, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(q, p, s, r, u, t, w, v, ncmo)] =
+                                        rdm_element;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return rdm;
+}
+
+ambit::Tensor GenCIVector::compute_4rdm_abbb_same_irrep(GenCIVector& C_left, GenCIVector& C_right) {
+    size_t ncmo = C_left.ncmo_;
+    const auto& lists = C_left.lists_;
+
+    auto rdm = ambit::Tensor::build(ambit::CoreTensor, "4RDM_ABBB",
+                                    {ncmo, ncmo, ncmo, ncmo, ncmo, ncmo, ncmo, ncmo});
+    rdm.zero();
+    auto& rdm_data = rdm.data();
+
+    int num_1h_class_Ka = lists->alfa_address_1h()->nclasses();
+    int num_3h_class_Kb = lists->beta_address_3h()->nclasses();
+
+    for (int class_Ka = 0; class_Ka < num_1h_class_Ka; ++class_Ka) {
+        size_t maxKa = lists->alfa_address_1h()->strpcls(class_Ka);
+
+        for (int class_Kb = 0; class_Kb < num_3h_class_Kb; ++class_Kb) {
+            size_t maxKb = lists->beta_address_3h()->strpcls(class_Kb);
+
+            // loop over blocks of matrix C
+            for (const auto& [nI, class_Ia, class_Ib] : lists->determinant_classes()) {
+                if (lists->detpblk(nI) == 0)
+                    continue;
+
+                const auto Cr = C_right.C_[nI]->pointer();
+
+                for (const auto& [nJ, class_Ja, class_Jb] : lists->determinant_classes()) {
+                    if (lists->detpblk(nJ) == 0)
+                        continue;
+
+                    // Get a pointer to the correct block of matrix C
+                    const auto Cl = C_left.C_[nJ]->pointer();
+
+                    for (size_t Ka = 0; Ka < maxKa; ++Ka) {
+                        auto& Ka_right_list = lists->get_alfa_1h_list(class_Ka, Ka, class_Ia);
+                        auto& Ka_left_list = lists->get_alfa_1h_list(class_Ka, Ka, class_Ja);
+                        for (size_t Kb = 0; Kb < maxKb; ++Kb) {
+                            auto& Kb_right_list = lists->get_beta_3h_list(class_Kb, Kb, class_Ib);
+                            auto& Kb_left_list = lists->get_beta_3h_list(class_Kb, Kb, class_Jb);
+                            for (const auto& [sign_p, p, Ja] : Ka_left_list) {
+                                for (const auto& [sign_qrs, q, r, s, Jb] : Kb_left_list) {
+                                    const double ClJ = sign_p * sign_qrs * Cl[Ja][Jb];
+                                    for (const auto& [sign_t, t, Ia] : Ka_right_list) {
+                                        const auto CrIa = Cr[Ia];
+                                        for (const auto& [sign_uvw, u, v, w, Ib] : Kb_right_list) {
+                                            rdm_data[eight_index(p, q, r, s, t, u, v, w, ncmo)] +=
+                                                sign_t * sign_uvw * ClJ * CrIa[Ib];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for (size_t p = 0; p < ncmo; ++p) {
+        for (size_t q = 0; q < ncmo; ++q) {
+            for (size_t r = 0; r < q; ++r) {
+                for (size_t s = 0; s < r; ++s) {
+                    for (size_t t = 0; t < ncmo; ++t) {
+                        for (size_t u = 0; u < ncmo; ++u) {
+                            for (size_t v = 0; v < u; ++v) {
+                                for (size_t w = 0; w < v; ++w) {
+                                    const double rdm_element =
+                                        rdm_data[eight_index(p, q, r, s, t, u, v, w, ncmo)];
+                                    rdm_data[eight_index(p, q, r, s, t, u, w, v, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, q, r, s, t, v, u, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, q, r, s, t, v, w, u, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, q, r, s, t, w, u, v, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, q, r, s, t, w, v, u, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, q, s, r, t, u, v, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, q, s, r, t, u, w, v, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, q, s, r, t, v, u, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, q, s, r, t, v, w, u, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, q, s, r, t, w, u, v, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, q, s, r, t, w, v, u, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, r, q, s, t, u, v, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, r, q, s, t, u, w, v, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, r, q, s, t, v, u, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, r, q, s, t, v, w, u, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, r, q, s, t, w, u, v, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, r, q, s, t, w, v, u, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, r, s, q, t, u, v, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, r, s, q, t, u, w, v, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, r, s, q, t, v, u, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, r, s, q, t, v, w, u, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, r, s, q, t, w, u, v, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, r, s, q, t, w, v, u, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, s, q, r, t, u, v, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, s, q, r, t, u, w, v, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, s, q, r, t, v, u, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, s, q, r, t, v, w, u, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, s, q, r, t, w, u, v, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, s, q, r, t, w, v, u, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, s, r, q, t, u, v, w, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, s, r, q, t, u, w, v, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, s, r, q, t, v, u, w, ncmo)] =
+                                        rdm_element;
+                                    rdm_data[eight_index(p, s, r, q, t, v, w, u, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, s, r, q, t, w, u, v, ncmo)] =
+                                        -rdm_element;
+                                    rdm_data[eight_index(p, s, r, q, t, w, v, u, ncmo)] =
+                                        rdm_element;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return rdm;
+}
+
 void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level, RDMsType type,
                             std::shared_ptr<RDMs> rdms) {
     size_t ncmo = Cl.ncmo_;
@@ -642,7 +1171,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                     sign *= J.create_alfa_bit(p);
                     if (sign != 0) {
                         if (state_vector_l.count(J) != 0) {
-                            rdm += sign * state_vector_l[J] * c_I;
+                            rdm += sign * to_double(state_vector_l[J] * c_I);
                         }
                     }
                 }
@@ -662,7 +1191,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                     sign *= J.create_beta_bit(p);
                     if (sign != 0) {
                         if (state_vector_l.count(J) != 0) {
-                            rdm += sign * state_vector_l[J] * c_I;
+                            rdm += sign * to_double(state_vector_l[J] * c_I);
                         }
                     }
                 }
@@ -714,7 +1243,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                             sign *= J.create_alfa_bit(p);
                             if (sign != 0) {
                                 if (state_vector_l.count(J) != 0) {
-                                    rdm += sign * state_vector_l[J] * c_I;
+                                    rdm += sign * to_double(state_vector_l[J] * c_I);
                                 }
                             }
                         }
@@ -744,7 +1273,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                             sign *= J.create_beta_bit(p);
                             if (sign != 0) {
                                 if (state_vector_l.count(J) != 0) {
-                                    rdm += sign * state_vector_l[J] * c_I;
+                                    rdm += sign * to_double(state_vector_l[J] * c_I);
                                 }
                             }
                         }
@@ -774,7 +1303,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                             sign *= J.create_alfa_bit(p);
                             if (sign != 0) {
                                 if (state_vector_l.count(J) != 0) {
-                                    rdm += sign * state_vector_l[J] * c_I;
+                                    rdm += sign * to_double(state_vector_l[J] * c_I);
                                 }
                             }
                         }
@@ -792,8 +1321,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
     if (max_rdm_level >= 3) {
         auto g3aaa = rdms->g3aaa();
         double error_3rdm_aaa = 0.0;
-        //        for (size_t p = 0; p < no_; ++p){
-        for (size_t p = 0; p < 1; ++p) {
+        for (size_t p = 0; p < ncmo; ++p) {
             for (size_t q = p + 1; q < ncmo; ++q) {
                 for (size_t r = q + 1; r < ncmo; ++r) {
                     for (size_t s = 0; s < ncmo; ++s) {
@@ -811,7 +1339,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                                     sign *= J.create_alfa_bit(p);
                                     if (sign != 0) {
                                         if (state_vector_l.count(J) != 0) {
-                                            rdm += sign * state_vector_l[J] * c_I;
+                                            rdm += sign * to_double(state_vector_l[J] * c_I);
                                         }
                                     }
                                 }
@@ -848,7 +1376,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                                     sign *= J.create_alfa_bit(p);
                                     if (sign != 0) {
                                         if (state_vector_l.count(J) != 0) {
-                                            rdm += sign * state_vector_l[J] * c_I;
+                                            rdm += sign * to_double(state_vector_l[J] * c_I);
                                         }
                                     }
                                 }
@@ -885,7 +1413,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                                     sign *= J.create_alfa_bit(p);
                                     if (sign != 0) {
                                         if (state_vector_l.count(J) != 0) {
-                                            rdm += sign * state_vector_l[J] * c_I;
+                                            rdm += sign * to_double(state_vector_l[J] * c_I);
                                         }
                                     }
                                 }
@@ -904,8 +1432,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
 
         auto g3bbb = rdms->g3bbb();
         double error_3rdm_bbb = 0.0;
-        for (size_t p = 0; p < 1; ++p) {
-            //            for (size_t p = 0; p < no_; ++p){
+        for (size_t p = 0; p < ncmo; ++p) {
             for (size_t q = p + 1; q < ncmo; ++q) {
                 for (size_t r = q + 1; r < ncmo; ++r) {
                     for (size_t s = 0; s < ncmo; ++s) {
@@ -923,7 +1450,7 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
                                     sign *= J.create_beta_bit(p);
                                     if (sign != 0) {
                                         if (state_vector_l.count(J) != 0) {
-                                            rdm += sign * state_vector_l[J] * c_I;
+                                            rdm += sign * to_double(state_vector_l[J] * c_I);
                                         }
                                     }
                                 }
@@ -939,6 +1466,223 @@ void GenCIVector::test_rdms(GenCIVector& Cl, GenCIVector& Cr, int max_rdm_level,
         }
         psi::Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
         psi::outfile->Printf("\n    BBBBBB 3-RDM Error : %+e", error_3rdm_bbb);
+    }
+
+    if (max_rdm_level >= 4) {
+        auto g4aaaa = rdms->g4aaaa();
+        double error_4rdm_aaaa = 0.0;
+        for (size_t p = 0; p < ncmo; ++p) {
+            for (size_t q = p + 1; q < ncmo; ++q) {
+                for (size_t r = q + 1; r < ncmo; ++r) {
+                    for (size_t s = r + 1; s < ncmo; ++s) {
+                        for (size_t t = 0; t < ncmo; ++t) {
+                            for (size_t u = t + 1; u < ncmo; ++u) {
+                                for (size_t v = u + 1; v < ncmo; ++v) {
+                                    for (size_t w = v + 1; w < ncmo; ++w) {
+                                        double rdm = 0.0;
+                                        for (const auto& [I, c_I] : state_vector_r) {
+                                            J = I;
+                                            double sign = 1.0;
+                                            sign *= J.destroy_alfa_bit(t);
+                                            sign *= J.destroy_alfa_bit(u);
+                                            sign *= J.destroy_alfa_bit(v);
+                                            sign *= J.destroy_alfa_bit(w);
+                                            sign *= J.create_alfa_bit(s);
+                                            sign *= J.create_alfa_bit(r);
+                                            sign *= J.create_alfa_bit(q);
+                                            sign *= J.create_alfa_bit(p);
+                                            if (sign != 0) {
+                                                if (state_vector_l.count(J) != 0) {
+                                                    rdm += sign * to_double(state_vector_l[J] * c_I);
+                                                }
+                                            }
+                                        }
+                                        if (std::fabs(rdm) > 1.0e-12) {
+                                            double rdm_comp = g4aaaa.at({p, q, r, s, t, u, v, w});
+                                            error_4rdm_aaaa += std::fabs(rdm - rdm_comp);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        psi::Process::environment.globals["AAAAAAAA 4-RDM ERROR"] = error_4rdm_aaaa;
+        psi::outfile->Printf("\n    AAAAAAAA 4-RDM Error : %+e", error_4rdm_aaaa);
+
+        auto g4aaab = rdms->g4aaab();
+        double error_4rdm_aaab = 0.0;
+        for (size_t p = 0; p < ncmo; ++p) {
+            for (size_t q = p + 1; q < ncmo; ++q) {
+                for (size_t r = q + 1; r < ncmo; ++r) {
+                    for (size_t s = 0; s < ncmo; ++s) {
+                        for (size_t t = 0; t < ncmo; ++t) {
+                            for (size_t u = t + 1; u < ncmo; ++u) {
+                                for (size_t v = u + 1; v < ncmo; ++v) {
+                                    for (size_t w = 0; w < ncmo; ++w) {
+                                        double rdm = 0.0;
+                                        for (const auto& [I, c_I] : state_vector_r) {
+                                            J = I;
+                                            double sign = 1.0;
+                                            sign *= J.destroy_alfa_bit(t);
+                                            sign *= J.destroy_alfa_bit(u);
+                                            sign *= J.destroy_alfa_bit(v);
+                                            sign *= J.destroy_beta_bit(w);
+                                            sign *= J.create_beta_bit(s);
+                                            sign *= J.create_alfa_bit(r);
+                                            sign *= J.create_alfa_bit(q);
+                                            sign *= J.create_alfa_bit(p);
+                                            if (sign != 0) {
+                                                if (state_vector_l.count(J) != 0) {
+                                                    rdm += sign * to_double(state_vector_l[J] * c_I);
+                                                }
+                                            }
+                                        }
+                                        if (std::fabs(rdm) > 1.0e-12) {
+                                            double rdm_comp = g4aaab.at({p, q, r, s, t, u, v, w});
+                                            error_4rdm_aaab += std::fabs(rdm - rdm_comp);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        psi::Process::environment.globals["AAABAAAB 4-RDM ERROR"] = error_4rdm_aaab;
+        psi::outfile->Printf("\n    AAABAAAB 4-RDM Error : %+e", error_4rdm_aaab);
+
+        auto g4aabb = rdms->g4aabb();
+        double error_4rdm_aabb = 0.0;
+        for (size_t p = 0; p < ncmo; ++p) {
+            for (size_t q = p + 1; q < ncmo; ++q) {
+                for (size_t r = 0; r < ncmo; ++r) {
+                    for (size_t s = r + 1; s < ncmo; ++s) {
+                        for (size_t t = 0; t < ncmo; ++t) {
+                            for (size_t u = t + 1; u < ncmo; ++u) {
+                                for (size_t v = 0; v < ncmo; ++v) {
+                                    for (size_t w = v + 1; w < ncmo; ++w) {
+                                        double rdm = 0.0;
+                                        for (const auto& [I, c_I] : state_vector_r) {
+                                            J = I;
+                                            double sign = 1.0;
+                                            sign *= J.destroy_alfa_bit(t);
+                                            sign *= J.destroy_alfa_bit(u);
+                                            sign *= J.destroy_beta_bit(v);
+                                            sign *= J.destroy_beta_bit(w);
+                                            sign *= J.create_beta_bit(s);
+                                            sign *= J.create_beta_bit(r);
+                                            sign *= J.create_alfa_bit(q);
+                                            sign *= J.create_alfa_bit(p);
+                                            if (sign != 0) {
+                                                if (state_vector_l.count(J) != 0) {
+                                                    rdm += sign * to_double(state_vector_l[J] * c_I);
+                                                }
+                                            }
+                                        }
+                                        if (std::fabs(rdm) > 1.0e-12) {
+                                            double rdm_comp = g4aabb.at({p, q, r, s, t, u, v, w});
+                                            error_4rdm_aabb += std::fabs(rdm - rdm_comp);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        psi::Process::environment.globals["AABBAABB 4-RDM ERROR"] = error_4rdm_aabb;
+        psi::outfile->Printf("\n    AABBAABB 4-RDM Error : %+e", error_4rdm_aabb);
+
+        auto g4abbb = rdms->g4abbb();
+        double error_4rdm_abbb = 0.0;
+        for (size_t p = 0; p < ncmo; ++p) {
+            for (size_t q = 0; q < ncmo; ++q) {
+                for (size_t r = q + 1; r < ncmo; ++r) {
+                    for (size_t s = r + 1; s < ncmo; ++s) {
+                        for (size_t t = 0; t < ncmo; ++t) {
+                            for (size_t u = 0; u < ncmo; ++u) {
+                                for (size_t v = u + 1; v < ncmo; ++v) {
+                                    for (size_t w = v + 1; w < ncmo; ++w) {
+                                        double rdm = 0.0;
+                                        for (const auto& [I, c_I] : state_vector_r) {
+                                            J = I;
+                                            double sign = 1.0;
+                                            sign *= J.destroy_alfa_bit(t);
+                                            sign *= J.destroy_beta_bit(u);
+                                            sign *= J.destroy_beta_bit(v);
+                                            sign *= J.destroy_beta_bit(w);
+                                            sign *= J.create_beta_bit(s);
+                                            sign *= J.create_beta_bit(r);
+                                            sign *= J.create_beta_bit(q);
+                                            sign *= J.create_alfa_bit(p);
+                                            if (sign != 0) {
+                                                if (state_vector_l.count(J) != 0) {
+                                                    rdm += sign * to_double(state_vector_l[J] * c_I);
+                                                }
+                                            }
+                                        }
+                                        if (std::fabs(rdm) > 1.0e-12) {
+                                            double rdm_comp = g4abbb.at({p, q, r, s, t, u, v, w});
+                                            error_4rdm_abbb += std::fabs(rdm - rdm_comp);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        psi::Process::environment.globals["ABBBABBB 4-RDM ERROR"] = error_4rdm_abbb;
+        psi::outfile->Printf("\n    ABBBABBB 4-RDM Error : %+e", error_4rdm_abbb);
+
+        auto g4bbbb = rdms->g4bbbb();
+        double error_4rdm_bbbb = 0.0;
+        for (size_t p = 0; p < ncmo; ++p) {
+            for (size_t q = p + 1; q < ncmo; ++q) {
+                for (size_t r = q + 1; r < ncmo; ++r) {
+                    for (size_t s = r + 1; s < ncmo; ++s) {
+                        for (size_t t = 0; t < ncmo; ++t) {
+                            for (size_t u = t + 1; u < ncmo; ++u) {
+                                for (size_t v = u + 1; v < ncmo; ++v) {
+                                    for (size_t w = v + 1; w < ncmo; ++w) {
+                                        double rdm = 0.0;
+                                        for (const auto& [I, c_I] : state_vector_r) {
+                                            J = I;
+                                            double sign = 1.0;
+                                            sign *= J.destroy_beta_bit(t);
+                                            sign *= J.destroy_beta_bit(u);
+                                            sign *= J.destroy_beta_bit(v);
+                                            sign *= J.destroy_beta_bit(w);
+                                            sign *= J.create_beta_bit(s);
+                                            sign *= J.create_beta_bit(r);
+                                            sign *= J.create_beta_bit(q);
+                                            sign *= J.create_beta_bit(p);
+                                            if (sign != 0) {
+                                                if (state_vector_l.count(J) != 0) {
+                                                    rdm += sign * to_double(state_vector_l[J] * c_I);
+                                                }
+                                            }
+                                        }
+                                        if (std::fabs(rdm) > 1.0e-12) {
+                                            double rdm_comp = g4bbbb.at({p, q, r, s, t, u, v, w});
+                                            error_4rdm_bbbb += std::fabs(rdm - rdm_comp);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        psi::Process::environment.globals["BBBBBBBB 4-RDM ERROR"] = error_4rdm_bbbb;
+        psi::outfile->Printf("\n    BBBBBBBB 4-RDM Error : %+e", error_4rdm_bbbb);
     }
 }
 

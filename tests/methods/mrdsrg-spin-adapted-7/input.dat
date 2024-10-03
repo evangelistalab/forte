@@ -85,10 +85,11 @@ set forte {
   corr_level                pt2
   dsrg_s                    0.35
   calc_type                 sa
-  transition_dipoles        true
+  transition_dipoles        [[0,1,0]]
+  multipole_moment_level    2
   dsrg_max_dipole_level     1
   dsrg_max_quadrupole_level 1
-  mcscf_reference false
+  mcscf_reference           false
 }
 Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 
@@ -114,6 +115,7 @@ set forte {
   dsrg_s         1.5
   dsrg_nivo      true
   dsrg_read_amps true
+  dsrg_adaptive_rsc false
 }
 Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 

@@ -2,7 +2,7 @@
  * @BEGIN LICENSE
  *
  * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
- * t    hat implements a variety of quantum chemistry methods for strongly
+ * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
  * Copyright (c) 2012-2024 by its authors (see LICENSE, AUTHORS).
@@ -57,8 +57,9 @@
 #include "mcscf/mcscf_2step.h"
 #include "fci/fci_solver.h"
 #include "mrdsrg-helper/run_dsrg.h"
-#include "mrdsrg-spin-integrated/master_mrdsrg.h"
 #include "mrdsrg-spin-adapted/sadsrg.h"
+#include "mrdsrg-spin-adapted/sa_mrpt2.h"
+#include "mrdsrg-spin-integrated/master_mrdsrg.h"
 #include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
 #include "integrals/one_body_integrals.h"
 #include "sci/tdci.h"
@@ -66,99 +67,15 @@
 
 #include "post_process/spin_corr.h"
 
+#include "forte_python_module.h"
+
 namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace forte {
 
-// see the files in src/api for the implementation of the following methods
-void export_EPICTensors(py::module& m);
-void export_ActiveSpaceIntegrals(py::module& m);
-void export_ForteIntegrals(py::module& m);
-void export_ForteOptions(py::module& m);
-void export_MOSpaceInfo(py::module& m);
-void export_RDMs(py::module& m);
-void export_Determinant(py::module& m);
-void export_GAS(py::module& m);
-void export_StateInfo(py::module& m);
-void export_SigmaVector(py::module& m);
-void export_SparseCISolver(py::module& m);
-void export_ForteCubeFile(py::module& m);
-void export_OrbitalTransform(py::module& m);
-void export_Localize(py::module& m);
-void export_SemiCanonical(py::module& m);
-void export_DavidsonLiuSolver(py::module& m);
-
 void set_master_screen_threshold(double value);
 double get_master_screen_threshold();
-
-/// Export the ActiveSpaceMethod class
-void export_ActiveSpaceMethod(py::module& m) {
-    py::class_<ActiveSpaceMethod, std::shared_ptr<ActiveSpaceMethod>>(m, "ActiveSpaceMethod")
-        .def("compute_energy", &ActiveSpaceMethod::compute_energy)
-        .def("set_quiet_mode", &ActiveSpaceMethod::set_quiet_mode)
-        .def("dump_wave_function", &ActiveSpaceMethod::dump_wave_function)
-        .def("read_wave_function", &ActiveSpaceMethod::read_wave_function);
-}
-
-void export_ActiveSpaceSolver(py::module& m) {
-    py::class_<ActiveSpaceSolver, std::shared_ptr<ActiveSpaceSolver>>(m, "ActiveSpaceSolver")
-        .def("compute_energy", &ActiveSpaceSolver::compute_energy)
-        .def("rdms", &ActiveSpaceSolver::rdms)
-        .def("compute_contracted_energy", &ActiveSpaceSolver::compute_contracted_energy,
-             "as_ints"_a, "max_body"_a,
-             "Solve the contracted CI eigenvalue problem using given integrals")
-        .def("compute_average_rdms", &ActiveSpaceSolver::compute_average_rdms,
-             "Compute the weighted average reference")
-        .def("state_energies_map", &ActiveSpaceSolver::state_energies_map,
-             "Return a map of StateInfo to the computed nroots of energies")
-        .def("set_active_space_integrals", &ActiveSpaceSolver::set_active_space_integrals,
-             "Set the active space integrals manually")
-        .def("set_Uactv", &ActiveSpaceSolver::set_Uactv,
-             "Set unitary matrices for changing orbital basis in RDMs when computing dipoles")
-        .def("compute_dipole_moment", &ActiveSpaceSolver::compute_dipole_moment,
-             "Compute transition dipole moment")
-        .def("compute_quadrupole_moment", &ActiveSpaceSolver::compute_quadrupole_moment,
-             "Compute transition quadrupole moment")
-        .def("compute_fosc_same_orbs", &ActiveSpaceSolver::compute_fosc_same_orbs,
-             "Compute the oscillator strength assuming using same orbitals")
-        .def("state_ci_wfn_map", &ActiveSpaceSolver::state_ci_wfn_map,
-             "Return a map from StateInfo to CI wave functions (DeterminantHashVec, eigenvectors)")
-        .def("state_filename_map", &ActiveSpaceSolver::state_filename_map,
-             "Return a map from StateInfo to wave function file names")
-        .def("dump_wave_function", &ActiveSpaceSolver::dump_wave_function,
-             "Dump wave functions to disk")
-        .def("eigenvectors", &ActiveSpaceSolver::eigenvectors, "Return the CI wave functions");
-
-    m.def("compute_average_state_energy", &compute_average_state_energy,
-          "Compute the average energy given the energies and weights of each state");
-}
-
-void export_MCSCF_2STEP(py::module& m) {
-    py::class_<MCSCF_2STEP>(m, "MCSCF_2STEP")
-        .def("compute_energy", &MCSCF_2STEP::compute_energy, "Compute the MCSCF energy");
-}
-
-void export_Symmetry(py::module& m) {
-    py::class_<Symmetry>(m, "Symmetry")
-        .def(py::init<std::string>())
-        .def("point_group_label", &Symmetry::point_group_label,
-             "Returns the label of this point group")
-        .def("irrep_labels", &Symmetry::irrep_labels, "Returns a vector of irrep labels")
-        .def("irrep_label", &Symmetry::irrep_label, "h"_a, "Returns the label of irrep ``h``")
-        .def("irrep_label_to_index", &Symmetry::irrep_label_to_index, "label"_a,
-             "Returns the index of a given irrep ``label``")
-        .def("nirrep", &Symmetry::nirrep, "Returns the number of irreps")
-        .def(
-            "__repr__",
-            [](const Symmetry& sym) { return "Symmetry(" + sym.point_group_label() + ")"; },
-            "Returns a representation of this object")
-        .def(
-            "__str__", [](const Symmetry& sym) { return sym.point_group_label(); },
-            "Returns a string representation of this object")
-        .def_static("irrep_product", &Symmetry::irrep_product, "h"_a, "g"_a,
-                    "Returns the product of irreps ``h`` and ``g``");
-}
 
 // TODO: export more classes using the function above
 PYBIND11_MODULE(_forte, m) {
@@ -215,8 +132,7 @@ PYBIND11_MODULE(_forte, m) {
           "Make a DSRG method (spin-integrated implementation)");
     m.def("make_sadsrg_method", &make_sadsrg_method,
           "Make a DSRG method (spin-adapted implementation)");
-    m.def("make_dsrg_so_y", &make_dsrg_so_y, "Make a DSRG pointer (spin-orbital implementation)");
-    m.def("make_dsrg_so_f", &make_dsrg_so_f, "Make a DSRG pointer (spin-orbital implementation)");
+    m.def("make_dsrg_so", &make_dsrg_so, "Make a DSRG pointer (spin-orbital implementation)");
     m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
           "Make a DSRG pointer (spin-adapted implementation)");
 
@@ -322,7 +238,18 @@ PYBIND11_MODULE(_forte, m) {
             return pyrdm;
         },
         "Return the L3 in a dictionary");
-
+    m.def(
+        "L4_dict", // L4aaaa_, L4aaab_, L4aabb_, L4abbb_, L4bbbb_
+        [](std::vector<ambit::Tensor> rdm) {
+            py::dict pyrdm;
+            pyrdm[py::str("aaaaaaaa")] = ambit_to_np(rdm[0]);
+            pyrdm[py::str("aaaAaaaA")] = ambit_to_np(rdm[1]);
+            pyrdm[py::str("aaAAaaAA")] = ambit_to_np(rdm[2]);
+            pyrdm[py::str("aAAAaAAA")] = ambit_to_np(rdm[3]);
+            pyrdm[py::str("AAAAAAAA")] = ambit_to_np(rdm[4]);
+            return pyrdm;
+        },
+        "Return the L3 in a dictionary");
     m.def("get_gas_occupation", &get_gas_occupation);
     m.def("get_ci_occupation_patterns", &get_ci_occupation_patterns);
 
@@ -339,7 +266,7 @@ PYBIND11_MODULE(_forte, m) {
     export_ActiveSpaceMethod(m);
     export_ActiveSpaceSolver(m);
 
-    export_MCSCF_2STEP(m);
+    export_MCSCF(m);
     export_ForteIntegrals(m);
 
     export_Symmetry(m);
@@ -348,8 +275,20 @@ PYBIND11_MODULE(_forte, m) {
     export_SemiCanonical(m);
 
     export_Determinant(m);
+    export_Configuration(m);
+    export_String(m);
 
-    export_GAS(m);
+    export_SQOperatorString(m);
+    export_SparseExp(m);
+    export_SparseFactExp(m);
+    export_SparseHamiltonian(m);
+    export_SparseOperator(m);
+    export_SparseOperatorList(m);
+    export_SparseOperatorSimTrans(m);
+    export_SparseState(m);
+
+    export_GenCIStringLists(m);
+    export_GenCIVector(m);
 
     export_RDMs(m);
 
@@ -383,17 +322,6 @@ PYBIND11_MODULE(_forte, m) {
         .def("set_ci_vectors", &DynamicCorrelationSolver::set_ci_vectors,
              "Set the CI eigenvectors for DSRG-MRPT2 analytic gradients");
 
-    // export ActiveMultipoleIntegrals
-    py::class_<ActiveMultipoleIntegrals, std::shared_ptr<ActiveMultipoleIntegrals>>(
-        m, "ActiveMultipoleIntegrals")
-        .def("compute_electronic_dipole", &ActiveMultipoleIntegrals::compute_electronic_dipole)
-        .def("compute_electronic_quadrupole",
-             &ActiveMultipoleIntegrals::compute_electronic_quadrupole)
-        .def("nuclear_dipole", &ActiveMultipoleIntegrals::nuclear_dipole)
-        .def("nuclear_quadrupole", &ActiveMultipoleIntegrals::nuclear_quadrupole)
-        .def("set_dipole_name", &ActiveMultipoleIntegrals::set_dp_name)
-        .def("set_quadrupole_name", &ActiveMultipoleIntegrals::set_qp_name);
-
     // export MASTER_DSRG
     py::class_<MASTER_DSRG>(m, "MASTER_DSRG")
         .def("compute_energy", &MASTER_DSRG::compute_energy, "Compute the DSRG energy")
@@ -412,6 +340,7 @@ PYBIND11_MODULE(_forte, m) {
         .def("get_eta1", &MASTER_DSRG::get_eta1, "Return the eta1 tensor")
         .def("get_lambda2", &MASTER_DSRG::get_lambda2, "Return the lambda2 tensor")
         .def("get_lambda3", &MASTER_DSRG::get_lambda3, "Return the lambda3 tensor")
+        .def("get_lambda4", &MASTER_DSRG::get_lambda4, "Return the lambda4 tensor")
         .def("deGNO_DMbar_actv", &MASTER_DSRG::deGNO_DMbar_actv,
              "Return the DSRG dressed dipole integrals")
         .def("nuclear_dipole", &MASTER_DSRG::nuclear_dipole,
@@ -450,6 +379,13 @@ PYBIND11_MODULE(_forte, m) {
         .def("converged", &SADSRG::converged, "Return if amplitudes are converged or not")
         .def("clean_checkpoints", &SADSRG::clean_checkpoints, "Delete amplitudes checkpoint files");
 
+    // export spin-adapted DSRG-MRPT2
+    py::class_<SA_MRPT2, SADSRG>(m, "SA_MRPT2")
+        .def(
+            py::init<std::shared_ptr<RDMs>, std::shared_ptr<SCFInfo>, std::shared_ptr<ForteOptions>,
+                     std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
+        .def("build_fno", &SA_MRPT2::build_fno, "Build DSRG-MRPT2 frozen natural orbitals");
+
     // export MRDSRG_SO
     py::class_<MRDSRG_SO>(m, "MRDSRG_SO")
         .def("compute_energy", &MRDSRG_SO::compute_energy, "Compute DSRG energy")
@@ -461,12 +397,6 @@ PYBIND11_MODULE(_forte, m) {
         .def("get_eta1", &MRDSRG_SO::get_eta1, "Return the eta1 tensor")
         .def("get_lambda2", &MRDSRG_SO::get_lambda2, "Return the lambda2 tensor")
         .def("get_lambda3", &MRDSRG_SO::get_lambda3, "Return the lambda3 tensor");
-
-    // export SOMRDSRG
-    py::class_<SOMRDSRG>(m, "SOMRDSRG")
-        .def("compute_energy", &SOMRDSRG::compute_energy, "Compute DSRG energy")
-        .def("compute_Heff_actv", &SOMRDSRG::compute_Heff_actv,
-             "Return the DSRG dressed ActiveSpaceIntegrals");
 
     // export DSRG_MRPT spin-adapted code
     py::class_<DSRG_MRPT>(m, "DSRG_MRPT")

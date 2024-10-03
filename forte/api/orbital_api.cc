@@ -2,7 +2,7 @@
  * @BEGIN LICENSE
  *
  * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
- * t    hat implements a variety of quantum chemistry methods for strongly
+ * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
  * Copyright (c) 2012-2024 by its authors (see LICENSE, AUTHORS).
@@ -44,8 +44,6 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace forte {
-
-/// Export the OrbitalTransform class
 void export_OrbitalTransform(py::module& m) {
     py::class_<OrbitalTransform>(m, "OrbitalTransform")
         .def("compute_transformation", &OrbitalTransform::compute_transformation)
@@ -53,7 +51,6 @@ void export_OrbitalTransform(py::module& m) {
         .def("get_Ub", &OrbitalTransform::get_Ub, "Get Ub rotation");
 }
 
-/// Export the ForteOptions class
 void export_Localize(py::module& m) {
     py::class_<Localize>(m, "Localize")
         .def(py::init<std::shared_ptr<ForteOptions>, std::shared_ptr<ForteIntegrals>,
@@ -70,7 +67,6 @@ void export_Localize(py::module& m) {
         .def("get_Ub", &Localize::get_Ub, "Get Ub rotation");
 }
 
-/// export SemiCanonical class
 void export_SemiCanonical(py::module& m) {
     py::class_<SemiCanonical>(m, "SemiCanonical")
         .def(py::init<std::shared_ptr<MOSpaceInfo>, std::shared_ptr<ForteIntegrals>,

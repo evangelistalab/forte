@@ -2,7 +2,7 @@
  * @BEGIN LICENSE
  *
  * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
- * t    hat implements a variety of quantum chemistry methods for strongly
+ * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
  * Copyright (c) 2012-2024 by its authors (see LICENSE, AUTHORS).
@@ -30,8 +30,10 @@
 #include <pybind11/stl.h>
 
 #include "integrals/active_space_integrals.h"
+#include "integrals/one_body_integrals.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 namespace forte {
 
@@ -58,7 +60,20 @@ void export_ActiveSpaceIntegrals(py::module& m) {
         .def("tei_aa", &ActiveSpaceIntegrals::tei_aa, "alpha-alpha two-electron integral <pq||rs>")
         .def("tei_ab", &ActiveSpaceIntegrals::tei_ab, "alpha-beta two-electron integral <pq|rs>")
         .def("tei_bb", &ActiveSpaceIntegrals::tei_bb, "beta-beta two-electron integral <pq||rs>")
+        .def("add", &ActiveSpaceIntegrals::add, "Add another integrals to this one", "as_ints"_a,
+             "factor"_a = 1.0)
         .def("print", &ActiveSpaceIntegrals::print, "Print the integrals (alpha-alpha case)");
+
+    // export ActiveMultipoleIntegrals
+    py::class_<ActiveMultipoleIntegrals, std::shared_ptr<ActiveMultipoleIntegrals>>(
+        m, "ActiveMultipoleIntegrals")
+        .def("compute_electronic_dipole", &ActiveMultipoleIntegrals::compute_electronic_dipole)
+        .def("compute_electronic_quadrupole",
+             &ActiveMultipoleIntegrals::compute_electronic_quadrupole)
+        .def("nuclear_dipole", &ActiveMultipoleIntegrals::nuclear_dipole)
+        .def("nuclear_quadrupole", &ActiveMultipoleIntegrals::nuclear_quadrupole)
+        .def("set_dipole_name", &ActiveMultipoleIntegrals::set_dp_name)
+        .def("set_quadrupole_name", &ActiveMultipoleIntegrals::set_qp_name);
 }
 
 } // namespace forte

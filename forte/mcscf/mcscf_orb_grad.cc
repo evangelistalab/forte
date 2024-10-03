@@ -42,7 +42,9 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libiwl/iwl.hpp"
 #include "psi4/libpsio/psio.hpp"
+#include "psi4/lib3index/dfhelper.h"
 
+#include "forte-def.h"
 #include "helpers/helpers.h"
 #include "helpers/lbfgs/lbfgs.h"
 #include "helpers/printing.h"
@@ -59,9 +61,9 @@ using namespace ambit;
 namespace forte {
 
 MCSCF_ORB_GRAD::MCSCF_ORB_GRAD(std::shared_ptr<ForteOptions> options,
-                                 std::shared_ptr<MOSpaceInfo> mo_space_info,
-                                 std::shared_ptr<ForteIntegrals> ints, bool freeze_core)
-    : options_(options), mo_space_info_(mo_space_info), ints_(ints), freeze_core_(freeze_core) {
+                               std::shared_ptr<MOSpaceInfo> mo_space_info,
+                               std::shared_ptr<ForteIntegrals> ints, bool ignore_frozen)
+    : options_(options), mo_space_info_(mo_space_info), ints_(ints), ignore_frozen_(ignore_frozen) {
     startup();
 }
 
@@ -77,6 +79,33 @@ void MCSCF_ORB_GRAD::startup() {
 
     // setup JK
     JK_ = ints_->jk();
+    if (ints_->integral_type() == IntegralType::DF or
+        ints_->integral_type() == IntegralType::DiskDF) {
+        tei_alg_ = options_->get_bool("MCSCF_DF_TEIALG") ? TEIALG::DF : TEIALG::JK;
+
+        outfile->Printf("\n\n  DF-MCSCF adopts integrals from DFHelper of Psi4.\n");
+
+        auto wfn = ints_->wfn();
+        auto bs = wfn->basisset();
+        auto bs_aux = wfn->get_basisset("DF_BASIS_SCF");
+
+        df_helper_ = std::make_shared<psi::DFHelper>(bs, bs_aux);
+        size_t mem_sys = psi::Process::environment.get_memory() / sizeof(double);
+        int64_t mem = mem_sys - JK_->memory_estimate();
+        if (mem < 0) {
+            auto xb = to_xb(static_cast<size_t>(-mem), sizeof(double));
+            std::string msg = "Not enough memory! Need at least ";
+            msg += std::to_string(xb.first) + " " + xb.second.c_str() + " more.";
+            outfile->Printf("\n  %s", msg.c_str());
+            throw std::runtime_error(msg);
+        }
+        df_helper_->set_schwarz_cutoff(options_->get_double("INTS_TOLERANCE"));
+        df_helper_->set_fitting_condition(options_->get_double("DF_FITTING_CONDITION"));
+        df_helper_->set_memory(static_cast<size_t>(mem));
+        df_helper_->set_nthreads(omp_get_max_threads());
+        df_helper_->set_print_lvl(0);
+        df_helper_->initialize();
+    }
 
     // allocate memory for tensors and matrices
     init_tensors();
@@ -86,61 +115,48 @@ void MCSCF_ORB_GRAD::startup() {
 }
 
 void MCSCF_ORB_GRAD::setup_mos() {
+    label_to_mos_.clear();
+    label_to_cmos_.clear();
 
     nirrep_ = mo_space_info_->nirrep();
 
     nsopi_ = ints_->nsopi();
     nmopi_ = mo_space_info_->dimension("ALL");
-
-    if (freeze_core_) {
-        ncmopi_ = mo_space_info_->dimension("CORRELATED");
-    } else {
-        ncmopi_ =
-            mo_space_info_->dimension("FROZEN_DOCC") + mo_space_info_->dimension("CORRELATED");
-    }
-
     ndoccpi_ = mo_space_info_->dimension("INACTIVE_DOCC");
-    nfrzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
-
-    if (freeze_core_) {
-        nfrzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
-        core_mos_ = mo_space_info_->absolute_mo("RESTRICTED_DOCC");
-    } else {
-        nfrzcpi_ = psi::Dimension(nirrep_);
-        core_mos_ = mo_space_info_->absolute_mo("INACTIVE_DOCC");
-    }
-
     nactvpi_ = mo_space_info_->dimension("ACTIVE");
     actv_mos_ = mo_space_info_->absolute_mo("ACTIVE");
+
+    if (ignore_frozen_) {
+        ncmopi_ = mo_space_info_->dimension("ALL");
+        nfrzvpi_ = psi::Dimension(nirrep_);
+        nfrzcpi_ = psi::Dimension(nirrep_);
+        core_mos_ = mo_space_info_->absolute_mo("INACTIVE_DOCC");
+        label_to_mos_["f"] = std::vector<size_t>();
+        label_to_mos_["u"] = std::vector<size_t>();
+        label_to_mos_["v"] = mo_space_info_->absolute_mo("INACTIVE_UOCC");
+        label_to_cmos_["c"] = mo_space_info_->corr_absolute_mo("INACTIVE_DOCC");
+        label_to_cmos_["v"] = mo_space_info_->corr_absolute_mo("INACTIVE_UOCC");
+    } else {
+        ncmopi_ = mo_space_info_->dimension("CORRELATED");
+        nfrzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
+        nfrzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
+        core_mos_ = mo_space_info_->absolute_mo("RESTRICTED_DOCC");
+        label_to_mos_["f"] = mo_space_info_->absolute_mo("FROZEN_DOCC");
+        label_to_mos_["u"] = mo_space_info_->absolute_mo("FROZEN_UOCC");
+        label_to_mos_["v"] = mo_space_info_->absolute_mo("RESTRICTED_UOCC");
+        label_to_cmos_["c"] = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+        label_to_cmos_["v"] = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
+    }
+
+    label_to_mos_["c"] = core_mos_;
+    label_to_mos_["a"] = actv_mos_;
+    label_to_cmos_["a"] = mo_space_info_->corr_absolute_mo("ACTIVE");
 
     nso_ = nsopi_.sum();
     nmo_ = nmopi_.sum();
     ncmo_ = ncmopi_.sum();
     nactv_ = nactvpi_.sum();
     nfrzc_ = nfrzcpi_.sum();
-
-    label_to_mos_.clear();
-
-    if (freeze_core_) {
-        label_to_mos_["f"] = mo_space_info_->absolute_mo("FROZEN_DOCC");
-    } else {
-        label_to_mos_["f"] = std::vector<size_t>();
-    }
-    label_to_mos_["c"] = core_mos_;
-    label_to_mos_["a"] = actv_mos_;
-    label_to_mos_["v"] = mo_space_info_->absolute_mo("RESTRICTED_UOCC");
-    label_to_mos_["u"] = mo_space_info_->absolute_mo("FROZEN_UOCC");
-
-    label_to_cmos_.clear();
-    if (freeze_core_) {
-        label_to_cmos_["c"] = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
-        label_to_cmos_["a"] = mo_space_info_->corr_absolute_mo("ACTIVE");
-        label_to_cmos_["v"] = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
-    } else {
-        label_to_cmos_["c"] = mo_space_info_->absolute_mo("INACTIVE_DOCC");
-        label_to_cmos_["a"] = mo_space_info_->absolute_mo("ACTIVE");
-        label_to_cmos_["v"] = mo_space_info_->absolute_mo("RESTRICTED_UOCC");
-    }
 
     // in Pitzer ordering
     mos_rel_.resize(nmo_);
@@ -456,7 +472,11 @@ void MCSCF_ORB_GRAD::build_mo_integrals() {
     if (ints_->integral_type() == Custom) {
         fill_tei_custom(V_);
     } else {
-        build_tei_from_ao();
+        if (tei_alg_ == TEIALG::JK) {
+            build_tei_jk();
+        } else {
+            build_tei_df();
+        }
     }
 }
 
@@ -475,7 +495,57 @@ void MCSCF_ORB_GRAD::fill_tei_custom(ambit::BlockedTensor V) {
     }
 }
 
-void MCSCF_ORB_GRAD::build_tei_from_ao() {
+void MCSCF_ORB_GRAD::build_tei_df() {
+    if (nactv_ == 0)
+        return;
+
+    timer_on("Build (pu|xy) integrals");
+
+    auto C_nosym = ints_->Ca_SO2AO(C_);
+
+    auto Cact = std::make_shared<psi::Matrix>("Cact", nso_, nactv_);
+    for (size_t x = 0; x < nactv_; ++x) {
+        Cact->set_column(0, x, C_nosym->get_column(0, actv_mos_[x]));
+    }
+
+    df_helper_->add_space("ALL", C_nosym);
+    df_helper_->add_space("ACT", Cact);
+    df_helper_->add_transformation("B", "ALL", "ACT", "Qpq");
+    df_helper_->transform();
+
+    auto B = df_helper_->get_tensor("B"); // naux * (nmo * nact)
+
+    size_t naux = df_helper_->get_naux();
+    auto Baa = std::make_shared<psi::Matrix>("Baa", naux, nactv_ * nactv_);
+    for (size_t Q = 0; Q < naux; ++Q) {
+        for (size_t u = 0, nua = 0; u < nactv_; ++u) {
+            nua = label_to_mos_["a"][u] * nactv_;
+            Baa->set(Q, u * nactv_ + u, B->get(Q, nua + u));
+            for (size_t v = u + 1; v < nactv_; ++v) {
+                Baa->set(Q, u * nactv_ + v, B->get(Q, nua + v));
+                Baa->set(Q, v * nactv_ + u, B->get(Q, nua + v));
+            }
+        }
+    }
+
+    auto puxy = psi::linalg::doublet(B, Baa, true, false); // (nmo * nactv) * (nactv * nactv)
+    auto puxy_ptr = puxy->get_pointer();
+    for (const auto& [p_label, p_mos] : label_to_mos_) {
+        std::string block = p_label + "aaa";
+        auto& data = V_.block(block).data();
+        for (size_t p = 0, psize = p_mos.size(), nactv2 = nactv_ * nactv_; p < psize; ++p) {
+            for (size_t u = 0; u < nactv_; ++u) {
+                C_DCOPY(nactv2, puxy_ptr + (p_mos[p] * nactv_ + u) * nactv2, 1,
+                        &data[(p * nactv_ + u) * nactv2], 1);
+            }
+        }
+    }
+
+    df_helper_->clear_all();
+    timer_off("Build (pu|xy) integrals");
+}
+
+void MCSCF_ORB_GRAD::build_tei_jk() {
     if (nactv_ == 0)
         return;
 
@@ -485,24 +555,7 @@ void MCSCF_ORB_GRAD::build_tei_from_ao() {
 
     // Transform C matrix to C1 symmetry
     // JK does not support mixed symmetry needed for 4-index integrals (York 09/09/2020)
-    auto aotoso = ints_->wfn()->aotoso();
-    auto C_nosym = std::make_shared<psi::Matrix>(nso_, nmo_);
-
-    // Transform from the SO to the AO basis for the C matrix
-    // MO in Pitzer ordering and only keep the non-frozen MOs
-    for (int h = 0, index = 0; h < nirrep_; ++h) {
-        for (int i = 0; i < nmopi_[h]; ++i) {
-            int nao = nso_, nso_h = nsopi_[h];
-
-            if (!nso_h)
-                continue;
-
-            C_DGEMV('N', nao, nso_h, 1.0, aotoso->pointer(h)[0], nso_h, &C_->pointer(h)[0][i],
-                    nmopi_[h], 0.0, &C_nosym->pointer()[0][index], nmo_);
-
-            index += 1;
-        }
-    }
+    auto C_nosym = ints_->Ca_SO2AO(C_);
 
     // set up the active part of the C matrix
     auto Cact = std::make_shared<psi::Matrix>("Cact", nso_, nactv_);
@@ -693,7 +746,7 @@ std::shared_ptr<psi::Matrix> MCSCF_ORB_GRAD::fock(std::shared_ptr<RDMs> rdms) {
 }
 
 double MCSCF_ORB_GRAD::evaluate(std::shared_ptr<psi::Vector> x, std::shared_ptr<psi::Vector> g,
-                                 bool do_g) {
+                                bool do_g) {
     // if need to update orbitals and integrals
     if (update_orbitals(x)) {
         build_mo_integrals();
@@ -812,7 +865,7 @@ std::shared_ptr<psi::Matrix> MCSCF_ORB_GRAD::cayley_trans(const std::shared_ptr<
 
 std::vector<std::tuple<int, int, int>>
 MCSCF_ORB_GRAD::test_orbital_rotations(const std::shared_ptr<psi::Matrix>& U,
-                                        const std::string& warning_msg) {
+                                       const std::string& warning_msg) {
     // the overlap between new and old orbitals is simply U
     // O = Cold^T S Cnew = Cold^T S Cold U = U
     // MOM projection index: Pj = sum_{i}^{actv} O_ij
@@ -900,7 +953,7 @@ void MCSCF_ORB_GRAD::compute_orbital_grad() {
 }
 
 void MCSCF_ORB_GRAD::hess_diag(std::shared_ptr<psi::Vector>,
-                                const std::shared_ptr<psi::Vector>& h0) {
+                               const std::shared_ptr<psi::Vector>& h0) {
     compute_orbital_hess_diag();
     h0->copy(*hess_diag_);
 }
@@ -1006,7 +1059,7 @@ void MCSCF_ORB_GRAD::compute_orbital_hess_diag() {
 }
 
 void MCSCF_ORB_GRAD::reshape_rot_ambit(ambit::BlockedTensor bt,
-                                        const std::shared_ptr<psi::Vector>& sv) {
+                                       const std::shared_ptr<psi::Vector>& sv) {
     size_t vec_size = sv->dimpi().sum();
     if (vec_size != nrot_) {
         throw std::runtime_error(

@@ -1,6 +1,6 @@
 ![forte](lib/logos/forte_motologo_github.gif)
 
-[![Build Status](https://travis-ci.org/evangelistalab/forte.svg?branch=master)](https://travis-ci.org/evangelistalab/forte)
+[![Build Status](https://github.com/evangelistalab/forte/actions/workflows/build.yml/badge.svg)](https://github.com/evangelistalab/forte/actions/workflows/build.yml)
 [![Documentation Status](https://readthedocs.org/projects/forte/badge/?version=latest)](http://forte.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/evangelistalab/forte/branch/master/graph/badge.svg)](https://codecov.io/gh/evangelistalab/forte)
 
@@ -60,6 +60,7 @@ or for Debug mode
 ```tcsh
 python setup.py build_ext --debug develop
 ```
+If using `src/forte/setup.cfg`, instead append the line `debug=True` to `src/forte/setup.cfg` and then use `python setup.py develop` as normal.
 This procedure will register forte within pip and you should be able to see forte listed just by calling
 ```tcsh
 pip list

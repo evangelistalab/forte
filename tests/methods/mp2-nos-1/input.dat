@@ -36,6 +36,7 @@ scf_type df
 basis def2-svp
 maxiter 100
 docc [40,7]
+e_convergence 12
 d_convergence 6
 }
 

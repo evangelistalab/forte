@@ -2,7 +2,7 @@
  * @BEGIN LICENSE
  *
  * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
- * t    hat implements a variety of quantum chemistry methods for strongly
+ * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
  * Copyright (c) 2012-2024 by its authors (see LICENSE, AUTHORS).
@@ -36,8 +36,6 @@
 namespace py = pybind11;
 
 namespace forte {
-
-/// Export the ForteOptions class
 void export_ForteOptions(py::module& m) {
     py::class_<ForteOptions, std::shared_ptr<ForteOptions>>(m, "ForteOptions")
         .def(py::init<>())

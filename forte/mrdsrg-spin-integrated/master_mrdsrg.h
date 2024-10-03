@@ -59,6 +59,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     ambit::BlockedTensor get_eta1() { return Eta1_; }
     ambit::BlockedTensor get_lambda2() { return Lambda2_; }
     std::vector<ambit::Tensor> get_lambda3() { return {L3aaa_, L3aab_, L3abb_, L3bbb_}; }
+    std::vector<ambit::Tensor> get_lambda4() {
+        return {L4aaaa_, L4aaab_, L4aabb_, L4abbb_, L4bbbb_};
+    }
 
     /// De-normal-order DSRG transformed dipole moment
     std::vector<DressedQuantity> deGNO_DMbar_actv();
@@ -291,8 +294,15 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     ambit::Tensor L3aab_;
     ambit::Tensor L3abb_;
     ambit::Tensor L3bbb_;
+    /// Four-body density cumulants
+    ambit::Tensor L4aaaa_;
+    ambit::Tensor L4aaab_;
+    ambit::Tensor L4aabb_;
+    ambit::Tensor L4abbb_;
+    ambit::Tensor L4bbbb_;
     /// Whether to compute 3-cumulant contributions
     bool do_cu3_;
+    bool do_cu4_;
 
     // ==> Fock matrix related <==
 

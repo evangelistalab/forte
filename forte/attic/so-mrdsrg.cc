@@ -105,6 +105,8 @@ void SOMRDSRG::startup() {
     }
     taylor_order_ = int(0.5 * (15.0 / taylor_threshold_ + 1)) + 1;
 
+    dsrg_trans_type_ = foptions_->get_str("DSRG_TRANS_TYPE");
+
     std::vector<size_t> rdocc = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
     std::vector<size_t> actv = mo_space_info_->corr_absolute_mo("ACTIVE");
     std::vector<size_t> ruocc = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
@@ -932,13 +934,15 @@ void SOMRDSRG::H_eq_commutator_C_T(double factor, BlockedTensor& F, BlockedTenso
     H1.scale(factor);
     H2.scale(factor);
 
-    // => Add the term  + [F + V,T1 + T2]^+ <= //
-    H0 *= 2.0;
-    F["pq"] = H1["pq"];
-    H1["pq"] += F["qp"];
+    if (dsrg_trans_type_ == "UNITARY"){
+        // => Add the term  + [F + V,T1 + T2]^+ <= //
+        H0 *= 2.0;
+        F["pq"] = H1["pq"];
+        H1["pq"] += F["qp"];
 
-    V["pqrs"] = H2["pqrs"];
-    H2["pqrs"] += V["rspq"];
+        V["pqrs"] = H2["pqrs"];
+        H2["pqrs"] += V["rspq"];
+    }
 }
 
 void SOMRDSRG::update_T1() {

@@ -108,6 +108,14 @@ void MRDSRG_SO::startup() {
 
     source_ = foptions_->get_str("SOURCE");
 
+    dsrg_trans_type_ = foptions_->get_str("DSRG_TRANS_TYPE");
+    if (dsrg_trans_type_ == "CC" && foptions_->get_str("CORR_LEVEL") == "QDSRG2") {
+        outfile->Printf(
+            "\n  Warning: DSRG_TRANS_TYPE option CC is not supported with CORR_LEVEL QDSRG2.");
+        outfile->Printf("\n  Changed DSRG_TRANS_TYPE option to UNITARY");
+        dsrg_trans_type_ = "UNITARY";
+    }
+
     ntamp_ = foptions_->get_int("NTAMP");
     intruder_tamp_ = foptions_->get_double("INTRUDER_TAMP");
 
@@ -778,55 +786,36 @@ void MRDSRG_SO::compute_hbar() {
         double C0 = 0.0;
         C1.zero();
         C2.zero();
-        if (do_wicked) {
-            outfile->Printf("\n  Wick&d contraction");
-            // zero-body
-            H1_T1_C0(O1, T1, factor, C0);
-            H1_T2_C0(O1, T2, factor, C0);
-            H2_T1_C0(O2, T1, factor, C0);
-            H2_T2_C0(O2, T2, factor, C0);
+        // zero-body
+        H1_T1_C0(O1, T1, factor, C0);
+        H1_T2_C0(O1, T2, factor, C0);
+        H2_T1_C0(O2, T1, factor, C0);
+        H2_T2_C0(O2, T2, factor, C0);
 
-            // one-body
-            H1_T1_C1(O1, T1, factor, C1);
-            H1_T2_C1(O1, T2, factor, C1);
-            H2_T1_C1(O2, T1, factor, C1);
-            H2_T2_C1(O2, T2, factor, C1);
+        // one-body
+        H1_T1_C1(O1, T1, factor, C1);
+        H1_T2_C1(O1, T2, factor, C1);
+        H2_T1_C1(O2, T1, factor, C1);
+        H2_T2_C1(O2, T2, factor, C1);
 
-            // two-body
-            H1_T2_C2(O1, T2, factor, C2);
-            H2_T1_C2(O2, T1, factor, C2);
-            H2_T2_C2(O2, T2, factor, C2);
-        } else {
-            outfile->Printf("\n  Original contraction");
-            // zero-body
-            H1_T1_C0_slow(O1, T1, factor, C0);
-            H1_T2_C0_slow(O1, T2, factor, C0);
-            H2_T1_C0_slow(O2, T1, factor, C0);
-            H2_T2_C0_slow(O2, T2, factor, C0);
-
-            // one-body
-            H1_T1_C1_slow(O1, T1, factor, C1);
-            H1_T2_C1_slow(O1, T2, factor, C1);
-            H2_T1_C1_slow(O2, T1, factor, C1);
-            H2_T2_C1_slow(O2, T2, factor, C1);
-
-            // two-body
-            H1_T2_C2_slow(O1, T2, factor, C2);
-            H2_T1_C2_slow(O2, T1, factor, C2);
-            H2_T2_C2_slow(O2, T2, factor, C2);
-        }
+        // two-body
+        H1_T2_C2(O1, T2, factor, C2);
+        H2_T1_C2(O2, T1, factor, C2);
+        H2_T2_C2(O2, T2, factor, C2);
 
         //        outfile->Printf("\n   H0  = %20.12f", C0);
         //        outfile->Printf("\n  |H1| = %20.12f", C1.norm(1));
         //        outfile->Printf("\n  |H2| = %20.12f", C2.norm(1));
         //        outfile->Printf("\n  --------------------------------");
 
-        // [H, A] = [H, T] + [H, T]^dagger
-        C0 *= 2.0;
-        O1["pq"] = C1["pq"];
-        C1["pq"] += O1["qp"];
-        O2["pqrs"] = C2["pqrs"];
-        C2["pqrs"] += O2["rspq"];
+        if (dsrg_trans_type_ == "UNITARY") {
+            // [H, A] = [H, T] + [H, T]^dagger
+            C0 *= 2.0;
+            O1["pq"] = C1["pq"];
+            C1["pq"] += O1["qp"];
+            O2["pqrs"] = C2["pqrs"];
+            C2["pqrs"] += O2["rspq"];
+        }
 
         if (do_wicked) {
             O2["pqrs"] = C2["pqrs"];
@@ -965,8 +954,7 @@ void MRDSRG_SO::compute_qhbar() {
     //    -----------------------------------------------------------------");
 }
 
-void MRDSRG_SO::H1_T1_C0_slow(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
-                              double& C0) {
+void MRDSRG_SO::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
     //    local_timer timer;
     //    std::string str = "Computing [Hbar1, T1] -> C0 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -982,8 +970,7 @@ void MRDSRG_SO::H1_T1_C0_slow(BlockedTensor& H1, BlockedTensor& T1, const double
     //    timer.get(), E);
 }
 
-void MRDSRG_SO::H2_T1_C0_slow(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-                              double& C0) {
+void MRDSRG_SO::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0) {
     //    local_timer timer;
     //    std::string str = "Computing [Hbar2, T1] -> C0 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -1000,8 +987,7 @@ void MRDSRG_SO::H2_T1_C0_slow(BlockedTensor& H2, BlockedTensor& T1, const double
     //    timer.get(), E);
 }
 
-void MRDSRG_SO::H1_T2_C0_slow(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-                              double& C0) {
+void MRDSRG_SO::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0) {
     //    local_timer timer;
     //    std::string str = "Computing [Hbar1, T2] -> C0 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -1018,8 +1004,7 @@ void MRDSRG_SO::H1_T2_C0_slow(BlockedTensor& H1, BlockedTensor& T2, const double
     //    timer.get(), E);
 }
 
-void MRDSRG_SO::H2_T2_C0_slow(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                              double& C0) {
+void MRDSRG_SO::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0) {
     //    local_timer timer;
     //    std::string str = "Computing [Hbar2, T2] -> C0 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -1078,8 +1063,8 @@ void MRDSRG_SO::H2_T2_C0_slow(BlockedTensor& H2, BlockedTensor& T2, const double
     //    timer.get(), E);
 }
 
-void MRDSRG_SO::H1_T1_C1_slow(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
-                              BlockedTensor& C1) {
+void MRDSRG_SO::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+                         BlockedTensor& C1) {
     //    local_timer timer;
     //    std::string str = "Computing [Hbar1, T1] -> C1 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -1090,8 +1075,8 @@ void MRDSRG_SO::H1_T1_C1_slow(BlockedTensor& H1, BlockedTensor& T1, const double
     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-void MRDSRG_SO::H2_T1_C1_slow(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-                              BlockedTensor& C1) {
+void MRDSRG_SO::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+                         BlockedTensor& C1) {
     //    local_timer timer;
     //    std::string str = "Computing [Hbar2, T1] -> C1 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -1102,8 +1087,8 @@ void MRDSRG_SO::H2_T1_C1_slow(BlockedTensor& H2, BlockedTensor& T1, const double
     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-void MRDSRG_SO::H1_T2_C1_slow(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-                              BlockedTensor& C1) {
+void MRDSRG_SO::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                         BlockedTensor& C1) {
     //    local_timer timer;
     //    std::string str = "Computing [Hbar1, T2] -> C1 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -1114,8 +1099,8 @@ void MRDSRG_SO::H1_T2_C1_slow(BlockedTensor& H1, BlockedTensor& T2, const double
     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-void MRDSRG_SO::H2_T2_C1_slow(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                              BlockedTensor& C1) {
+void MRDSRG_SO::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                         BlockedTensor& C1) {
     //    local_timer timer;
     //    std::string str = "Computing [Hbar2, T2] -> C1 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -1179,8 +1164,8 @@ void MRDSRG_SO::H2_T2_C1_slow(BlockedTensor& H2, BlockedTensor& T2, const double
     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-void MRDSRG_SO::H1_T2_C2_slow(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-                              BlockedTensor& C2) {
+void MRDSRG_SO::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                         BlockedTensor& C2) {
     //    local_timer timer;
     //    std::string str = "Computing [Hbar1, T2] -> C2 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -1193,8 +1178,8 @@ void MRDSRG_SO::H1_T2_C2_slow(BlockedTensor& H1, BlockedTensor& T2, const double
     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-void MRDSRG_SO::H2_T1_C2_slow(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-                              BlockedTensor& C2) {
+void MRDSRG_SO::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+                         BlockedTensor& C2) {
     //    local_timer timer;
     //    std::string str = "Computing [Hbar2, T1] -> C2 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -1207,8 +1192,8 @@ void MRDSRG_SO::H2_T1_C2_slow(BlockedTensor& H2, BlockedTensor& T1, const double
     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-void MRDSRG_SO::H2_T2_C2_slow(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                              BlockedTensor& C2) {
+void MRDSRG_SO::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                         BlockedTensor& C2) {
     //    local_timer timer;
     //    std::string str = "Computing [Hbar2, T2] -> C2 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());

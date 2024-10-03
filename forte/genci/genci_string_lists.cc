@@ -124,6 +124,7 @@ void GenCIStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
     double h1_list_timer = 0.0;
     double h2_list_timer = 0.0;
     double h3_list_timer = 0.0;
+    double h4_list_timer = 0.0;
     double vovo_list_timer = 0.0;
     double vvoo_list_timer = 0.0;
 
@@ -154,6 +155,8 @@ void GenCIStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
     gas_beta_2h_occupations_ = generate_1h_occupations(gas_beta_1h_occupations_);
     gas_alfa_3h_occupations_ = generate_1h_occupations(gas_alfa_2h_occupations_);
     gas_beta_3h_occupations_ = generate_1h_occupations(gas_beta_2h_occupations_);
+    gas_alfa_4h_occupations_ = generate_1h_occupations(gas_alfa_3h_occupations_);
+    gas_beta_4h_occupations_ = generate_1h_occupations(gas_beta_3h_occupations_);
 
     if (na_ >= 1) {
         auto alfa_1h_strings = make_strings_with_occupation(
@@ -185,6 +188,16 @@ void GenCIStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         auto beta_3h_strings = make_strings_with_occupation(
             ngas_spaces_, nirrep_, gas_size_, gas_mos_, gas_beta_3h_occupations_, string_class_);
         beta_address_3h_ = std::make_shared<StringAddress>(gas_size_, nb_ - 3, beta_3h_strings);
+    }
+    if (na_ >= 4) {
+        auto alfa_4h_strings = make_strings_with_occupation(
+            ngas_spaces_, nirrep_, gas_size_, gas_mos_, gas_alfa_4h_occupations_, string_class_);
+        alfa_address_4h_ = std::make_shared<StringAddress>(gas_size_, na_ - 4, alfa_4h_strings);
+    }
+    if (nb_ >= 4) {
+        auto beta_4h_strings = make_strings_with_occupation(
+            ngas_spaces_, nirrep_, gas_size_, gas_mos_, gas_beta_4h_occupations_, string_class_);
+        beta_address_4h_ = std::make_shared<StringAddress>(gas_size_, nb_ - 4, beta_4h_strings);
     }
 
     nas_ = 0;
@@ -250,6 +263,12 @@ void GenCIStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         beta_3h_list = make_3h_list(beta_strings_, beta_address_, beta_address_3h_);
         h3_list_timer += t.get();
     }
+    {
+        local_timer t;
+        alfa_4h_list = make_4h_list(alfa_strings_, alfa_address_, alfa_address_4h_);
+        beta_4h_list = make_4h_list(beta_strings_, beta_address_, beta_address_4h_);
+        h4_list_timer += t.get();
+    }
 
     double total_time = str_list_timer + nn_list_timer + vo_list_timer + oo_list_timer +
                         vvoo_list_timer + vovo_list_timer;
@@ -269,6 +288,7 @@ void GenCIStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
                                      {"timing for 1-hole strings", h1_list_timer},
                                      {"timing for 2-hole strings", h2_list_timer},
                                      {"timing for 3-hole strings", h3_list_timer},
+                                     {"timing for 4-hole strings", h4_list_timer},
                                      {"total timing", total_time}});
         }
         std::string table = printer.get_table("String Lists");
@@ -421,6 +441,18 @@ std::vector<H3StringSubstitution>& GenCIStringLists::get_beta_3h_list(int h_I, s
                                                                       int h_J) {
     std::tuple<int, size_t, int> I_tuple(h_I, add_I, h_J);
     return beta_3h_list[I_tuple];
+}
+
+std::vector<H4StringSubstitution>& GenCIStringLists::get_alfa_4h_list(int h_I, size_t add_I,
+                                                                      int h_J) {
+    std::tuple<int, size_t, int> I_tuple(h_I, add_I, h_J);
+    return alfa_4h_list[I_tuple];
+}
+
+std::vector<H4StringSubstitution>& GenCIStringLists::get_beta_4h_list(int h_I, size_t add_I,
+                                                                      int h_J) {
+    std::tuple<int, size_t, int> I_tuple(h_I, add_I, h_J);
+    return beta_4h_list[I_tuple];
 }
 
 } // namespace forte

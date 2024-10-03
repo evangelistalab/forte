@@ -150,6 +150,7 @@ void MASTER_DSRG::read_options() {
     }
 
     do_cu3_ = (foptions_->get_str("THREEPDC") != "ZERO");
+    do_cu4_ = (foptions_->get_str("FOURPDC") != "ZERO");
 
     outfile->Printf("Done");
 }
@@ -259,6 +260,15 @@ void MASTER_DSRG::fill_density() {
         L3aab_ = rdms_->L3aab();
         L3abb_ = rdms_->L3abb();
         L3bbb_ = rdms_->L3bbb();
+    }
+
+    // 4-body density cumulants
+    if (do_cu4_) {
+        L4aaaa_ = rdms_->L4aaaa();
+        L4aaab_ = rdms_->L4aaab();
+        L4aabb_ = rdms_->L4aabb();
+        L4abbb_ = rdms_->L4abbb();
+        L4bbbb_ = rdms_->L4bbbb();
     }
 }
 

@@ -60,6 +60,7 @@ from forte.proc.external_active_space_solver import (
     make_hamiltonian,
 )
 from forte.proc.dsrg import ProcedureDSRG
+from forte.proc.orbital_helpers import dump_orbitals
 
 
 def forte_driver(data: ForteData):
@@ -195,14 +196,14 @@ def energy_forte(name, **kwargs):
             "\n\n  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn\n")
     else:
         active_space_solver_type = data.options.get_str("ACTIVE_SPACE_SOLVER")
-        mcscf_freeze_core = data.options.get_bool("MCSCF_FREEZE_CORE")
+        mcscf_ignore_frozen = data.options.get_bool("MCSCF_IGNORE_FROZEN_ORBS")
 
-        # freeze core orbitals check
-        frozen_docc_set = data.mo_space_info.size("FROZEN_DOCC") > 0
-        if not mcscf_freeze_core and frozen_docc_set and data.options.get_str("CORRELATION_SOLVER") == "NONE":
-            msg = "\n  WARNING: By default, Forte will not freeze core orbitals in MCSCF,\n  unless the option MCSCF_FREEZE_CORE is set to True.\n"
-            msg += f"\n  Your input file specifies the FROZEN_DOCC array ({data.mo_space_info.size('FROZEN_DOCC')} MOs) in the\n  MO_SPACE_INFO block, but the option MCSCF_FREEZE_CORE is set to False.\n"
-            msg += "\n  If you want to freeze the core orbitals in MCSCF, set MCSCF_FREEZE_CORE to True,\n  otherwise change the FROZEN_DOCC array to zero(s) and update the RESTRICTED_DOCC array.\n"
+        # freeze core/virtual orbitals check
+        frozen_set = data.mo_space_info.size("FROZEN_DOCC") > 0 or data.mo_space_info.size("FROZEN_UOCC") > 0
+        if mcscf_ignore_frozen and frozen_set and data.options.get_str("CORRELATION_SOLVER") == "NONE":
+            msg = "\n  WARNING: By default, Forte will not freeze core/virtual orbitals in MCSCF,\n  unless the option MCSCF_IGNORE_FROZEN_ORBS is set to False.\n"
+            msg += f"\n  Your input file specifies the FROZEN_DOCC ({data.mo_space_info.size('FROZEN_DOCC')} MOs) / FROZEN_UOCC ({data.mo_space_info.size('FROZEN_UOCC')} MOs) arrays in the\n  MO_SPACE_INFO block, but the option MCSCF_IGNORE_FROZEN_ORBS is set to True.\n"
+            msg += "\n  If you want to freeze the core/virtual orbitals in MCSCF, set MCSCF_IGNORE_FROZEN_ORBS to False,\n  otherwise change the FROZEN_DOCC/FROZEN_UOCC arrays to zero(s) and update the RESTRICTED_DOCC/RESTRICTED_UOCC arrays.\n"
             print(msg)
             psi4.core.print_out(msg)
 
@@ -304,7 +305,7 @@ def gradient_forte(name, **kwargs):
         OrbitalTransformation(orb_type, job_type != "NONE").run(data)
 
     active_space_solver_type = data.options.get_str("ACTIVE_SPACE_SOLVER")
-    mcscf_freeze_core = data.options.get_bool("MCSCF_FREEZE_CORE")
+    mcscf_ignore_frozen = data.options.get_bool("MCSCF_IGNORE_FROZEN_ORBS")
     data = MCSCF(active_space_solver_type).run(data)
     energy = data.results.value("energy")
 

@@ -101,7 +101,7 @@ compare_values(refpt2sub,variable("ENERGY ROOT 0 1A1"),9,"SA-DSRG-MRPT2 SUB ener
 set forte{
   dsrg_multi_state    sa_full
   active_space_solver detci
-  transition_dipoles  true
+  transition_dipoles  [[0,1,0]]
 }
 energy('forte',ref_wfn=wfn)
 compare_values(refpt2full,variable("ENERGY ROOT 0 1A1"),9,"SA-DSRG-MRPT2 FULL energy root 0")

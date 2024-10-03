@@ -30,7 +30,7 @@ set forte {
   active                [3, 0, 1, 2]
   mcscf_e_convergence   1e-10
   mcscf_g_convergence   1e-6
-  mcscf_freeze_core     true
+  mcscf_ignore_frozen_orbs false
 }
 
 mcscf_forte = energy('forte')

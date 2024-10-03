@@ -22,6 +22,7 @@ set {
 
 set forte {
   active_space_solver genci
+  multipole_moment_level 2
 }
 
 energy('scf')

@@ -81,14 +81,30 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++1z-extensions") # avoid warnings
 # List of CC files
 pybind11_add_module(_forte
 api/active_space_integrals_api.cc
+api/active_space_method_api.cc
+api/active_space_solver_api.cc
+api/configuration_api.cc
 api/cube_file_api.cc
+api/determinant_api.cc
+api/genci_api.cc
 api/integrals_api.cc
+api/mcscf_api.cc
 api/mospaceinfo_api.cc
 api/rdms_api.cc
 api/options_api.cc
 api/orbital_api.cc
-api/sci_api.cc
 api/state_info_api.cc
+api/string_api.cc
+api/sq_operator_string_api.cc
+api/sparse_ci_solver_api.cc
+api/sparse_exp_api.cc
+api/sparse_fact_exp_api.cc
+api/sparse_hamiltonian_api.cc
+api/sparse_operator_api.cc
+api/sparse_operator_list_api.cc
+api/sparse_operator_sim_trans_api.cc
+api/sparse_state_api.cc
+api/symmetry_api.cc
 api/forte_python_module.cc
 api/dl_solver_api.cc
 api/tensors_api.cc
@@ -183,8 +199,6 @@ mrdsrg-helper/dsrg_time.cc
 mrdsrg-helper/dsrg_transformed.cc
 mrdsrg-helper/run_dsrg.cc
 mrdsrg-so/mrdsrg_so.cc
-mrdsrg-so/wicked_contractions.cc
-mrdsrg-so/so-mrdsrg.cc
 mrdsrg-spin-adapted/dsrg_mrpt.cc
 mrdsrg-spin-adapted/dsrg_mrpt_2nd.cc
 mrdsrg-spin-adapted/dsrg_mrpt_amp.cc
@@ -260,6 +274,7 @@ sparse_ci/sorted_string_list.cc
 sparse_ci/sparse_ci_solver.cc
 sparse_ci/sparse_initial_guess.cc
 sparse_ci/sparse_operator.cc
+sparse_ci/sparse_operator_sim_trans.cc
 sparse_ci/sparse_exp.cc
 sparse_ci/sparse_fact_exp.cc
 sparse_ci/sparse_hamiltonian.cc
@@ -288,6 +303,7 @@ endif()
 if(TARGET block2::block2)
     target_link_libraries(_forte PRIVATE block2::block2)
     add_definitions(-DHAVE_BLOCK2)
+    add_definitions(-D_USE_GLOBAL_VARIABLE -D_EXPLICIT_TEMPLATE -D_LARGE_BOND -D_USE_CORE -D_USE_SU2SZ -D_USE_DMRG)
 endif()
 
 if(ENABLE_MPI)

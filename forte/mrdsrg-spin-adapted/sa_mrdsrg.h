@@ -103,6 +103,12 @@ class SA_MRDSRG : public SADSRG {
     int rsc_ncomm_;
     /// Convergenve threshold for Hbar in recursive single commutator algorithm
     double rsc_conv_;
+    bool rsc_conv_adapt_;
+    double rsc_conv_adapt_threshold_;
+    double rsc_conv_adapt_delta_e_;
+
+    /// DSRG transformation type
+    std::string dsrg_trans_type_;
 
     /// One-electron integral
     ambit::BlockedTensor H_;
@@ -154,9 +160,9 @@ class SA_MRDSRG : public SADSRG {
     void update_t1();
 
     /// Compute DSRG-transformed Hamiltonian
-    void compute_hbar();
+    int compute_hbar(double& rsc_conv);
     /// Compute DSRG-transformed Hamiltonian Hbar sequentially
-    void compute_hbar_sequential();
+    int compute_hbar_sequential(double& rsc_conv);
     /// Compute DSRG-transformed Hamiltonian truncated to 2-nested commutator
     void compute_hbar_qc();
     // /// Compute EOM-LDSRG2
@@ -174,6 +180,9 @@ class SA_MRDSRG : public SADSRG {
     /// Temporary two-body Hamiltonian
     ambit::BlockedTensor O2_;
     ambit::BlockedTensor C2_;
+
+    /// Get adaptive rsc_conv
+    double get_adaptive_rsc_conv(const int& iter, const double& deltaE);
 
     /// Norm of off-diagonal Hbar1 or Hbar2
     double Hbar_od_norm(const int& n, const std::vector<std::string>& blocks);

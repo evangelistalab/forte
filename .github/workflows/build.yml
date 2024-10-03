@@ -1,0 +1,231 @@
+name: build
+
+on: 
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 15 * * *'
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}   
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: 'true'
+
+    - name: Setup Conda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        activate-environment: forte
+        environment-file: environment.yml
+        channels: conda-forge
+        show-channel-urls: true
+        python-version: '3.11'
+        auto-activate-base: false
+        add-pip-as-python-dependency: true
+
+    - name: Get ambit cache key
+      id: get-ambit-key
+      run: |
+        echo "key=$(git ls-remote https://github.com/jturney/ambit.git refs/heads/master | awk '{print $1}')" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Restore ambit
+      uses: actions/cache/restore@v4
+      id: cache-restore-ambit
+      with:
+        path: |
+          ~/bin/ambit
+        key: ${{ runner.os }}-${{ runner.arch }}-ambit-${{ steps.get-ambit-key.outputs.key }}
+
+    - name: Install ambit
+      if: steps.cache-restore-ambit.outputs.cache-hit != 'true'
+      run: |
+        conda info
+        conda list
+        cd $HOME
+        git clone https://github.com/jturney/ambit.git
+        cd ambit
+        cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/bin/ambit
+        cd objdir
+        make -j4
+        make install
+
+    - name: Cache ambit
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/bin/ambit
+        key: ${{ runner.os }}-${{ runner.arch }}-ambit-${{ steps.get-ambit-key.outputs.key }}
+    
+    - name: Get Psi4 cache key
+      id: get-psi4-key
+      run: |
+        echo "key=$(git ls-remote https://github.com/psi4/psi4.git refs/heads/master | awk '{print $1}')" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Restore Psi4
+      uses: actions/cache/restore@v4
+      id: cache-restore-psi4
+      with:
+        path: |
+          ~/psi4
+        key: ${{ runner.os }}-${{ runner.arch }}-psi4-${{ steps.get-psi4-key.outputs.key }}
+      
+    - name: Compile Psi4
+      if: steps.cache-restore-psi4.outputs.cache-hit != 'true'
+      run: |
+        cd $HOME        
+        git clone https://github.com/psi4/psi4.git
+        cd psi4
+        git pull origin master --tags 
+        git fetch origin "refs/tags/*:refs/tags/*"
+        cmake -H. -Bobjdir -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$HOME/psi4bin -DENABLE_ecpint=ON
+        cd objdir
+        make -j4
+    
+    - name: Cache Psi4
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/psi4
+        key: ${{ runner.os }}-${{ runner.arch }}-psi4-${{ steps.get-psi4-key.outputs.key }}
+
+    - name: Get block2 cache key
+      id: get-block2-key
+      run: |
+        echo "key=$(git ls-remote https://github.com/block-hczhai/block2-preview.git refs/heads/master | awk '{print $1}')" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Restore block2
+      uses: actions/cache/restore@v4
+      id: cache-restore-block2
+      with:
+        path: |
+          ~/block2-bin
+          ~/block2-preview
+        key: ${{ runner.os }}-${{ runner.arch }}-block2-${{ steps.get-block2-key.outputs.key }}
+
+    - name: Compile block2
+      if: steps.cache-restore-block2.outputs.cache-hit != 'true'
+      env: 
+        BLAS_ROOT: $
+      run: |
+        cd $HOME
+        git clone https://github.com/block-hczhai/block2-preview.git
+        mkdir -p block2-preview/build
+        cd block2-preview/build
+        cmake .. -DBUILD_CLIB=ON \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DLARGE_BOND=ON \
+          -DMPI=OFF \
+          -DCMAKE_INSTALL_PREFIX=${HOME}/block2-bin
+        make -j4 install
+
+    - name: Cache block2
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/block2-bin
+          ~/block2-preview
+        key: ${{ runner.os }}-${{ runner.arch }}-block2-${{ steps.get-block2-key.outputs.key }}
+
+    - name: Compile Forte
+      id: compile-forte
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib
+        export AMBITPATH=$HOME/bin/ambit
+        export PATH=$PATH:$HOME/psi4/objdir/stage/bin
+        ambit_dir=$HOME/bin/ambit/share/cmake/ambit/
+        build_type=Release
+        cd $HOME/work/forte/forte
+        cmake_psi4=`psi4 --plugin-compile`
+        $cmake_psi4 \
+          -Dambit_DIR=$ambit_dir \
+          -DCMAKE_BUILD_TYPE=$build_type \
+          -Dblock2_DIR=${HOME}/block2-bin/share/cmake/block2 \
+          -DENABLE_block2=ON \
+          -DMAX_DET_ORB=128 \
+          -DPYTHON_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
+          -DENABLE_ForteTests=TRUE 
+        make -j4
+        pip list
+
+    - name: Run Forte methods tests
+      if: steps.compile-forte.outcome == 'success' && '!cancelled()'
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
+        export AMBITPATH=$HOME/bin/ambit
+        export PATH=$PATH:$HOME/psi4/objdir/stage/bin
+        export OPENBLAS_NUM_THREADS=1
+        lscpu
+        export CPUTYPE=$(lscpu | grep 'Vendor ID' | awk '{print $3}')
+        echo $CPUTYPE
+        if [ "$CPUTYPE" = "AuthenticAMD" ]; then
+          echo "int mkl_serv_intel_cpu_true() { return 1; }" > fixcpu.c
+          gcc -shared -fPIC -o libfixcpu.so fixcpu.c
+        fi
+        export CPUTYPE=$(lscpu | grep 'Vendor ID' | awk '{print $3}')
+        if [ "$CPUTYPE" = "AuthenticAMD" ]; then
+          export LD_PRELOAD=$PWD/libfixcpu.so
+        fi
+        cd $HOME/work/forte/forte/tests/methods
+        python run_forte_tests.py --failed_dump --bw
+
+    - name: Run Forte pytest tests
+      if: steps.compile-forte.outcome == 'success' && '!cancelled()'
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
+        export AMBITPATH=$HOME/bin/ambit
+        export PATH=$PATH:$HOME/psi4/objdir/stage/bin
+        export OPENBLAS_NUM_THREADS=1
+        cd $HOME/work/forte/forte/tests/pytest
+        pytest -v
+
+    - name: Run Forte pytest methods tests
+      if: steps.compile-forte.outcome == 'success' && '!cancelled()'
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
+        export AMBITPATH=$HOME/bin/ambit
+        export PATH=$PATH:$HOME/psi4/objdir/stage/bin
+        export OPENBLAS_NUM_THREADS=1
+        cd $HOME/work/forte/forte/tests/pytest-methods
+        pytest -v
+
+    - name: Run Forte pytest block2 test
+      if: steps.compile-forte.outcome == 'success' && '!cancelled()'
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$HOME/psi4/objdir/stage/lib:$HOME/bin/ambit/lib:$PYTHONPATH:$HOME/work/forte/forte
+        export AMBITPATH=$HOME/bin/ambit
+        export PATH=$PATH:$HOME/psi4/objdir/stage/bin
+        export OPENBLAS_NUM_THREADS=1
+        lscpu
+        export CPUTYPE=$(lscpu | grep 'Vendor ID' | awk '{print $3}')
+        echo $CPUTYPE
+        if [ "$CPUTYPE" = "AuthenticAMD" ]; then
+          echo "int mkl_serv_intel_cpu_true() { return 1; }" > fixcpu.c
+          gcc -shared -fPIC -o libfixcpu.so fixcpu.c
+        fi
+        export CPUTYPE=$(lscpu | grep 'Vendor ID' | awk '{print $3}')
+        if [ "$CPUTYPE" = "AuthenticAMD" ]; then
+          export LD_PRELOAD=$PWD/libfixcpu.so
+        fi
+        cd $HOME/work/forte/forte/tests/pytest-block2
+        pytest -v
+    
+    - name: Upload artifacts
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: forte-test-outputs
+        path: |
+          ~/work/forte/forte/tests/methods/*/output.dat
+          ~/work/forte/forte/tests/methods/*/output.log
+          ~/work/forte/forte/tests/pytest*/output.dat
+          ~/work/forte/forte/tests/pytest*/output.log

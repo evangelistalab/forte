@@ -22,7 +22,8 @@ set {
 set forte {
   active_space_solver fci
   fci_test_rdms true
-  transition_dipoles true
+  transition_dipoles [[0,1,0]]
+  multipole_moment_level 2
 }
 
 energy('scf')
