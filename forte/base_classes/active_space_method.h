@@ -228,7 +228,7 @@ class ActiveSpaceMethod {
         throw std::runtime_error(
             "ActiveSpaceMethod::eigenvectors(): Not Implemented for this class!");
     }
-    
+
     /// Dump the wave function to file
     /// @param file name
     virtual void dump_wave_function(const std::string&) {

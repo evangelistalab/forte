@@ -1755,7 +1755,7 @@ BLOCK2:
     help: "Whether to use low memory algorithm to compute RDMs"
   BLOCK2_INTERGRAL_CUTOFF:
     type: double
-    default: 1.0e-14
+    default: 1.0e-12
     help: "Consider those integrals as zero if the absolute value is smaller than this value"
 
 
