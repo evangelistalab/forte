@@ -8,6 +8,8 @@
 #include "psi4/libmints/vector.h"
 
 #include "base_classes/mo_space_info.h"
+#include "base_classes/forte_options.h"
+
 #include "integrals/active_space_integrals.h"
 #include "integrals/one_body_integrals.h"
 
@@ -1968,7 +1970,7 @@ bool MASTER_DSRG::check_semi_orbs() {
     }
 
     auto nactv = actv_mos_.size();
-    for (const std::string& space : mo_space_info_->space_names()) {
+    for (const std::string& space : mo_space_info_->elementary_spaces()) {
         if (space.find("GAS") == std::string::npos or mo_space_info_->size(space) == 0)
             continue;
 
@@ -2043,7 +2045,7 @@ std::vector<std::vector<double>> MASTER_DSRG::diagonalize_Fock_diagblocks(Blocke
     // loop each correlated elementary space
     int nirrep = mo_space_info_->nirrep();
 
-    auto elementary_spaces = mo_space_info_->composite_space_names()["CORRELATED"];
+    auto elementary_spaces = mo_space_info_->composite_spaces_def().at("CORRELATED");
     for (const std::string& space : elementary_spaces) {
         if (mo_space_info_->size(space) == 0)
             continue;

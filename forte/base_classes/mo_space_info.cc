@@ -29,6 +29,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <unordered_set>
 
 #define FMT_HEADER_ONLY
 #include "lib/fmt/core.h"
@@ -46,17 +47,47 @@ using namespace psi;
 
 namespace forte {
 
+const std::vector<std::string> MOSpaceInfo::elementary_spaces_{
+    "FROZEN_DOCC", "RESTRICTED_DOCC", "GAS1",       "GAS2", "GAS3", "GAS4", "GAS5",
+    "GAS6",        "RESTRICTED_UOCC", "FROZEN_UOCC"};
+
+const std::vector<std::string> MOSpaceInfo::composite_spaces_{
+    {"ALL", "FROZEN", "CORRELATED", "ACTIVE", "INACTIVE_DOCC", "INACTIVE_UOCC", "GENERALIZED HOLE",
+     "GENERALIZED PARTICLE", "CORE", "VIRTUAL"}};
+
+/// Defines composite orbital spaces
+const std::map<std::string, std::vector<std::string>> MOSpaceInfo::composite_spaces_def_{
+    {"ALL",
+     {"FROZEN_DOCC", "RESTRICTED_DOCC", "GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6",
+      "RESTRICTED_UOCC", "FROZEN_UOCC"}},
+    {"FROZEN", {"FROZEN_DOCC", "FROZEN_UOCC"}},
+    {"CORRELATED",
+     {"RESTRICTED_DOCC", "GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6", "RESTRICTED_UOCC"}},
+    {"ACTIVE", {"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"}},
+    {"INACTIVE_DOCC", {"FROZEN_DOCC", "RESTRICTED_DOCC"}},
+    {"INACTIVE_UOCC", {"RESTRICTED_UOCC", "FROZEN_UOCC"}},
+    // Spaces for multireference calculations
+    {"GENERALIZED HOLE", {"RESTRICTED_DOCC", "GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"}},
+    {"GENERALIZED PARTICLE", {"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6", "RESTRICTED_UOCC"}},
+    {"CORE", {"RESTRICTED_DOCC"}},
+    {"VIRTUAL", {"RESTRICTED_UOCC"}},
+    {"FROZEN_DOCC", {"FROZEN_DOCC"}},
+    {"FROZEN_UOCC", {"FROZEN_UOCC"}},
+    {"RESTRICTED_DOCC", {"RESTRICTED_DOCC"}},
+    {"RESTRICTED_UOCC", {"RESTRICTED_UOCC"}},
+    {"GAS1", {"GAS1"}},
+    {"GAS2", {"GAS2"}},
+    {"GAS3", {"GAS3"}},
+    {"GAS4", {"GAS4"}},
+    {"GAS5", {"GAS5"}},
+    {"GAS6", {"GAS6"}}};
+
 MOSpaceInfo::MOSpaceInfo(const psi::Dimension& nmopi, const std::string& point_group)
-    : symmetry_(point_group), nirrep_(nmopi.n()), nmopi_(nmopi) {
-    // Add the elementary spaces to the list of composite spaces
-    for (const std::string& es : elementary_spaces_) {
-        composite_spaces_[es] = {es};
-    }
-}
+    : symmetry_(point_group), nirrep_(nmopi.n()), nmopi_(nmopi) {}
 
 std::string MOSpaceInfo::str() const {
     std::string s;
-    for (const auto& space : space_names()) {
+    for (const auto& space : elementary_spaces()) {
         s += "space: " + space + " ";
         const auto dim = dimension(space);
         for (size_t h = 0, maxh = static_cast<size_t>(dim.n()); h < maxh; h++) {
@@ -77,19 +108,25 @@ const std::string& MOSpaceInfo::irrep_label(size_t h) const { return symmetry_.i
 
 std::string MOSpaceInfo::point_group_label() const { return symmetry_.point_group_label(); }
 
-const std::vector<std::string>& MOSpaceInfo::space_names() const { return elementary_spaces_; }
+const std::vector<std::string>& MOSpaceInfo::elementary_spaces() {
+    return MOSpaceInfo::elementary_spaces_;
+}
 
-std::map<std::string, std::vector<std::string>> MOSpaceInfo::composite_space_names() const {
-    return composite_spaces_;
+const std::vector<std::string>& MOSpaceInfo::composite_spaces() {
+    return MOSpaceInfo::composite_spaces_;
+}
+
+const std::map<std::string, std::vector<std::string>>& MOSpaceInfo::composite_spaces_def() {
+    return MOSpaceInfo::composite_spaces_def_;
 }
 
 size_t MOSpaceInfo::size(const std::string& space) const {
     size_t s = 0;
-    if (composite_spaces_.count(space) == 0) {
+    if (composite_spaces_def().count(space) == 0) {
         std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-        throw psi::PSIEXCEPTION(msg.c_str());
+        throw std::runtime_error(msg);
     } else {
-        for (const auto& el_space : composite_spaces_.at(space)) {
+        for (const auto& el_space : composite_spaces_def().at(space)) {
             if (mo_spaces_.count(el_space))
                 s += mo_spaces_.at(el_space).first.sum();
         }
@@ -99,12 +136,12 @@ size_t MOSpaceInfo::size(const std::string& space) const {
 
 psi::Dimension MOSpaceInfo::dimension(const std::string& space) const {
     psi::Dimension result(nirrep_);
-    if (composite_spaces_.count(space) == 0) {
+    if (composite_spaces_def().count(space) == 0) {
         std::string msg =
             "\n  MOSpaceInfo::dimension - composite space " + space + " is not defined.";
-        throw psi::PSIEXCEPTION(msg.c_str());
+        throw std::runtime_error(msg);
     } else {
-        for (const auto& el_space : composite_spaces_.at(space)) {
+        for (const auto& el_space : composite_spaces_def().at(space)) {
             if (mo_spaces_.count(el_space))
                 result += mo_spaces_.at(el_space).first;
         }
@@ -123,13 +160,14 @@ std::vector<int> MOSpaceInfo::symmetry(const std::string& space) const {
 
 std::vector<size_t> MOSpaceInfo::absolute_mo(const std::string& space) const {
     std::vector<size_t> result;
-    if (composite_spaces_.count(space) == 0) {
+    if (composite_spaces_def().count(space) == 0) {
         std::string msg =
             "\n  MOSpaceInfo::absolute_mo - composite space " + space + " is not defined.";
-        throw psi::PSIEXCEPTION(msg.c_str());
+        throw std::runtime_error(msg);
+        ;
     } else {
         std::vector<std::vector<size_t>> mo_list(nirrep_);
-        for (const auto& el_space : composite_spaces_.at(space)) {
+        for (const auto& el_space : composite_spaces_def().at(space)) {
             if (mo_spaces_.count(el_space)) {
                 auto& vec_mo_info = mo_spaces_.at(el_space).second;
                 for (auto& mo_info : vec_mo_info) {
@@ -149,21 +187,20 @@ std::vector<size_t> MOSpaceInfo::absolute_mo(const std::string& space) const {
 
 std::vector<size_t> MOSpaceInfo::corr_absolute_mo(const std::string& space) const {
     std::vector<size_t> result;
-    if (composite_spaces_.count(space) == 0) {
+    if (composite_spaces_def().count(space) == 0) {
         std::string msg =
             "\n  MOSpaceInfo::corr_absolute_mo - composite space " + space + " is not defined.";
-        throw psi::PSIEXCEPTION(msg.c_str());
+        throw std::runtime_error(msg);
+        ;
     } else {
         std::vector<std::vector<size_t>> mo_list(nirrep_);
         // Loop over all the spaces
-        for (const auto& el_space : composite_spaces_.at(space)) {
+        for (const auto& el_space : composite_spaces_def().at(space)) {
             if (mo_spaces_.count(el_space)) {
                 auto& vec_mo_info = mo_spaces_.at(el_space).second;
-                for (auto& mo_info : vec_mo_info) {
-                    size_t h = std::get<1>(mo_info); // <- the orbital irrep
-                    mo_list[h].push_back(
-                        mo_to_cmo_[std::get<0>(mo_info)]); // <- grab the absolute index
-                                                           // and convert to correlated MOs
+                for (auto& [p, h, _] : vec_mo_info) {
+                    mo_list[h].push_back(mo_to_cmo_[p]); // <- grab the absolute index
+                                                         // and convert to correlated MOs
                 }
             }
         }
@@ -178,14 +215,15 @@ std::vector<size_t> MOSpaceInfo::corr_absolute_mo(const std::string& space) cons
 
 std::vector<std::pair<size_t, size_t>> MOSpaceInfo::relative_mo(const std::string& space) const {
     std::vector<std::pair<size_t, size_t>> result;
-    if (composite_spaces_.count(space) == 0) {
+    if (composite_spaces_def().count(space) == 0) {
         std::string msg =
             "\n  MOSpaceInfo::relative_mo - composite space " + space + " is not defined.";
-        throw psi::PSIEXCEPTION(msg.c_str());
+        throw std::runtime_error(msg);
+        ;
     } else {
         std::vector<std::vector<std::pair<size_t, size_t>>> mo_list(nirrep_);
 
-        for (const auto& el_space : composite_spaces_.at(space)) {
+        for (const auto& el_space : composite_spaces_def().at(space)) {
             if (mo_spaces_.count(el_space)) {
                 auto& vec_mo_info = mo_spaces_.at(el_space).second;
                 for (auto& mo_info : vec_mo_info) {
@@ -207,15 +245,16 @@ std::vector<std::pair<size_t, size_t>> MOSpaceInfo::relative_mo(const std::strin
 
 bool MOSpaceInfo::contained_in_space(const std::string& space,
                                      const std::string& composite_space) const {
-    if (composite_spaces_.count(space) * composite_spaces_.count(composite_space) == 0) {
+    if (composite_spaces_def().count(space) * composite_spaces_def().count(composite_space) == 0) {
         std::string msg = "\n  MOSpaceInfo::contained_in_space - space " + space +
                           " or composite space " + composite_space + " is not defined.";
-        throw psi::PSIEXCEPTION(msg);
+        throw std::runtime_error(msg);
     }
 
-    std::unordered_set<std::string> composite_spaces(composite_spaces_.at(composite_space).begin(),
-                                                     composite_spaces_.at(composite_space).end());
-    for (const std::string& s : composite_spaces_.at(space)) {
+    std::unordered_set<std::string> composite_spaces(
+        composite_spaces_def().at(composite_space).begin(),
+        composite_spaces_def().at(composite_space).end());
+    for (const std::string& s : composite_spaces_def().at(space)) {
         if (composite_spaces.find(s) == composite_spaces.end()) {
             return false;
         }
@@ -229,24 +268,26 @@ std::vector<size_t> MOSpaceInfo::pos_in_space(const std::string& space,
     if (not contained_in_space(space, composite_space)) {
         std::string msg = "\n  MOSpaceInfo::pos_in_space - space " + space +
                           " is not contained in composite space " + composite_space + " .";
-        throw psi::PSIEXCEPTION(msg);
+        throw std::runtime_error(msg);
     }
 
     std::vector<size_t> result;
-    if (composite_spaces_.count(space) * composite_spaces_.count(composite_space) == 0) {
+    if (composite_spaces_def().count(space) * composite_spaces_def().count(composite_space) == 0) {
         std::string msg = "\n  MOSpaceInfo::pos_in_space - space " + space +
                           " or composite space " + composite_space + " is not defined.";
-        throw psi::PSIEXCEPTION(msg.c_str());
+        throw std::runtime_error(msg);
+        ;
     }
 
     // make sure that space is contained in composite_space
-    for (auto s : composite_spaces_.at(space)) {
-        auto it = find(composite_spaces_[composite_space].begin(),
-                       composite_spaces_[composite_space].end(), s);
-        if (it == composite_spaces_[composite_space].end()) {
+    for (auto s : composite_spaces_def().at(space)) {
+        auto it = find(composite_spaces_def().at(composite_space).begin(),
+                       composite_spaces_def().at(composite_space).end(), s);
+        if (it == composite_spaces_def().at(composite_space).end()) {
             std::string msg = "\n  MOSpaceInfo::pos_in_space - space " + s +
                               " is not contained in composite space " + composite_space + " .";
-            throw psi::PSIEXCEPTION(msg.c_str());
+            throw std::runtime_error(msg);
+            ;
         }
     }
 
@@ -265,21 +306,23 @@ std::vector<size_t> MOSpaceInfo::pos_in_space(const std::string& space,
 }
 
 psi::Slice MOSpaceInfo::range(const std::string& space) {
-    if (composite_spaces_.count(space) == 0) {
+    if (composite_spaces_def().count(space) == 0) {
         std::string msg = "\n  MOSpaceInfo::range - composite space " + space + " is not defined.";
-        throw psi::PSIEXCEPTION(msg.c_str());
+        throw std::runtime_error(msg);
+        ;
     }
 
     // make sure the elementary spaces in composite space are consecutive
     int start = std::find(elementary_spaces_.begin(), elementary_spaces_.end(),
-                          composite_spaces_.at(space)[0]) -
+                          composite_spaces_def().at(space)[0]) -
                 elementary_spaces_.begin();
 
-    for (int i = 1, size = composite_spaces_.at(space).size(); i < size; ++i) {
-        if (composite_spaces_.at(space)[i] != elementary_spaces_[start + i]) {
+    for (int i = 1, size = composite_spaces_def().at(space).size(); i < size; ++i) {
+        if (composite_spaces_def().at(space)[i] != elementary_spaces_[start + i]) {
             std::string msg = "\n  MOSpaceInfo::range - elementary spaces in composite space " +
                               space + " are not consecutive.";
-            throw psi::PSIEXCEPTION(msg.c_str());
+            throw std::runtime_error(msg);
+            ;
         }
     }
 
@@ -291,28 +334,11 @@ psi::Slice MOSpaceInfo::range(const std::string& space) {
 
     psi::Dimension dim_end(nirrep_, space + " end");
     dim_end += dim_start;
-    for (int i = start, end = start + composite_spaces_.at(space).size(); i < end; ++i) {
+    for (int i = start, end = start + composite_spaces_def().at(space).size(); i < end; ++i) {
         dim_end += mo_spaces_[elementary_spaces_[i]].first;
     }
 
     return psi::Slice(dim_start, dim_end);
-}
-
-void MOSpaceInfo::read_options(std::shared_ptr<ForteOptions> options) {
-    // Read the elementary spaces
-    for (const std::string& space : elementary_spaces_) {
-        std::pair<SpaceInfo, bool> result = read_mo_space(space, options);
-        if (result.second) {
-            mo_spaces_[space] = result.first;
-        }
-    }
-    for (auto& space_list : composite_spaces_) {
-        const auto& space = space_list.first;
-        std::pair<SpaceInfo, bool> result = read_mo_space(space, options);
-        if (result.second) {
-            mo_spaces_[space_list.second[0]] = result.first;
-        }
-    }
 }
 
 void MOSpaceInfo::read_from_map(const std::map<std::string, std::vector<size_t>>& mo_space_map) {
@@ -322,19 +348,24 @@ void MOSpaceInfo::read_from_map(const std::map<std::string, std::vector<size_t>>
         mo_space_map_capitalized[upper_string(el.first)] = el.second;
     }
     // Read the elementary spaces
-    for (std::string& space : elementary_spaces_) {
+    for (const std::string& space : elementary_spaces_) {
         std::pair<SpaceInfo, bool> result = read_mo_space_from_map(space, mo_space_map_capitalized);
         if (result.second) {
             mo_spaces_[space] = result.first;
         }
     }
-    for (auto& space_list : composite_spaces_) {
-        const auto& space = space_list.first;
-        std::pair<SpaceInfo, bool> result = read_mo_space_from_map(space, mo_space_map_capitalized);
-        if (result.second) {
-            mo_spaces_[space_list.second[0]] = result.first;
-        }
+    // Treat "ACTIVE" in a special way
+    std::pair<SpaceInfo, bool> result = read_mo_space_from_map("ACTIVE", mo_space_map_capitalized);
+    if (result.second) {
+        mo_spaces_["GAS1"] = result.first;
     }
+
+    // for (const auto& [space,space_list]] : composite_spaces_def) {
+    //     std::pair<SpaceInfo, bool> result = read_mo_space_from_map(space,
+    //     mo_space_map_capitalized); if (result.second) {
+    //         mo_spaces_[space_list[0]] = result.first;
+    //     }
+    // }
 }
 
 void MOSpaceInfo::compute_space_info() {
@@ -445,37 +476,37 @@ void MOSpaceInfo::compute_space_info() {
     outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
 }
 
-std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
-                                                      std::shared_ptr<ForteOptions> options) {
-    bool read = false;
-    psi::Dimension space_dim(nirrep_);
-    std::vector<MOInfo> vec_mo_info;
-    if (not options->exists(space)) {
-        SpaceInfo space_info(space_dim, vec_mo_info);
-        return std::make_pair(space_info, false);
-    }
-    size_t vec_size = options->get_int_list(space).size();
-    if (vec_size == nirrep_) {
-        for (size_t h = 0; h < nirrep_; ++h) {
-            space_dim[h] = options->get_int_list(space)[h];
-        }
-        read = true;
-        outfile->Printf("\n  Read options for space %s", space.c_str());
-    } else if (vec_size > 0) {
-        std::string msg = "\n  The size of space " + space + " (" + std::to_string(vec_size) +
-                          ") does not match the number of irreducible representations (" +
-                          std::to_string(nirrep_) + ").";
-        outfile->Printf("\n%s", msg.c_str());
-        throw std::runtime_error(msg);
-    }
-    SpaceInfo space_info(space_dim, vec_mo_info);
-    return std::make_pair(space_info, read);
-}
+// std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
+//                                                       std::shared_ptr<ForteOptions> options) {
+//     bool read = false;
+//     psi::Dimension space_dim(nirrep_);
+//     std::vector<MOInfo> vec_mo_info;
+//     if (not options->exists(space)) {
+//         SpaceInfo space_info(space_dim, vec_mo_info);
+//         return std::make_pair(space_info, false);
+//     }
+//     size_t vec_size = options->get_int_list(space).size();
+//     if (vec_size == nirrep_) {
+//         for (size_t h = 0; h < nirrep_; ++h) {
+//             space_dim[h] = options->get_int_list(space)[h];
+//         }
+//         read = true;
+//         outfile->Printf("\n  Read options for space %s", space.c_str());
+//     } else if (vec_size > 0) {
+//         std::string msg = "\n  The size of space " + space + " (" + std::to_string(vec_size) +
+//                           ") does not match the number of irreducible representations (" +
+//                           std::to_string(nirrep_) + ").";
+//         outfile->Printf("\n%s", msg.c_str());
+//         throw std::runtime_error(msg);
+//     }
+//     SpaceInfo space_info(space_dim, vec_mo_info);
+//     return std::make_pair(space_info, read);
+// }
 
 std::vector<std::string> MOSpaceInfo::nonzero_gas_spaces() const {
     std::vector<std::string> nonzero_gas;
 
-    auto gas_spaces = composite_space_names()["ACTIVE"];
+    auto gas_spaces = composite_spaces_def().at("ACTIVE");
     for (const std::string& gas_name : gas_spaces) {
         if (size(gas_name) != 0) {
             nonzero_gas.push_back(gas_name);
@@ -507,15 +538,6 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space_from_map(
     }
     SpaceInfo space_info(space_dim, vec_mo_info);
     return std::make_pair(space_info, read);
-}
-
-std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
-                                                const std::string& point_group,
-                                                std::shared_ptr<ForteOptions> options) {
-    auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi, point_group);
-    mo_space_info->read_options(options);
-    mo_space_info->compute_space_info();
-    return mo_space_info;
 }
 
 std::shared_ptr<MOSpaceInfo>

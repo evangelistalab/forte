@@ -55,6 +55,8 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
+#include "base_classes/forte_options.h"
+
 #include "orbital-helpers/ao_helper.h"
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/printing.h"

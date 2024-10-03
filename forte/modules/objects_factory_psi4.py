@@ -10,7 +10,6 @@ import psi4.driver.p4util as p4util
 from .check_mo_orthogonality import check_mo_orthonormality
 
 from forte._forte import (
-    make_mo_space_info,
     make_mo_space_info_from_map,
     make_state_weights_map,
     SCFInfo,
@@ -24,6 +23,8 @@ from forte.proc.orbital_helpers import read_orbitals, ortho_orbs_forte
 from forte.proc.external_active_space_solver import write_wavefunction, read_wavefunction
 
 from .module import Module
+
+from .helpers import make_mo_spaces_from_options
 
 p4print = psi4.core.print_out
 
@@ -281,9 +282,8 @@ class ObjectsFromPsi4(Module):
         point_group = data.psi_wfn.molecule().point_group().symbol()
         mo_spaces = kwargs.get("mo_spaces", None)
         if mo_spaces is None:
-            mo_space_info = make_mo_space_info(nmopi, point_group, data.options)
-        else:
-            mo_space_info = make_mo_space_info_from_map(nmopi, point_group, mo_spaces)
+            mo_spaces = make_mo_spaces_from_options(data.options)
+        mo_space_info = make_mo_space_info_from_map(nmopi, point_group, mo_spaces)
         return mo_space_info
 
     def add_and_orthonormalize_orbitals(self, data, is_psi_wfn_fresh, Ca, temp_mo_space_info, **kwargs):

@@ -41,6 +41,8 @@
 #include "psi4/libpsi4util/process.h"
 
 #include "base_classes/mo_space_info.h"
+#include "base_classes/forte_options.h"
+
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 

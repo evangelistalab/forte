@@ -7,7 +7,9 @@ import forte
 from forte.data import ForteData
 from .module import Module
 
+from forte._forte import make_mo_space_info_from_map
 from forte.register_forte_options import register_forte_options
+from .helpers import make_mo_spaces_from_options
 
 import pyscf
 
@@ -105,7 +107,8 @@ def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
     nmopi = psi4.core.Dimension(list(nmopi_list))
 
     # Create the MOSpaceInfo object
-    data.mo_space_info = forte.make_mo_space_info(nmopi, pyscf_obj.mol.groupname.lower(), options)
+    mo_spaces = make_mo_spaces_from_options(data.options)
+    data.mo_space_info = make_mo_space_info_from_map(nmopi, pyscf_obj.mol.groupname.lower(), mo_spaces)
 
     # manufacture a SCFInfo object from the PySCF object.
     nel = pyscf_obj.mol.nelectron

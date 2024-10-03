@@ -4,10 +4,13 @@ import numpy as np
 import psi4
 import forte
 
+from forte._forte import make_mo_space_info_from_map
+
 from forte.data import ForteData
 from .module import Module
 
 from forte.register_forte_options import register_forte_options
+from .helpers import make_mo_spaces_from_options
 
 
 def _make_ints_from_fcidump(fcidump, data: ForteData):
@@ -95,7 +98,8 @@ def _prepare_forte_objects_from_fcidump(data, filename: str = None):
     nmopi = psi4.core.Dimension(nmopi_list)
 
     # Create the MOSpaceInfo object
-    data.mo_space_info = forte.make_mo_space_info(nmopi, fcidump["pntgrp"], options)
+    mo_spaces = make_mo_spaces_from_options(data.options)
+    data.mo_space_info = make_mo_space_info_from_map(nmopi, fcidump["pntgrp"], mo_spaces)
 
     # manufacture a SCFInfo object from the FCIDUMP file (this assumes C1 symmetry)
     nel = fcidump["nelec"]

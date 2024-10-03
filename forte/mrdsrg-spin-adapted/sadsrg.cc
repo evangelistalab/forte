@@ -28,6 +28,8 @@
 
 #include <numeric>
 
+#include "base_classes/forte_options.h"
+
 #include "psi4/libmints/matrix.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -776,7 +778,7 @@ bool SADSRG::check_semi_orbs() {
     bool semi_actv = true;
     auto nactv = actv_mos_.size();
     auto& Faa_data = Fd.block("aa").data();
-    auto actv_subspace = mo_space_info_->composite_space_names().at("ACTIVE");
+    auto actv_subspace = mo_space_info_->composite_spaces_def().at("ACTIVE");
     for (const auto& space : actv_subspace) {
         if (mo_space_info_->size(space) == 0)
             continue;
@@ -867,7 +869,7 @@ std::vector<double> SADSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
     // loop each correlated elementary space
     int nirrep = mo_space_info_->nirrep();
 
-    auto elementary_spaces = mo_space_info_->composite_space_names()["CORRELATED"];
+    auto elementary_spaces = mo_space_info_->composite_spaces_def().at("CORRELATED");
     for (const std::string& space : elementary_spaces) {
         if (mo_space_info_->size(space) == 0 or semi_checked_results_[space])
             continue;

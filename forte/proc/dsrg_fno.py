@@ -31,6 +31,8 @@ import os
 import psi4
 import forte
 
+from forte.modules.helpers import make_mo_spaces_from_options
+
 
 def dsrg_fno_procrouting(state_weights_map, scf_info, options, ints, mo_space_info, active_space_solver, rdms, Ua):
     """Driver for frozen-natural-orbital truncated DSRG."""
@@ -61,7 +63,8 @@ def dsrg_fno_procrouting(state_weights_map, scf_info, options, ints, mo_space_in
     options.set_int_list("FROZEN_UOCC", [fnopi[h] for h in range(mo_space_info.nirrep())])
     nmopi = mo_space_info.dimension("ALL")
     pg = mo_space_info.point_group_label()
-    mo_space_info = forte.make_mo_space_info(nmopi, pg, options)
+    mo_spaces = make_mo_spaces_from_options(options)
+    mo_space_info = forte.make_mo_space_info_from_map(nmopi, pg, mo_spaces)
 
     # transform integrals to FNO semicanonical basis
     Ca = ints.wfn().Ca()

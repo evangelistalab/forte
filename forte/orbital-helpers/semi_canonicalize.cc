@@ -91,7 +91,7 @@ void SemiCanonical::startup() {
     set_U_to_identity();
 
     // Find the elementary blocks
-    auto composite_spaces = mo_space_info_->composite_space_names();
+    auto composite_spaces = mo_space_info_->composite_spaces_def();
     auto docc_names = inactive_mix_ ? std::vector<std::string>{"INACTIVE_DOCC"}
                                     : composite_spaces["INACTIVE_DOCC"];
     auto actv_names = active_mix_ ? std::vector<std::string>{"ACTIVE"} : composite_spaces["ACTIVE"];
@@ -288,7 +288,7 @@ void SemiCanonical::build_transformation_matrices(const bool& semi) {
 
 void SemiCanonical::fill_Uactv(const std::shared_ptr<psi::Matrix>& U, ambit::Tensor& Ut) {
     auto actv_names = active_mix_ ? std::vector<std::string>{"ACTIVE"}
-                                  : mo_space_info_->composite_space_names()["ACTIVE"];
+                                  : mo_space_info_->composite_spaces_def().at("ACTIVE");
     auto& Ut_data = Ut.data();
 
     for (const std::string& name : actv_names) {
