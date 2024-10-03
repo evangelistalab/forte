@@ -29,6 +29,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <unordered_map>
 #include <unordered_set>
 
 #define FMT_HEADER_ONLY
