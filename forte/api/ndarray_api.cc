@@ -154,6 +154,27 @@ void export_ndarray(py::module& m) {
             }
         },
         py::arg("array"));
+    m.def(
+        "ndarray_copy_from_numpy",
+        [](py::array array)
+            -> std::variant<ndarray<float>, ndarray<double>, ndarray<std::complex<float>>,
+                            ndarray<std::complex<double>>> {
+            auto itemsize = array.dtype().itemsize();
+            auto kind = array.dtype().kind();
+            if (kind == 'f' and itemsize == sizeof(float)) {
+                return ndarray<float>::copy_from_numpy(array);
+            } else if (kind == 'f' and itemsize == sizeof(double)) {
+                return ndarray<double>::copy_from_numpy(array);
+            } else if (kind == 'c' and itemsize == sizeof(std::complex<float>)) {
+                return ndarray<std::complex<float>>::copy_from_numpy(array);
+            } else if (kind == 'c' and itemsize == sizeof(std::complex<double>)) {
+                return ndarray<std::complex<double>>::copy_from_numpy(array);
+            } else {
+                throw py::type_error("Unknown dtype: kind = " + std::to_string(kind) +
+                                     " itemsize = " + std::to_string(itemsize));
+            }
+        },
+        py::arg("array"));
 
     py::class_<DataType>(m, "DataType")
         .def_property_readonly("name", &DataType::name)

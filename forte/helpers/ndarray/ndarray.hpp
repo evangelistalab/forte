@@ -46,7 +46,9 @@ template <typename T> class ndarray {
     /// @param data pointer to data
     /// @param size size of data
     /// @param shape shape of tensor
-    ndarray(T* data, size_t size, shape_t shape_list) : shape_(shape_list), data_span_(data, size) {
+    ndarray(T* data, shape_t shape) : shape_(shape) {
+        size_t size = size_from_shape(shape);
+        data_span_ = std::span<T>(data, size);
         compute_strides();
     }
 
@@ -85,30 +87,16 @@ template <typename T> class ndarray {
         return data_span_[index];
     }
 
+    /// @brief Return the data of the tensor at the given indices
+    /// @param indices indices of the data to return
+    /// @return A reference to the data at the given indices
     template <typename... Indices> T& at(Indices... indices) {
         // return data_span_[offset(indices...)];
         size_t index = calculate_index_variadic(0, indices...);
         return data_span_[index];
     }
 
-    template <typename First, typename... Rest>
-    size_t calculate_index_variadic(size_t dim, First first, Rest... rest) const {
-        if constexpr (ndarray_debug) {
-            if (dim >= shape_.size()) {
-                throw std::out_of_range("Too many indices");
-            }
-            if (first >= shape_[dim]) {
-                throw std::out_of_range("Index out of bounds");
-            }
-        }
-        size_t offset = first * strides_[dim];
-        if constexpr (sizeof...(rest) == 0) {
-            return offset;
-        } else {
-            return offset + calculate_index_variadic(dim + 1, rest...);
-        }
-    }
-
+    /// @brief Return the data of the tensor at the given flat index
     T& operator[](size_t index) { return data_span_[index]; }
 
     /// @brief Set the value of a tensor element at the given indices
@@ -131,7 +119,7 @@ template <typename T> class ndarray {
     /// isn't deleted while Python still has a reference to it. For example, in
     /// python:
     /// ```
-    /// t = dtensor([2])
+    /// t = ndarray([2,2])
     /// t.at([0, 0]) = 1.0
     /// npt = t.numpy_array()
     /// npt[0, 0] = 7.0
@@ -152,12 +140,6 @@ template <typename T> class ndarray {
         return py::array_t<T>(shape_, data_span_.data(), py::cast(this));
     }
 
-    // static ndarray<T> from_numpy(py::array_t<T> array) {
-    //     std::vector<size_t> shape(array.shape(), array.shape() + array.ndim());
-    //     ndarray<T> tensor(const_cast<T*>(array.data()), array.size(), shape);
-    //     return tensor;
-    // }
-
     /// @brief Construct a ndarray object from a numpy array
     static ndarray<T> from_numpy(py::array_t<T> array) {
         // Request buffer info
@@ -167,10 +149,29 @@ template <typename T> class ndarray {
         }
         std::vector<size_t> shape(info.shape.begin(), info.shape.end());
         T* data_ptr = static_cast<T*>(info.ptr);
-        ndarray<T> tensor(data_ptr, array.size(), shape);
+        ndarray<T> tensor(data_ptr, shape);
         return tensor;
     }
 
+    /// @brief Create a new ndarray that contains a copy of a numpy array
+    static ndarray<T> copy_from_numpy(py::array_t<T> array) {
+        // Request buffer info
+        py::buffer_info info = array.request();
+        std::vector<size_t> shape(info.shape.begin(), info.shape.end());
+        ndarray<T> tensor(shape);
+        std::copy(static_cast<T*>(info.ptr), static_cast<T*>(info.ptr) + array.size(),
+                  tensor.data_span_.begin());
+        return tensor;
+    }
+
+    /// @brief Create a new ndarray that contains a copy of the data passed via a raw pointer
+    static ndarray<T> copy_from_pointer(const T* const data, const std::vector<size_t>& shape) {
+        ndarray<T> tensor(shape);
+        std::copy(data, data + tensor.size(), tensor.data_span_.begin());
+        return tensor;
+    }
+
+    /// @brief Return a string representation of the tensor
     std::string to_string() const {
         std::ostringstream oss;
         oss << "ndarray(shape=[";
@@ -197,26 +198,6 @@ template <typename T> class ndarray {
         }
         oss << "], data_type=" << typeid(T).name() << "])";
         return oss.str();
-    }
-
-    static ndarray<T> einsum(const std::string& equation, const std::vector<ndarray<T>>& tensors) {
-        if (tensors.empty()) {
-            throw std::runtime_error("No tensors provided to einsum.");
-        }
-
-        // Convert all tensors to numpy arrays and store them in a vector
-        std::vector<py::array_t<T>> numpy_tensors;
-        numpy_tensors.reserve(tensors.size());
-        for (const auto& tensor : tensors) {
-            numpy_tensors.push_back(tensor.numpy_array_const());
-        }
-
-        // Import numpy and call einsum with all numpy arrays at once
-        py::object numpy = py::module::import("numpy");
-        py::array_t<T> result =
-            numpy.attr("einsum")(equation, *numpy_tensors.data()).template cast<py::array_t<T>>();
-
-        return ndarray<T>::from_numpy(result);
     }
 
   private:
@@ -250,25 +231,25 @@ template <typename T> class ndarray {
         }
     }
 
-    template <typename... Indices> size_t offset(Indices... indices) const {
-        if constexpr (ndarray_debug) {
-            if (sizeof...(indices) != shape_.size()) {
-                throw std::out_of_range("Incorrect number of indices");
-            }
-        }
-        return offset_impl(0, indices...);
-    }
-
-    size_t offset_impl(size_t) const { return 0; }
-
+    /// @brief Return the data of the tensor at the given indices
+    /// @param indices indices of the data to return
+    /// @return A reference to the data at the given indices
     template <typename First, typename... Rest>
-    size_t offset_impl(size_t dim, First first, Rest... rest) const {
+    size_t calculate_index_variadic(size_t dim, First first, Rest... rest) const {
         if constexpr (ndarray_debug) {
+            if (dim >= shape_.size()) {
+                throw std::out_of_range("Too many indices");
+            }
             if (first >= shape_[dim]) {
-                throw std::out_of_range("Index out of bounds for dimension");
+                throw std::out_of_range("Index out of bounds");
             }
         }
-        return first * strides_[dim] + offset_impl(dim + 1, rest...);
+        size_t offset = first * strides_[dim];
+        if constexpr (sizeof...(rest) == 0) {
+            return offset;
+        } else {
+            return offset + calculate_index_variadic(dim + 1, rest...);
+        }
     }
 
   public:
@@ -276,7 +257,7 @@ template <typename T> class ndarray {
         py::class_<ndarray<T>>(m, name.c_str())
             .def(py::init<const std::vector<size_t>&>())
             .def_static("from_numpy", &ndarray<T>::from_numpy)
-            .def_static("einsum", &ndarray<T>::einsum)
+            .def_static("copy_from_numpy", &ndarray<T>::copy_from_numpy)
             .def("__repr__", &ndarray<T>::to_string, "Return a string representation of the tensor")
             .def("__str__", &ndarray<T>::to_string, "Return a string representation of the tensor")
             .def_property_readonly_static("dtype", [](py::object) { return ndarray<T>::dtype; })
@@ -391,8 +372,9 @@ template <typename T> class ndarray {
     }
 };
 
-template <typename T> std::ostream& operator<<(std::ostream& os, const ndarray<T>& tensor) {
-    os << tensor.to_string();
+/// @brief Output operator for tensor
+template <typename T> std::ostream& operator<<(std::ostream& os, const ndarray<T>& a) {
+    os << a.to_string();
     return os;
 }
 
