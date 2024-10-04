@@ -242,7 +242,9 @@ template <typename T> class ndarray {
                 throw std::out_of_range("Too many indices");
             }
             if (first >= shape_[dim]) {
-                throw std::out_of_range("Index out of bounds");
+                throw std::out_of_range("Index " + std::to_string(first) +
+                                        " out of bounds for dimension " + std::to_string(dim) +
+                                        " with size " + std::to_string(shape_[dim]));
             }
         }
         size_t offset = first * strides_[dim];
@@ -300,70 +302,140 @@ template <typename T> class ndarray {
                      return self.at(indices);
                  })
             .def(
-                "at", [](ndarray<T>& self, size_t i1) -> T& { return self.at(i1); },
+                "at",
+                [](ndarray<T>& self, size_t i1) -> T& {
+                    if constexpr (ndarray_debug) {
+                        if (self.rank() != 1) {
+                            throw std::out_of_range(
+                                "Rank " + std::to_string(self.rank()) +
+                                " array addressed with incorrect number of indices (1)");
+                        }
+                    }
+                    return self.at(i1);
+                },
                 "Get the value at the given index")
             .def(
-                "at", [](ndarray<T>& self, size_t i1, size_t i2) -> T& { return self.at(i1, i2); },
+                "at",
+                [](ndarray<T>& self, size_t i1, size_t i2) -> T& {
+                    if constexpr (ndarray_debug) {
+                        if (self.rank() != 2) {
+                            throw std::out_of_range(
+                                "Rank " + std::to_string(self.rank()) +
+                                " array addressed with incorrect number of indices (2)");
+                        }
+                    }
+                    return self.at(i1, i2);
+                },
                 "Get the value at the given indices")
             .def(
                 "at",
                 [](ndarray<T>& self, size_t i1, size_t i2, size_t i3) -> T& {
+                    if constexpr (ndarray_debug) {
+                        if (self.rank() != 3) {
+                            throw std::out_of_range(
+                                "Rank " + std::to_string(self.rank()) +
+                                " array addressed with incorrect number of indices (3)");
+                        }
+                    }
                     return self.at(i1, i2, i3);
                 },
                 "Get the value at the given indices")
             .def(
                 "at",
                 [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4) -> T& {
+                    if constexpr (ndarray_debug) {
+                        if (self.rank() != 4) {
+                            throw std::out_of_range(
+                                "Rank " + std::to_string(self.rank()) +
+                                " array addressed with incorrect number of indices (4)");
+                        }
+                    }
                     return self.at(i1, i2, i3, i4);
                 },
                 "Get the value at the given indices")
             .def(
                 "at",
                 [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5) -> T& {
+                    if constexpr (ndarray_debug) {
+                        if (self.rank() != 5) {
+                            throw std::out_of_range(
+                                "Rank " + std::to_string(self.rank()) +
+                                " array addressed with incorrect number of indices (5)");
+                        }
+                    }
+
                     return self.at(i1, i2, i3, i4, i5);
                 },
                 "Get the value at the given indices")
             .def(
                 "at",
                 [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
-                   size_t i6) -> T& { return self.at(i1, i2, i3, i4, i5, i6); },
-                "Get the value at the given indices")
-            .def(
-                "at",
-                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
-                   size_t i6, size_t i7) -> T& { return self.at(i1, i2, i3, i4, i5, i6, i7); },
-                "Get the value at the given indices")
-            .def(
-                "at",
-                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
-                   size_t i6, size_t i7,
-                   size_t i8) -> T& { return self.at(i1, i2, i3, i4, i5, i6, i7, i8); },
-                "Get the value at the given indices")
-            .def(
-                "at",
-                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
-                   size_t i6, size_t i7, size_t i8,
-                   size_t i9) -> T& { return self.at(i1, i2, i3, i4, i5, i6, i7, i8, i9); },
-                "Get the value at the given indices")
-            .def(
-                "at",
-                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
-                   size_t i6, size_t i7, size_t i8, size_t i9,
-                   size_t i10) -> T& { return self.at(i1, i2, i3, i4, i5, i6, i7, i8, i9, i10); },
-                "Get the value at the given indices")
-            .def(
-                "at",
-                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
-                   size_t i6, size_t i7, size_t i8, size_t i9, size_t i10, size_t i11) -> T& {
-                    return self.at(i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11);
+                   size_t i6) -> T& {
+                    if constexpr (ndarray_debug) {
+                        if (self.rank() != 6) {
+                            throw std::out_of_range(
+                                "Rank " + std::to_string(self.rank()) +
+                                " array addressed with incorrect number of indices (6)");
+                        }
+                    }
+                    return self.at(i1, i2, i3, i4, i5, i6);
                 },
                 "Get the value at the given indices")
             .def(
                 "at",
                 [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
-                   size_t i6, size_t i7, size_t i8, size_t i9, size_t i10, size_t i11,
-                   size_t i12) -> T& {
-                    return self.at(i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12);
+                   size_t i6, size_t i7) -> T& {
+                    if constexpr (ndarray_debug) {
+                        if (self.rank() != 7) {
+                            throw std::out_of_range(
+                                "Rank " + std::to_string(self.rank()) +
+                                " array addressed with incorrect number of indices (7)");
+                        }
+                    }
+                    return self.at(i1, i2, i3, i4, i5, i6, i7);
+                },
+                "Get the value at the given indices")
+            .def(
+                "at",
+                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
+                   size_t i6, size_t i7, size_t i8) -> T& {
+                    if constexpr (ndarray_debug) {
+                        if (self.rank() != 8) {
+                            throw std::out_of_range(
+                                "Rank " + std::to_string(self.rank()) +
+                                " array addressed with incorrect number of indices (8)");
+                        }
+                    }
+
+                    return self.at(i1, i2, i3, i4, i5, i6, i7, i8);
+                },
+                "Get the value at the given indices")
+            .def(
+                "at",
+                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
+                   size_t i6, size_t i7, size_t i8, size_t i9) -> T& {
+                    if constexpr (ndarray_debug) {
+                        if (self.rank() != 9) {
+                            throw std::out_of_range(
+                                "Rank " + std::to_string(self.rank()) +
+                                " array addressed with incorrect number of indices (9)");
+                        }
+                    }
+                    return self.at(i1, i2, i3, i4, i5, i6, i7, i8, i9);
+                },
+                "Get the value at the given indices")
+            .def(
+                "at",
+                [](ndarray<T>& self, size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
+                   size_t i6, size_t i7, size_t i8, size_t i9, size_t i10) -> T& {
+                    if constexpr (ndarray_debug) {
+                        if (self.rank() != 10) {
+                            throw std::out_of_range(
+                                "Rank " + std::to_string(self.rank()) +
+                                " array addressed with incorrect number of indices (10)");
+                        }
+                    }
+                    return self.at(i1, i2, i3, i4, i5, i6, i7, i8, i9, i10);
                 },
                 "Get the value at the given indices")
             .def("set_at", &ndarray<T>::set_at, "indices"_a, "value"_a,

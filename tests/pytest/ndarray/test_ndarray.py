@@ -1,3 +1,4 @@
+import re
 import pytest
 import numpy as np
 
@@ -14,16 +15,6 @@ def test_ndarray_creation():
     assert tensor.dtype.itemsize == 8  # Size of double in bytes
 
 
-# def test_ndarray_creation_from_list():
-#     """Test creation of ndarray with a given shape."""
-#     tensor = ndarray((2, 3))
-#     assert tensor.shape == [2]
-#     assert tensor.size == 2
-#     assert tensor.dtype.name == "float64"  # Assuming T is double
-#     assert tensor.dtype.kind == "f"
-#     assert tensor.dtype.itemsize == 8  # Size of double in bytes
-
-
 def test_ndarray_fill_and_access():
     """Test filling the tensor and accessing elements."""
     tensor = ndarray((2, 2))
@@ -35,9 +26,9 @@ def test_ndarray_fill_and_access():
 
     # Test set_at and __setitem__
     tensor.set_at([0, 1], 3.0)
-    assert tensor.at([0, 1]) == 3.0
+    assert tensor.at(0, 1) == 3.0
     tensor[1, 0] = 2.0  # Using __setitem__
-    assert tensor.at([1, 0]) == 2.0
+    assert tensor.at(1, 0) == 2.0
 
 
 def test_ndarray_numpy_array():
@@ -51,7 +42,7 @@ def test_ndarray_numpy_array():
 
     # Modify NumPy array and check if changes reflect in tensor
     nparray[0, 0] = 7.0
-    assert tensor.at([0, 0]) == 7.0
+    assert tensor.at(0, 0) == 7.0
 
 
 def test_ndarray_from_numpy():
@@ -59,11 +50,20 @@ def test_ndarray_from_numpy():
     arr = np.array([[1, 2], [3, 4]], dtype=np.float64)
     tensor = ndarray_from_numpy(arr)
     assert tensor.shape == [2, 2]
-    assert tensor.at([0, 0]) == 1.0
+    assert tensor.at(0, 0) == 1.0
 
     # Modify the original NumPy array and check if changes reflect in tensor
     arr[0, 1] = 5.0
-    assert tensor.at([0, 1]) == 5.0
+    assert tensor.at(0, 1) == 5.0
+
+    arr = np.array([[1, 2j], [3j, 4]], dtype=np.complex128)
+    tensor = ndarray_from_numpy(arr)
+    assert tensor.shape == [2, 2]
+    assert tensor.at(0, 1) == 2.0j
+
+    # Modify the original NumPy array and check if changes reflect in tensor
+    arr[0, 1] = 5.0j
+    assert tensor.at(0, 1) == 5.0j
 
 
 def test_ndarray_indexing_errors():
@@ -71,7 +71,7 @@ def test_ndarray_indexing_errors():
     tensor = ndarray((2, 2))
 
     with pytest.raises(IndexError):
-        tensor.at([2, 0])  # Index out of bounds
+        tensor.at(2, 0)  # Index out of bounds
 
     with pytest.raises(IndexError):
         tensor.at([0])  # Incorrect number of indices
@@ -201,13 +201,16 @@ def test_ndarray_reshape():
 
 def test_ndarray_exception_messages():
     """Test that appropriate exceptions are raised with clear messages."""
-    tensor = ndarray((2, 2))
+    tensor = ndarray((2, 4))
 
-    with pytest.raises(IndexError, match="Index 2 out of bounds for dimension 0"):
-        tensor.at([2, 0])
+    with pytest.raises(IndexError, match="Index 2 out of bounds for dimension 0 with size 2"):
+        tensor.at(2, 0)
 
-    # with pytest.raises(RuntimeError, match="No tensors provided to einsum."):
-    #     ndarray.einsum("i->", [])
+    with pytest.raises(IndexError, match="Index 5 out of bounds for dimension 1 with size 4"):
+        tensor.at(0, 5)
+
+    with pytest.raises(IndexError, match=re.escape("Rank 2 array addressed with incorrect number of indices (3)")):
+        tensor.at(0, 5, 7)
 
 
 def test_ndarray_dtype_consistency():
@@ -235,7 +238,7 @@ def test_ndarray_copy():
     nparray_copy = nparray.copy()
     nparray_copy[0, 0] = 5.0
     # Ensure original tensor is not affected
-    assert tensor.at([0, 0]) == 1.0
+    assert tensor.at(0, 0) == 1.0
 
 
 def test_ndarray_non_contiguous_memory():
@@ -316,9 +319,9 @@ def test_ndarray_copy_from_numpy():
     tensor = ndarray_copy_from_numpy(nparray)
     assert tensor.shape == [2, 2]
     assert tensor.dtype.name == "complex128"
-    assert tensor.at([0, 0]) == 1.0
+    assert tensor.at(0, 0) == 1.0
     nparray[0, 1] = 5.0
-    assert tensor.at([0, 1]) == 2.0
+    assert tensor.at(0, 1) == 2.0
     assert nparray[0, 1] == 5.0
 
 
