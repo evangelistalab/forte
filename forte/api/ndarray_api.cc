@@ -118,9 +118,13 @@ void export_ndarray(py::module& m) {
 
     m.def(
         "ndarray",
-        [](std::vector<size_t> shape, const std::string& dtype_str)
+        [](const py::tuple& shape_tuple, const std::string& dtype_str)
             -> std::variant<ndarray<float>, ndarray<double>, ndarray<std::complex<float>>,
                             ndarray<std::complex<double>>> {
+            std::vector<size_t> shape;
+            for (auto item : shape_tuple) {
+                shape.push_back(py::cast<size_t>(item));
+            }
             auto dtype = string_to_dtype(dtype_str);
             return make_ndarray(shape, dtype);
         },
@@ -128,9 +132,15 @@ void export_ndarray(py::module& m) {
 
     m.def(
         "ndarray",
-        [](std::vector<size_t> shape, DataTypeEnum dtype)
+        [](const py::tuple& shape_tuple, DataTypeEnum dtype)
             -> std::variant<ndarray<float>, ndarray<double>, ndarray<std::complex<float>>,
-                            ndarray<std::complex<double>>> { return make_ndarray(shape, dtype); },
+                            ndarray<std::complex<double>>> {
+            std::vector<size_t> shape;
+            for (auto item : shape_tuple) {
+                shape.push_back(py::cast<size_t>(item));
+            }
+            return make_ndarray(shape, dtype);
+        },
         py::arg("shape"), py::arg("dtype") = DataTypeEnum::Float64);
 
     m.def(

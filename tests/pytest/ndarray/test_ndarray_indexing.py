@@ -5,7 +5,7 @@ from forte import ndarray
 
 def test_ndarray_fill_and_access_1d():
     """Test filling the tensor and accessing elements of a 1D tensor."""
-    tensor = ndarray([5])
+    tensor = ndarray((5,))
     tensor.fill(3.0)
     for i in range(5):
         print(i)
@@ -17,7 +17,7 @@ def test_ndarray_fill_and_access_1d():
 
 def test_ndarray_fill_and_access_2d():
     """Test filling the tensor and accessing elements of a 2D tensor."""
-    tensor = ndarray([5, 7])
+    tensor = ndarray((5, 7))
     tensor.fill(3.0)
     for i in range(5):
         for j in range(7):
@@ -30,7 +30,7 @@ def test_ndarray_fill_and_access_2d():
 
 def test_ndarray_fill_and_access_3d():
     """Test filling the tensor and accessing elements of a 3D tensor."""
-    tensor = ndarray([5, 7, 3])
+    tensor = ndarray((5, 7, 3))
     tensor.fill(3.0)
     for i in range(5):
         for j in range(7):

@@ -32,7 +32,8 @@ template <typename T> class ndarray {
     ndarray() = default;
 
     /// @brief Construct a new ndarray object from a shape. This will allocate
-    /// the data and the ndarray object will own it.
+    /// the data and the ndarray object will own it. The data is initialized to
+    /// zero.
     /// @param shape
     ndarray(const shape_t& shape) : shape_(shape) {
         size_t size = size_from_shape(shape);
