@@ -71,7 +71,9 @@ template <typename T> class ndarray {
     T& at(const std::vector<size_t>& indices) {
         if constexpr (ndarray_debug) {
             if (indices.size() != shape_.size()) {
-                throw std::out_of_range("Incorrect number of indices");
+                throw std::out_of_range("Incorrect number of indices. Expected " +
+                                        std::to_string(shape_.size()) + " but got " +
+                                        std::to_string(indices.size()));
             }
         }
         size_t index = 0;
@@ -261,9 +263,6 @@ template <typename T> class ndarray {
             .def(py::init<const std::vector<size_t>&>())
             .def_static("from_numpy", &ndarray<T>::from_numpy)
             .def_static("copy_from_numpy", &ndarray<T>::copy_from_numpy)
-            .def("__repr__", &ndarray<T>::to_string, "Return a string representation of the tensor")
-            .def("__str__", &ndarray<T>::to_string, "Return a string representation of the tensor")
-            .def_property_readonly_static("dtype", [](py::object) { return ndarray<T>::dtype; })
             .def_property_readonly("rank", &ndarray<T>::rank, "Return the rank of the tensor")
             .def_property_readonly(
                 "shape", &ndarray<T>::shape,
@@ -272,31 +271,55 @@ template <typename T> class ndarray {
                                    "Return the size of the tensor (number of elements)")
             .def_property_readonly("strides", &ndarray<T>::strides,
                                    "Return the strides of the tensor")
-            .def("fill", &ndarray<T>::fill, "value"_a, "Fill the tensor with a value")
-            .def("numpy_array", &ndarray<T>::numpy_array, "Return a numpy array view of the tensor")
+            .def_property_readonly_static("dtype", [](py::object) { return ndarray<T>::dtype; })
+            .def("__repr__", &ndarray<T>::to_string, "Return a string representation of the tensor")
+            .def("__str__", &ndarray<T>::to_string, "Return a string representation of the tensor")
+            .def("__len__", &ndarray<T>::size, "Return the size of the tensor")
             // TODO: this is dangerous because we ignore the args and kwargs
-            .def("__array__",
-                 [](ndarray<T>& self, py::args, py::kwargs) { return self.numpy_array(); })
-            .def("__getitem__",
-                 [](ndarray<T>& self, py::tuple index) -> T& {
-                     std::vector<size_t> indices;
-                     for (auto item : index) {
-                         indices.push_back(item.cast<size_t>());
-                     }
-                     return self.at(indices);
-                 })
-            .def("__getitem__",
-                 [](ndarray<T>& self, size_t index) -> T& { return self.at({index}); })
-            .def("__setitem__",
-                 [](ndarray<T>& self, py::tuple index, T value) {
-                     std::vector<size_t> indices;
-                     for (auto item : index) {
-                         indices.push_back(item.cast<size_t>());
-                     }
-                     self.set_at(indices, value);
-                 })
+            .def(
+                "__array__",
+                [](ndarray<T>& self, py::args, py::kwargs) { return self.numpy_array(); },
+                "Return a numpy array view of the tensor")
+            .def(
+                "__getitem__",
+                [](ndarray<T>& self, py::tuple index) -> T& {
+                    std::vector<size_t> indices;
+                    for (auto item : index) {
+                        indices.push_back(item.cast<size_t>());
+                    }
+                    return self.at(indices);
+                },
+                "Get the value at the given indices")
+            .def(
+                "__getitem__",
+                [](ndarray<T>& self, size_t index) -> T& { return self.at({index}); },
+                "Get the value at the given index")
+            .def(
+                "__setitem__",
+                [](ndarray<T>& self, py::tuple index, T value) {
+                    std::vector<size_t> indices;
+                    for (auto item : index) {
+                        indices.push_back(item.cast<size_t>());
+                    }
+                    self.set_at(indices, value);
+                },
+                "Set the value at the given indices")
             .def("__setitem__",
                  [](ndarray<T>& self, size_t index, T value) { self.set_at({index}, value); })
+            // iterator support
+            .def(
+                "__iter__",
+                [](ndarray<T>& self) {
+                    return py::make_iterator(self.data_span_.begin(), self.data_span_.end());
+                },
+                py::keep_alive<0, 1>())
+            .def("numpy_array", &ndarray<T>::numpy_array, "Return a numpy array view of the tensor")
+            .def("fill", &ndarray<T>::fill, "value"_a, "Fill the tensor with a value")
+            .def("set_at", &ndarray<T>::set_at, "indices"_a, "value"_a,
+                 "Set the value at the given indices (passed as a list)")
+            .def("set_to", &ndarray<T>::set_to, "values"_a,
+                 "Set the values of the tensor to a vector of values")
+            // addressing functions
             .def("at",
                  [](ndarray<T>& self, const std::vector<size_t>& indices) -> T& {
                      return self.at(indices);
@@ -437,11 +460,7 @@ template <typename T> class ndarray {
                     }
                     return self.at(i1, i2, i3, i4, i5, i6, i7, i8, i9, i10);
                 },
-                "Get the value at the given indices")
-            .def("set_at", &ndarray<T>::set_at, "indices"_a, "value"_a,
-                 "Set the value at the given indices (passed as a list)")
-            .def("set_to", &ndarray<T>::set_to, "values"_a,
-                 "Set the values of the tensor to a vector of values");
+                "Get the value at the given indices");
     }
 };
 

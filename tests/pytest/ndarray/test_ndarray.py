@@ -52,6 +52,9 @@ def test_ndarray_from_numpy():
     assert tensor.shape == [2, 2]
     assert tensor.at(0, 0) == 1.0
 
+    # Check if the tensor is iterable and verify the values using isclose
+    assert all(np.isclose(i, j) for i, j in zip(tensor, [1.0, 2.0, 3.0, 4.0]))
+
     # Modify the original NumPy array and check if changes reflect in tensor
     arr[0, 1] = 5.0
     assert tensor.at(0, 1) == 5.0
@@ -211,6 +214,15 @@ def test_ndarray_exception_messages():
 
     with pytest.raises(IndexError, match=re.escape("Rank 2 array addressed with incorrect number of indices (3)")):
         tensor.at(0, 5, 7)
+
+    with pytest.raises(IndexError, match="Index 2 out of bounds for dimension 0 with size 2"):
+        tensor[2, 0]
+
+    with pytest.raises(IndexError, match="Incorrect number of indices. Expected 2 but got 1"):
+        tensor[2]
+
+    with pytest.raises(IndexError, match="Incorrect number of indices. Expected 2 but got 3"):
+        tensor[2, 3, 6]
 
 
 def test_ndarray_dtype_consistency():
