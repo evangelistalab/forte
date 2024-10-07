@@ -3,7 +3,7 @@
 
 import forte
 
-psi4_casscf = -99.925009149448968
+psi4_casscf = -99.922927691438559
 
 memory 500 mb
 
@@ -29,7 +29,12 @@ set forte{
   restricted_docc         [1,0,1,1]
   active                  [2,0,0,0]
   read_orbitals           true  # generated @ 1.5
-  mcscf_reference        false
+  mcscf_reference         false
 }
-Ecas = energy('forte')
-compare_values(psi4_casscf, Ecas, 8, "FORTE 2-step MCSCF energy")
+Ecas, wfn = energy('forte', return_wfn=True)
+compare_values(psi4_casscf, Ecas, 8, "CASCI(READ)/cc-pVDZ energy")
+
+S = psi4.core.triplet(wfn.Ca(), wfn.S(), wfn.Ca(), True, False, False)
+Sref = S.clone()
+Sref.identity()
+compare_matrices(Sref, S, 10, "Orthonormality of MO overlap matrix")
