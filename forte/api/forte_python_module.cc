@@ -87,7 +87,7 @@ PYBIND11_MODULE(_forte, m) {
     m.doc() = "pybind11 Forte module"; // module docstring
 
     // export base classes
-    export_EPICTensors(m);
+    export_ndarray(m);
 
     export_ActiveSpaceIntegrals(m);
 
