@@ -21,7 +21,7 @@ from forte._forte import (
 from forte.data import ForteData
 from forte.register_forte_options import register_forte_options
 from forte.proc.orbital_helpers import orbital_projection
-from forte.proc.orbital_helpers import read_orbitals, projectout, ortho_orbs_new
+from forte.proc.orbital_helpers import read_orbitals, basis_projection, ortho_orbs_new
 from forte.proc.external_active_space_solver import (
     write_external_active_space_file,
     write_external_rdm_file,
@@ -121,71 +121,61 @@ def prepare_psi4_ref_wfn(options, **kwargs):
         msg += f"Expected: {molecule.name()} but got: {ref_wfn.molecule().name()}"
         raise ValueError(msg)
 
-    wfn_new = ref_wfn
-
     # run new SCF if basis sets are inconsistent
     bs_name = options.get_str("BASIS")
-    if bs_name!= ref_wfn.basisset().name():
+    if bs_name != ref_wfn.basisset().name():
         p4print(f"\n\n  Different basis sets between option ({bs_name}) and ref_wfn ({ref_wfn.basisset().name()})!")
         p4print(f"\n  Perform new SCF using target basis set {bs_name} ...\n\n")
         kwargs_copy = {k: v for k, v in kwargs.items() if k != "ref_wfn"}
         wfn_new = run_psi4_ref("scf", molecule, False, **kwargs_copy)
 
-    # create a MOSpaceInfo object
-    nmopi = wfn_new.nmopi()
-    if kwargs.get("mo_spaces", None) is None:
-        mo_space_info = make_mo_space_info(nmopi, point_group, options)
+        # create a MOSpaceInfo object
+        nmopi = wfn_new.nmopi()
+        if kwargs.get("mo_spaces", None) is None:
+            mo_space_info = make_mo_space_info(nmopi, point_group, options)
+        else:
+            mo_space_info = make_mo_space_info_from_map(nmopi, point_group, kwargs.get("mo_spaces"), [])
+
+        mcscf_ignore_frozen = options.get_bool("MCSCF_IGNORE_FROZEN_ORBS")
+        if mo_space_info.size("FROZEN") > 0 and (not mcscf_ignore_frozen) and options.get_bool("MCSCF_REFERENCE"):
+            msg = "\n\n  WARNING: "
+            msg += "Frozen orbitals are detected for MCSCF starting from orbitals of a different basis set."
+            msg += "\n  This is currently not supported."
+            msg += "\n  Option MCSCF_IGNORE_FROZEN_ORBS is now set to TRUE to continue."
+            options.set_bool("MCSCF_IGNORE_FROZEN_ORBS", True)
+            print(msg)
+            p4print(msg)
+
+        p4print("\n\n  Perform basis projection for occupied orbitals ...")
+        Ca = basis_projection(ref_wfn, wfn_new, mo_space_info)
+        wfn_new.Ca().copy(Ca)
     else:
-        mo_space_info = make_mo_space_info_from_map(nmopi, point_group, kwargs.get("mo_spaces"), [])
+        # create a MOSpaceInfo object
+        nmopi = ref_wfn.nmopi()
+        if kwargs.get("mo_spaces", None) is None:
+            mo_space_info = make_mo_space_info(nmopi, point_group, options)
+        else:
+            mo_space_info = make_mo_space_info_from_map(nmopi, point_group, kwargs.get("mo_spaces"), [])
 
     # do we need to check MO overlap?
     if not need_orbital_check:
         wfn_new = ref_wfn
     else:
-        if bs_name!= ref_wfn.basisset().name():
-            p4print("\n\n  Perform basis projection for occupied orbitals ...")
-
-            mcscf_ignore_frozen = options.get_bool("MCSCF_IGNORE_FROZEN_ORBS")
-            if mo_space_info.size("FROZEN") > 0 and (not mcscf_ignore_frozen) and options.get_bool("MCSCF_REFERENCE"):
-                msg = "\n\n  WARNING: "
-                msg += "Frozen orbitals are detected for MCSCF starting from orbitals of a different basis set."
-                msg += "\n  This is currently not supported."
-                msg += "\n  Option MCSCF_IGNORE_FROZEN_ORBS is now set to TRUE to continue."
-                options.set_bool("MCSCF_IGNORE_FROZEN_ORBS", True)
-                print(msg)
-                p4print(msg)
-
-            dim_zero = psi4.core.Dimension([0] * wfn_new.nirrep())
-            slice_so_ref = psi4.core.Slice(dim_zero, ref_wfn.nsopi())
-            slice_so_new = psi4.core.Slice(dim_zero, wfn_new.nsopi())
-
-            dim_docc = mo_space_info.dimension("INACTIVE_DOCC")
-            dim_actv = mo_space_info.dimension("ACTIVE")
-            dim_occ = dim_docc + dim_actv
-
-            slice_occ = psi4.core.Slice(dim_zero, dim_occ)
-            Cocc_target = ref_wfn.Ca().get_block(slice_so_ref, slice_occ)
-            Cocc = wfn_new.basis_projection(Cocc_target, dim_occ, ref_wfn.basisset(), wfn_new.basisset())
-
-            Cp = projectout(wfn_new.Ca(), Cocc, wfn_new.S())
-            Ca = ortho_orbs_new(Cp, wfn_new.S(), wfn_new.Ca(), mo_space_info, ["INACTIVE_UOCC"])
-            Ca.set_block(slice_so_new, slice_occ, Cocc)
-            wfn_new.Ca().copy(Ca)
-        else:
-            new_S = psi4.core.Wavefunction.build(molecule, options.get_str("BASIS")).S()
-            if check_mo_orthonormality(new_S, Ca):
+        new_S = psi4.core.Wavefunction.build(molecule, options.get_str("BASIS")).S()
+        if check_mo_orthonormality(new_S, Ca):
+            if bs_name == ref_wfn.basisset().name():
                 wfn_new = ref_wfn
                 wfn_new.Ca().copy(Ca)
+        else:
+            if fresh_ref_wfn:
+                wfn_new = ref_wfn
+                wfn_new.Ca().copy(ortho_orbs_new(wfn_new.Ca(), wfn_new.S(), Ca, mo_space_info))
             else:
-                if fresh_ref_wfn:
-                    wfn_new = ref_wfn
-                    wfn_new.Ca().copy(ortho_orbs_new(wfn_new.Ca(), wfn_new.S(), Ca, mo_space_info))
-                else:
-                    p4print("\n  Perform new SCF at current geometry ...\n")
-                    kwargs_copy = {k: v for k, v in kwargs.items() if k != "ref_wfn"}
-                    wfn_new = run_psi4_ref("scf", molecule, False, **kwargs_copy)
-                    wfn_new.Ca().copy(ortho_orbs_new(wfn_new.Ca(), wfn_new.S(), Ca, mo_space_info))
-                    ref_wfn.shallow_copy(wfn_new)
+                p4print("\n  Perform new SCF at current geometry ...\n")
+                kwargs_copy = {k: v for k, v in kwargs.items() if k != "ref_wfn"}
+                wfn_new = run_psi4_ref("scf", molecule, False, **kwargs_copy)
+                wfn_new.Ca().copy(ortho_orbs_new(wfn_new.Ca(), wfn_new.S(), Ca, mo_space_info))
+                ref_wfn.shallow_copy(wfn_new)
 
     # set DF and MINAO basis
     if "DF" in options.get_str("INT_TYPE"):

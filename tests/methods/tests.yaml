@@ -73,6 +73,7 @@ casscf:
       - df-casscf-1
       - df-casscf-2-rdm
       - df-casscf-3-edge
+      - df-casscf-4-basis
       - casscf-fcidump-1
       - casscf-gradient-1
       - casscf-gradient-3

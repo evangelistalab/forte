@@ -90,37 +90,6 @@ def orbital_projection(ref_wfn, options, mo_space_info):
         return mo_space_info
 
 
-def ortho_orbs_forte(wfn, mo_space_info, Cold):
-    """
-    Read the set of orbitals from file and
-    pass it to the current wave function as initial guess
-
-    :param wfn: current Psi4 Wavefunction
-    :param mo_space_info: the Forte MOSpaceInfo object
-    :param Cold: MO coefficients from previous calculations
-    :return: orthonormalized orbital coefficients
-    """
-    orbital_spaces = mo_space_info.space_names()
-
-    # slices in the order of frozen core, core, active, virtual, frozen virtual
-    occ_start = [psi4.core.Dimension([0] * mo_space_info.nirrep())]
-    occ_end = []
-    for space in orbital_spaces[:-1]:
-        occpi = mo_space_info.dimension(space)
-        occpi.name = space
-
-        temp = occ_start[-1] + occpi
-        occ_start.append(temp)
-        occ_end.append(temp)
-    occ_end.append(wfn.nmopi())
-
-    slices = [psi4.core.Slice(b, e) for b, e in zip(occ_start, occ_end)]
-
-    semi = True if wfn.Fa() else False  # Forte make_fock passes to wfn.Fa()
-
-    return ortho_orbs_impl(Cold, wfn, slices, semi)
-
-
 def ortho_orbs_new(Ca, S, Cinit, mo_space_info, space_priority=None):
     """Orthonormalize between orbitals
 
@@ -183,6 +152,66 @@ def ortho_orbs_new(Ca, S, Cinit, mo_space_info, space_priority=None):
             C[h][:, mos] = Csub
 
     return psi4.core.Matrix.from_array(C)
+
+
+def basis_projection(wfn_old, wfn_new, mo_space_info):
+    """Project the orbitals from the old to new basis
+
+    Args:
+        wfn_old (psi4.Wavefunction): the old wave function
+        wfn_new (psi4.Wavefunction): the new wave function
+        mo_space_info (forte.MOSpaceInfo): the Forte MOSpaceInfo object
+
+    Returns:
+        psi4.core.Matrix: the new orbitals
+    """
+    dim_zero = psi4.core.Dimension([0] * wfn_new.nirrep())
+    slice_so_ref = psi4.core.Slice(dim_zero, wfn_old.nsopi())
+    slice_so_new = psi4.core.Slice(dim_zero, wfn_new.nsopi())
+
+    dim_docc = mo_space_info.dimension("INACTIVE_DOCC")
+    dim_actv = mo_space_info.dimension("ACTIVE")
+    dim_occ = dim_docc + dim_actv
+
+    slice_occ = psi4.core.Slice(dim_zero, dim_occ)
+    Cocc_target = wfn_old.Ca().get_block(slice_so_ref, slice_occ)
+    Cocc = wfn_new.basis_projection(Cocc_target, dim_occ, wfn_old.basisset(), wfn_new.basisset())
+
+    Cp = projectout(wfn_new.Ca(), Cocc, wfn_new.S())
+    Ca = ortho_orbs_new(Cp, wfn_new.S(), wfn_new.Ca(), mo_space_info, ["INACTIVE_UOCC"])
+    Ca.set_block(slice_so_new, slice_occ, Cocc)
+    return Ca
+
+
+def ortho_orbs_forte(wfn, mo_space_info, Cold):
+    """
+    Read the set of orbitals from file and
+    pass it to the current wave function as initial guess
+
+    :param wfn: current Psi4 Wavefunction
+    :param mo_space_info: the Forte MOSpaceInfo object
+    :param Cold: MO coefficients from previous calculations
+    :return: orthonormalized orbital coefficients
+    """
+    orbital_spaces = mo_space_info.space_names()
+
+    # slices in the order of frozen core, core, active, virtual, frozen virtual
+    occ_start = [psi4.core.Dimension([0] * mo_space_info.nirrep())]
+    occ_end = []
+    for space in orbital_spaces[:-1]:
+        occpi = mo_space_info.dimension(space)
+        occpi.name = space
+
+        temp = occ_start[-1] + occpi
+        occ_start.append(temp)
+        occ_end.append(temp)
+    occ_end.append(wfn.nmopi())
+
+    slices = [psi4.core.Slice(b, e) for b, e in zip(occ_start, occ_end)]
+
+    semi = True if wfn.Fa() else False  # Forte make_fock passes to wfn.Fa()
+
+    return ortho_orbs_impl(Cold, wfn, slices, semi)
 
 
 def ortho_orbs_impl(C1, wfn, slices, semi):
