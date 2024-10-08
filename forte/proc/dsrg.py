@@ -199,27 +199,6 @@ class ProcedureDSRG:
             self.semi = forte.SemiCanonical(
                 self.mo_space_info, self.ints, options, inactive_mix, active_mix)
 
-        # if self.options.get_bool('FULL_HBAR'):
-        #     L1a = self.rdms.L1a()
-        #     L1b = self.rdms.L1b()
-        #     L2aa = self.rdms.L2aa()
-        #     L2ab = self.rdms.L2ab()
-        #     L2bb = self.rdms.L2bb()
-        #     L3aaa = self.rdms.L3aaa()
-        #     L3aab = self.rdms.L3aab()
-        #     L3abb = self.rdms.L3abb()
-        #     L3bbb = self.rdms.L3bbb()
-
-        #     np.save("L1a", L1a)
-        #     np.save("L1b", L1b)
-        #     np.save("L2aa", L2aa)
-        #     np.save("L2ab", L2ab)
-        #     np.save("L2bb", L2bb)
-        #     np.save("L3aaa", L3aaa)
-        #     np.save("L3aab", L3aab)
-        #     np.save("L3abb", L3abb)
-        #     np.save("L3bbb", L3bbb)
-
     def make_dsrg_solver(self):
         """Make a DSRG solver."""
         args = (self.rdms, self.scf_info, self.options,
@@ -294,9 +273,11 @@ class ProcedureDSRG:
         #     self.relax_maxiter = 0
 
         if self.options.get_bool('FULL_HBAR') and self.relax_maxiter == 0:
+            psi4.core.print_out("\n  =>** Saving Full Hbar **<=\n")
             Heff = self.dsrg_solver.compute_Heff_full()
             Heff_dict = forte.Heff_dict(Heff)
             np.savez('save_Hbar', **Heff_dict)
+            del Heff
 
         # Reference relaxation procedure
         for n in range(self.relax_maxiter):
@@ -404,6 +385,7 @@ class ProcedureDSRG:
             # Test convergence and break loop
             if self.test_relaxation_convergence(n):
                 if self.options.get_bool('FULL_HBAR'):
+                    psi4.core.print_out("\n  =>** Saving Full Hbar **<=\n")
                     Heff = self.dsrg_solver.compute_Heff_full()
                     Heff_dict = forte.Heff_dict(Heff)
                     np.savez('save_Hbar', **Heff_dict)
@@ -454,23 +436,36 @@ class ProcedureDSRG:
 
         ################
         if self.solver_type == 'SA-MRDSRG':
-            print("HERE")
             asmpints = self.dsrg_solver.compute_mp_eff_actv()
         if self.options.get_bool('FULL_HBAR'):
-            # Heff = self.dsrg_solver.compute_Heff_full()
-            # Heff_dict = forte.Heff_dict(Heff)
-            # np.savez('save_Hbar', **Heff_dict)
+            psi4.core.print_out("\n  =>** Getting gamma1 **<=\n")
             gamma1 = self.dsrg_solver.get_gamma1()
+            psi4.core.print_out("\n  =>** Getting eta1 **<=\n")
             eta1 = self.dsrg_solver.get_eta1()
+            psi4.core.print_out("\n  =>** Getting lambda2 **<=\n")
             lambda2 = self.dsrg_solver.get_lambda2()
+            psi4.core.print_out("\n  =>** Getting lambda3 **<=\n")
             lambda3 = self.dsrg_solver.get_lambda3()
-            lambda4 = self.dsrg_solver.get_lambda4()
             gamma1_dict = forte.blocktensor_to_dict(gamma1)
             eta_1_dict = forte.blocktensor_to_dict(eta1)
             lambda2_dict = forte.blocktensor_to_dict(lambda2)
             lambda3_dict = forte.L3_dict(lambda3)
-            lambda4_dict = forte.L4_dict(lambda4)
 
+            np.savez('save_gamma1', **gamma1_dict)
+            np.savez('save_eta1', **eta_1_dict)
+            np.savez('save_lambda2', **lambda2_dict)
+            np.savez('save_lambda3', **lambda3_dict)
+
+            del gamma1, eta1, lambda2, lambda3, gamma1_dict, eta_1_dict, lambda2_dict, lambda3_dict
+
+            if self.options.get_str('FOURPDC') != 'ZERO':
+                psi4.core.print_out("\n  =>** Getting lambda4 **<=\n")
+                lambda4 = self.dsrg_solver.get_lambda4()
+                lambda4_dict = forte.L4_dict(lambda4)
+                np.savez('save_lambda4', **lambda4_dict)
+                del lambda4, lambda4_dict
+
+            psi4.core.print_out("\n  =>** Getting dipole integral **<=\n")
             Mbar0 = self.dsrg_solver.compute_Mbar0_full()
             print(Mbar0)
             np.save('Mbar0', Mbar0)
@@ -483,35 +478,7 @@ class ProcedureDSRG:
             # Heff_dict = forte.Heff_dict(Heff)
             # np.savez('save_Hbar', **Heff_dict)
 
-            np.savez('save_gamma1', **gamma1_dict)
-            np.savez('save_eta1', **eta_1_dict)
-            np.savez('save_lambda2', **lambda2_dict)
-            np.savez('save_lambda3', **lambda3_dict)
-            np.savez('save_lambda4', **lambda4_dict)
-
-            # self.rdms = self.active_space_solver.compute_average_rdms(
-            #     self.state_weights_map, self.max_rdm_level, self.rdm_type
-            # )
-            # self.rdms.rotate(self.Ua, self.Ub)
-            # self.semi.semicanonicalize(self.rdms)
-            # gamma1_aa = self.rdms.g1a()
-            # gamma1_bb = self.rdms.g1b()
-            # lambda2_aa = self.rdms.L2aa()
-            # lambda2_bb = self.rdms.L2bb()
-            # lambda2_ab = self.rdms.L2ab()
-            # lambda3_aaa = self.rdms.L3aaa()
-            # lambda3_aab = self.rdms.L3aab()
-            # lambda3_abb = self.rdms.L3abb()
-            # lambda3_bbb = self.rdms.L3bbb()
-            # np.save("gamma1_aa", gamma1_aa)
-            # np.save("gamma1_bb", gamma1_bb)
-            # np.save("lambda2_aa", lambda2_aa)
-            # np.save("lambda2_bb", lambda2_bb)
-            # np.save("lambda2_ab", lambda2_ab)
-            # np.save("lambda3_aaa", lambda3_aaa)
-            # np.save("lambda3_aab", lambda3_aab)
-            # np.save("lambda3_abb", lambda3_abb)
-            # np.save("lambda3_bbb", lambda3_bbb)
+            del Mbar0, Mbar1, Mbar2
 
         ################
 
