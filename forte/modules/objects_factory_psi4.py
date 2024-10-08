@@ -21,7 +21,7 @@ from forte._forte import (
 from forte.data import ForteData
 from forte.register_forte_options import register_forte_options
 from forte.proc.orbital_helpers import orbital_projection
-from forte.proc.orbital_helpers import read_orbitals, dmrg_initial_orbitals, ortho_orbs_forte
+from forte.proc.orbital_helpers import read_orbitals, dmrg_initial_orbitals, basis_projection, ortho_orbs_new
 from forte.proc.external_active_space_solver import (
     write_external_active_space_file,
     write_external_rdm_file,
@@ -115,52 +115,67 @@ def prepare_psi4_ref_wfn(options, **kwargs):
         # Ca from file has higher priority than that of ref_wfn
         Ca = ref_wfn.Ca().clone() if Ca is None else Ca
 
-    # create a MOSpaceInfo object
-    nmopi = ref_wfn.nmopi()
-    if kwargs.get("mo_spaces", None) is None:
-        mo_space_info = make_mo_space_info(nmopi, point_group, options)
+    # throw if molecule of ref_wfn is not the active one
+    if molecule.name() != ref_wfn.molecule().name():
+        msg = "Invalid ref_wfn: different molecule! "
+        msg += f"Expected: {molecule.name()} but got: {ref_wfn.molecule().name()}"
+        raise ValueError(msg)
+
+    # run new SCF if basis sets are inconsistent
+    bs_name = options.get_str("BASIS")
+    if bs_name != ref_wfn.basisset().name():
+        p4print(f"\n\n  Different basis sets between option ({bs_name}) and ref_wfn ({ref_wfn.basisset().name()})!")
+        p4print(f"\n  Perform new SCF using target basis set {bs_name} ...\n\n")
+        kwargs_copy = {k: v for k, v in kwargs.items() if k != "ref_wfn"}
+        wfn_new = run_psi4_ref("scf", molecule, False, **kwargs_copy)
+
+        # create a MOSpaceInfo object
+        nmopi = wfn_new.nmopi()
+        if kwargs.get("mo_spaces", None) is None:
+            mo_space_info = make_mo_space_info(nmopi, point_group, options)
+        else:
+            mo_space_info = make_mo_space_info_from_map(nmopi, point_group, kwargs.get("mo_spaces"), [])
+
+        mcscf_ignore_frozen = options.get_bool("MCSCF_IGNORE_FROZEN_ORBS")
+        if mo_space_info.size("FROZEN") > 0 and (not mcscf_ignore_frozen) and options.get_bool("MCSCF_REFERENCE"):
+            msg = "\n\n  WARNING: "
+            msg += "Frozen orbitals are detected for MCSCF starting from orbitals of a different basis set."
+            msg += "\n  This is currently not supported."
+            msg += "\n  Option MCSCF_IGNORE_FROZEN_ORBS is now set to TRUE to continue."
+            options.set_bool("MCSCF_IGNORE_FROZEN_ORBS", True)
+            print(msg)
+            p4print(msg)
+
+        p4print("\n\n  Perform basis projection for occupied orbitals ...")
+        Ca = basis_projection(ref_wfn, wfn_new, mo_space_info)
+        wfn_new.Ca().copy(Ca)
     else:
-        mo_space_info = make_mo_space_info_from_map(nmopi, point_group, kwargs.get("mo_spaces"), [])
+        # create a MOSpaceInfo object
+        nmopi = ref_wfn.nmopi()
+        if kwargs.get("mo_spaces", None) is None:
+            mo_space_info = make_mo_space_info(nmopi, point_group, options)
+        else:
+            mo_space_info = make_mo_space_info_from_map(nmopi, point_group, kwargs.get("mo_spaces"), [])
 
     # do we need to check MO overlap?
     if not need_orbital_check:
         wfn_new = ref_wfn
     else:
-        # test if input Ca has the correct dimension
-        if Ca.rowdim() != ref_wfn.nsopi() or Ca.coldim() != nmopi:
-            p4print("\n  Expecting orbital dimensions:\n")
-            p4print("\n  row:    ")
-            ref_wfn.nsopi().print_out()
-            p4print("  column: ")
-            nmopi.print_out()
-            p4print("\n  Actual orbital dimensions:\n")
-            p4print("\n  row:    ")
-            Ca.rowdim().print_out()
-            p4print("  column: ")
-            Ca.coldim().print_out()
-            msg = "Invalid orbitals: different basis set / molecule! Check output for more."
-            raise ValueError(msg)
-
         new_S = psi4.core.Wavefunction.build(molecule, options.get_str("BASIS")).S()
-
         if check_mo_orthonormality(new_S, Ca):
-            wfn_new = ref_wfn
-            wfn_new.Ca().copy(Ca)
+            if bs_name == ref_wfn.basisset().name():
+                wfn_new = ref_wfn
+                wfn_new.Ca().copy(Ca)
         else:
             semi = options.get_str("ACTIVE_SPACE_SOLVER") not in ["DMRG", "BLOCK2"]  # keep original order for DMRG
             if fresh_ref_wfn:
                 wfn_new = ref_wfn
-                wfn_new.Ca().copy(ortho_orbs_forte(wfn_new, mo_space_info, Ca, semi))
+                wfn_new.Ca().copy(ortho_orbs_new(wfn_new.Ca(), wfn_new.S(), Ca, mo_space_info))
             else:
                 p4print("\n  Perform new SCF at current geometry ...\n")
-
                 kwargs_copy = {k: v for k, v in kwargs.items() if k != "ref_wfn"}
                 wfn_new = run_psi4_ref("scf", molecule, False, **kwargs_copy)
-
-                # orthonormalize orbitals
-                wfn_new.Ca().copy(ortho_orbs_forte(wfn_new, mo_space_info, Ca, semi))
-
-                # copy wfn_new to ref_wfn
+                wfn_new.Ca().copy(ortho_orbs_new(wfn_new.Ca(), wfn_new.S(), Ca, mo_space_info))
                 ref_wfn.shallow_copy(wfn_new)
 
     # set DF and MINAO basis
@@ -230,6 +245,25 @@ def prepare_forte_objects(data, name, **kwargs):
 
     psi4.core.print_out("\n\n  Preparing forte objects from a Psi4 Wavefunction object")
     ref_wfn, mo_space_info = prepare_psi4_ref_wfn(options, **kwargs)
+
+    # Copy state information from the wfn where applicable.
+    # This **MUST** be done before the next function prepares states.
+    # Note that we do not require Psi4 and Forte agree. This allows, e.g., using singlet orbitals for a triplet.
+    molecule = ref_wfn.molecule()
+    if (data.options.is_none("CHARGE")):
+        data.options.set_int("CHARGE", molecule.molecular_charge())
+    elif molecule.molecular_charge() != data.options.get_int("CHARGE"):
+        warnings.warn(f"Psi4 and Forte options disagree about the molecular charge ({molecule.molecular_charge()} vs {data.options.get_int('CHARGE')}).", UserWarning)
+    if (data.options.is_none("MULTIPLICITY")):
+        data.options.set_int("MULTIPLICITY", molecule.multiplicity())
+    elif molecule.multiplicity() != data.options.get_int("MULTIPLICITY"):
+        warnings.warn(f"Psi4 and Forte options disagree about the multiplicity ({molecule.multiplicity()}) vs ({data.options.get_int('MULTIPLICITY')}).", UserWarning)
+    nel = int(sum(molecule.Z(i) for i in range(molecule.natom()))) - data.options.get_int("CHARGE")
+    if (data.options.is_none("NEL")):
+        data.options.set_int("NEL", nel)
+    elif nel != data.options.get_int("NEL"):
+        warnings.warn(f"Psi4 and Forte options disagree about the number of electorns ({nel}) vs ({data.options.get_int('NEL')}).", UserWarning)
+
     forte_objects = prepare_forte_objects_from_psi4_wfn(options, ref_wfn, mo_space_info)
     state_weights_map, mo_space_info, scf_info = forte_objects
     fcidump = None

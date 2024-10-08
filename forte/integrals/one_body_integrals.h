@@ -45,7 +45,9 @@ namespace forte {
 class MultipoleIntegrals {
   public:
     /**
-     * @brief Construct a new Multipole Integrals object
+     * @brief Construct a new Multipole Integrals object.
+     *        Warning! This is only valid for a ForteIntegrals
+     *        with wfn_ set. It will segfault otherwise.
      *
      * @param ints forte integral object
      * @param mo_space_info The MOSpaceInfo object

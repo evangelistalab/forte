@@ -279,6 +279,10 @@ def gradient_forte(name, **kwargs):
     # if job_type not in {"CASSCF", "MCSCF_TWO_STEP"} and correlation_solver != "DSRG-MRPT2":
     #     raise Exception("Analytic energy gradients are only implemented for" " CASSCF, MCSCF_TWO_STEP, or DSRG-MRPT2.")
 
+    if "FCIDUMP" in int_type:
+        raise Exception("Analytic gradients with FCIDUMP are not theoretically possible.")
+    if int_type == "PYSCF":
+        raise "Analytic gradients with PySCF are not yet implemented."
     # Prepare Forte objects: state_weights_map, mo_space_info, scf_info
     data = ObjectsFromPsi4(**kwargs).run(data)
 
@@ -353,7 +357,6 @@ def mr_dsrg_pt2(job_type, data):
     scf_info = data.scf_info
     ints = data.ints
 
-    state = forte.make_state_info_from_psi(options)
     # generate a list of states with their own weights
     state_map = forte.to_state_nroots_map(state_weights_map)
 

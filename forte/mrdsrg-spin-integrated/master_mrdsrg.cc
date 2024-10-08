@@ -4,12 +4,12 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
 
-#include "psi4/libmints/molecule.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 
 #include "base_classes/mo_space_info.h"
 #include "integrals/active_space_integrals.h"
+#include "integrals/one_body_integrals.h"
 
 #include "helpers/printing.h"
 #include "helpers/timer.h"
@@ -448,10 +448,10 @@ double MASTER_DSRG::compute_reference_energy_df(BlockedTensor H, BlockedTensor F
 
 void MASTER_DSRG::init_dm_ints() {
     outfile->Printf("\n    Preparing ambit tensors for dipole moments ...... ");
-    Vector3 dm_nuc =
-        psi::Process::environment.molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
+    MultipoleIntegrals dm_ints(ints_, mo_space_info_);
+    auto dm_nuc = dm_ints.nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
     for (int i = 0; i < 3; ++i) {
-        dm_nuc_[i] = dm_nuc[i];
+        dm_nuc_[i] = (*dm_nuc)[i];
         dm_[i] = BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
     }
 
