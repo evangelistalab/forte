@@ -92,6 +92,8 @@ api/genci_api.cc
 api/integrals_api.cc
 api/mcscf_api.cc
 api/mo_space_info_api.cc
+api/ndarray_api.cc
+api/rdms_api.cc
 api/options_api.cc
 api/orbital_api.cc
 api/rdms_api.cc
@@ -108,7 +110,6 @@ api/sq_operator_string_api.cc
 api/state_info_api.cc
 api/string_api.cc
 api/symmetry_api.cc
-api/tensors_api.cc
 base_classes/active_space_method.cc
 base_classes/active_space_solver.cc
 base_classes/dynamic_correlation_solver.cc
