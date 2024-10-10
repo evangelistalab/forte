@@ -138,8 +138,7 @@ void Localize::compute_transformation() {
     }
 }
 
-CholeskyLocal::CholeskyLocal(std::shared_ptr<ForteOptions> options,
-                             std::shared_ptr<ForteIntegrals> ints,
+CholeskyLocal::CholeskyLocal(std::shared_ptr<ForteOptions>, std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info)
     : OrbitalTransform(ints, mo_space_info) {}
 

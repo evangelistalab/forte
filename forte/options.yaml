@@ -338,6 +338,14 @@ MO_Space_Info:
     help: "An array of MOs to swap in the format [irrep, mo_1, mo_2, irrep, mo_3, mo_4]. Irrep and MOs are all 1-based (NOT 0-based)!"
 
 Active_Space_Solver:
+  NACT_ORB:
+    type: int
+    default: None
+    help: "The number of orbitals in the active space."
+  NACT_EL:
+    type: int
+    default: None
+    help: "The number of electrons in the active space."
   NROOT:
     type: int
     default: 1
@@ -1753,7 +1761,6 @@ BLOCK2:
     type: double
     default: 1.0e-14
     help: "Consider those integrals as zero if the absolute value is smaller than this value"
-
 
 DEPRECATED:
   CASSCF_MAXITER:

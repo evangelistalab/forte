@@ -35,6 +35,8 @@
 #include "psi4/libmints/dimension.h"
 #include "ambit/blocked_tensor.h"
 
+#include "forte/helpers/observer.h"
+
 class Tensor;
 
 namespace psi {
@@ -50,6 +52,7 @@ namespace forte {
 
 class ForteOptions;
 class MOSpaceInfo;
+class SCFInfo;
 
 /**
  * @brief The IntegralSpinRestriction enum
@@ -102,31 +105,16 @@ enum ThreeIntsBlockOrder { Qpq, pqQ };
  * defined in 'make_integrals.h'
  *
  */
-class ForteIntegrals {
+class ForteIntegrals : public Observer, public std::enable_shared_from_this<ForteIntegrals> {
   public:
-    // ==> Class Constructor and Destructor <==
-
-    /**
-     * @brief Class constructor
-     * @param options The main options object
-     * @param ref_wfn The reference wave function object
-     * @param restricted Select a restricted or unrestricted transformation
-     * @param mo_space_info The MOSpaceInfo object
-     */
-    ForteIntegrals(std::shared_ptr<ForteOptions> options,
-                   std::shared_ptr<psi::Wavefunction> ref_wfn,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
-                   IntegralSpinRestriction restricted);
-
-    /**
-     * @brief Class constructor
-     * @param options The main options object
-     * @param restricted Select a restricted or unrestricted transformation
-     * @param mo_space_info The MOSpaceInfo object
-     */
-    ForteIntegrals(std::shared_ptr<ForteOptions> options,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
-                   IntegralSpinRestriction restricted);
+    // Template function to create a derived class instance as a shared pointer
+    // Derived class objects should be created using this function only
+    template <typename Derived, typename... Args>
+    static std::shared_ptr<Derived> create(Args&&... args) {
+        auto ptr = std::shared_ptr<Derived>(new Derived(std::forward<Args>(args)...));
+        ptr->initialize();
+        return ptr;
+    }
 
     /// Virtual destructor to enable deletion of a Derived* through a Base*
     virtual ~ForteIntegrals() = default;
@@ -136,7 +124,13 @@ class ForteIntegrals {
     /// Common initializer for all types of integrals
     void common_initialize();
 
+    /// Initialize function to be implemented by derived classes
     virtual void initialize() = 0;
+
+    // Observer interface function. This function is called by the object being observed by
+    // ForteIntegrals. The object being observed is responsible for calling this function when a
+    // change occurs that might impact the consistency of the integrals.
+    void update(const std::vector<std::string>& messages) override;
 
     /// Skip integral transformation
     bool skip_build_;
@@ -149,25 +143,31 @@ class ForteIntegrals {
     /// Use the function update_ints_if_needed to re-transform the integrals only if they changed.
     ///
     /// @return the coefficient matrix for the alpha orbitals used to transform the integrals
+    std::shared_ptr<psi::Matrix> _Ca();
+    /// Return Cb
+    std::shared_ptr<psi::Matrix> _Cb();
+
     std::shared_ptr<const psi::Matrix> Ca() const;
     /// Return Cb
     std::shared_ptr<const psi::Matrix> Cb() const;
+
+    std::shared_ptr<SCFInfo> scf_info();
 
     /// Return nuclear repulsion energy
     double nuclear_repulsion_energy() const;
 
     /// temporary solution for not having a Wavefunction
-    std::shared_ptr<psi::Wavefunction> wfn();
+    virtual std::shared_ptr<psi::Wavefunction> wfn();
 
     /// Return the Psi4 JK object
-    std::shared_ptr<psi::JK> jk();
+    virtual std::shared_ptr<psi::JK> jk();
 
     /// Enum class for the status of Psi4 JK
     enum class JKStatus { empty, initialized, finalized };
     /// Return the status of Psi4 JK object
     JKStatus jk_status();
     /// Finalize Psi4 JK object
-    void jk_finalize();
+    virtual void jk_finalize();
 
     // The number of symmetry-adapted orbitals
     // see https://github.com/psi4/psi4/wiki/OrbitalDimensions
@@ -201,7 +201,7 @@ class ForteIntegrals {
     virtual size_t nthree() const;
 
     /// Return the frozen core energy
-    double frozen_core_energy();
+    double frozen_core_energy() const;
 
     /// Scalar component of the Hamiltonian
     double scalar() const;
@@ -235,11 +235,11 @@ class ForteIntegrals {
     std::shared_ptr<psi::Matrix> get_fock_b(bool corr = true) const;
 
     /// The antisymmetrixed alpha-alpha two-electron integrals in physicist notation <pq||rs>
-    virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s) = 0;
+    virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s) const = 0;
     /// The antisymmetrixed alpha-beta two-electron integrals in physicist notation <pq|rs>
-    virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s) = 0;
+    virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s) const = 0;
     /// The antisymmetrixed beta-beta two-electron integrals in physicist notation <pq||rs>
-    virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s) = 0;
+    virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s) const = 0;
 
     /// @return a tensor with a block of the alpha one-electron integrals
     ambit::Tensor oei_a_block(const std::vector<size_t>& p, const std::vector<size_t>& q);
@@ -342,28 +342,13 @@ class ForteIntegrals {
     /// @param alpha the spin type of the integrals
     void set_oei(size_t p, size_t q, double value, bool alpha);
 
-    /// Set the value of the two-electron integrals
-    virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
-                         bool alpha2) = 0;
-
-    /// Rotate the MO coefficients, update psi::Wavefunction, and re-transform integrals
-    /// @param Ua the alpha unitary transformation matrix
-    /// @param Ub the beta unitary transformation matrix
-    /// @param re_transform re-transform integrals if true
-    void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub,
-                         bool re_transform = true);
-
-    /// Copy these MO coeffs to class variables, update psi::Wavefunction, and re-transform
-    /// integrals
-    /// @param Ca the alpha MO coefficients
-    /// @param Cb the beta MO coefficients
-    /// @param re_transform re-transform integrals if true
-    virtual void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb,
-                                 bool re_transform = true);
+    /// Function used when orbital coefficients are updated
+    /// @param transform_ints re-transform integrals if true
+    virtual void __update_orbitals(bool transform_ints = true);
 
     /// Update the MOSpaceInfo and re-initialize the size of orbital spaces
     /// @param mo_space_info the MOSpaceInfo object
-    void update_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info);
+    void __update_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Update the integrals if the MO coefficients have changed but the integrals were not
     /// re-transformed
@@ -390,13 +375,13 @@ class ForteIntegrals {
 
     /// Print the details of the integral transformation
     void print_info();
-    /// Print the one- and two-electron integrals to the output
-    void print_ints();
+    /// A string representation of the one- and two-electron integrals to the output
+    std::string repr() const;
 
     /// Orbital coefficients in AO x MO basis where MO in Pitzer order
     virtual std::shared_ptr<psi::Matrix> Ca_AO() const = 0;
     /// Transform SO orbital coefficients to AO x MO basis where MO is Pitzer order
-    std::shared_ptr<psi::Matrix> Ca_SO2AO(std::shared_ptr<psi::Matrix> Ca_SO) const;
+    virtual std::shared_ptr<psi::Matrix> Ca_SO2AO(std::shared_ptr<const psi::Matrix> Ca_SO) const;
 
     /// Obtain AO dipole integrals [X, Y, Z]
     /// Each direction is a std::shared_ptr<psi::Matrix> of dimension nao * nao
@@ -416,28 +401,33 @@ class ForteIntegrals {
     virtual std::vector<std::shared_ptr<psi::Matrix>> mo_quadrupole_ints() const;
 
   protected:
+    // ==> Class constructor <==
+    /**
+     * @brief Class constructor
+     * @param options The main options object
+     * @param restricted Select a restricted or unrestricted transformation
+     * @param mo_space_info The MOSpaceInfo object
+     */
+    ForteIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
+                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
+                   IntegralSpinRestriction restricted);
+
     // ==> Class data <==
 
     /// The options object
     std::shared_ptr<ForteOptions> options_;
 
+    /// The SCFInfo object (stores the MO coefficients)
+    std::shared_ptr<SCFInfo> scf_info_;
+
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
-    /// The Wavefunction object
-    std::shared_ptr<psi::Wavefunction> wfn_;
 
     /// The integral_type
     IntegralType integral_type_;
 
     /// Are we doing a spin-restricted computation?
     IntegralSpinRestriction spin_restriction_;
-
-    // Ca matrix from psi
-    std::shared_ptr<psi::Matrix> Ca_;
-
-    // Cb matrix from psi
-    std::shared_ptr<psi::Matrix> Cb_;
 
     // AO overlap matrix from psi
     std::shared_ptr<psi::Matrix> S_;
@@ -493,14 +483,14 @@ class ForteIntegrals {
     /// notation <pq||rs>
     size_t num_aptei_;
 
-    // Nuclear repulsion energy
-    double nucrep_ = 0.0;
-
     /// Frozen-core energy
     double frozen_core_energy_ = 0.0;
 
     /// Scalar energy term
     double scalar_energy_ = 0.0;
+
+    // Nuclear repulsion energy
+    double nucrep_ = 0.0;
 
     /// Full one-electron integrals stored as a vector (includes frozen orbitals)
     std::vector<double> full_one_electron_integrals_a_;
@@ -509,9 +499,6 @@ class ForteIntegrals {
     /// One-electron integrals stored as a vector
     std::vector<double> one_electron_integrals_a_;
     std::vector<double> one_electron_integrals_b_;
-
-    /// JK object from Psi4
-    std::shared_ptr<psi::JK> JK_;
 
     /// Status of the JK object
     JKStatus JK_status_ = JKStatus::empty;
@@ -559,7 +546,7 @@ class ForteIntegrals {
 
     /// An addressing function to for two-electron integrals
     /// @return the address of the integral <pq|rs> or <pq||rs>
-    size_t aptei_index(size_t p, size_t q, size_t r, size_t s) {
+    size_t aptei_index(size_t p, size_t q, size_t r, size_t s) const {
         return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q +
                aptei_idx_ * r + s;
     }
@@ -584,74 +571,6 @@ class ForteIntegrals {
     /// Remove the doubly occupied and virtual orbitals and resort the rest so
     /// that we are left only with ncmo = nmo - nfzc - nfzv
     virtual void resort_integrals_after_freezing() = 0;
-};
-
-/**
- * @brief Interface to integrals read from psi4
- */
-class Psi4Integrals : public ForteIntegrals {
-  public:
-    Psi4Integrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
-                  std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
-                  IntegralSpinRestriction restricted);
-
-    /// Make the generalized Fock matrix using Psi4 JK object
-    void make_fock_matrix(ambit::Tensor Da, ambit::Tensor Db) override;
-
-    /// Make the closed-shell Fock matrix using Psi4 JK object
-    std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>, double>
-    make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) override;
-
-    /// Make the active Fock matrix using Psi4 JK object
-    std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>
-    make_fock_active(ambit::Tensor Da, ambit::Tensor Db) override;
-
-    /// Make the active Fock matrix using restricted equation
-    std::shared_ptr<psi::Matrix>
-    make_fock_active_restricted(std::shared_ptr<psi::Matrix> D) override;
-
-    /// Make the active Fock matrix using unrestricted equation
-    std::tuple<std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>>
-    make_fock_active_unrestricted(std::shared_ptr<psi::Matrix> Da,
-                                  std::shared_ptr<psi::Matrix> Db) override;
-
-    /// Orbital coefficients in AO x MO basis, where MO is in Pitzer order
-    std::shared_ptr<psi::Matrix> Ca_AO() const override;
-
-    /// Build and return MO dipole integrals (X, Y, Z) in Pitzer order
-    std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints() const override;
-
-    /// Build and return MO quadrupole integrals (XX, XY, XZ, YY, YZ, ZZ) in Pitzer order
-    std::vector<std::shared_ptr<psi::Matrix>> mo_quadrupole_ints() const override;
-
-  private:
-    void base_initialize_psi4();
-    void setup_psi4_ints();
-    void transform_one_electron_integrals();
-    void compute_frozen_one_body_operator() override;
-    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb,
-                         bool re_transform = true) override;
-    void rotate_mos() override;
-
-    /// Build AO dipole and quadrupole integrals
-    void build_multipole_ints_ao() override;
-
-    /// Make a shared pointer to a Psi4 JK object
-    void make_psi4_JK();
-    /// Call JK intialize
-    void jk_initialize(double mem_percentage = 0.8, int print_level = 1);
-
-    /// AO Fock control
-    enum class FockAOStatus { none, inactive, generalized };
-    FockAOStatus fock_ao_level_ = FockAOStatus::none;
-
-  protected:
-    void freeze_core_orbitals() override;
-
-    // threshold for DF fitting condition (Psi4)
-    double df_fitting_cutoff_;
-    // threshold for Schwarz cutoff (Psi4)
-    double schwarz_cutoff_;
 };
 
 } // namespace forte

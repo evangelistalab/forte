@@ -6,6 +6,7 @@ from psi4 import geometry
 from .module import Module
 from forte.data import ForteData
 from forte._forte import Symmetry, StateInfo
+from .validators import Feature, module_validation
 
 
 @dataclass
@@ -20,7 +21,7 @@ class StateFactory(Module):
     multiplicity: int
         the spin multiplicity of the state
     ms: float
-        projection of spin on the z axis (e.g. 0.5, 2.0,).
+        projection of spin on the z axis (e.g. 0.5, 2.0).
         (default = lowest value consistent with multiplicity)
     sym: str
         the state irrep label (e.g., 'C2v')
@@ -40,6 +41,7 @@ class StateFactory(Module):
     def __post_init__(self):
         super().__init__()
 
+    @module_validation(needs=[Feature.MOLECULE])
     def _run(self, data: ForteData) -> ForteData:
         if self.ms is None:
             # If ms = None take the lowest value consistent with multiplicity
@@ -85,5 +87,5 @@ class StateFactory(Module):
         self.gasmax = [] if self.gasmax is None else self.gasmax
 
         state = StateInfo(na, nb, self.multiplicity, twice_ms, irrep, self.sym, self.gasmin, self.gasmax)
-        data.state_weights_map = {state: 1.0}
+        data.state_weights_map = {state: [1.0]}
         return data

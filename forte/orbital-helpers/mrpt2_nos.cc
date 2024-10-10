@@ -35,6 +35,8 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
+#include "base_classes/forte_options.h"
+
 #include "mrdsrg-spin-adapted/sa_mrpt2.h"
 #include "helpers/disk_io.h"
 #include "helpers/printing.h"
@@ -169,7 +171,7 @@ MRPT2_NOS::suggest_active_space(const psi::Vector& D1c_evals, const psi::Vector&
     outfile->Printf("    Sum");
     outfile->Printf("\n    %s", dash.c_str());
 
-    for (const std::string& space_name : mo_space_info_->space_names()) {
+    for (const std::string& space_name : mo_space_info_->elementary_spaces()) {
         auto dim = mo_space_info_->dimension(space_name);
         if (dim.sum() == 0)
             continue;

@@ -60,7 +60,6 @@
 #include "mrdsrg-spin-adapted/sadsrg.h"
 #include "mrdsrg-spin-adapted/sa_mrpt2.h"
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
-#include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
 #include "integrals/one_body_integrals.h"
 #include "sci/tdci.h"
 #include "genci/ci_occupation.h"
@@ -96,10 +95,6 @@ PYBIND11_MODULE(_forte, m) {
     m.def("banner", &banner, "Print forte banner");
     m.def("print_method_banner", &print_method_banner, "text"_a, "separator"_a = "-",
           "Print a method banner");
-    m.def("make_mo_space_info", &make_mo_space_info, "Make a MOSpaceInfo object");
-    m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map, "nmopi"_a, "point_group"_a,
-          "mo_space_map"_a, "reorder"_a = std::vector<size_t>(),
-          "Make a MOSpaceInfo object using a dictionary");
     m.def("make_aosubspace_projector", &make_aosubspace_projector, "Make a AOSubspace projector");
     m.def("make_avas", &make_avas, "Make AVAS orbitals");
     m.def("make_fragment_projector", &make_fragment_projector,
@@ -108,7 +103,8 @@ PYBIND11_MODULE(_forte, m) {
     m.def("make_custom_ints", &make_custom_forte_integrals,
           "Make a custom Forte integral object from arrays");
     m.def("make_ints_from_psi4", &make_forte_integrals_from_psi4, "ref_wfn"_a, "options"_a,
-          "mo_space_info"_a, "int_type"_a = "", "Make a Forte integral object from psi4");
+          "scf_info"_a, "mo_space_info"_a, "int_type"_a = "",
+          "Make a Forte integral object from psi4");
     m.def("make_active_space_method", &make_active_space_method, "Make an active space method");
     m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver",
           "method"_a, "state_nroots_map"_a, "scf_info"_a, "mo_space_info"_a, "options"_a,
@@ -239,17 +235,7 @@ PYBIND11_MODULE(_forte, m) {
 
     export_DavidsonLiuSolver(m);
 
-    // export SCFInfo
-    py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
-        .def(py::init<psi::SharedWavefunction>())
-        .def(py::init<const psi::Dimension&, const psi::Dimension&, const psi::Dimension&, double,
-                      std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>>())
-        .def("nmopi", &SCFInfo::nmopi, "the number of orbitals per irrep")
-        .def("doccpi", &SCFInfo::doccpi, "the number of doubly occupied orbitals per irrep")
-        .def("soccpi", &SCFInfo::soccpi, "the number of singly occupied orbitals per irrep")
-        .def("reference_energy", &SCFInfo::reference_energy, "the reference energy")
-        .def("epsilon_a", &SCFInfo::epsilon_a, "a vector of alpha orbital energy (psi::Vector)")
-        .def("epsilon_b", &SCFInfo::epsilon_b, "a vector of beta orbital energy (psi::Vector)");
+    export_SCFInfo(m);
 
     // export DynamicCorrelationSolver
     py::class_<DynamicCorrelationSolver, std::shared_ptr<DynamicCorrelationSolver>>(
@@ -327,11 +313,6 @@ PYBIND11_MODULE(_forte, m) {
                       std::shared_ptr<ForteOptions>, std::shared_ptr<MOSpaceInfo>,
                       std::shared_ptr<ActiveSpaceIntegrals>>())
         .def("compute_energy", &TDCI::compute_energy, "Compute TD-ACI");
-
-    py::class_<MCSRGPT2_MO>(m, "MCSRGPT2_MO")
-        .def(py::init<std::shared_ptr<RDMs>, std::shared_ptr<ForteOptions>,
-                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
-        .def("compute_energy", &MCSRGPT2_MO::compute_energy, "Compute DSRG energy");
 
     // export DressedQuantity for dipole moments
     py::class_<DressedQuantity>(m, "DressedQuantity")

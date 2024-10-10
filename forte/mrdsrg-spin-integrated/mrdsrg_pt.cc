@@ -34,10 +34,12 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libdiis/diismanager.h"
-#include "helpers/printing.h"
 
+#include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
+
 #include "helpers/timer.h"
+#include "helpers/printing.h"
 #include "mrdsrg.h"
 
 using namespace psi;

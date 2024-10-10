@@ -39,6 +39,7 @@ void export_ForteOptions(py::module& m);
 void export_MOSpaceInfo(py::module& m);
 void export_StateInfo(py::module& m);
 void export_RDMs(py::module& m);
+void export_SCFInfo(py::module& m);
 
 // Helpers
 void export_Symmetry(py::module& m);

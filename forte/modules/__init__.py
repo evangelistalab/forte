@@ -1,13 +1,15 @@
 from .module import Module
-from .sequential import Sequential
+from .workflow import Workflow
 
 from .active_space_ints import ActiveSpaceInts
 from .active_space_rdms import ActiveSpaceRDMs
 from .active_space_solver import ActiveSpaceSolver
-from .graph_visualizer import GraphVisualizer
+from .active_space_selector import ActiveSpaceSelector
+from .graph_visualizer import WorkflowVisualizer
 from .options_factory import OptionsFactory
 from .objects_factory_fcidump import ObjectsFromFCIDUMP
 from .objects_factory_psi4 import ObjectsFromPsi4
+
 try:
     from .objects_factory_pyscf import ObjectsFromPySCF
 except ImportError:

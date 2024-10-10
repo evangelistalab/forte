@@ -12,7 +12,9 @@
 
 #include "ambit/tensor.h"
 
+#include "base_classes/forte_options.h"
 #include "base_classes/rdms.h"
+
 #include "helpers/timer.h"
 #include "helpers/printing.h"
 #include "helpers/string_algorithms.h"

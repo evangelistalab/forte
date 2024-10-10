@@ -14,8 +14,7 @@ def test_uccsd_3():
 
     ref_energy = -107.655681875111
 
-    psi4.set_options({"FORTE__FROZEN_DOCC": [2]})
-    data = forte.modules.OptionsFactory().run()
+    data = forte.modules.OptionsFactory(options={"FROZEN_DOCC": [2]}).run()
     data = forte.modules.ObjectsFromFCIDUMP(file=os.path.dirname(__file__) + "/INTDUMP").run(data)
     data = forte.modules.ActiveSpaceInts("CORRELATED", []).run(data)
     calc_data = scc.run_cc(

@@ -42,12 +42,10 @@ namespace forte {
 /// export ForteIntegrals
 void export_ForteIntegrals(py::module& m) {
     py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
+        .def("__repr__", &ForteIntegrals::repr)
         .def("wfn", &ForteIntegrals::wfn, "Psi4 Wavefunction")
-        .def("update_mo_space_info", &ForteIntegrals::update_mo_space_info,
+        .def("update_mo_space_info", &ForteIntegrals::__update_mo_space_info,
              "Update MOSpaceInfo and orbital countings")
-        .def("update_orbitals", &ForteIntegrals::update_orbitals,
-             "Update orbitals for given orbital coefficients")
-        .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals, "Rotate MOs during contructor")
         .def("Ca", &ForteIntegrals::Ca, "Return the alpha MO coefficients")
         .def("Cb", &ForteIntegrals::Cb, "Return the beta MO coefficients")
         .def("nmo", &ForteIntegrals::nmo, "Return the total number of moleuclar orbitals")
@@ -97,6 +95,9 @@ void export_ForteIntegrals(py::module& m) {
         .def("set_oei", &ForteIntegrals::set_oei_all, "Set the one-electron integrals")
         .def("set_tei", &ForteIntegrals::set_tei_all, "Set the two-electron integrals")
         .def("initialize", &ForteIntegrals::initialize, "Initialize the integrals")
-        .def("print_ints", &ForteIntegrals::print_ints, "Print the integrals");
+        .def(
+            "print_ints",
+            [](const ForteIntegrals& ints) { psi::outfile->Printf("\n%s", ints.repr().c_str()); },
+            "Print the integrals");
 }
 } // namespace forte
