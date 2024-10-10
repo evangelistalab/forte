@@ -277,7 +277,45 @@ class ProcedureDSRG:
             Heff = self.dsrg_solver.compute_Heff_full()
             Heff_dict = forte.Heff_dict(Heff)
             np.savez('save_Hbar', **Heff_dict)
-            del Heff
+            psi4.core.print_out("\n  =>** Getting gamma1 **<=\n")
+            gamma1 = self.dsrg_solver.get_gamma1()
+            psi4.core.print_out("\n  =>** Getting eta1 **<=\n")
+            eta1 = self.dsrg_solver.get_eta1()
+            psi4.core.print_out("\n  =>** Getting lambda2 **<=\n")
+            lambda2 = self.dsrg_solver.get_lambda2()
+            psi4.core.print_out("\n  =>** Getting lambda3 **<=\n")
+            lambda3 = self.dsrg_solver.get_lambda3()
+            gamma1_dict = forte.blocktensor_to_dict(gamma1)
+            eta_1_dict = forte.blocktensor_to_dict(eta1)
+            lambda2_dict = forte.blocktensor_to_dict(lambda2)
+            lambda3_dict = forte.L3_dict(lambda3)
+
+            np.savez('save_gamma1', **gamma1_dict)
+            np.savez('save_eta1', **eta_1_dict)
+            np.savez('save_lambda2', **lambda2_dict)
+            np.savez('save_lambda3', **lambda3_dict)
+            del gamma1, eta1, lambda2, lambda3, gamma1_dict, eta_1_dict, lambda2_dict, lambda3_dict
+            if self.options.get_str('FOURPDC') != 'ZERO':
+                psi4.core.print_out("\n  =>** Getting lambda4 **<=\n")
+                lambda4 = self.dsrg_solver.get_lambda4()
+                lambda4_dict = forte.L4_dict(lambda4)
+                np.savez('save_lambda4', **lambda4_dict)
+                del lambda4, lambda4_dict
+
+            psi4.core.print_out("\n  =>** Getting dipole integral **<=\n")
+            Mbar0 = self.dsrg_solver.compute_Mbar0_full()
+            print(Mbar0)
+            np.save('Mbar0', Mbar0)
+            Mbar1 = self.dsrg_solver.compute_Mbar1_full()
+            Mbar2 = self.dsrg_solver.compute_Mbar2_full()
+
+            for i in range(3):
+                np.savez(f"Mbar1_{i}", **
+                         forte.blocktensor_to_dict(Mbar1[i]))
+                np.savez(f"Mbar2_{i}", **
+                         forte.blocktensor_to_dict(Mbar2[i]))
+
+            del Mbar0, Mbar1, Mbar2
 
         # Reference relaxation procedure
         for n in range(self.relax_maxiter):
@@ -384,11 +422,6 @@ class ProcedureDSRG:
 
             # Test convergence and break loop
             if self.test_relaxation_convergence(n):
-                if self.options.get_bool('FULL_HBAR'):
-                    psi4.core.print_out("\n  =>** Saving Full Hbar **<=\n")
-                    Heff = self.dsrg_solver.compute_Heff_full()
-                    Heff_dict = forte.Heff_dict(Heff)
-                    np.savez('save_Hbar', **Heff_dict)
                 break
 
             # Continue to solve DSRG equations
@@ -433,54 +466,50 @@ class ProcedureDSRG:
                     f"\n\n    DSRG-MRPT2 FNO energy correction:  {self.fno_pt2_energy_shift:20.15f}")
                 psi4.core.print_out(
                     f"\n    DSRG-MRPT2 FNO corrected energy:   {e_dsrg:20.15f}")
+            if self.options.get_bool('FULL_HBAR'):
+                psi4.core.print_out("\n  =>** Saving Full Hbar **<=\n")
+                Heff = self.dsrg_solver.compute_Heff_full()
+                Heff_dict = forte.Heff_dict(Heff)
+                np.savez('save_Hbar', **Heff_dict)
+                psi4.core.print_out("\n  =>** Getting gamma1 **<=\n")
+                gamma1 = self.dsrg_solver.get_gamma1()
+                psi4.core.print_out("\n  =>** Getting eta1 **<=\n")
+                eta1 = self.dsrg_solver.get_eta1()
+                psi4.core.print_out("\n  =>** Getting lambda2 **<=\n")
+                lambda2 = self.dsrg_solver.get_lambda2()
+                psi4.core.print_out("\n  =>** Getting lambda3 **<=\n")
+                lambda3 = self.dsrg_solver.get_lambda3()
+                gamma1_dict = forte.blocktensor_to_dict(gamma1)
+                eta_1_dict = forte.blocktensor_to_dict(eta1)
+                lambda2_dict = forte.blocktensor_to_dict(lambda2)
+                lambda3_dict = forte.L3_dict(lambda3)
 
-        ################
-        if self.solver_type == 'SA-MRDSRG':
-            asmpints = self.dsrg_solver.compute_mp_eff_actv()
-        if self.options.get_bool('FULL_HBAR'):
-            psi4.core.print_out("\n  =>** Getting gamma1 **<=\n")
-            gamma1 = self.dsrg_solver.get_gamma1()
-            psi4.core.print_out("\n  =>** Getting eta1 **<=\n")
-            eta1 = self.dsrg_solver.get_eta1()
-            psi4.core.print_out("\n  =>** Getting lambda2 **<=\n")
-            lambda2 = self.dsrg_solver.get_lambda2()
-            psi4.core.print_out("\n  =>** Getting lambda3 **<=\n")
-            lambda3 = self.dsrg_solver.get_lambda3()
-            gamma1_dict = forte.blocktensor_to_dict(gamma1)
-            eta_1_dict = forte.blocktensor_to_dict(eta1)
-            lambda2_dict = forte.blocktensor_to_dict(lambda2)
-            lambda3_dict = forte.L3_dict(lambda3)
+                np.savez('save_gamma1', **gamma1_dict)
+                np.savez('save_eta1', **eta_1_dict)
+                np.savez('save_lambda2', **lambda2_dict)
+                np.savez('save_lambda3', **lambda3_dict)
+                del gamma1, eta1, lambda2, lambda3, gamma1_dict, eta_1_dict, lambda2_dict, lambda3_dict
+                if self.options.get_str('FOURPDC') != 'ZERO':
+                    psi4.core.print_out("\n  =>** Getting lambda4 **<=\n")
+                    lambda4 = self.dsrg_solver.get_lambda4()
+                    lambda4_dict = forte.L4_dict(lambda4)
+                    np.savez('save_lambda4', **lambda4_dict)
+                    del lambda4, lambda4_dict
 
-            np.savez('save_gamma1', **gamma1_dict)
-            np.savez('save_eta1', **eta_1_dict)
-            np.savez('save_lambda2', **lambda2_dict)
-            np.savez('save_lambda3', **lambda3_dict)
+                psi4.core.print_out("\n  =>** Getting dipole integral **<=\n")
+                Mbar0 = self.dsrg_solver.compute_Mbar0_full()
+                print(Mbar0)
+                np.save('Mbar0', Mbar0)
+                Mbar1 = self.dsrg_solver.compute_Mbar1_full()
+                Mbar2 = self.dsrg_solver.compute_Mbar2_full()
 
-            del gamma1, eta1, lambda2, lambda3, gamma1_dict, eta_1_dict, lambda2_dict, lambda3_dict
+                for i in range(3):
+                    np.savez(f"Mbar1_{i}", **
+                             forte.blocktensor_to_dict(Mbar1[i]))
+                    np.savez(f"Mbar2_{i}", **
+                             forte.blocktensor_to_dict(Mbar2[i]))
 
-            if self.options.get_str('FOURPDC') != 'ZERO':
-                psi4.core.print_out("\n  =>** Getting lambda4 **<=\n")
-                lambda4 = self.dsrg_solver.get_lambda4()
-                lambda4_dict = forte.L4_dict(lambda4)
-                np.savez('save_lambda4', **lambda4_dict)
-                del lambda4, lambda4_dict
-
-            psi4.core.print_out("\n  =>** Getting dipole integral **<=\n")
-            Mbar0 = self.dsrg_solver.compute_Mbar0_full()
-            print(Mbar0)
-            np.save('Mbar0', Mbar0)
-            Mbar1 = self.dsrg_solver.compute_Mbar1_full()
-            Mbar2 = self.dsrg_solver.compute_Mbar2_full()
-
-            for i in range(3):
-                np.savez(f"Mbar1_{i}", **forte.blocktensor_to_dict(Mbar1[i]))
-                np.savez(f"Mbar2_{i}", **forte.blocktensor_to_dict(Mbar2[i]))
-            # Heff_dict = forte.Heff_dict(Heff)
-            # np.savez('save_Hbar', **Heff_dict)
-
-            del Mbar0, Mbar1, Mbar2
-
-        ################
+                del Mbar0, Mbar1, Mbar2
 
         self.dsrg_cleanup()
 
