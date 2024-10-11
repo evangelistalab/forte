@@ -127,14 +127,14 @@ void SemiCanonical::set_U_to_identity() {
         [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
 }
 
-void SemiCanonical::semicanonicalize(std::shared_ptr<RDMs> rdms, const bool& build_fock,
-                                     const bool& nat_orb, const bool& transform) {
+void SemiCanonical::semicanonicalize(std::shared_ptr<RDMs> rdms, bool build_fock,
+                                     ActiveOrbitalType orb_type, bool transform) {
     timer t_semi("semicanonicalize orbitals");
 
     print_h2("Semicanonicalize Orbitals");
     auto true_or_false = [](bool x) { return x ? "TRUE" : "FALSE"; };
-    outfile->Printf("\n    MIX INACTIVE ORBITALS         %5s", true_or_false(inactive_mix_));
-    outfile->Printf("\n    MIX GAS ACTIVE ORBITALS       %5s", true_or_false(active_mix_));
+    outfile->Printf("\n    MIX INACTIVE ORBITALS         %s", true_or_false(inactive_mix_));
+    outfile->Printf("\n    MIX GAS ACTIVE ORBITALS       %s", true_or_false(active_mix_));
 
     // build Fock matrix
     if (build_fock) {
@@ -147,7 +147,7 @@ void SemiCanonical::semicanonicalize(std::shared_ptr<RDMs> rdms, const bool& bui
     }
 
     // build transformation matrix based on Fock or 1-RDM
-    bool already_semi = check_orbitals(rdms, nat_orb);
+    bool already_semi = check_orbitals(rdms, orb_type);
     build_transformation_matrices(already_semi);
     if (transform and (not already_semi)) {
         ints_->rotate_orbitals(Ua_, Ub_);
@@ -157,23 +157,23 @@ void SemiCanonical::semicanonicalize(std::shared_ptr<RDMs> rdms, const bool& bui
         print_timing("orbital canonicalization", t_semi.stop());
 }
 
-bool SemiCanonical::check_orbitals(std::shared_ptr<RDMs> rdms, const bool& nat_orb) {
+bool SemiCanonical::check_orbitals(std::shared_ptr<RDMs> rdms, ActiveOrbitalType orb_type) {
     bool semi = true;
 
     // print orbitals requested
-    std::string nat = nat_orb ? "NATURAL" : "CANONICAL";
     for (const auto& [name, npi] : mo_dims_) {
         if (mo_space_info_->contained_in_space(name, "ACTIVE")) {
             if (npi.sum() != 0) {
-                outfile->Printf("\n    %-15s              %10s", name.c_str(), nat.c_str());
+                outfile->Printf("\n    %-15s%15c%s", name.c_str(), ' ',
+                                orb_type.toString().c_str());
             }
         } else {
-            outfile->Printf("\n    %-15s              %10s", name.c_str(), "CANONICAL");
+            outfile->Printf("\n    %-15s%15c%s", name.c_str(), ' ', "CANONICAL");
         }
     }
 
     // prepare data blocks
-    prepare_matrix_blocks(rdms, nat_orb);
+    prepare_matrix_blocks(rdms, orb_type);
 
     // check data blocks
     int width = 18 + 2 + 13 + 2 + 13;
@@ -210,7 +210,7 @@ bool SemiCanonical::check_orbitals(std::shared_ptr<RDMs> rdms, const bool& nat_o
     return semi;
 }
 
-void SemiCanonical::prepare_matrix_blocks(std::shared_ptr<RDMs> rdms, const bool& nat_orb) {
+void SemiCanonical::prepare_matrix_blocks(std::shared_ptr<RDMs> rdms, ActiveOrbitalType orb_type) {
     mats_.clear();
 
     // Fock alpha should be the same as beta
@@ -232,11 +232,20 @@ void SemiCanonical::prepare_matrix_blocks(std::shared_ptr<RDMs> rdms, const bool
 
         // fill data
         auto slice = mo_space_info_->range(name);
-        if (nat_orb and mo_space_info_->contained_in_space(name, "ACTIVE")) {
-            // For natural orbitals, diagonalize the 1-RDM in the active space
-            auto actv_slice = psi::Slice(slice.begin() - docc_offset, slice.end() - docc_offset);
-            mats_[name] = d1->get_block(actv_slice, actv_slice);
-            mats_[name]->set_name("D1 " + name);
+        if (mo_space_info_->contained_in_space(name, "ACTIVE")) {
+            if (orb_type == ActiveOrbitalType::unspecified) {
+                continue;
+            } else if (orb_type == ActiveOrbitalType::natural) {
+                // For natural orbitals, diagonalize the 1-RDM in the active space
+                auto actv_slice =
+                    psi::Slice(slice.begin() - docc_offset, slice.end() - docc_offset);
+                mats_[name] = d1->get_block(actv_slice, actv_slice);
+                mats_[name]->set_name("D1 " + name);
+            } else {
+                // By default, diagonalize the Fock in the active space
+                mats_[name] = fock->get_block(slice, slice);
+                mats_[name]->set_name("Fock " + name);
+            }
         } else {
             // for all other spaces always diagonalize the Fock matrix
             mats_[name] = fock->get_block(slice, slice);
