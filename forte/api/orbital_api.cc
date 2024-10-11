@@ -70,9 +70,9 @@ void export_Localize(py::module& m) {
 void export_SemiCanonical(py::module& m) {
     py::class_<SemiCanonical>(m, "SemiCanonical")
         .def(py::init<std::shared_ptr<MOSpaceInfo>, std::shared_ptr<ForteIntegrals>,
-                      std::shared_ptr<ForteOptions>, bool, bool, bool>(),
-             "mo_space_info"_a, "ints"_a, "options"_a, "inactive_mix"_a, "active_mix"_a,
-             "quiet"_a = false)
+                      std::shared_ptr<ForteOptions>, std::shared_ptr<SCFInfo>, bool, bool, bool>(),
+             "mo_space_info"_a, "ints"_a, "options"_a, "scf_info"_a, "inactive_mix"_a,
+             "active_mix"_a, "quiet"_a = false)
         .def("semicanonicalize", &SemiCanonical::semicanonicalize, "RDMs"_a, "build_fock"_a = true,
              "nat_orb"_a = false, "transform"_a = true,
              "Semicanonicalize the orbitals and transform the integrals and reference")

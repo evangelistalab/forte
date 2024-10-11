@@ -30,6 +30,7 @@
 #include <numeric>
 #include <vector>
 
+#include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
 #include "mrdsrg.h"
 

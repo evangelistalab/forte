@@ -11,12 +11,14 @@ def test_sparse_operator2():
     import psi4
     from forte import det
 
-    geom = """
+    molecule = psi4.geometry(
+        """
      H
      H 1 1.0
     """
-    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis="DZ", reference="RHF")
-    data = forte.modules.ObjectsUtilPsi4(ref_wnf=psi4_wfn).run()
+    )
+
+    data = forte.modules.ObjectsUtilPsi4(molecule=molecule, basis="DZ").run()
 
     as_ints = data.as_ints  # forte_objs["as_ints"]
 

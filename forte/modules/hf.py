@@ -7,6 +7,7 @@ from .module import Module
 from forte.data import ForteData
 from forte.core import clean_options
 from forte._forte import SCFInfo
+from .validators import Feature, module_validation
 
 
 @dataclass
@@ -32,8 +33,10 @@ class HF(Module):
         """
         super().__init__()
 
+    @module_validation(needs=[Feature.MOLECULE, Feature.STATE_WEIGHTS_MAP])
     def _run(self, data: ForteData) -> ForteData:
         """Run a Hartree-Fock computation"""
+
         import psi4
 
         # reset psi4's options to avoid pollution

@@ -14,13 +14,15 @@ def test_ccsd():
 
     ref_energy = -1.126712715716011  # CCSD = FCI energy from psi4
 
-    geom = """
+    molecule = psi4.geometry(
+        """
      H
      H 1 1.0
     """
+    )
 
-    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis="DZ", reference="RHF")
-    data = forte.modules.ObjectsUtilPsi4(ref_wnf=psi4_wfn).run()
+    data = forte.modules.ObjectsUtilPsi4(molecule=molecule, basis="DZ").run()
+    scf_energy = data.psi_wfn.energy()
     calc_data = scc.run_cc(
         data.as_ints, data.scf_info, data.mo_space_info, cc_type="cc", max_exc=2, e_convergence=1.0e-11
     )

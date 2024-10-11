@@ -31,13 +31,13 @@ import forte
 import numpy as np
 
 
-def read_orbitals(filename='forte_Ca.npz'):
-    """ Read orbitals from file. """
+def read_orbitals(filename="forte_Ca.npz"):
+    """Read orbitals from file."""
     psi4.core.print_out(f"\n\n  Forte: Read orbitals from file {filename} ...")
     try:
         Ca_loaded = np.load(filename)
         nirrep = len(Ca_loaded.files)
-        Ca_list = [Ca_loaded[f'arr_{i}'] for i in range(nirrep)]  # to list
+        Ca_list = [Ca_loaded[f"arr_{i}"] for i in range(nirrep)]  # to list
         Ca_mat = psi4.core.Matrix.from_array(Ca_list)
         psi4.core.print_out(" Done\n")
         return Ca_mat
@@ -46,14 +46,14 @@ def read_orbitals(filename='forte_Ca.npz'):
         return None
 
 
-def dump_orbitals(wfn, filename='forte_Ca.npz'):
-    """ Dump orbitals to file. """
+def dump_orbitals(wfn, filename="forte_Ca.npz"):
+    """Dump orbitals to file."""
     psi4.core.print_out(f"\n\n  Forte: Dump orbitals to file filename ...")
 
     Ca = wfn.Ca()
     Ca = [Ca.to_array()] if wfn.nirrep() == 1 else Ca.to_array()
 
-    with open(filename, 'wb') as f:
+    with open(filename, "wb") as f:
         np.savez_compressed(f, *Ca)
 
     psi4.core.print_out(" Done\n")
@@ -73,6 +73,7 @@ def orbital_projection(ref_wfn, options, mo_space_info):
         # Find the subspace projector
         # - Parse the subspace planes for pi orbitals
         from .aosubspace import parse_subspace_pi_planes
+
         pi_planes = parse_subspace_pi_planes(ref_wfn.molecule(), options.get_list("SUBSPACE_PI_PLANES"))
 
         # - Create the AO subspace projector
@@ -193,7 +194,7 @@ def ortho_orbs_forte(wfn, mo_space_info, Cold):
     :param Cold: MO coefficients from previous calculations
     :return: orthonormalized orbital coefficients
     """
-    orbital_spaces = mo_space_info.space_names()
+    orbital_spaces = forte.MOSpaceInfo.elementary_spaces
 
     # slices in the order of frozen core, core, active, virtual, frozen virtual
     occ_start = [psi4.core.Dimension([0] * mo_space_info.nirrep())]
@@ -393,7 +394,7 @@ def canonicalX(S):
     shalf_inv = psi4.core.Matrix("s^(-1/2)", rdim, rdim)
     for h in range(nirrep):
         for i in range(rdim[h]):
-            shalf_inv.set(h, i, i, evals.get(h, i)**-0.5)
+            shalf_inv.set(h, i, i, evals.get(h, i) ** -0.5)
 
     X = psi4.core.doublet(evecs, shalf_inv, False, False)
     return X

@@ -37,7 +37,9 @@
 #define FMT_HEADER_ONLY
 #include "lib/fmt/core.h"
 
+#include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
+
 #include "helpers/disk_io.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
