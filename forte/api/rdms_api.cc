@@ -73,6 +73,21 @@ void export_RDMs(py::module& m) {
             "g3bbb", [](RDMs& rdm) { return ambit_to_np(rdm.g3bbb()); },
             "Return the beta-beta-beta 3RDM as a numpy array")
         .def(
+            "g4aaaa", [](RDMs& rdm) { return ambit_to_np(rdm.g4aaaa()); },
+            "Return the alpha-alpha-alpha-alpha 4RDM as a numpy array")
+        .def(
+            "g4aaab", [](RDMs& rdm) { return ambit_to_np(rdm.g4aaab()); },
+            "Return the alpha-alpha-alpha-beta 4RDM as a numpy array")
+        .def(
+            "g4aabb", [](RDMs& rdm) { return ambit_to_np(rdm.g4aabb()); },
+            "Return the alpha-alpha-beta-beta 4RDM as a numpy array")
+        .def(
+            "g4abbb", [](RDMs& rdm) { return ambit_to_np(rdm.g4abbb()); },
+            "Return the alpha-beta-beta-beta 4RDM as a numpy array")
+        .def(
+            "g4bbbb", [](RDMs& rdm) { return ambit_to_np(rdm.g4bbbb()); },
+            "Return the beta-beta-beta-beta 4RDM as a numpy array")
+        .def(
             "L1a", [](RDMs& rdm) { return ambit_to_np(rdm.L1a()); },
             "Return the alpha 1-cumulant as a numpy array")
         .def(
@@ -99,6 +114,21 @@ void export_RDMs(py::module& m) {
         .def(
             "L3bbb", [](RDMs& rdm) { return ambit_to_np(rdm.L3bbb()); },
             "Return the beta-beta-beta 3-cumulant as a numpy array")
+        .def(
+            "L4aaaa", [](RDMs& rdm) { return ambit_to_np(rdm.L4aaaa()); },
+            "Return the alpha-alpha-alpha-alpha 4-cumulant as a numpy array")
+        .def(
+            "L4aaab", [](RDMs& rdm) { return ambit_to_np(rdm.L4aaab()); },
+            "Return the alpha-alpha-alpha-beta 4-cumulant as a numpy array")
+        .def(
+            "L4aabb", [](RDMs& rdm) { return ambit_to_np(rdm.L4aabb()); },
+            "Return the alpha-alpha-beta-beta 4-cumulant as a numpy array")
+        .def(
+            "L4abbb", [](RDMs& rdm) { return ambit_to_np(rdm.L4abbb()); },
+            "Return the alpha-beta-beta-beta 4-cumulant as a numpy array")
+        .def(
+            "L4bbbb", [](RDMs& rdm) { return ambit_to_np(rdm.L4bbbb()); },
+            "Return the beta-beta-beta-beta 4-cumulant as a numpy array")
         .def(
             "SF_G1", [](RDMs& rdm) { return ambit_to_np(rdm.SF_G1()); },
             "Return the spin-free 1RDM as a numpy array")
