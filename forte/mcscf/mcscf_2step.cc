@@ -436,8 +436,6 @@ double MCSCF_2STEP::compute_energy() {
                                 {print_, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
 
     if (ints_->integral_type() != Custom) {
-        ActiveOrbitalType actv_orb_type(options_->get_str("MCSCF_FINAL_ORBITAL"));
-
         // fix orbitals for redundant pairs
         rdms = as_solver_->compute_average_rdms(state_weights_map_, 1, RDMsType::spin_free);
         auto F = cas_grad.fock(rdms);
@@ -450,6 +448,7 @@ double MCSCF_2STEP::compute_energy() {
         auto active_mix = options_->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
 
         psi::outfile->Printf("\n  Canonicalizing final MCSCF orbitals");
+        ActiveOrbitalType actv_orb_type(options_->get_str("MCSCF_FINAL_ORBITAL"));
         SemiCanonical semi(mo_space_info_, ints_, options_, inactive_mix, active_mix);
         semi.semicanonicalize(rdms, false, actv_orb_type, false);
 
