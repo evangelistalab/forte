@@ -199,7 +199,7 @@ template <typename T> class ndarray {
                 oss << ", ";
             }
         }
-        oss << "], data_type=" << typeid(T).name() << "])";
+        oss << "], data_type=" << ndarray<T>::dtype.to_string() << "])";
         return oss.str();
     }
 
