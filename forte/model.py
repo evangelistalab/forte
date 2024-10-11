@@ -18,6 +18,7 @@ class Model(ABC):
     This allows to deal with molecules, model Hamiltonians
     (e.g. Hubbard), effective Hamiltonians, in a unified way.
     """
+
     @abstractmethod
     def point_group(self) -> str:
         """The model point group"""
@@ -35,13 +36,14 @@ class MolecularModel(Model):
     This class knows the molecular structure and the basis,
     and is responsible for providing integrals over molecular orbitals.
     """
+
     def __init__(
         self,
         molecule: Molecule,
         basis: Basis,
         int_type: str = None,
         scf_aux_basis: Basis = None,
-        corr_aux_basis: Basis = None
+        corr_aux_basis: Basis = None,
     ):
         """
         Initialize a MolecularModel object
@@ -61,7 +63,7 @@ class MolecularModel(Model):
         """
         self._molecule = molecule
         self._basis = basis
-        self._int_type = 'CONVENTIONAL' if int_type is None else int_type.upper()
+        self._int_type = "CONVENTIONAL" if int_type is None else int_type.upper()
         self._scf_aux_basis = scf_aux_basis
         self._corr_aux_basis = corr_aux_basis
         self.symmetry = Symmetry(molecule.molecule.point_group().symbol().capitalize())
@@ -143,7 +145,7 @@ class MolecularModel(Model):
 
         if (nel - twice_ms) % 2 != 0:
             raise ValueError(
-                f'(MolecularModel) The value of M_S ({twice_ms / 2.0}) is incompatible with the number of electrons ({nel})'
+                f"(MolecularModel) The value of M_S ({twice_ms / 2.0}) is incompatible with the number of electrons ({nel})"
             )
 
         # compute the number of alpha/beta electrons
@@ -154,11 +156,10 @@ class MolecularModel(Model):
         if sym is None:
             if self.symmetry.nirrep() == 1:
                 # in this case there is only one possible choice
-                sym = 'A'
+                sym = "A"
             else:
                 raise ValueError(
-                    f'(MolecularModel) The value of sym ({sym}) is invalid.'
-                    f' Please specify a valid symmetry label.'
+                    f"(MolecularModel) The value of sym ({sym}) is invalid." f" Please specify a valid symmetry label."
                 )
 
         # get the irrep index from the symbol
@@ -169,15 +170,20 @@ class MolecularModel(Model):
         return StateInfo(na, nb, multiplicity, twice_ms, irrep, sym, gasmin, gasmax)
 
     def ints(self, data, options):
-        flog('info', 'MolecularModel: preparing integrals from psi4')
+        flog("info", "MolecularModel: preparing integrals from psi4")
         # if we do DF, we need to make sure that psi4's wavefunction object
         # has a DF_BASIS_MP2 basis registered
-        if self.int_type == 'DF':
+        if self.int_type == "DF":
             import psi4
+
             aux_basis = psi4.core.BasisSet.build(
-                self.molecule, 'DF_BASIS_MP2', self.corr_aux_basis, 'RIFIT', self.basis,
-                puream=data.psi_wfn.basisset().has_puream()
+                self.molecule,
+                "DF_BASIS_MP2",
+                self.corr_aux_basis,
+                "RIFIT",
+                self.basis,
+                puream=data.psi_wfn.basisset().has_puream(),
             )
-            data.psi_wfn.set_basisset('DF_BASIS_MP2', aux_basis)
+            data.psi_wfn.set_basisset("DF_BASIS_MP2", aux_basis)
         # get the appropriate integral object
-        return make_ints_from_psi4(data.psi_wfn, options, data.mo_space_info, self._int_type)
+        return make_ints_from_psi4(data.psi_wfn, options, data.scf_info, data.mo_space_info, self._int_type)

@@ -28,8 +28,9 @@
 
 #include <numeric>
 
+#include "base_classes/forte_options.h"
+
 #include "psi4/libmints/matrix.h"
-#include "psi4/libmints/molecule.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/vector.h"
@@ -139,7 +140,7 @@ void SADSRG::startup() {
     // setup checkpoint filename prefix
     chk_filename_prefix_ = PSIOManager::shared_object()->get_default_path();
     chk_filename_prefix_ += "forte." + std::to_string(getpid());
-    chk_filename_prefix_ += "." + psi::Process::environment.molecule()->name();
+    chk_filename_prefix_ += "." + std::to_string(mo_space_info_->size("ACTIVE"));
     Bcan_files_.clear();
 }
 
@@ -147,7 +148,9 @@ void SADSRG::build_fock_from_ints() {
     local_timer lt;
     print_contents("Computing Fock matrix and cleaning JK");
     ints_->make_fock_matrix(rdms_->g1a(), rdms_->g1b());
-    ints_->jk_finalize();
+    if (ints_->integral_type() != IntegralType::Custom) {
+        ints_->jk_finalize();
+    }
     print_done(lt.get());
 }
 
@@ -775,7 +778,7 @@ bool SADSRG::check_semi_orbs() {
     bool semi_actv = true;
     auto nactv = actv_mos_.size();
     auto& Faa_data = Fd.block("aa").data();
-    auto actv_subspace = mo_space_info_->composite_space_names().at("ACTIVE");
+    auto actv_subspace = mo_space_info_->composite_spaces_def().at("ACTIVE");
     for (const auto& space : actv_subspace) {
         if (mo_space_info_->size(space) == 0)
             continue;
@@ -866,7 +869,7 @@ std::vector<double> SADSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
     // loop each correlated elementary space
     int nirrep = mo_space_info_->nirrep();
 
-    auto elementary_spaces = mo_space_info_->composite_space_names()["CORRELATED"];
+    auto elementary_spaces = mo_space_info_->composite_spaces_def().at("CORRELATED");
     for (const std::string& space : elementary_spaces) {
         if (mo_space_info_->size(space) == 0 or semi_checked_results_[space])
             continue;

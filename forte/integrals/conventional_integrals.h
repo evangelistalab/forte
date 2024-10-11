@@ -29,7 +29,7 @@
 
 #pragma once
 
-#include "integrals.h"
+#include "psi4_integrals.h"
 
 namespace psi {
 class IntegralTransform;
@@ -46,7 +46,7 @@ namespace forte {
 class ConventionalIntegrals : public Psi4Integrals {
   public:
     /// Contructor of ConventionalIntegrals
-    ConventionalIntegrals(std::shared_ptr<ForteOptions> options,
+    ConventionalIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
                           std::shared_ptr<psi::Wavefunction> ref_wfn,
                           std::shared_ptr<MOSpaceInfo> mo_space_info,
                           IntegralSpinRestriction restricted);
@@ -54,9 +54,9 @@ class ConventionalIntegrals : public Psi4Integrals {
     void initialize() override;
 
     /// Grabs the antisymmetriced TEI - assumes storage in aphy_tei_*
-    double aptei_aa(size_t p, size_t q, size_t r, size_t s) override;
-    double aptei_ab(size_t p, size_t q, size_t r, size_t s) override;
-    double aptei_bb(size_t p, size_t q, size_t r, size_t s) override;
+    double aptei_aa(size_t p, size_t q, size_t r, size_t s) const override;
+    double aptei_ab(size_t p, size_t q, size_t r, size_t s) const override;
+    double aptei_bb(size_t p, size_t q, size_t r, size_t s) const override;
 
     /// Grabs the antisymmetrized TEI - assumes storage of ambit tensor
     ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
@@ -68,9 +68,6 @@ class ConventionalIntegrals : public Psi4Integrals {
     ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                  const std::vector<size_t>& r,
                                  const std::vector<size_t>& s) override;
-
-    void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
-                 bool alpha2) override;
 
   private:
     // ==> Class data <==

@@ -12,15 +12,17 @@ def test_uccsd_8():
 
     ref_energy = -1.9976233094  # from Jonathon
 
-    geom = """
+    molecule = psi4.geometry(
+        """
      H 0.0 0.0 0.0
      H 0.0 0.0 1.5
      H 0.0 0.0 3.0
      H 0.0 0.0 4.5     
     """
+    )
 
-    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis="sto-3g", reference="RHF")
-    data = forte.modules.ObjectsUtilPsi4(ref_wnf=psi4_wfn, mo_spaces={}).run()
+    data = forte.modules.ObjectsUtilPsi4(molecule=molecule, basis="sto-3g").run()
+    scf_energy = data.psi_wfn.energy()
     calc_data = scc.run_cc(
         data.as_ints, data.scf_info, data.mo_space_info, cc_type="ucc", max_exc=2, e_convergence=1.0e-10, linked=False
     )

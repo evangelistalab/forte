@@ -31,15 +31,15 @@
 #include <map>
 #include <vector>
 
-#include "psi4/libmints/molecule.h"
-#include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
-#include "psi4/libmints/molecule.h"
+#include "psi4/libpsio/psio.hpp"
 
 #define FMT_HEADER_ONLY
 #include "lib/fmt/core.h"
 
+#include "base_classes/forte_options.h"
 #include "base_classes/active_space_solver.h"
+
 #include "fci/fci_solver.h"
 #include "helpers/printing.h"
 #include "orbital-helpers/semi_canonicalize.h"
@@ -132,7 +132,7 @@ void MRDSRG::startup() {
     // set up file name prefix
     restart_file_prefix_ = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
                            std::to_string(getpid()) + "." +
-                           psi::Process::environment.molecule()->name();
+                           std::to_string(mo_space_info_->size("ACTIVE"));
     t1_file_chk_.clear();
     t2_file_chk_.clear();
     if (restart_amps_ and (relax_ref_ != "NONE") and

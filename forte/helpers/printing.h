@@ -36,6 +36,9 @@
 #include <utility>
 #include <iomanip> // for std::setw
 
+namespace psi {
+class Matrix;
+}
 namespace forte {
 
 /// This enum is used to control the verbosity of the output
@@ -182,5 +185,9 @@ class table_printer {
 /// @brief Return the label for a spin state
 /// @param twiceS Twice the spin quantum number S (multiplicity - 1)
 const std::string& s2_label(int twiceS);
+
+/// @brief Return a string representation of a psi4 matrix
+/// @param mat The matrix to convert to a string
+std::string matrix_to_string(const psi::Matrix& mat);
 
 } // namespace forte

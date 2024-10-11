@@ -1,14 +1,12 @@
 import forte
-from forte.modules import Sequential, HF, FCI, Ints, Ints2, Localizer, GraphVisualizer
+from forte.modules import Workflow, HF, FCI, Ints, Ints2, Localizer, WorkflowVisualizer
 from forte import ForteData
 
-data = ForteData()
+int_mod = Ints()
 
-ints = Ints()
-ints2 = Ints2()
-seq = Sequential([Localizer(), Localizer()], ints)
-fci = FCI(seq)
+sub_job = Workflow([Ints2(), int_mod])
+job = Workflow([int_mod, FCI(), sub_job])
+job.run()
 
-graph = GraphVisualizer().visualize(fci)
+graph = WorkflowVisualizer().visualize(job)
 print(graph)
-data = fci.run(data)

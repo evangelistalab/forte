@@ -17,6 +17,7 @@ class MoleculeFactory(Module):
     molecule: str
 
     def __post_init__(self):
+        # This module initializes the molecule object in ForteData, so it does not require a ForteData object as input
         super().__init__()
 
     def _run(self, data: ForteData = None) -> ForteData:

@@ -31,10 +31,11 @@ import os
 import psi4
 import forte
 
+from forte.modules.helpers import make_mo_spaces_from_options
 
-def dsrg_fno_procrouting(state_weights_map, scf_info, options, ints, mo_space_info,
-                         active_space_solver, rdms, Ua):
-    """ Driver for frozen-natural-orbital truncated DSRG. """
+
+def dsrg_fno_procrouting(state_weights_map, scf_info, options, ints, mo_space_info, active_space_solver, rdms, Ua):
+    """Driver for frozen-natural-orbital truncated DSRG."""
     # read options
     pt2_correction = options.get_bool("DSRG_FNO_PT2_CORRECTION")
     dsrg_s = options.get_double("DSRG_S")
@@ -62,13 +63,16 @@ def dsrg_fno_procrouting(state_weights_map, scf_info, options, ints, mo_space_in
     options.set_int_list("FROZEN_UOCC", [fnopi[h] for h in range(mo_space_info.nirrep())])
     nmopi = mo_space_info.dimension("ALL")
     pg = mo_space_info.point_group_label()
-    mo_space_info = forte.make_mo_space_info(nmopi, pg, options)
+    mo_spaces = make_mo_spaces_from_options(options)
+    mo_space_info = forte.make_mo_space_info_from_map(nmopi, pg, mo_spaces)
 
     # transform integrals to FNO semicanonical basis
     Ca = ints.wfn().Ca()
     Ca.copy(psi4.core.doublet(Ca, Va, False, False))
+    # update the MO space info and SCF info with the new Ca
+    # the order here is important, as the SCF info will update
     ints.update_mo_space_info(mo_space_info)
-    ints.update_orbitals(Ca, Ca, True)
+    scf_info.update_orbitals(Ca, Ca, True)
 
     # run DSRG-MRPT2 in truncated basis
     if pt2_correction:

@@ -29,15 +29,11 @@
 
 #pragma once
 
+#include <memory>
+
 #include "psi4/libmints/dimension.h"
 
 #include "helpers/symmetry.h"
-#include "base_classes/forte_options.h"
-
-namespace psi {
-class Wavefunction;
-class Options;
-} // namespace psi
 
 namespace forte {
 
@@ -181,10 +177,6 @@ class MOSpaceInfo {
     const std::string& irrep_label(size_t h) const;
     /// @return The label of the molecular point groupo (e.g. "C2V")
     std::string point_group_label() const;
-    /// @return The names of the elementary orbital spaces
-    const std::vector<std::string>& space_names() const;
-    /// @return The names of the composite orbital spaces
-    std::map<std::string, std::vector<std::string>> composite_space_names() const;
     /// @return The names of nonzero GAS spaces
     std::vector<std::string> nonzero_gas_spaces() const;
     /// @return The number of orbitals in a space
@@ -207,26 +199,37 @@ class MOSpaceInfo {
     std::vector<size_t> pos_in_space(const std::string& space, const std::string& composite_space);
     /// @return The psi::Slice for a space counting started at absolute zero
     psi::Slice range(const std::string& space);
-
-    /// Read the space info from forte options(inputs)
-    void read_options(std::shared_ptr<ForteOptions> options);
-
     /// Read the space info from a map of space name-dimension_vector
     void read_from_map(const std::map<std::string, std::vector<size_t>>& mo_space_map);
-
-    /// Reorder MOs according to the input indexing vector
-    void set_reorder(const std::vector<size_t>& reorder);
-
-    const std::vector<size_t>& reorder() const;
-
     /// Process current MOSpaceInfo: calculate frozen core, count, and assign orbitals
     void compute_space_info();
-
     /// @return The number of irreps
     size_t nirrep() const;
 
+    // ==> Static Class Interface <==
+    /// @return The names of the elementary orbital spaces
+    static const std::vector<std::string>& elementary_spaces();
+    /// @return The names of the composite orbital spaces
+    static const std::vector<std::string>& composite_spaces();
+    /// @return The definition of the composite orbital spaces
+    static const std::map<std::string, std::vector<std::string>>& composite_spaces_def();
+    /// @return The priority used to assign orbitals to elementary spaces
+    static const std::vector<std::string>& elementary_spaces_priority();
+
   private:
-    // ==> Class Data <==
+    // ==> Static Class Data <==
+    /// The list of elementary orbital spaces
+    static const std::vector<std::string> elementary_spaces_;
+    /// The list of composite orbital spaces (this includes all elementary spaces)
+    static const std::vector<std::string> composite_spaces_;
+    /// The definition of the composite orbital spaces (this includes all elementary spaces)
+    static const std::map<std::string, std::vector<std::string>> composite_spaces_def_;
+
+    /// The priority used to assign orbitals to elementary spaces
+    static const std::vector<std::string> elementary_spaces_priority_;
+
+    // ==> Private Class Data <==
+    /// The molecular point group information
     Symmetry symmetry_;
     /// The number of irreducible representations
     size_t nirrep_;
@@ -234,51 +237,10 @@ class MOSpaceInfo {
     psi::Dimension nmopi_;
     /// Information about each elementary space stored in a map
     std::map<std::string, SpaceInfo> mo_spaces_;
-    /// The list of elementary spaces
-    std::vector<std::string> elementary_spaces_{
-        "FROZEN_DOCC", "RESTRICTED_DOCC", "GAS1",       "GAS2", "GAS3", "GAS4", "GAS5",
-        "GAS6",        "RESTRICTED_UOCC", "FROZEN_UOCC"};
-    /// The priority used to assign orbitals to elementary spaces
-    std::vector<std::string> elementary_spaces_priority_{"GAS1",
-                                                         "RESTRICTED_UOCC",
-                                                         "RESTRICTED_DOCC",
-                                                         "FROZEN_DOCC",
-                                                         "FROZEN_UOCC",
-                                                         "GAS2",
-                                                         "GAS3",
-                                                         "GAS4",
-                                                         "GAS5",
-                                                         "GAS6"};
-
-    /// Defines composite orbital spaces
-    std::map<std::string, std::vector<std::string>> composite_spaces_{
-        {"ALL",
-         {"FROZEN_DOCC", "RESTRICTED_DOCC", "GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6",
-          "RESTRICTED_UOCC", "FROZEN_UOCC"}},
-        {"FROZEN", {"FROZEN_DOCC", "FROZEN_UOCC"}},
-        {"CORRELATED",
-         {"RESTRICTED_DOCC", "GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6", "RESTRICTED_UOCC"}},
-        {"ACTIVE", {"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"}},
-        {"INACTIVE_DOCC", {"FROZEN_DOCC", "RESTRICTED_DOCC"}},
-        {"INACTIVE_UOCC", {"RESTRICTED_UOCC", "FROZEN_UOCC"}},
-        // Spaces for multireference calculations
-        {"GENERALIZED HOLE", {"RESTRICTED_DOCC", "GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"}},
-        {"GENERALIZED PARTICLE",
-         {"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6", "RESTRICTED_UOCC"}},
-        {"CORE", {"RESTRICTED_DOCC"}},
-        {"VIRTUAL", {"RESTRICTED_UOCC"}}};
-
     /// The map from all MO to the correlated MOs (excludes frozen core/virtual)
     std::vector<size_t> mo_to_cmo_;
 
-    /// The index vector used to reorder the orbitals
-    std::vector<size_t> reorder_;
-
-    // ==> Class functions <==
-
-    /// Read information about each elementary space from the psi Options object
-    std::pair<SpaceInfo, bool> read_mo_space(const std::string& space,
-                                             std::shared_ptr<ForteOptions> options);
+    // ==> Private Class Functions <==
 
     /// Read information about each elementary space from a map
     std::pair<SpaceInfo, bool>
@@ -286,15 +248,9 @@ class MOSpaceInfo {
                            const std::map<std::string, std::vector<size_t>>& mo_space_map);
 };
 
-/// Make MOSpaceInfo from input (options)
-std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
-                                                const std::string& point_group,
-                                                std::shared_ptr<ForteOptions> options);
-
 /// Make MOSpaceInfo from a map of spacename-dimension_vector ("ACTIVE", [size_t, size_t, ...])
 std::shared_ptr<MOSpaceInfo>
 make_mo_space_info_from_map(const psi::Dimension& nmopi, const std::string& point_group,
-                            const std::map<std::string, std::vector<size_t>>& mo_space_map,
-                            const std::vector<size_t>& reorder);
+                            const std::map<std::string, std::vector<size_t>>& mo_space_map);
 
 } // namespace forte

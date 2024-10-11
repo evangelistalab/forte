@@ -82,7 +82,7 @@ void GenCIStringLists::startup(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         cmopi_int.push_back(cmopi_[h]);
     }
 
-    auto gas_space_names = mo_space_info->composite_space_names()["ACTIVE"];
+    auto gas_space_names = mo_space_info->composite_spaces_def().at("ACTIVE");
 
     for (size_t n = 0; n < gas_space_names.size(); ++n) {
         const std::string& space = gas_space_names[n];
