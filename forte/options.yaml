@@ -1558,6 +1558,11 @@ Old:
     default: "MK"
     choices: ["MK", "MK_DECOMP", "ZERO"]
     help: "The form of the three-particle density cumulant"
+  FOURPDC:
+    type: str
+    default: "ZERO"
+    choices: ["MK", "ZERO"]
+    help: "The form of the four-particle density cumulant"
   SRG_COMM:
     type: str
     default: "STANDARD"
