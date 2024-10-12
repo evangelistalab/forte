@@ -36,8 +36,10 @@
 #define FMT_HEADER_ONLY
 #include "lib/fmt/core.h"
 
-#include "integrals/active_space_integrals.h"
+#include "base_classes/forte_options.h"
 #include "base_classes/state_info.h"
+
+#include "integrals/active_space_integrals.h"
 #include "helpers/printing.h"
 
 #include "dsrg_mrpt.h"

@@ -48,18 +48,19 @@ class CustomIntegrals : public ForteIntegrals {
     /// @param tei_aa the alpha-alpha two-electron integrals in MO basis
     /// @param tei_ab the alpha-beta two-electron integrals in MO basis
     /// @param tei_bb the beta-beta two-electron integrals in MO basis
-    CustomIntegrals(std::shared_ptr<ForteOptions> options,
+    CustomIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
                     std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted,
                     double scalar, const std::vector<double>& oei_a,
                     const std::vector<double>& oei_b, const std::vector<double>& tei_aa,
                     const std::vector<double>& tei_ab, const std::vector<double>& tei_bb);
 
+    /// Class initializer
     void initialize() override;
 
     /// Grabs the antisymmetriced TEI - assumes storage in aphy_tei_*
-    double aptei_aa(size_t p, size_t q, size_t r, size_t s) override;
-    double aptei_ab(size_t p, size_t q, size_t r, size_t s) override;
-    double aptei_bb(size_t p, size_t q, size_t r, size_t s) override;
+    double aptei_aa(size_t p, size_t q, size_t r, size_t s) const override;
+    double aptei_ab(size_t p, size_t q, size_t r, size_t s) const override;
+    double aptei_bb(size_t p, size_t q, size_t r, size_t s) const override;
 
     /// Grabs the antisymmetrized TEI - assumes storage of ambit tensor
     ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
@@ -97,41 +98,33 @@ class CustomIntegrals : public ForteIntegrals {
 
     size_t nthree() const override { throw std::runtime_error("Wrong Integral type"); }
 
-    void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
-                 bool alpha2) override;
-
   private:
     // ==> Class private data <==
 
     /// Full two-electron integrals stored as a vector with redundant elements (no permutational
     /// symmetry) (includes frozen orbitals)
-    std::vector<double> full_aphys_tei_aa_;
-    std::vector<double> full_aphys_tei_ab_;
-    std::vector<double> full_aphys_tei_bb_;
 
     std::vector<double> original_full_one_electron_integrals_a_;
     std::vector<double> original_full_one_electron_integrals_b_;
+
+    std::vector<double> original_full_aphys_tei_aa_;
+    std::vector<double> original_full_aphys_tei_ab_;
+    std::vector<double> original_full_aphys_tei_bb_;
+
+    std::vector<double> full_aphys_tei_aa_;
+    std::vector<double> full_aphys_tei_ab_;
+    std::vector<double> full_aphys_tei_bb_;
 
     bool save_original_tei_ = false;
     ambit::Tensor original_V_aa_;
     ambit::Tensor original_V_ab_;
     ambit::Tensor original_V_bb_;
-    std::vector<double> original_full_aphys_tei_aa_;
-    std::vector<double> original_full_aphys_tei_ab_;
-    std::vector<double> original_full_aphys_tei_bb_;
 
     // ==> Class private functions <==
 
     void resort_four(std::vector<double>& tei, std::vector<size_t>& map);
-    /// An addressing function to for two-electron integrals
-    /// @return the address of the integral <pq|rs> or <pq||rs>
-    size_t aptei_index(size_t p, size_t q, size_t r, size_t s) {
-        return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q +
-               aptei_idx_ * r + s;
-    }
 
-    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb,
-                         bool re_transform = true) override;
+    void __update_orbitals(bool transform_ints = true) override;
 
     // ==> Class private virtual functions <==
     void gather_integrals() override;

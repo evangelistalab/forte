@@ -39,6 +39,6 @@ class OptionsFactory(Module):
             )
             data.options = forte.ForteOptions()
             register_forte_options(data.options)
-            data.options.set_from_dict(self.options)
+            data.options.set_from_dict(self._options)
 
         return data

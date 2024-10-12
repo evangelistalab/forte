@@ -38,7 +38,7 @@ set forte{
   active                  [2,0,0,0]
   active_space_solver     fci
   mcscf_maxiter          25
-  mcscf_e_convergence    7
+  mcscf_e_convergence    10
   mcscf_g_convergence    7
   mcscf_ignore_frozen_orbs false
   print                   0
@@ -47,12 +47,13 @@ Ecas_1 = energy('forte')
 compare_values(psi4_mcscf_1, Ecas_1, 6, "FORTE CASSCF energy @ 1.5")
 
 HF.R = 1.6
+
 set forte {
   job_type                mcscf_two_step
   frozen_docc             [0,0,0,0]
   restricted_docc         [2,0,1,1]
 }
-Ecas_2, wfn2 = energy('forte', ref_wfn=wfn, return_wfn=True)
+Ecas_2, wfn2 = energy('forte', return_wfn=True,ref_wfn=wfn)
 compare_values(psi4_mcscf_2, Ecas_2, 6, "FORTE 2-step MCSCF energy @ 1.6")
 
 set forte {

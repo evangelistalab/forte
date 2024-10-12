@@ -45,6 +45,8 @@
 #define FMT_HEADER_ONLY
 #include "lib/fmt/core.h"
 
+#include "base_classes/forte_options.h"
+
 #include "helpers/helpers.h"
 #include "helpers/timer.h"
 #include "helpers/blockedtensorfactory.h"

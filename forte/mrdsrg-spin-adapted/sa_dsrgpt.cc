@@ -29,6 +29,8 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
+#include "base_classes/forte_options.h"
+
 #include "helpers/disk_io.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"

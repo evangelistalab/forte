@@ -37,6 +37,8 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "base_classes/forte_options.h"
+#include "base_classes/scf_info.h"
+
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/helpers.h"
 #include "helpers/printing.h"
@@ -51,24 +53,12 @@ using namespace ambit;
 
 SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
                              std::shared_ptr<ForteIntegrals> ints,
-                             std::shared_ptr<ForteOptions> options, bool inactive_mix,
-                             bool active_mix, bool quiet)
-    : mo_space_info_(mo_space_info), ints_(ints), print_(not quiet), inactive_mix_(inactive_mix),
-      active_mix_(active_mix), fix_orbital_success_(true) {
-    read_options(options);
-    // initialize the dimension objects
-    startup();
-}
-
-void SemiCanonical::read_options(const std::shared_ptr<ForteOptions>& options) {
-    // compute thresholds from options
-    double econv = options->get_double("E_CONVERGENCE");
-    threshold_tight_ = (econv < 1.0e-12) ? 1.0e-12 : econv;
-    if (ints_->integral_type() == Cholesky) {
-        double cd_tlr = options->get_double("CHOLESKY_TOLERANCE");
-        threshold_tight_ = (threshold_tight_ < 0.5 * cd_tlr) ? 0.5 * cd_tlr : threshold_tight_;
-    }
-    threshold_loose_ = 10.0 * threshold_tight_;
+                             std::shared_ptr<SCFInfo> scf_info, bool inactive_mix, bool active_mix,
+                             double threshold, bool quiet)
+    : mo_space_info_(mo_space_info), ints_(ints), scf_info_(scf_info), print_(not quiet),
+      inactive_mix_(inactive_mix), active_mix_(active_mix), threshold_tight_(threshold),
+      fix_orbital_success_(true) {
+    startup(); // initialize the dimension objects
 }
 
 void SemiCanonical::startup() {
@@ -88,7 +78,7 @@ void SemiCanonical::startup() {
     set_U_to_identity();
 
     // Find the elementary blocks
-    auto composite_spaces = mo_space_info_->composite_space_names();
+    auto composite_spaces = mo_space_info_->composite_spaces_def();
     auto docc_names = inactive_mix_ ? std::vector<std::string>{"INACTIVE_DOCC"}
                                     : composite_spaces["INACTIVE_DOCC"];
     auto actv_names = active_mix_ ? std::vector<std::string>{"ACTIVE"} : composite_spaces["ACTIVE"];
@@ -114,6 +104,8 @@ void SemiCanonical::startup() {
             offset += mo_dims_[space][h];
         }
     }
+
+    threshold_loose_ = 10.0 * threshold_tight_;
 }
 
 void SemiCanonical::set_U_to_identity() {
@@ -150,7 +142,8 @@ void SemiCanonical::semicanonicalize(std::shared_ptr<RDMs> rdms, bool build_fock
     bool already_semi = check_orbitals(rdms, orb_type);
     build_transformation_matrices(already_semi);
     if (transform and (not already_semi)) {
-        ints_->rotate_orbitals(Ua_, Ub_);
+        scf_info_->rotate_orbitals(Ua_, Ub_);
+        // ints_->rotate_orbitals(Ua_, Ub_);
         rdms->rotate(Ua_t_, Ub_t_);
     }
     if (print_)
@@ -293,7 +286,7 @@ void SemiCanonical::build_transformation_matrices(const bool& semi) {
 
 void SemiCanonical::fill_Uactv(const std::shared_ptr<psi::Matrix>& U, ambit::Tensor& Ut) {
     auto actv_names = active_mix_ ? std::vector<std::string>{"ACTIVE"}
-                                  : mo_space_info_->composite_space_names()["ACTIVE"];
+                                  : mo_space_info_->composite_spaces_def().at("ACTIVE");
     auto& Ut_data = Ut.data();
 
     for (const std::string& name : actv_names) {

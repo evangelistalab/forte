@@ -39,8 +39,6 @@
 
 namespace forte {
 
-class ForteOptions;
-
 struct ActiveOrbitalType {
     enum Value { canonical, natural, unspecified };
     Value value_;
@@ -86,13 +84,14 @@ class SemiCanonical {
     /// @brief SemiCanonical Constructor
     /// @param mo_space_info The MOSpaceInfo object
     /// @param ints The ForteIntegrals object
-    /// @param options The ForteOptions object
+    /// @param scf_info The SCFInfo object
+    /// @param threshold The threshold for testing orbitals
     /// @param inactive_mix Mix the frozen and restricted orbitals together?
     /// @param active_mix Mix all GAS orbitals together?
     /// @param quiet_banner Method banner is not printed if set to true
     SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
-                  std::shared_ptr<ForteOptions> options, bool inactive_mix, bool active_mix,
-                  bool quiet_banner = false);
+                  std::shared_ptr<SCFInfo> scf_info, bool inactive_mix,
+                  bool active_mix, double threshold = 1.0e-8, bool quiet_banner = false);
 
     /// Transforms integrals and RDMs
     /// @brief Semicanonicalize the orbitals and transform the integrals and RDMs
@@ -123,14 +122,14 @@ class SemiCanonical {
     /// startup function to find dimensions and variables
     void startup();
 
-    /// read ForteOptions
-    void read_options(const std::shared_ptr<ForteOptions>& foptions);
-
     /// Forte MOSpaceInfo
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// Forte integral
     std::shared_ptr<ForteIntegrals> ints_;
+
+    /// SCF information
+    std::shared_ptr<SCFInfo> scf_info_;
 
     /// Print level
     int print_;

@@ -59,7 +59,7 @@ class MCSCF_ORB_GRAD {
      * Implementation notes:
      *   See J. Chem. Phys. 142, 224103 (2015) and Theor. Chem. Acc. 97, 88-95 (1997)
      */
-    MCSCF_ORB_GRAD(std::shared_ptr<ForteOptions> options,
+    MCSCF_ORB_GRAD(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
                    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
                    bool ignore_frozen);
 
@@ -100,6 +100,9 @@ class MCSCF_ORB_GRAD {
   private:
     /// The Forte options
     std::shared_ptr<ForteOptions> options_;
+
+    /// The SCF information
+    std::shared_ptr<SCFInfo> scf_info_;
 
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;

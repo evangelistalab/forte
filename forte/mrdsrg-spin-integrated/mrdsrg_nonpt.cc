@@ -38,6 +38,8 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libqt/qt.h"
 
+#include "base_classes/forte_options.h"
+
 #include "helpers/timer.h"
 #include "base_classes/mo_space_info.h"
 #include "mrdsrg.h"
@@ -746,9 +748,10 @@ double MRDSRG::compute_energy_ldsrg2() {
         // compute Hbar
         local_timer t_hbar;
         timer hbar("Compute Hbar");
-        double rsc_conv = rsc_adapt ? get_adaptive_rsc_conv(cycle, Edelta, 
-                                      rsc_thres, rsc_adapt_thres, rsc_adapt_delta_e, e_conv)
-                                    : rsc_thres;
+        double rsc_conv = rsc_adapt
+                              ? get_adaptive_rsc_conv(cycle, Edelta, rsc_thres, rsc_adapt_thres,
+                                                      rsc_adapt_delta_e, e_conv)
+                              : rsc_thres;
         if (sequential_Hbar_) {
             compute_hbar_sequential_rotation(rsc_conv);
         } else {
@@ -1252,13 +1255,18 @@ void MRDSRG::tensor_add_HC_ab(BlockedTensor& H2) {
     }
 }
 
-double MRDSRG::get_adaptive_rsc_conv(const int& iter, const double& deltaE, const double& rsc_conv, 
-                                     const double& rsc_conv_adapt, const double& rsc_conv_adapt_delta_e, const double& e_conv){
+double MRDSRG::get_adaptive_rsc_conv(const int& iter, const double& deltaE, const double& rsc_conv,
+                                     const double& rsc_conv_adapt,
+                                     const double& rsc_conv_adapt_delta_e, const double& e_conv) {
     // A (log)-ReLU-like kick in for adaptive RSC conv to kick in
-    if (iter == 1 || std::fabs(deltaE) >= rsc_conv_adapt_delta_e) {return rsc_conv_adapt;}
+    if (iter == 1 || std::fabs(deltaE) >= rsc_conv_adapt_delta_e) {
+        return rsc_conv_adapt;
+    }
     // Linear interpolation between the upper and lower threshold exponents
-    double x = (std::log10(std::fabs(deltaE)) - std::log10(rsc_conv_adapt_delta_e)) / (std::log10(e_conv) - std::log10(rsc_conv_adapt_delta_e));
-    double exponent = std::log10(rsc_conv_adapt) + x * (std::log10(rsc_conv) - std::log10(rsc_conv_adapt));
+    double x = (std::log10(std::fabs(deltaE)) - std::log10(rsc_conv_adapt_delta_e)) /
+               (std::log10(e_conv) - std::log10(rsc_conv_adapt_delta_e));
+    double exponent =
+        std::log10(rsc_conv_adapt) + x * (std::log10(rsc_conv) - std::log10(rsc_conv_adapt));
     double threshold = std::pow(10.0, exponent);
     return threshold;
 }

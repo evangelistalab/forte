@@ -7,9 +7,12 @@ import forte
 from forte.data import ForteData
 from .module import Module
 
+from forte._forte import make_mo_space_info_from_map
 from forte.register_forte_options import register_forte_options
+from .helpers import make_mo_spaces_from_options
 
 import pyscf
+
 
 def _make_ints_from_pyscf(pyscf_obj, data: ForteData, mo_coeff):
     """
@@ -18,7 +21,7 @@ def _make_ints_from_pyscf(pyscf_obj, data: ForteData, mo_coeff):
     int_ao = pyscf_obj.mol.intor("int2e", aosym="s8")
     eri = pyscf.ao2mo.incore.full(int_ao, mo_coeff, compact=False).reshape(mo_coeff.shape * 2)
     nmo = pyscf_obj.mol.nao_nr()
-    
+
     eri_aa = np.zeros((nmo, nmo, nmo, nmo))
     eri_ab = np.zeros((nmo, nmo, nmo, nmo))
     eri_bb = np.zeros((nmo, nmo, nmo, nmo))
@@ -30,14 +33,15 @@ def _make_ints_from_pyscf(pyscf_obj, data: ForteData, mo_coeff):
     # <ij||kl> = (ik|jl) - (il|jk)
     eri_bb += np.einsum("ikjl->ijkl", eri)
     eri_bb -= np.einsum("iljk->ijkl", eri)
-    
+
     enuc = pyscf_obj.mol.energy_nuc()
     hcore_ao = pyscf_obj.get_hcore()
-    
+
     hcore = np.einsum("uv,up,vq->pq", hcore_ao, mo_coeff.conj(), mo_coeff, optimize="optimal")
-    
+
     ints = forte.make_custom_ints(
         data.options,
+        data.scf_info,
         data.mo_space_info,
         enuc,
         hcore.flatten(),
@@ -47,17 +51,18 @@ def _make_ints_from_pyscf(pyscf_obj, data: ForteData, mo_coeff):
         eri_bb.flatten(),
     )
     data.ints = ints
-    
-    data.as_ints = forte.make_active_space_ints(data.mo_space_info, data.ints, 'ACTIVE', ['RESTRICTED_DOCC'])
-    
+
+    data.as_ints = forte.make_active_space_ints(data.mo_space_info, data.ints, "ACTIVE", ["RESTRICTED_DOCC"])
+
     return data
+
 
 def _make_state_info_from_pyscf(pyscf_obj, options):
     nel = pyscf_obj.mol.nelectron
-    multiplicity = pyscf_obj.mol.spin + 1 # PySCF 'spin' is nalpha - nbeta
-    
+    multiplicity = pyscf_obj.mol.spin + 1  # PySCF 'spin' is nalpha - nbeta
+
     twice_ms = (multiplicity + 1) % 2
-    
+
     na = (nel + twice_ms) // 2
     nb = nel - na
 
@@ -70,43 +75,47 @@ def _make_state_info_from_pyscf(pyscf_obj, options):
     else:
         psi4.core.print_out(f"\n  Should run CASCI or CASSCF in Forte! Set Root_sym to 0 by default.")
         irrep = 0
-    
+
     return forte.StateInfo(na, nb, multiplicity, twice_ms, irrep)
+
 
 def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
     options = data.options
     psi4.core.print_out(f"\n  Getting integral information from PySCF")
     nmo = pyscf_obj.mol.nao_nr()
-    
+
     irrep_size = {"c1": 1, "ci": 2, "c2": 2, "cs": 2, "d2": 4, "c2v": 4, "c2h": 4, "d2h": 8}
-    
+
     try:
         orbsym = pyscf_obj.mo_coeff.orbsym
     except:
-        orbsym = np.zeros(nmo, dtype = int)
-    
+        orbsym = np.zeros(nmo, dtype=int)
+
     if pyscf_obj.mol.symmetry is None:
         nirrep = 1
         nmopi_list = [nmo]
     else:
-        if pyscf_obj.mol.groupname.lower() in ['coov', 'dooh', 'so3']:
-            raise Exception(f"Forte: the value ({pyscf_obj.mol.groupname.lower()}) is not supported. Use an Abelian group.")
+        if pyscf_obj.mol.groupname.lower() in ["coov", "dooh", "so3"]:
+            raise Exception(
+                f"Forte: the value ({pyscf_obj.mol.groupname.lower()}) is not supported. Use an Abelian group."
+            )
         nirrep = irrep_size[pyscf_obj.mol.groupname.lower()]
-        nmopi_list = np.zeros(nirrep, dtype = int)
+        nmopi_list = np.zeros(nirrep, dtype=int)
         for i in orbsym:
             nmopi_list[i] += 1
 
     nmopi = psi4.core.Dimension(list(nmopi_list))
-    
+
     # Create the MOSpaceInfo object
-    data.mo_space_info = forte.make_mo_space_info(nmopi, pyscf_obj.mol.groupname.lower(), options)
-    
+    mo_spaces = make_mo_spaces_from_options(data.options)
+    data.mo_space_info = make_mo_space_info_from_map(nmopi, pyscf_obj.mol.groupname.lower(), mo_spaces)
+
     # manufacture a SCFInfo object from the PySCF object.
     nel = pyscf_obj.mol.nelectron
     ms2 = pyscf_obj.mol.spin
     na = (nel + ms2) // 2
     nb = nel - na
-    
+
     if pyscf_obj.mol.groupname.lower() == "c1":
         doccpi = psi4.core.Dimension([nb])
         soccpi = psi4.core.Dimension([ms2])
@@ -117,25 +126,25 @@ def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
             mo_occ = pyscf_obj.mo_occ
         else:
             raise Exception(f"Forte: the object ({pyscf_obj}) is not supported. Use CASCI or SCF.")
-        doccpi = np.zeros(nirrep, dtype = int)
-        soccpi = np.zeros(nirrep, dtype = int)
+        doccpi = np.zeros(nirrep, dtype=int)
+        soccpi = np.zeros(nirrep, dtype=int)
         for i in range(len(mo_occ)):
             symm = orbsym[i]
             if mo_occ[i] == 2:
                 doccpi[symm] += 1
             elif mo_occ[i] == 1:
                 soccpi[symm] += 1
-        
+
         doccpi = psi4.core.Dimension(list(doccpi))
-        soccpi = psi4.core.Dimension(list(soccpi))  
-    
+        soccpi = psi4.core.Dimension(list(soccpi))
+
     if isinstance(pyscf_obj, pyscf.mcscf.casci.CASBase):
         mo_energy_pyscf = pyscf_obj._scf.mo_energy
     elif isinstance(pyscf_obj, pyscf.scf.hf.SCF):
         mo_energy_pyscf = pyscf_obj.mo_energy
-        
+
     mo_coeff_pyscf = pyscf_obj.mo_coeff
-        
+
     if nirrep == 1:
         mo_energy = mo_energy_pyscf
         mo_coeff = mo_coeff_pyscf
@@ -147,20 +156,26 @@ def _prepare_forte_objects_from_pyscf(data: ForteData, pyscf_obj) -> ForteData:
             for i_orb in range(nmo):
                 if orbsym[i_orb] == int(i):
                     mo_energy.append(mo_energy_pyscf[i_orb])
-                    mo_coeff[:,n_orb] = mo_coeff_pyscf[:,i_orb] 
+                    mo_coeff[:, n_orb] = mo_coeff_pyscf[:, i_orb]
                     n_orb += 1
         mo_energy = np.array(mo_energy)
-    
+
     epsilon_a = psi4.core.Vector.from_array(mo_energy)
     epsilon_b = psi4.core.Vector.from_array(mo_energy)
-    
-    data.scf_info = forte.SCFInfo(nmopi, doccpi, soccpi, 0.0, epsilon_a, epsilon_b)
-    
+
+    Ca = psi4.core.Matrix("Ca", nmopi, nmopi)
+    Cb = psi4.core.Matrix("Cb", nmopi, nmopi)
+    Ca.identity()
+    Cb.identity()
+
+    data.scf_info = forte.SCFInfo(nmopi, doccpi, soccpi, 0.0, epsilon_a, epsilon_b, Ca, Cb)
+
     state_info = _make_state_info_from_pyscf(pyscf_obj, options)
     data.state_weights_map = {state_info: [1.0]}
     data.psi_wfn = None
-    
+
     return data, pyscf_obj, mo_coeff
+
 
 class ObjectsFromPySCF(Module):
     """

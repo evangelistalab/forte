@@ -17,22 +17,20 @@ def test_sparse_ci2():
     # need to clean the options otherwise this job will interfere
     forte.clean_options()
 
-    h2o = psi4.geometry(
+    molecule = psi4.geometry(
         """
      He
      He 1 1.0
     """
     )
 
-    psi4.set_options({"basis": "cc-pVDZ"})
-    _, wfn = psi4.energy("scf", return_wfn=True)
+    data = forte.modules.ObjectsUtilPsi4(molecule=molecule, basis="cc-pVDZ").run()
+    wfn = data.psi_wfn
     na = wfn.nalpha()
     nb = wfn.nbeta()
     nirrep = wfn.nirrep()
     wfn_symmetry = 0
 
-    # Make the integrals
-    data = forte.modules.ObjectsUtilPsi4().run()
     as_ints = data.as_ints
 
     print("\n\n  => Sparse FCI Test <=")
