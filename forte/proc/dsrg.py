@@ -156,10 +156,11 @@ class ProcedureDSRG:
             print("Warning DSRG Python driver:", err)
             self.state_ci_wfn_map = None
 
+        # Semi-canonicalize orbitals and rotation matrices
         inactive_mix = options.get_bool("SEMI_CANONICAL_MIX_INACTIVE")
         active_mix = options.get_bool("SEMI_CANONICAL_MIX_ACTIVE")
-        # Semi-canonicalize orbitals and rotation matrices
-        self.semi = forte.SemiCanonical(mo_space_info, ints, options, scf_info, inactive_mix, active_mix)
+        semi_threshold = options.get_double("SEMI_CANONICAL_THRESHOLD")
+        self.semi = forte.SemiCanonical(mo_space_info, ints, scf_info, inactive_mix, active_mix, semi_threshold)
         if self.do_semicanonical:
             self.semi.semicanonicalize(self.rdms)
         self.Ua, self.Ub = self.semi.Ua_t(), self.semi.Ub_t()
