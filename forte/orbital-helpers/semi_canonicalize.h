@@ -41,36 +41,68 @@ namespace forte {
 
 class ForteOptions;
 
+struct ActiveOrbitalType {
+    enum Value { canonical, natural, unspecified };
+    Value value_;
+    ActiveOrbitalType(Value value) : value_(value) {};
+    ActiveOrbitalType(std::string name) {
+        for (auto& c : name)
+            c = toupper(c);
+        if (name == "UNSPECIFIED") {
+            value_ = unspecified;
+        } else if (name == "NATURAL") {
+            value_ = natural;
+        } else {
+            value_ = canonical;
+        }
+    }
+    // operator Value() const { return value_; }
+    // operator bool() const = delete;
+    bool operator==(ActiveOrbitalType rhs) const { return value_ == rhs.value_; }
+    bool operator!=(ActiveOrbitalType rhs) const { return value_ != rhs.value_; }
+    std::string toString() const {
+        switch (value_) {
+        case unspecified:
+            return "UNSPECIFIED";
+        case natural:
+            return "NATURAL";
+        default:
+            return "CANONICAL";
+        }
+    }
+};
+
 /// @brief The SemiCanonical class
-/// This class computes semi-canonical orbitals from the 1RDM and optionally transforms the integrals and RDMs
-/// Semi-canonical orbitals are obtained by diagonalizing the Fock matrix in each orbital space separately
-/// The class can also produce natural orbitals. These differ by the semi-canonical orbital only in the active space
-/// where they are defined to be eigenvectors of the 1RDM
-/// 
-/// The final orbitals are ordered by increasing energy within each irrep and space. Natural orbitals are ordered
-/// by decreasing occupation number
+/// This class computes semi-canonical orbitals from the 1RDM and optionally transforms the
+/// integrals and RDMs Semi-canonical orbitals are obtained by diagonalizing the Fock matrix in each
+/// orbital space separately The class can also produce natural orbitals. These differ by the
+/// semi-canonical orbital only in the active space where they are defined to be eigenvectors of the
+/// 1RDM
+///
+/// The final orbitals are ordered by increasing energy within each irrep and space. Natural
+/// orbitals are ordered by decreasing occupation number
 class SemiCanonical {
   public:
-    
     /// @brief SemiCanonical Constructor
     /// @param mo_space_info The MOSpaceInfo object
     /// @param ints The ForteIntegrals object
-    /// @param options The ForteOptions object
     /// @param inactive_mix Mix the frozen and restricted orbitals together?
     /// @param active_mix Mix all GAS orbitals together?
+    /// @param threshold The threshold for testing orbitals
     /// @param quiet_banner Method banner is not printed if set to true
     SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
-                  std::shared_ptr<ForteOptions> options, bool inactive_mix, bool active_mix,
+                  bool inactive_mix, bool active_mix, double threshold = 1.0e-8,
                   bool quiet_banner = false);
 
     /// Transforms integrals and RDMs
     /// @brief Semicanonicalize the orbitals and transform the integrals and RDMs
     /// @param rdms The RDMs of the state to be semicanonicalized
     /// @param build_fock If true, the Fock matrix is built and diagonalized
-    /// @param nat_orb If true, the natural orbitals are used to semicanonicalize
+    /// @param actv_orb_type Orbital type for active orbitals
     /// @param transform If true, the orbitals are transformed
-    void semicanonicalize(std::shared_ptr<RDMs> rdms, const bool& build_fock = true,
-                          const bool& nat_orb = false, const bool& transform = true);
+    void semicanonicalize(std::shared_ptr<RDMs> rdms, bool build_fock = true,
+                          ActiveOrbitalType orb_type = ActiveOrbitalType::canonical,
+                          bool transform = true);
 
     /// @return the alpha rotation matrix
     std::shared_ptr<psi::Matrix> Ua() { return Ua_; }
@@ -90,9 +122,6 @@ class SemiCanonical {
   private:
     /// startup function to find dimensions and variables
     void startup();
-
-    /// read ForteOptions
-    void read_options(const std::shared_ptr<ForteOptions>& foptions);
 
     /// Forte MOSpaceInfo
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -136,7 +165,7 @@ class SemiCanonical {
     void set_U_to_identity();
 
     /// Check if orbitals are semicanonicalized
-    bool check_orbitals(std::shared_ptr<RDMs> rdms, const bool& nat_orb);
+    bool check_orbitals(std::shared_ptr<RDMs> rdms, ActiveOrbitalType orb_type);
 
     /// Thresholds for Fock matrix testing
     double threshold_tight_;
@@ -145,7 +174,7 @@ class SemiCanonical {
     /// Blocks of Fock or 1RDM to be checked and diagonalized
     std::map<std::string, std::shared_ptr<psi::Matrix>> mats_;
     /// Prepare blocks of Fock or 1RDM to be checked
-    void prepare_matrix_blocks(std::shared_ptr<RDMs> rdms, const bool& nat_orb);
+    void prepare_matrix_blocks(std::shared_ptr<RDMs> rdms, ActiveOrbitalType orb_type);
 
     /// If certain Fock blocks need to be diagonalized
     std::map<std::string, bool> checked_results_;

@@ -438,28 +438,23 @@ double MCSCF_2STEP::compute_energy() {
                                 {print_, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
 
     if (ints_->integral_type() != Custom) {
-        auto final_orbs = options_->get_str("MCSCF_FINAL_ORBITAL");
+        // fix orbitals for redundant pairs
+        rdms = as_solver_->compute_average_rdms(state_weights_map_, 1, RDMsType::spin_free);
+        auto F = cas_grad.fock(rdms);
+        ints_->set_fock_matrix(F, F);
 
-        if (final_orbs != "UNSPECIFIED" or der_type_ == "FIRST") {
-            // fix orbitals for redundant pairs
-            rdms = as_solver_->compute_average_rdms(state_weights_map_, 1, RDMsType::spin_free);
-            auto F = cas_grad.fock(rdms);
-            ints_->set_fock_matrix(F, F);
+        // if we do not freeze orbitals, we need to set the inactive_mix flag to make sure
+        // the frozen and non-frozen core/virtual orbitals are canonicalized together.
+        auto inactive_mix =
+            ignore_frozen ? ignore_frozen : options_->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
+        auto active_mix = options_->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
 
-            // if we do not freeze orbitals, we need to set the inactive_mix flag to make sure
-            // the frozen and non-frozen core/virtual orbitals are canonicalized together.
-            auto inactive_mix = ignore_frozen;
+        psi::outfile->Printf("\n  Canonicalizing final MCSCF orbitals");
+        ActiveOrbitalType actv_orb_type(options_->get_str("MCSCF_FINAL_ORBITAL"));
+        SemiCanonical semi(mo_space_info_, ints_, inactive_mix, active_mix);
+        semi.semicanonicalize(rdms, false, actv_orb_type, false);
 
-            if (!ignore_frozen)
-                inactive_mix = options_->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
-            auto active_mix = options_->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
-
-            psi::outfile->Printf("\n  Canonicalizing final MCSCF orbitals");
-            SemiCanonical semi(mo_space_info_, ints_, options_, inactive_mix, active_mix);
-            semi.semicanonicalize(rdms, false, final_orbs == "NATURAL", false);
-
-            cas_grad.canonicalize_final(semi.Ua());
-        }
+        cas_grad.canonicalize_final(semi.Ua());
 
         // pass to wave function
         auto Ca = cas_grad.Ca();

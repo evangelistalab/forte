@@ -65,13 +65,26 @@ void export_Localize(py::module& m) {
 }
 
 void export_SemiCanonical(py::module& m) {
+    py::enum_<ActiveOrbitalType::Value>(m, "ActiveOrbitalType::Value")
+        .value("canonical", ActiveOrbitalType::Value::canonical)
+        .value("natural", ActiveOrbitalType::Value::natural)
+        .value("unspecified", ActiveOrbitalType::Value::unspecified)
+        .export_values();
+
+    py::class_<ActiveOrbitalType>(m, "ActiveOrbitalType")
+        .def(py::init<std::string>())
+        .def(py::init<ActiveOrbitalType::Value>())
+        .def_readwrite("value", &ActiveOrbitalType::value_)
+        .def("__str__", &ActiveOrbitalType::toString);
+
     py::class_<SemiCanonical>(m, "SemiCanonical")
-        .def(py::init<std::shared_ptr<MOSpaceInfo>, std::shared_ptr<ForteIntegrals>,
-                      std::shared_ptr<ForteOptions>, bool, bool, bool>(),
-             "mo_space_info"_a, "ints"_a, "options"_a, "inactive_mix"_a, "active_mix"_a,
+        .def(py::init<std::shared_ptr<MOSpaceInfo>, std::shared_ptr<ForteIntegrals>, bool, bool,
+                      double, bool>(),
+             "mo_space_info"_a, "ints"_a, "inactive_mix"_a, "active_mix"_a, "threshold"_a = 1.0e-8,
              "quiet"_a = false)
         .def("semicanonicalize", &SemiCanonical::semicanonicalize, "RDMs"_a, "build_fock"_a = true,
-             "nat_orb"_a = false, "transform"_a = true,
+             "orb_type"_a = ActiveOrbitalType(ActiveOrbitalType::Value::canonical),
+             "transform"_a = true,
              "Semicanonicalize the orbitals and transform the integrals and reference")
         .def("Ua", &SemiCanonical::Ua, "Return the alpha rotation matrix")
         .def("Ub", &SemiCanonical::Ub, "Return the alpha rotation matrix")
