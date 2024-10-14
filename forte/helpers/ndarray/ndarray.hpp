@@ -210,10 +210,10 @@ template <typename T> class ndarray {
     shape_t shape_;
     /// @brief Strides of tensor
     strides_t strides_;
-    /// @brief Data of tensor (if owned)
-    std::shared_ptr<container_t> owned_data_;
     /// @brief Span of the data used to access the data
     std::span<T> data_span_;
+    /// @brief Data of tensor (if owned)
+    std::shared_ptr<container_t> owned_data_;
 
     /// @brief Compute the size of a tensor from its shape
     /// @param shape Shape of the tensor
