@@ -1,11 +1,11 @@
 # Valence-Rydberg mixing of ethene in the MS-CASPT2 paper
 
 eref_cas = -77.815291856530
-eref_pt2 = -78.086546061652
-oref_0b1u_dp1 = 0.416480859498
-oref_1b1u_dp1 = 0.071544002468
-oref_0b1u_dp2 = 0.423521418134
-oref_1b1u_dp2 = 0.075960724331
+eref_pt2 = -78.086546947896
+oref_0b1u_dp1 = 0.4164795496
+oref_1b1u_dp1 = 0.0715428186
+oref_0b1u_dp2 = 0.4235201564
+oref_1b1u_dp2 = 0.0759595194
 
 memory 8 gb
 import forte

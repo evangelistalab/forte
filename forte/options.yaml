@@ -1556,6 +1556,10 @@ Old:
     type: bool
     default: False
     help: "Treat all GAS orbitals together for semi-canonicalization"
+  SEMI_CANONICAL_THRESHOLD:
+    type: double
+    default: 1.0e-8
+    help: "Threshold for testing semi-canonical orbitals"
   TWOPDC:
     type: str
     default: "MK"
