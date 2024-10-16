@@ -73,8 +73,6 @@ set {
 Escf, wfn = energy('scf', return_wfn=True)
 
 set forte {
-  read_orbitals             true
-  job_type                  newdriver
   int_type                  df
   frozen_docc               [1,0,0,0,0,1,0,0]
   restricted_docc           [2,0,0,1,0,1,1,0]
