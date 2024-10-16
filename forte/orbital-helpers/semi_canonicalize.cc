@@ -260,7 +260,6 @@ void SemiCanonical::build_transformation_matrices(const bool& semi) {
             auto Usub = std::make_shared<psi::Matrix>("U " + name, M->rowspi(), M->colspi());
             auto evals = std::make_shared<psi::Vector>("evals" + name, M->rowspi());
             M->diagonalize(Usub, evals, ascending ? psi::ascending : psi::descending);
-            Usub->eivprint(evals);
 
             // fill in Ua or Ub
             auto slice = mo_space_info_->range(name);
@@ -269,7 +268,8 @@ void SemiCanonical::build_transformation_matrices(const bool& semi) {
     }
 
     // keep phase and order unchanged
-    fix_orbital_success_ = ints_->fix_orbital_phases(Ua_, true);
+    if (!inactive_mix_)
+        fix_orbital_success_ = ints_->fix_orbital_phases(Ua_, true);
 
     // fill in Ua_t_
     fill_Uactv(Ua_, Ua_t_);
