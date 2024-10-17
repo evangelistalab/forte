@@ -1,5 +1,5 @@
-# Test read_orbitals keyword without a ref_wfn and
-# the orbitals on disk were generated at a different geometry.
+# Test reading a reference wave function from a file 
+# the orbitals on disk were generated at a different geometry (R = 1.5).
 
 import forte
 
@@ -30,10 +30,13 @@ set forte{
   active                  [2,0,0,0]
 }
 
+# read Wavefunction from disk
 ref_wfn = psi4.core.Wavefunction.from_file('scf_wfn.npy')
+
 Ecas, wfn = energy('forte', ref_wfn=ref_wfn, return_wfn=True)
 compare_values(ref_casscf, variable("CURRENT ENERGY"), 10, "CASSCF energy")
 
+# check orthonormality of the orbitals
 S = psi4.core.triplet(wfn.Ca(), wfn.S(), wfn.Ca(), True, False, False)
 Sref = S.clone()
 Sref.identity()
