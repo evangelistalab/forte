@@ -99,6 +99,8 @@ class ObjectsFromPsi4(Module):
         if "basis" not in kwargs and basis == "":
             basis = psi4.core.get_global_option("BASIS")
             kwargs["basis"] = basis
+            p4print(f"  Using basis set {basis} from Psi4 global options.")
+
         elif "basis" in kwargs and basis != "":
             raise ValueError("Both basis set in options and kwargs are provided. Please provide only one.")
 
