@@ -70,17 +70,17 @@ set {
   df_basis_mp2        aug-cc-pvdz-jkfit
   maxiter             300
 }
-Escf, wfn = energy('scf', return_wfn=True)
+
+# read a wavefunction containing the optimized MCSCF orbitals (see ref/input.dat)
+mcscf_wfn = psi4.core.Wavefunction.from_file('mcscf_ref.npy')
 
 set forte {
-  read_orbitals             true
-  job_type                  newdriver
   int_type                  df
   frozen_docc               [1,0,0,0,0,1,0,0]
   restricted_docc           [2,0,0,1,0,1,1,0]
   active                    [0,0,2,0,0,0,0,1]
   avg_state                 [[0,1,1],[5,1,2]]
-  active_space_solver       detci
+  active_space_solver       genci
   correlation_solver        sa-mrdsrg
   corr_level                pt2
   dsrg_s                    0.35
@@ -89,9 +89,9 @@ set forte {
   multipole_moment_level    2
   dsrg_max_dipole_level     1
   dsrg_max_quadrupole_level 1
-  mcscf_reference           false
+  mcscf_reference           false # do not run MCSCF, use MOs from mcscf_wfn
 }
-Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+Edsrg, wfn = energy('forte', ref_wfn=mcscf_wfn, return_wfn=True)
 
 # compare SA-CASSCF results
 compare_results("cas")

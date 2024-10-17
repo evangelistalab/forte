@@ -1,0 +1,43 @@
+# Valence-Rydberg mixing of ethene in the MS-CASPT2 paper
+
+import forte
+
+molecule C2H4{
+0 1
+C      0.000000000000000     0.000000000000000     0.000000000000000
+H      0.000000000000000     0.928925586534310     0.562577332179220
+H      0.000000000000000    -0.928925586534310     0.562577332179220
+C      0.000000000000000     0.000000000000000    -1.339000000000000
+H      0.000000000000000     0.928925586534310    -1.901577332179220
+H      0.000000000000000    -0.928925586534310    -1.901577332179220
+}
+
+set {
+  reference           rhf
+  basis               aug-cc-pvdz
+  scf_type            df
+  df_basis_scf        aug-cc-pvdz-jkfit
+  df_basis_mp2        aug-cc-pvdz-jkfit
+  maxiter             300
+}
+
+set forte {
+  int_type                  df
+  frozen_docc               [1,0,0,0,0,1,0,0]
+  restricted_docc           [2,0,0,1,0,1,1,0]
+  active                    [0,0,2,0,0,0,0,1]
+  avg_state                 [[0,1,1],[5,1,2]]
+  active_space_solver       genci #detci
+  correlation_solver        sa-mrdsrg
+  corr_level                pt2
+  dsrg_s                    0.35
+  calc_type                 sa
+  transition_dipoles        [[0,1,0]]
+  multipole_moment_level    2
+  dsrg_max_dipole_level     1
+  dsrg_max_quadrupole_level 1
+#  mcscf_e_convergence       1e-13
+}
+Edsrg, wfn = energy('forte', return_wfn=True)
+
+wfn.to_file('mcscf_ref.npy')

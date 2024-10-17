@@ -1,0 +1,2061 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.10a1.dev49 
+
+                         Git: Rev {master} 82ce595 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Thursday, 17 October 2024 09:33AM
+
+    Process ID: 7000
+    Host:       MacBook-Pro-347.attlocal.net
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+# Valence-Rydberg mixing of ethene in the MS-CASPT2 paper
+
+import forte
+
+molecule C2H4{
+0 1
+C      0.000000000000000     0.000000000000000     0.000000000000000
+H      0.000000000000000     0.928925586534310     0.562577332179220
+H      0.000000000000000    -0.928925586534310     0.562577332179220
+C      0.000000000000000     0.000000000000000    -1.339000000000000
+H      0.000000000000000     0.928925586534310    -1.901577332179220
+H      0.000000000000000    -0.928925586534310    -1.901577332179220
+}
+
+set {
+  reference           rhf
+  basis               aug-cc-pvdz
+  scf_type            df
+  df_basis_scf        aug-cc-pvdz-jkfit
+  df_basis_mp2        aug-cc-pvdz-jkfit
+  maxiter             300
+}
+
+set forte {
+  int_type                  df
+  frozen_docc               [1,0,0,0,0,1,0,0]
+  restricted_docc           [2,0,0,1,0,1,1,0]
+  active                    [0,0,2,0,0,0,0,1]
+  avg_state                 [[0,1,1],[5,1,2]]
+  active_space_solver       genci #detci
+  correlation_solver        sa-mrdsrg
+  corr_level                pt2
+  dsrg_s                    0.35
+  calc_type                 sa
+  transition_dipoles        [[0,1,0]]
+  multipole_moment_level    2
+  dsrg_max_dipole_level     1
+  dsrg_max_quadrupole_level 1
+#  mcscf_e_convergence       1e-13
+}
+Edsrg, wfn = energy('forte', return_wfn=True)
+
+wfn.to_file('mcscf_ref.npy')
+--------------------------------------------------------------------------
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: main - git commit: ec4d442a
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+
+  Preparing forte objects from a Psi4 Wavefunction object   => Libint2 <=
+
+    Primary   basis highest AM E, G, H:  6, 6, 3
+    Auxiliary basis highest AM E, G, H:  7, 7, 4
+    Onebody   basis highest AM E, G, H:  -, -, -
+    Solid Harmonics ordering:            Gaussian
+
+*** tstart() called on MacBook-Pro-347.attlocal.net
+*** at Thu Oct 17 09:33:31 2024
+
+   => Loading Basis Set <=
+
+    Name: AUG-CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1, 4     entry C          line   182 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz.gbs 
+    atoms 2-3, 5-6 entry H          line    40 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: d2h
+    Full point group: D2h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         C            0.000000000000     0.000000000000     0.669500000000    12.000000000000
+         H           -0.000000000000     0.928925586534     1.232077332179     1.007825032230
+         H            0.000000000000    -0.928925586534     1.232077332179     1.007825032230
+         C            0.000000000000     0.000000000000    -0.669500000000    12.000000000000
+         H           -0.000000000000     0.928925586534    -1.232077332179     1.007825032230
+         H            0.000000000000    -0.928925586534    -1.232077332179     1.007825032230
+
+  Running in d2h symmetry.
+
+  Rotational constants: A =      4.84607  B =      0.99885  C =      0.82815 [cm^-1]
+  Rotational constants: A = 145281.46689  B =  29944.66235  C =  24827.37301 [MHz]
+  Nuclear repulsion =   33.264999961128140
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 16
+  Nalpha       = 8
+  Nbeta        = 8
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is DF.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-08
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: AUG-CC-PVDZ
+    Blend: AUG-CC-PVDZ
+    Number of shells: 38
+    Number of basis functions: 82
+    Number of Cartesian functions: 86
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+   => Loading Basis Set <=
+
+    Name: AUG-CC-PVDZ-JKFIT
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1, 4     entry C          line   154 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
+    atoms 2-3, 5-6 entry H          line    70 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
+
+  ==> Integral Setup <==
+
+  DFHelper Memory: AOs need 0.017 GiB; user supplied 0.366 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:               375
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       0.0000
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: AUG-CC-PVDZ-JKFIT
+    Blend: AUG-CC-PVDZ-JKFIT
+    Number of shells: 104
+    Number of basis functions: 300
+    Number of Cartesian functions: 342
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+  Minimum eigenvalue in the overlap matrix is 1.4824671869E-04.
+  Reciprocal condition number of the overlap matrix is 2.2150952066E-05.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     Ag        18      18 
+     B1g        4       4 
+     B2g        7       7 
+     B3g       12      12 
+     Au         4       4 
+     B1u       18      18 
+     B2u       12      12 
+     B3u        7       7 
+   -------------------------
+    Total      82      82
+   -------------------------
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+   @DF-RHF iter SAD:   -78.44099472325664   -7.84410e+01   0.00000e+00 
+   @DF-RHF iter   1:   -75.70117595807679    2.73982e+00   4.10828e-02 ADIIS/DIIS
+   @DF-RHF iter   2:   -77.60198070809963   -1.90080e+00   2.67346e-02 ADIIS/DIIS
+   @DF-RHF iter   3:   -78.03763640104907   -4.35656e-01   2.73763e-03 ADIIS/DIIS
+   @DF-RHF iter   4:   -78.04289414203870   -5.25774e-03   5.34181e-04 ADIIS/DIIS
+   @DF-RHF iter   5:   -78.04324386761019   -3.49726e-04   1.27177e-04 ADIIS/DIIS
+   @DF-RHF iter   6:   -78.04326884318982   -2.49756e-05   2.67948e-05 DIIS
+   @DF-RHF iter   7:   -78.04327015626342   -1.31307e-06   4.63988e-06 DIIS
+   @DF-RHF iter   8:   -78.04327019279478   -3.65314e-08   5.71836e-07 DIIS
+   @DF-RHF iter   9:   -78.04327019341778   -6.23004e-10   7.44611e-08 DIIS
+   @DF-RHF iter  10:   -78.04327019342807   -1.02887e-11   8.76477e-09 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1Ag   -11.241287     1B1u  -11.239665     2Ag    -1.034302  
+       2B1u   -0.792668     1B2u   -0.643028     3Ag    -0.585096  
+       1B3g   -0.507724     1B3u   -0.375275  
+
+    Virtual:                                                              
+
+       4Ag     0.040444     3B1u    0.050381     2B2u    0.051267  
+       2B3g    0.070767     1B2g    0.101690     2B3u    0.120755  
+       5Ag     0.127477     4B1u    0.146917     3B2u    0.177478  
+       6Ag     0.178562     3B3g    0.206301     2B2g    0.208280  
+       5B1u    0.223511     7Ag     0.250135     4B2u    0.294457  
+       1B1g    0.326318     6B1u    0.327736     1Au     0.402408  
+       8Ag     0.408541     7B1u    0.413228     3B3u    0.439746  
+       4B3g    0.451252     5B2u    0.470209     9Ag     0.532316  
+       5B3g    0.539289     3B2g    0.547978     6B2u    0.558807  
+      10Ag     0.600891     4B3u    0.607908     7B2u    0.615435  
+       8B1u    0.617332     6B3g    0.631609    11Ag     0.637046  
+       2B1g    0.652011     9B1u    0.691285    10B1u    0.727520  
+       4B2g    0.727942    11B1u    0.798913     2Au     0.846447  
+       5B3u    0.884345     7B3g    0.887715    12Ag     1.000580  
+       5B2g    1.087739     8B2u    1.182052    12B1u    1.230770  
+       8B3g    1.283912    13Ag     1.443448     9B2u    1.454016  
+       6B3u    1.512612     3B1g    1.522431    13B1u    1.621696  
+      14Ag     1.693104     9B3g    1.770445     3Au     1.790555  
+      15Ag     1.850015     6B2g    1.879725    10B2u    1.951378  
+      16Ag     2.014521    14B1u    2.059054     7B3u    2.087651  
+      10B3g    2.114814    15B1u    2.119750     4B1g    2.144447  
+      11B2u    2.169499     7B2g    2.381827     4Au     2.440953  
+      16B1u    2.468089    17Ag     2.618477    11B3g    2.669643  
+      17B1u    2.785117    18Ag     2.808202    12B2u    2.888833  
+      18B1u    3.422065    12B3g    3.473374  
+
+    Final Occupation by Irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     3,    0,    0,    1,    0,    2,    1,    1 ]
+    NA   [     3,    0,    0,    1,    0,    2,    1,    1 ]
+    NB   [     3,    0,    0,    1,    0,    2,    1,    1 ]
+
+  @DF-RHF Final Energy:   -78.04327019342807
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =             33.2649999611281402
+    One-Electron Energy =                -169.7784519900079374
+    Two-Electron Energy =                  58.4701818354517115
+    Total Energy =                        -78.0432701934280715
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :          0.0000000            0.0000000            0.0000000
+ Magnitude           :                                                    0.0000000
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on MacBook-Pro-347.attlocal.net at Thu Oct 17 09:33:31 2024
+Module time:
+	user time   =       0.25 seconds =       0.00 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.25 seconds =       0.00 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------------------------------
+                       Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u   Sum
+  -------------------------------------------------------------------------
+    FROZEN_DOCC         1     0     0     0     0     1     0     0     2
+    RESTRICTED_DOCC     2     0     0     1     0     1     1     0     5
+    GAS1                0     0     2     0     0     0     0     1     3
+    GAS2                0     0     0     0     0     0     0     0     0
+    GAS3                0     0     0     0     0     0     0     0     0
+    GAS4                0     0     0     0     0     0     0     0     0
+    GAS5                0     0     0     0     0     0     0     0     0
+    GAS6                0     0     0     0     0     0     0     0     0
+    RESTRICTED_UOCC    15     4     5    11     4    16    11     6    72
+    FROZEN_UOCC         0     0     0     0     0     0     0     0     0
+    Total              18     4     7    12     4    18    12     7    82
+  -------------------------------------------------------------------------   => Loading Basis Set <=
+
+    Name: AUG-CC-PVDZ-JKFIT
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1, 4     entry C          line   154 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
+    atoms 2-3, 5-6 entry H          line    70 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/aug-cc-pvdz-jkfit.gbs 
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1, 4     entry C          line    61 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2-3, 5-6 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  State Singlet (Ms = 0) Ag GAS min: 0 0 0 0 0 0 ; GAS max: 6 0 0 0 0 0 ; weights:
+      0.333333333333
+  State Singlet (Ms = 0) B1u GAS min: 0 0 0 0 0 0 ; GAS max: 6 0 0 0 0 0 ; weights:
+      0.333333333333
+      0.333333333333
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: AUG-CC-PVDZ
+    Blend: AUG-CC-PVDZ
+    Number of shells: 38
+    Number of basis functions: 82
+    Number of Cartesian functions: 86
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+
+  JK created using MemDF integrals
+  DFHelper Memory: AOs need 0.017 GiB; user supplied 0.391 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:               400
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       0.0000
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: AUG-CC-PVDZ-JKFIT
+    Blend: AUG-CC-PVDZ-JKFIT
+    Number of shells: 104
+    Number of basis functions: 300
+    Number of Cartesian functions: 342
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         82
+  Number of correlated molecular orbitals:              80
+  Number of frozen occupied orbitals:                    2
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:              Density fitting
+
+
+  Computing density fitted integrals
+
+  Number of auxiliary basis functions:  300
+  Need 16.14 MB to store DF integrals
+  DFHelper Memory: AOs need 0.017 GiB; user supplied 0.423 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> DFHelper <==
+    NBF:                              82
+    NAux:                            300
+    Schwarz Cutoff:                1E-12
+    Mask sparsity (%):                 0
+    DFH Avail. Memory [GiB]:       0.423
+    OpenMP threads:                    1
+    Algorithm:                     STORE
+    AO Core:                        True
+    MO Core:                       False
+    Hold Metric:                   False
+    Metric Power:                 -0.500
+    Fitting Condition:             1E-10
+    Q Shell Max:                       7
+
+
+
+  Transforming DF Integrals
+  Timing for density-fitting transformation:                  0.015 s.
+
+  Frozen-core energy         -78.519564594958723 a.u.
+  Timing for frozen one-body operator:                        0.002 s.
+  Resorting integrals after freezing core.
+  Timing for resorting DF integrals:                          0.004 s.
+  Timing for freezing core and virtual orbitals:              0.006 s.
+  Timing for computing density-fitted integrals:              0.093 s.
+
+          -----------------------------------------------------------
+                  Multi-Configurational Self Consistent Field
+                Two-Step Approximate Second-Order AO Algorithm
+            written by Chenyang Li, Kevin P. Hannon, and Shuhe Wang
+          -----------------------------------------------------------
+
+
+  ==> MCSCF Calculation Information <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Integral type                                         DF
+    CI solver type                                     GENCI
+    Final orbital type                             CANONICAL
+    Derivative type                                     NONE
+    Optimize orbitals                                   TRUE
+    Include internal rotations                         FALSE
+    Debug printing                                     FALSE
+    Energy convergence                             1.000e-08
+    Gradient convergence                           1.000e-07
+    Max value for rotation                         2.000e-01
+    Max number of macro iter.                            100
+    Max number of micro iter. for orbitals                 6
+    Max number of micro iter. for CI                      12
+    DIIS start                                            15
+    Min DIIS vectors                                       3
+    Max DIIS vectors                                       8
+    Frequency of DIIS extrapolation                        1
+    --------------------------------------------------------
+
+  ==> Independent Orbital Rotations <==
+
+    ORBITAL SPACES                        Ag    B1g    B2g    B3g     Au    B1u    B2u    B3u
+    -----------------------------------------------------------------------------------------
+             ACTIVE / RESTRICTED_DOCC      0      0      0      0      0      0      0      0
+    RESTRICTED_UOCC /          ACTIVE      0      0     10      0      0      0      0      6
+    RESTRICTED_UOCC / RESTRICTED_DOCC     45      0      0     11      0     32     11      0
+    -----------------------------------------------------------------------------------------
+
+  DF-MCSCF adopts integrals from DFHelper of Psi4.
+
+
+  ==> Possible Electron Occupations <==
+
+    Config.   Space 1
+               α    β 
+    -----------------
+         1     1    1
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              1
+    number of beta electrons                               1
+    number of alpha strings                                3
+    number of beta strings                                 3
+    --------------------------------------------------------
+
+  ==> String-based CI Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Spin adapt                                         FALSE
+    Number of determinants                                 5
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         5
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+     4       1       *
+     1       3        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   singlet    0     -156.579677150515  +0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-06
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                      5
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                  5
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0      -78.060112555557       78.060112555557        0.000000000000      1
+       1      -78.060112555557        0.000000000000        0.000000000000      2
+  ---------------------------------------------------------------------------------
+  Timing for CI:                                              0.000 s.
+
+  ==> Root No. 0 <==
+
+    00 2      0.98550798
+    02 0     -0.10241982
+
+    Total Energy:     -78.060112555557, <S^2>: -0.000000
+
+  ==> Possible Electron Occupations <==
+
+    Config.   Space 1
+               α    β 
+    -----------------
+         1     1    1
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              1
+    number of beta electrons                               1
+    number of alpha strings                                3
+    number of beta strings                                 3
+    --------------------------------------------------------
+
+  ==> String-based CI Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Spin adapt                                         FALSE
+    Number of determinants                                 4
+    Symmetry                                               5
+    Multiplicity                                           1
+    Number of roots                                        2
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         4
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+     2       1       *
+     2       3        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   triplet    0     -156.409173560395  +2.000000  removed
+   singlet    0     -156.252332989230  +0.000000  added
+   triplet    1     -156.188214453693  +2.000000  removed
+   singlet    1     -156.146124291642  +0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-06
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                      4
+    Number of roots                                        2
+    Maximum number of iterations                         100
+    Collapse subspace size                                 4
+    Maximum subspace size                                  4
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 2 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0      -77.679664045477       77.732768394271        0.000000000000      2 <- added 2 random vectors
+  ---------------------------------------------------------------------------------
+
+  Davidson-Liu solver:  No new vectors added, but residual converged. Finishing computation.
+  Timing for CI:                                              0.000 s.
+
+  ==> Root No. 0 <==
+
+    a0 b      0.69668190
+    b0 a      0.69668190
+    0a b      0.12097241
+    0b a      0.12097241
+
+    Total Energy:     -77.732768394271, <S^2>: 0.000000
+
+  ==> Root No. 1 <==
+
+    0a b      0.69668190
+    0b a      0.69668190
+    a0 b     -0.12097241
+    b0 a     -0.12097241
+
+    Total Energy:     -77.626559696684, <S^2>: 0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    Ag     0      -78.060112555557  -0.000000
+    --------------------------------------------------------
+       1  (  0)   B1u     0      -77.732768394271   0.000000
+       1  (  0)   B1u     1      -77.626559696684   0.000000
+    --------------------------------------------------------
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0AG    -0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+        0B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+        1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Summary of Quadrupole Moments [e a0^2] (Nuclear + Electronic) <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0AG   -12.06812772     0.00000000     0.00000000    -9.23854313    -0.00000000    -9.26368289
+    --------------------------------------------------------------------------------------------------
+        0B1U   -20.25354076     0.00000000     0.00000000   -11.97074941    -0.00000000   -19.17270263
+        1B1U   -24.61166737     0.00000000     0.00000000   -12.87400345    -0.00000000   -22.39898124
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
+    --------------------------------------------------------------------------------------------------
+
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
+
+    Transition from State  0AG to State 0B1U :
+      Component  1 with value of W = 1.3937
+        Initial Orbital: 1.0000 Orb.  2
+        Final Orbital: 0.9707 Orb.  0
+      Component  2 with value of W = 0.1811
+        Initial Orbital: 0.4051 Orb.  0 0.5949 Orb.  1
+        Final Orbital: 1.0000 Orb.  2
+
+    Transition from State  0AG to State 1B1U :
+      Component  1 with value of W = 1.3937
+        Initial Orbital: 1.0000 Orb.  2
+        Final Orbital: 0.9707 Orb.  1
+      Component  2 with value of W = 0.1573
+        Initial Orbital: 0.3910 Orb.  0 0.6090 Orb.  1
+        Final Orbital: 1.0000 Orb.  2
+
+
+  ==> Transition Dipole Moments [e a0] <==
+
+           Bra        Ket           DM_X           DM_Y           DM_Z           |DM|
+    ---------------------------------------------------------------------------------
+        0  1AG     0 1B1U     0.00000000    -0.00000000    -1.44721409     1.44721409
+        0  1AG     1 1B1U     0.00000000    -0.00000000    -0.75615619     0.75615619
+    ---------------------------------------------------------------------------------
+
+  ==> Summary for Vertical Transition Energy (in eV) <==
+
+         Init.      Final    Energy [eV]      Osc. Str.
+    ---------------------------------------------------
+        0  1AG     0 1B1U     8.90748833     0.45706599
+        0  1AG     1 1B1U    11.79757420     0.16526231
+    ---------------------------------------------------
+
+  ==> Natural Orbitals Occupation Numbers <==
+
+        1B3u    1.942452      1B2g    0.057545      2B2g    0.000003  
+
+
+  ==> Natural Orbitals Occupation Numbers <==
+
+        1B3u    1.000000      1B2g    1.000000      2B2g    0.000000  
+
+
+  ==> Natural Orbitals Occupation Numbers <==
+
+        1B3u    1.000000      1B2g    1.000000      2B2g    0.000000  
+
+
+  ==> MCSCF Iterations <==
+
+                      Energy CI                    Energy Orbital
+           ------------------------------  ------------------------------
+    Iter.        Total Energy       Delta        Total Energy       Delta  Orb. Grad.  Micro
+    ----------------------------------------------------------------------------------------
+       1     -77.806480215504 -7.7806e+01    -77.815280907684 -7.7815e+01  2.8985e-02    6/N <- added 2 random vectors
+
+  Davidson-Liu solver:  No new vectors added, but residual converged. Finishing computation.
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0AG    -0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+        0B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+        1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Summary of Quadrupole Moments [e a0^2] (Nuclear + Electronic) <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0AG   -12.07172821     0.00000000     0.00000000    -9.23976810    -0.00000000    -9.27146497
+    --------------------------------------------------------------------------------------------------
+        0B1U   -22.37292091     0.00000000     0.00000000   -12.56330091    -0.00000000   -21.04773388
+        1B1U   -22.49228722     0.00000000     0.00000000   -12.28145195    -0.00000000   -20.52395000
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
+    --------------------------------------------------------------------------------------------------
+
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
+
+    Transition from State  0AG to State 0B1U :
+      Component  1 with value of W = 1.3929
+        Initial Orbital: 1.0000 Orb.  2
+        Final Orbital: 0.9956 Orb.  0
+      Component  2 with value of W = 0.1622
+        Initial Orbital: 0.3838 Orb.  0 0.6162 Orb.  1
+        Final Orbital: 1.0000 Orb.  2
+
+    Transition from State  0AG to State 1B1U :
+      Component  1 with value of W = 1.3929
+        Initial Orbital: 1.0000 Orb.  2
+        Final Orbital: 0.9956 Orb.  1
+      Component  2 with value of W = 0.1828
+        Initial Orbital: 0.3685 Orb.  0 0.6315 Orb.  1
+        Final Orbital: 1.0000 Orb.  2
+
+
+  ==> Transition Dipole Moments [e a0] <==
+
+           Bra        Ket           DM_X           DM_Y           DM_Z           |DM|
+    ---------------------------------------------------------------------------------
+        0  1AG     0 1B1U     0.00000000    -0.00000000    -1.36156914     1.36156914
+        0  1AG     1 1B1U     0.00000000    -0.00000000    -0.89485911     0.89485911
+    ---------------------------------------------------------------------------------
+
+  ==> Summary for Vertical Transition Energy (in eV) <==
+
+         Init.      Final    Energy [eV]      Osc. Str.
+    ---------------------------------------------------
+        0  1AG     0 1B1U     8.07130360     0.36659046
+        0  1AG     1 1B1U    11.16111149     0.21896507
+    ---------------------------------------------------
+       2     -77.815291304612 -8.8111e-03    -77.815291820947 -1.0913e-05  8.8796e-06    6/N <- added 2 random vectors
+
+  Davidson-Liu solver:  No new vectors added, but residual converged. Finishing computation.
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0AG    -0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+        0B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+        1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Summary of Quadrupole Moments [e a0^2] (Nuclear + Electronic) <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0AG   -12.07192465     0.00000000     0.00000000    -9.23987870    -0.00000000    -9.27219183
+    --------------------------------------------------------------------------------------------------
+        0B1U   -22.37722908     0.00000000     0.00000000   -12.56449831    -0.00000000   -21.05153115
+        1B1U   -22.48797906     0.00000000     0.00000000   -12.28025454    -0.00000000   -20.52015272
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
+    --------------------------------------------------------------------------------------------------
+
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
+
+    Transition from State  0AG to State 0B1U :
+      Component  1 with value of W = 1.3928
+        Initial Orbital: 1.0000 Orb.  2
+        Final Orbital: 0.9956 Orb.  0
+      Component  2 with value of W = 0.1624
+        Initial Orbital: 0.3831 Orb.  0 0.6169 Orb.  1
+        Final Orbital: 1.0000 Orb.  2
+
+    Transition from State  0AG to State 1B1U :
+      Component  1 with value of W = 1.3928
+        Initial Orbital: 1.0000 Orb.  2
+        Final Orbital: 0.9956 Orb.  1
+      Component  2 with value of W = 0.1834
+        Initial Orbital: 0.3677 Orb.  0 0.6323 Orb.  1
+        Final Orbital: 1.0000 Orb.  2
+
+
+  ==> Transition Dipole Moments [e a0] <==
+
+           Bra        Ket           DM_X           DM_Y           DM_Z           |DM|
+    ---------------------------------------------------------------------------------
+        0  1AG     0 1B1U     0.00000000    -0.00000000    -1.36108027     1.36108027
+        0  1AG     1 1B1U     0.00000000    -0.00000000    -0.89446294     0.89446294
+    ---------------------------------------------------------------------------------
+
+  ==> Summary for Vertical Transition Energy (in eV) <==
+
+         Init.      Final    Energy [eV]      Osc. Str.
+    ---------------------------------------------------
+        0  1AG     0 1B1U     8.07362357     0.36643255
+        0  1AG     1 1B1U    11.16536206     0.21885456
+    ---------------------------------------------------
+       3     -77.815291853838 -5.4923e-07    -77.815291856310 -3.5364e-08  7.1443e-08    5/Y <- added 2 random vectors
+
+  Davidson-Liu solver:  No new vectors added, but residual converged. Finishing computation.
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0AG    -0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+        0B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+        1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Summary of Quadrupole Moments [e a0^2] (Nuclear + Electronic) <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0AG   -12.07193593     0.00000000     0.00000000    -9.23988773    -0.00000000    -9.27225367
+    --------------------------------------------------------------------------------------------------
+        0B1U   -22.37767950     0.00000000     0.00000000   -12.56462350    -0.00000000   -21.05192816
+        1B1U   -22.48752863     0.00000000     0.00000000   -12.28012935    -0.00000000   -20.51975572
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
+    --------------------------------------------------------------------------------------------------
+
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
+
+    Transition from State  0AG to State 0B1U :
+      Component  1 with value of W = 1.3928
+        Initial Orbital: 1.0000 Orb.  2
+        Final Orbital: 0.9956 Orb.  0
+      Component  2 with value of W = 0.1624
+        Initial Orbital: 0.3831 Orb.  0 0.6169 Orb.  1
+        Final Orbital: 1.0000 Orb.  2
+
+    Transition from State  0AG to State 1B1U :
+      Component  1 with value of W = 1.3928
+        Initial Orbital: 1.0000 Orb.  2
+        Final Orbital: 0.9956 Orb.  1
+      Component  2 with value of W = 0.1834
+        Initial Orbital: 0.3677 Orb.  0 0.6323 Orb.  1
+        Final Orbital: 1.0000 Orb.  2
+
+
+  ==> Transition Dipole Moments [e a0] <==
+
+           Bra        Ket           DM_X           DM_Y           DM_Z           |DM|
+    ---------------------------------------------------------------------------------
+        0  1AG     0 1B1U     0.00000000    -0.00000000    -1.36102057     1.36102057
+        0  1AG     1 1B1U     0.00000000    -0.00000000    -0.89443798     0.89443798
+    ---------------------------------------------------------------------------------
+
+  ==> Summary for Vertical Transition Energy (in eV) <==
+
+         Init.      Final    Energy [eV]      Osc. Str.
+    ---------------------------------------------------
+        0  1AG     0 1B1U     8.07386380     0.36641131
+        0  1AG     1 1B1U    11.16569001     0.21884877
+    ---------------------------------------------------
+       4     -77.815291856512 -2.6741e-09    -77.815291856529 -2.1893e-10  5.0807e-09    4/Y
+    ----------------------------------------------------------------------------------------
+
+  A miracle has come to pass: MCSCF iterations have converged!
+
+  Performing final CI Calculation using converged orbitals
+
+  ==> Possible Electron Occupations <==
+
+    Config.   Space 1
+               α    β 
+    -----------------
+         1     1    1
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              1
+    number of beta electrons                               1
+    number of alpha strings                                3
+    number of beta strings                                 3
+    --------------------------------------------------------
+
+  ==> String-based CI Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Spin adapt                                         FALSE
+    Number of determinants                                 5
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         5
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+     4       1       *
+     1       3        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   singlet    0     -156.570537244984  +0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-06
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                      5
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                  5
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0      -78.050972650025       78.050972650025        0.000000000000      1
+       1      -78.050972650025        0.000000000000        0.000000000000      2
+  ---------------------------------------------------------------------------------
+  Timing for CI:                                              0.000 s.
+
+  ==> Root No. 0 <==
+
+    00 2      0.98488423
+    02 0     -0.10886430
+
+    Total Energy:     -78.050972650025, <S^2>: -0.000000
+
+  ==> Possible Electron Occupations <==
+
+    Config.   Space 1
+               α    β 
+    -----------------
+         1     1    1
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              1
+    number of beta electrons                               1
+    number of alpha strings                                3
+    number of beta strings                                 3
+    --------------------------------------------------------
+
+  ==> String-based CI Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Spin adapt                                         FALSE
+    Number of determinants                                 4
+    Symmetry                                               5
+    Multiplicity                                           1
+    Number of roots                                        2
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         4
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+     2       1       *
+     2       3        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   triplet    0     -156.412453365565  +2.000000  removed
+   singlet    0     -156.273827404343  +0.000000  added
+   triplet    1     -156.218379540539  +2.000000  removed
+   singlet    1     -156.160204705141  +0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-06
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                      4
+    Number of roots                                        2
+    Maximum number of iterations                         100
+    Collapse subspace size                                 4
+    Maximum subspace size                                  4
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 2 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0      -77.697451459783       77.754262809385        0.000000000000      2 <- added 2 random vectors
+  ---------------------------------------------------------------------------------
+
+  Davidson-Liu solver:  No new vectors added, but residual converged. Finishing computation.
+  Timing for CI:                                              0.000 s.
+
+  ==> Root No. 0 <==
+
+    a0 b      0.70555511
+    b0 a      0.70555511
+
+    Total Energy:     -77.754262809385, <S^2>: 0.000000
+
+  ==> Root No. 1 <==
+
+    0a b      0.70555511
+    0b a      0.70555511
+
+    Total Energy:     -77.640640110182, <S^2>: 0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    Ag     0      -78.050972650025  -0.000000
+    --------------------------------------------------------
+       1  (  0)   B1u     0      -77.754262809385   0.000000
+       1  (  0)   B1u     1      -77.640640110182   0.000000
+    --------------------------------------------------------
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0AG    -0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+        0B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+        1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Summary of Quadrupole Moments [e a0^2] (Nuclear + Electronic) <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0AG   -12.07193672     0.00000000     0.00000000    -9.23988849    -0.00000000    -9.27225898
+    --------------------------------------------------------------------------------------------------
+        0B1U   -22.37772046     0.00000000     0.00000000   -12.56463489    -0.00000000   -21.05196427
+        1B1U   -22.48748767     0.00000000     0.00000000   -12.28011797    -0.00000000   -20.51971961
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
+    --------------------------------------------------------------------------------------------------
+
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
+
+    Transition from State  0AG to State 0B1U :
+      Component  1 with value of W = 1.3928
+        Initial Orbital: 1.0000 Orb.  2
+        Final Orbital: 0.9956 Orb.  0
+      Component  2 with value of W = 0.1624
+        Initial Orbital: 0.3831 Orb.  0 0.6169 Orb.  1
+        Final Orbital: 1.0000 Orb.  2
+
+    Transition from State  0AG to State 1B1U :
+      Component  1 with value of W = 1.3928
+        Initial Orbital: 1.0000 Orb.  2
+        Final Orbital: 0.9956 Orb.  1
+      Component  2 with value of W = 0.1834
+        Initial Orbital: 0.3677 Orb.  0 0.6323 Orb.  1
+        Final Orbital: 1.0000 Orb.  2
+
+
+  ==> Transition Dipole Moments [e a0] <==
+
+           Bra        Ket           DM_X           DM_Y           DM_Z           |DM|
+    ---------------------------------------------------------------------------------
+        0  1AG     0 1B1U     0.00000000    -0.00000000    -1.36101489     1.36101489
+        0  1AG     1 1B1U     0.00000000    -0.00000000    -0.89443610     0.89443610
+    ---------------------------------------------------------------------------------
+
+  ==> Summary for Vertical Transition Energy (in eV) <==
+
+         Init.      Final    Energy [eV]      Osc. Str.
+    ---------------------------------------------------
+        0  1AG     0 1B1U     8.07388601     0.36640926
+        0  1AG     1 1B1U    11.16571714     0.21884838
+    ---------------------------------------------------
+
+  ==> Natural Orbitals Occupation Numbers <==
+
+        1B3u    1.939994      1B2g    0.060002      2B2g    0.000004  
+
+
+  ==> Natural Orbitals Occupation Numbers <==
+
+        1B3u    1.000000      1B2g    1.000000      2B2g    0.000000  
+
+
+  ==> Natural Orbitals Occupation Numbers <==
+
+        1B3u    1.000000      1B2g    1.000000      2B2g    0.000000  
+
+  Canonicalizing final MCSCF orbitals
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS          TRUE
+    MIX GAS ACTIVE ORBITALS       FALSE
+    GAS1                          CANONICAL
+    INACTIVE_DOCC                 CANONICAL
+    INACTIVE_UOCC                 CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    GAS1                 0.0290188288   0.0410388213
+    INACTIVE_DOCC        0.0155248214   0.0221475526
+    INACTIVE_UOCC        0.0150704625   0.1286334659
+    ------------------------------------------------
+
+    Canonicalization test failed
+
+  Timing for orbital canonicalization:                        0.000 s.
+  Integrals are about to be updated.
+  Computing density fitted integrals
+
+  Number of auxiliary basis functions:  300
+  Need 16.14 MB to store DF integrals
+  DFHelper Memory: AOs need 0.017 GiB; user supplied 0.423 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> DFHelper <==
+    NBF:                              82
+    NAux:                            300
+    Schwarz Cutoff:                1E-12
+    Mask sparsity (%):                 0
+    DFH Avail. Memory [GiB]:       0.423
+    OpenMP threads:                    1
+    Algorithm:                     STORE
+    AO Core:                        True
+    MO Core:                       False
+    Hold Metric:                   False
+    Metric Power:                 -0.500
+    Fitting Condition:             1E-10
+    Q Shell Max:                       7
+
+
+
+  Transforming DF Integrals
+  Timing for density-fitting transformation:                  0.012 s.
+
+  Frozen-core energy         -78.519766265366428 a.u.
+  Timing for frozen one-body operator:                        0.002 s.
+  Resorting integrals after freezing core.
+  Timing for resorting DF integrals:                          0.007 s.
+  Timing for freezing core and virtual orbitals:              0.009 s.
+  Integrals update took     0.090 s.
+
+  The integrals are not consistent with the orbitals. Re-transforming them.
+
+
+  ==> Possible Electron Occupations <==
+
+    Config.   Space 1
+               α    β 
+    -----------------
+         1     1    1
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              1
+    number of beta electrons                               1
+    number of alpha strings                                3
+    number of beta strings                                 3
+    --------------------------------------------------------
+
+  ==> String-based CI Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Spin adapt                                         FALSE
+    Number of determinants                                 5
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         5
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+     4       1       *
+     1       3        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   singlet    0     -156.570738915391  +0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-06
+    Residual convergence threshold                 1.000e-06
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                      5
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                  5
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0      -78.050972650025       78.050972650025        0.000000000000      1
+       1      -78.050972650025        0.000000000000        0.000000000000      2
+  ---------------------------------------------------------------------------------
+  Timing for CI:                                              0.000 s.
+
+  ==> Root No. 0 <==
+
+    00 2      0.98488423
+    20 0     -0.11590206
+
+    Total Energy:     -78.050972650025, <S^2>: -0.000000
+
+  ==> Possible Electron Occupations <==
+
+    Config.   Space 1
+               α    β 
+    -----------------
+         1     1    1
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              1
+    number of beta electrons                               1
+    number of alpha strings                                3
+    number of beta strings                                 3
+    --------------------------------------------------------
+
+  ==> String-based CI Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Spin adapt                                         FALSE
+    Number of determinants                                 4
+    Symmetry                                               5
+    Multiplicity                                           1
+    Number of roots                                        2
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         4
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+     2       1       *
+     2       3        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   triplet    0     -156.412655035972  +2.000000  removed
+   singlet    0     -156.274029074751  +0.000000  added
+   triplet    1     -156.218581210947  +2.000000  removed
+   singlet    1     -156.160406375549  +0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-06
+    Residual convergence threshold                 1.000e-06
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                      4
+    Number of roots                                        2
+    Maximum number of iterations                         100
+    Collapse subspace size                                 4
+    Maximum subspace size                                  4
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 2 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0      -77.697451459783       77.754262809384        0.000000000000      2 <- added 2 random vectors
+  ---------------------------------------------------------------------------------
+
+  Davidson-Liu solver:  No new vectors added, but residual converged. Finishing computation.
+  Timing for CI:                                              0.000 s.
+
+  ==> Root No. 0 <==
+
+    a0 b      0.68841839
+    b0 a      0.68841839
+    0a b     -0.16149339
+    0b a     -0.16149339
+
+    Total Energy:     -77.754262809384, <S^2>: -0.000000
+
+  ==> Root No. 1 <==
+
+    0a b      0.68841839
+    0b a      0.68841839
+    a0 b      0.16149339
+    b0 a      0.16149339
+
+    Total Energy:     -77.640640110182, <S^2>: -0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    Ag     0      -78.050972650025  -0.000000
+    --------------------------------------------------------
+       1  (  0)   B1u     0      -77.754262809384  -0.000000
+       1  (  0)   B1u     1      -77.640640110182  -0.000000
+    --------------------------------------------------------
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0AG    -0.00000000    -0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+        0B1U    -0.00000000    -0.00000000    -0.00000000     0.00000000
+        1B1U    -0.00000000    -0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Summary of Quadrupole Moments [e a0^2] (Nuclear + Electronic) <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0AG   -11.68455315     0.00000000     0.00000000    -8.48273398    -0.00000000    -7.81728633
+    --------------------------------------------------------------------------------------------------
+        0B1U   -21.88290076     0.00000000     0.00000000   -11.85325349    -0.00000000   -19.67456801
+        1B1U   -21.60381728    -0.00000000     0.00000000   -11.43410063    -0.00000000   -18.74758661
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
+    --------------------------------------------------------------------------------------------------
+
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
+
+    Transition from State  0AG to State 0B1U :
+      Component  1 with value of W = 1.3928
+        Initial Orbital: 1.0000 Orb.  2
+        Final Orbital: 0.9478 Orb.  0
+      Component  2 with value of W = 0.1624
+        Initial Orbital: 0.6749 Orb.  0 0.3251 Orb.  1
+        Final Orbital: 1.0000 Orb.  2
+
+    Transition from State  0AG to State 1B1U :
+      Component  1 with value of W = 1.3928
+        Initial Orbital: 1.0000 Orb.  2
+        Final Orbital: 0.9478 Orb.  1
+      Component  2 with value of W = 0.1834
+        Initial Orbital: 0.6599 Orb.  0 0.3401 Orb.  1
+        Final Orbital: 1.0000 Orb.  2
+
+
+  ==> Transition Dipole Moments [e a0] <==
+
+           Bra        Ket           DM_X           DM_Y           DM_Z           |DM|
+    ---------------------------------------------------------------------------------
+        0  1AG     0 1B1U    -0.00000000    -0.00000000    -1.25329859     1.25329859
+        0  1AG     1 1B1U     0.00000000     0.00000000    -0.92470591     0.92470591
+    ---------------------------------------------------------------------------------
+
+  ==> Summary for Vertical Transition Energy (in eV) <==
+
+         Init.      Final    Energy [eV]      Osc. Str.
+    ---------------------------------------------------
+        0  1AG     0 1B1U     8.07388601     0.31070611
+        0  1AG     1 1B1U    11.16571714     0.23391171
+    ---------------------------------------------------
+
+  ==> Natural Orbitals Occupation Numbers <==
+
+        1B3u    1.939994      1B2g    0.060002      2B2g    0.000004  
+
+
+  ==> Natural Orbitals Occupation Numbers <==
+
+        1B3u    1.000000      1B2g    1.000000      2B2g    0.000000  
+
+
+  ==> Natural Orbitals Occupation Numbers <==
+
+        1B3u    1.000000      1B2g    1.000000      2B2g    0.000000  
+
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS         FALSE
+    MIX GAS ACTIVE ORBITALS       FALSE
+    FROZEN_DOCC                   CANONICAL
+    FROZEN_UOCC                   CANONICAL
+    GAS1                          CANONICAL
+    RESTRICTED_DOCC               CANONICAL
+    RESTRICTED_UOCC               CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    FROZEN_DOCC          0.0000000000   0.0000000000
+    GAS1                 0.0000000000   0.0000000000
+    RESTRICTED_DOCC      0.0000000000   0.0000000000
+    RESTRICTED_UOCC      0.0000000000   0.0000000000
+    ------------------------------------------------
+
+    Canonicalization test passed
+
+  Orbitals are already semicanonicalized.
+  Timing for orbital canonicalization:                        0.005 s.
+
+    -----------------------------------------------------------------------
+      Spin-Adapted Multireference Driven Similarity Renormalization Group
+                            written by Chenyang Li
+                                 1 OMP thread
+    -----------------------------------------------------------------------
+
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Computing Fock matrix and cleaning JK ....... Done. Timing      0.006 s
+    Reading DSRG options ........................ Done. Timing      0.000 s
+    Setting ambit MO space ...................... Done. Timing      0.000 s
+    Initializing density cumulants .............. Done. Timing      0.000 s
+    Filling Fock matrix from ForteIntegrals ..... Done. Timing      0.000 s
+
+  ==> Density Cumulant Summary <==
+
+             2-cumulant   3-cumulant
+    --------------------------------
+    max        0.560976     0.210755
+    2-norm     1.190432     1.050657
+    --------------------------------
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Block                Max            Mean
+    ----------------------------------------
+    CORE        0.0000000000    0.0000000000
+    VIRTUAL     0.0000000000    0.0000000000
+    GAS1        0.0000000000    0.0000000000
+    ----------------------------------------
+    Orbitals are semi-canonicalized.
+
+                  --------------------------------------------
+                    MR-DSRG Second-Order Perturbation Theory
+                  --------------------------------------------
+
+
+  ==> Calculation Information <==
+
+    --------------------------------------------------------
+    Integral type                                         DF
+    Source operator                                 STANDARD
+    Core-Virtual source type                          NORMAL
+    Reference relaxation                                NONE
+    3RDM algorithm                                  EXPLICIT
+    Internal amplitudes                                 NONE
+    State type                               MULTIPLE STATES
+    Multi-state type                                 SA_FULL
+    Flow parameter                                 3.500e-01
+    Taylor expansion threshold                     1.000e-03
+    Intruder amplitudes threshold                  1.000e-01
+    Number of amplitudes for printing                     15
+    --------------------------------------------------------
+
+  ==> DSRG-MRPT2 Memory Information <==
+
+    Memory assigned by the user                    524.29 MB
+    Memory available for MR-DSRG                   438.45 MB
+    Generalized Fock matrix                         51.84 KB
+    1-, 2-, and 3-density cumulants                  6.62 KB
+    2-electron (4-index) integrals                 444.17 KB
+    T2 cluster amplitudes                          888.34 KB
+    3-index auxiliary integrals                      1.44 MB
+    T1 cluster amplitudes                            4.80 KB
+    1- and 2-body Hbar                             720.00  B
+    Local integrals for CCVV energy                428.54 KB
+    Local integrals for CAVV energy                696.46 KB
+    Local integrals for CCAV energy                 49.27 KB
+    Local integrals for forming Hbar                59.40 KB
+    Max memory for local intermediates             696.46 KB
+    Memory currently available                     435.62 MB
+
+
+  ==> Prepare Integrals & Amplitudes <==
+
+    Initializing integrals ...................... Done. Timing      0.002 s
+    Allocating amplitudes ....................... Done. Timing      0.000 s
+    Computing T2 amplitudes minimal ............. Done. Timing      0.001 s
+    Computing T1 amplitudes ..................... Done. Timing      0.000 s
+
+  ==> First-Order Excitation Amplitudes Summary <==
+
+    Active Indices:   21   22   73
+    Largest T1 amplitudes (absolute values):
+        i    a                i    a                i    a
+    -----------------------------------------------------------------
+    [  73   78] 0.0072319 [  21   25] 0.0045205 [  22   26] 0.0044451
+    [  73   76] 0.0037111 [  73   75] 0.0033516 [  21   23] 0.0028687
+    [  21   24] 0.0023944 [  73   79] 0.0021494 [  21   26] 0.0018613
+    [  22   25] 0.0017798 [  73   77] 0.0017462 [  73   74] 0.0012765
+    [  22   27] 0.0008372 [  21   27] 0.0002499 [  22   23] 0.0001287
+    -----------------------------------------------------------------
+    2-Norm of T1 vector:                            0.012172876174511
+    Number of nonzero elements:                                    84
+    -----------------------------------------------------------------
+    Largest T2 amplitudes (absolute values):
+        i    j    a    b                i    j    a    b                i    j    a    b
+    -----------------------------------------------------------------------------------------------
+    [   0    0   73   73] 0.0261396 [  73   73   77   77] 0.0191103 [  73   73   77   73] 0.0190788
+    [  73    1   73   10] 0.0174308 [  73   28   73   34] 0.0153597 [  73    1   73    6] 0.0148706
+    [  73   61   73   64] 0.0145714 [  73   28   73   31] 0.0143381 [  73   61   73   67] 0.0128726
+    [  22   73   25   73] 0.0128221 [  73   44   73   51] 0.0126854 [   0   73   73   12] 0.0124500
+    [  73   61   73   68] 0.0123788 [   0   44   73   21] 0.0123308 [  21   73   25   77] 0.0119484
+    -----------------------------------------------------------------------------------------------
+    2-Norm of T2 vector:                                                          0.163417820558906
+    Number of nonzero elements:                                                               13670
+    -----------------------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000: NULL
+    T2 amplitudes larger than 0.1000: NULL
+  =>** Before self.dsrg_solver.compute_energy() **<=
+
+    Renormalizing 2-body integrals .............. Done. Timing      0.001 s
+    Renormalizing 1-body integrals .............. Done. Timing      0.000 s
+    Computing <0|[Fr, T1]|0> .................... Done. Timing      0.000 s
+    Computing <0|[Fr, T2]|0> .................... Done. Timing      0.000 s
+    Computing <0|[Vr, T1]|0> .................... Done. Timing      0.000 s
+    Computing <0|[Vr, T2]|0> minimal ............ Done. Timing      0.001 s
+    Computing DF <0|[Vr, T2]|0> CCVV ............ Done. Timing      0.002 s
+    Computing DF Hbar1 CAVV ..................... Done. Timing      0.009 s
+    Computing DF Hbar1 CCAV ..................... Done. Timing      0.002 s
+  DF-PT2 CCVV energy:     -0.159761440639418
+  DF-PT2 CAVV energy:     -0.052385924838780
+  DF-PT2 CCAV energy:     -0.011017636522964
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =    -77.815291856530564
+    < Phi_0 | [Fr, T1] | Phi_0 >   =     -0.000674102200563
+    < Phi_0 | [Fr, T2] | Phi_0 >   =      0.000672172613441
+    < Phi_0 | [Vr, T1] | Phi_0 >   =      0.000669176813669
+    < Phi_0 | [Vr, T2] | Phi_0 >   =     -0.271685529900484
+      - [Vr, T2] L1 contribution   =     -0.274187909607964
+      - [Vr, T2] L2 contribution   =      0.002293183498364
+      - [Vr, T2] L3 contribution   =      0.000209196209116
+    DSRG-MRPT2 correlation energy  =     -0.271018282673937
+    DSRG-MRPT2 total energy        =    -78.086310139204500
+    Computing MRPT2 Hbar AAAA minimal ........... Done. Timing      0.005 s
+  =>** After self.dsrg_solver.compute_energy() **<=
+
+  =>** In reference relaxation loop **<=
+
+
+  ==> De-Normal-Order 2-Body DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term ................... Done. Timing      0.000 s
+    Computing the 1-body term ................... Done. Timing      0.000 s
+
+  ==> Transform One-Electron Operators <==
+
+    Transforming DIPOLE X ....................... Done. Timing      0.001 s
+    Transforming DIPOLE Y ....................... Done. Timing      0.001 s
+    Transforming DIPOLE Z ....................... Done. Timing      0.001 s
+    Transforming QUADRUPOLE XX .................. Done. Timing      0.001 s
+    Transforming QUADRUPOLE XY .................. Done. Timing      0.001 s
+    Transforming QUADRUPOLE XZ .................. Done. Timing      0.001 s
+    Transforming QUADRUPOLE YY .................. Done. Timing      0.001 s
+    Transforming QUADRUPOLE YZ .................. Done. Timing      0.001 s
+    Transforming QUADRUPOLE ZZ .................. Done. Timing      0.001 s
+
+  ==> Expectation Values of the DSRG Transformed One-Body Operators [a.u.] <==
+
+    DIPOLE X:  -0.00000000
+    DIPOLE Y:  -0.00000000
+    DIPOLE Z:   0.00000000
+    QUADRUPOLE XX: -18.38890650
+    QUADRUPOLE XY:  -0.00000000
+    QUADRUPOLE XZ:   0.00000000
+    QUADRUPOLE YY: -10.58881702
+    QUADRUPOLE YZ:  -0.00000000
+    QUADRUPOLE ZZ: -15.40033466
+
+  ==> De-Normal-Order 1-Body DSRG Transformed DIPOLE X <==
+
+    Computing the scalar term ................... Done. Timing      0.000 s
+
+  ==> De-Normal-Order 1-Body DSRG Transformed DIPOLE Y <==
+
+    Computing the scalar term ................... Done. Timing      0.000 s
+
+  ==> De-Normal-Order 1-Body DSRG Transformed DIPOLE Z <==
+
+    Computing the scalar term ................... Done. Timing      0.000 s
+
+  ==> De-Normal-Order 1-Body DSRG Transformed QUADRUPOLE XX <==
+
+    Computing the scalar term ................... Done. Timing      0.000 s
+
+  ==> De-Normal-Order 1-Body DSRG Transformed QUADRUPOLE XY <==
+
+    Computing the scalar term ................... Done. Timing      0.000 s
+
+  ==> De-Normal-Order 1-Body DSRG Transformed QUADRUPOLE XZ <==
+
+    Computing the scalar term ................... Done. Timing      0.000 s
+
+  ==> De-Normal-Order 1-Body DSRG Transformed QUADRUPOLE YY <==
+
+    Computing the scalar term ................... Done. Timing      0.000 s
+
+  ==> De-Normal-Order 1-Body DSRG Transformed QUADRUPOLE YZ <==
+
+    Computing the scalar term ................... Done. Timing      0.000 s
+
+  ==> De-Normal-Order 1-Body DSRG Transformed QUADRUPOLE ZZ <==
+
+    Computing the scalar term ................... Done. Timing      0.000 s
+
+  ==> Possible Electron Occupations <==
+
+    Config.   Space 1
+               α    β 
+    -----------------
+         1     1    1
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              1
+    number of beta electrons                               1
+    number of alpha strings                                3
+    number of beta strings                                 3
+    --------------------------------------------------------
+
+  ==> String-based CI Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Spin adapt                                         FALSE
+    Number of determinants                                 5
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         5
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+     4       1       *
+     1       3        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   singlet    0     -156.842676685609  +0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-06
+    Residual convergence threshold                 1.000e-06
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                      5
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                  5
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0      -78.322910420243       78.322910420243        0.000000000000      1
+       1      -78.322910420243        0.000000000000        0.000000000000      2
+  ---------------------------------------------------------------------------------
+  Timing for CI:                                              0.000 s.
+
+  ==> Root No. 0 <==
+
+    00 2      0.99050245
+
+    Total Energy:     -78.322910420243, <S^2>: -0.000000
+
+  ==> Possible Electron Occupations <==
+
+    Config.   Space 1
+               α    β 
+    -----------------
+         1     1    1
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              1
+    number of beta electrons                               1
+    number of alpha strings                                3
+    number of beta strings                                 3
+    --------------------------------------------------------
+
+  ==> String-based CI Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Spin adapt                                         FALSE
+    Number of determinants                                 4
+    Symmetry                                               5
+    Multiplicity                                           1
+    Number of roots                                        2
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         4
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+     2       1       *
+     2       3        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   triplet    0     -156.665249152374  +2.000000  removed
+   singlet    0     -156.543839282078  +0.000000  added
+   triplet    1     -156.458241881309  +2.000000  removed
+   singlet    1     -156.432423591457  +0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-06
+    Residual convergence threshold                 1.000e-06
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                      4
+    Number of roots                                        2
+    Maximum number of iterations                         100
+    Collapse subspace size                                 4
+    Maximum subspace size                                  4
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 2 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0      -77.968365171401       78.024073016711        0.000000000000      2 <- added 2 random vectors
+  ---------------------------------------------------------------------------------
+
+  Davidson-Liu solver:  No new vectors added, but residual converged. Finishing computation.
+  Timing for CI:                                              0.000 s.
+
+  ==> Root No. 0 <==
+
+    a0 b      0.70583045
+    b0 a      0.70583045
+
+    Total Energy:     -78.024073016711, <S^2>: -0.000000
+
+  ==> Root No. 1 <==
+
+    0a b      0.70583045
+    0b a      0.70583045
+
+    Total Energy:     -77.912657326091, <S^2>: -0.000000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    Ag     0      -78.322910420243  -0.000000
+    --------------------------------------------------------
+       1  (  0)   B1u     0      -78.024073016711  -0.000000
+       1  (  0)   B1u     1      -77.912657326091  -0.000000
+    --------------------------------------------------------
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0AG    -0.00000000    -0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+        0B1U    -0.00000000    -0.00000000    -0.00000000     0.00000000
+        1B1U    -0.00000000    -0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Summary of Quadrupole Moments [e a0^2] (Nuclear + Electronic) <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0AG   -11.67531764     0.00000000     0.00000000    -8.47402702    -0.00000000    -7.75468726
+    --------------------------------------------------------------------------------------------------
+        0B1U   -16.51957819     0.00000000     0.00000000   -10.28839551    -0.00000000   -14.79281562
+        1B1U   -26.96713985    -0.00000000     0.00000000   -12.99895860    -0.00000000   -23.62933900
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
+    --------------------------------------------------------------------------------------------------
+
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
+
+    Transition from State  0AG to State 0B1U :
+      Component  1 with value of W = 1.4008
+        Initial Orbital: 1.0000 Orb.  2
+        Final Orbital: 0.9964 Orb.  0
+      Component  2 with value of W = 0.1654
+        Initial Orbital: 0.6737 Orb.  0 0.3263 Orb.  1
+        Final Orbital: 1.0000 Orb.  2
+
+    Transition from State  0AG to State 1B1U :
+      Component  1 with value of W = 1.4008
+        Initial Orbital: 1.0000 Orb.  2
+        Final Orbital: 0.9964 Orb.  1
+
+
+  ==> Transition Dipole Moments [e a0] <==
+
+           Bra        Ket           DM_X           DM_Y           DM_Z           |DM|
+    ---------------------------------------------------------------------------------
+        0  1AG     0 1B1U    -0.00000000     0.00000000    -1.53221223     1.53221223
+        0  1AG     1 1B1U     0.00000000     0.00000000    -0.56665333     0.56665333
+    ---------------------------------------------------------------------------------
+
+  ==> Summary for Vertical Transition Energy (in eV) <==
+
+         Init.      Final    Energy [eV]      Osc. Str.
+    ---------------------------------------------------
+        0  1AG     0 1B1U     8.13177994     0.46771526
+        0  1AG     1 1B1U    11.16355531     0.08782042
+    ---------------------------------------------------
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of DSRG Dressed Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0AG    -0.00000000    -0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+        0B1U    -0.00000000    -0.00000000    -0.00000000     0.00000000
+        1B1U    -0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     0.00000000     0.00000000
+    --------------------------------------------------------------------
+
+  ==> Summary of DSRG Dressed Quadrupole Moments [e a0^2] (Nuclear + Electronic) <==
+
+       State          QM_XX          QM_XY          QM_XZ          QM_YY          QM_YZ          QM_ZZ
+    --------------------------------------------------------------------------------------------------
+         0AG   -11.78113010     0.00000000    -0.00000000    -8.72309233     0.00000000    -8.22888228
+    --------------------------------------------------------------------------------------------------
+        0B1U   -16.49446567     0.00000000    -0.00000000   -10.23398953    -0.00000000   -14.61966901
+        1B1U   -26.88313011    -0.00000000     0.00000000   -12.80323897    -0.00000000   -23.29934218
+    --------------------------------------------------------------------------------------------------
+     Nuclear     0.00000000    -0.00000000     0.00000000    12.32592658     0.00000000    40.89162489
+    --------------------------------------------------------------------------------------------------
+
+  ==> Transition Reduced Density Matrix Analysis for Singlet (Ms = 0) Ag -> Singlet (Ms = 0) B1u <==
+
+    Transition from State  0AG to State 0B1U :
+      Component  1 with value of W = 1.4008
+        Initial Orbital: 1.0000 Orb.  2
+        Final Orbital: 0.9964 Orb.  0
+      Component  2 with value of W = 0.1654
+        Initial Orbital: 0.6737 Orb.  0 0.3263 Orb.  1
+        Final Orbital: 1.0000 Orb.  2
+
+    Transition from State  0AG to State 1B1U :
+      Component  1 with value of W = 1.4008
+        Initial Orbital: 1.0000 Orb.  2
+        Final Orbital: 0.9964 Orb.  1
+
+
+  ==> DSRG Dressed Transition Dipole Moments [e a0] <==
+
+           Bra        Ket           DM_X           DM_Y           DM_Z           |DM|
+    ---------------------------------------------------------------------------------
+        0  1AG     0 1B1U     0.00000000     0.00000000    -1.44585584     1.44585584
+        0  1AG     1 1B1U     0.00000000     0.00000000    -0.51144971     0.51144971
+    ---------------------------------------------------------------------------------
+
+  ==> Summary for Vertical Transition Energy (in eV) <==
+
+         Init.      Final    Energy [eV]      Osc. Str.
+    ---------------------------------------------------
+        0  1AG     0 1B1U     8.13177994     0.41647955
+        0  1AG     1 1B1U    11.16355531     0.07154289
+    ---------------------------------------------------
+
+ Permutations: [0]
+
+ Permutations: [0 1]
+  Semicanonical orbitals must be used!
+
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+           [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]  
+    -----------------------------------------------------
+    -> C0       0.001       0.001       0.000       0.000
+    -> C1       0.000       0.001       0.000       0.000
+    -> C2                   0.000       0.000       0.000
+    -----------------------------------------------------
+
+
+  Time to prepare integrals:        0.460 seconds
+  Time to run job          :        0.498 seconds
+  Total                    :        0.959 seconds
+
+    Psi4 stopped on: Thursday, 17 October 2024 09:33AM
+    Psi4 wall time for execution: 0:00:01.27
+
+*** Psi4 exiting successfully. Buy a developer a beer!
