@@ -96,8 +96,12 @@ class ObjectsFromPsi4(Module):
         # we store the basis information in kwargs, so we can pass it to the psi4 wavefunction
         # we can use the basis set from the options or the one passed in kwargs, but if both are provided, we throw an error
         basis = data.options.get_str("BASIS")
-        if "basis" in kwargs and basis != "":
+        if "basis" not in kwargs and basis == "":
+            basis = psi4.core.get_global_option("BASIS")
+            kwargs["basis"] = basis
+        elif "basis" in kwargs and basis != "":
             raise ValueError("Both basis set in options and kwargs are provided. Please provide only one.")
+
         if "basis" not in kwargs:
             kwargs["basis"] = basis
 
