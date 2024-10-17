@@ -1,3 +1,4 @@
+# test passing a refeference wave function computed in the same file
 import forte
 
 reffci = -14.595808852754013

@@ -31,7 +31,7 @@ set forte{
 }
 
 # read Wavefunction from disk
-ref_wfn = psi4.core.Wavefunction.from_file('scf_wfn.npy')
+ref_wfn = psi4.core.Wavefunction.from_file('scf_ref.npy')
 
 Ecas, wfn = energy('forte', ref_wfn=ref_wfn, return_wfn=True)
 compare_values(ref_casscf, variable("CURRENT ENERGY"), 10, "CASSCF energy")

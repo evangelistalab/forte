@@ -14,4 +14,4 @@ set globals{
 }
 
 _, scf_wfn = energy('scf', return_wfn=True)
-scf_wfn.to_file('scf_wfn.npy') 
+scf_wfn.to_file('scf_ref.npy') 

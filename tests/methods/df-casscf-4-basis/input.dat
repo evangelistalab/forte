@@ -23,7 +23,7 @@ set {
 }
 
 HF.R = 1.5
-wfn = psi4.Wavefunction.from_file('wfn_cas.npy')  # CASSCF/6-31G @ 1.5
+wfn = psi4.Wavefunction.from_file('cas_ref.npy')  # CASSCF/6-31G @ 1.5
 
 set forte{
   job_type                mcscf_two_step
