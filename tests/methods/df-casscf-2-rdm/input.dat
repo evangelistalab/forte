@@ -42,8 +42,6 @@ set forte {
 Ecas, wfn = energy('forte', return_wfn=True)
 compare_values(Eref_cas, Ecas, 9, "DF-CASSCF(9e,8o)/cc-pVDZ energy")
 
-wfn.molecule()
-
 set forte job_type newdriver
 
 # I just want to test the RDMs!
