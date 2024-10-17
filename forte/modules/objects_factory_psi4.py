@@ -93,13 +93,19 @@ class ObjectsFromPsi4(Module):
         # Step 1. Check if a molecule and a psi4 wavefunction are passed in the kwargs and if the basis set is specified in the options
         molecule = kwargs.pop("molecule", None)
         ref_wfn = kwargs.pop("ref_wfn", None)
+        # we store the basis information in kwargs, so we can pass it to the psi4 wavefunction
+        # we can use the basis set from the options or the one passed in kwargs, but if both are provided, we throw an error
         basis = data.options.get_str("BASIS")
+        if "basis" in kwargs and basis != "":
+            raise ValueError("Both basis set in options and kwargs are provided. Please provide only one.")
+        if "basis" not in kwargs:
+            kwargs["basis"] = basis
 
         # Step 2: Get the molecule object from the kwargs or the ref_wfn
         data.molecule = self.get_molecule(molecule, ref_wfn)
 
         # Step 3. Get or compute the reference Psi4 Wavefunction
-        data.psi_wfn = self.get_psi4_wavefunction(data, basis, ref_wfn, **kwargs)
+        data.psi_wfn = self.get_psi4_wavefunction(data, ref_wfn, **kwargs)
 
         # Step 4: Create MO space information (this should be avoided if possible)
         temp_mo_space_info = self.create_mo_space_info(data, **kwargs)
@@ -145,7 +151,7 @@ class ObjectsFromPsi4(Module):
             return ref_wfn.molecule()
         raise ValueError("No molecule provided to prepare_forte_objects.")
 
-    def get_psi4_wavefunction(self, data, basis, ref_wfn, **kwargs):
+    def get_psi4_wavefunction(self, data, ref_wfn, **kwargs):
         """
         Get or compute the reference Psi4 Wavefunction.
 
@@ -168,7 +174,7 @@ class ObjectsFromPsi4(Module):
             return ref_wfn
         elif ref_wfn:
             # to test if we can use the orbitals directly, we compare the SO overlap matrices
-            mol_S = psi4.core.Wavefunction.build(data.molecule, basis).S()
+            mol_S = psi4.core.Wavefunction.build(data.molecule, kwargs["basis"]).S()
             ref_S = ref_wfn.S()
 
             # catch the case where the number of irreps is different
