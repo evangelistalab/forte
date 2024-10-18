@@ -18,7 +18,7 @@ from forte._forte import (
 
 from forte.data import ForteData
 
-from forte.proc.orbital_helpers import read_orbitals, basis_projection, orbital_projection, ortho_orbs_new
+from forte.proc.orbital_helpers import orbital_projection
 from forte.proc.external_active_space_solver import write_wavefunction, read_wavefunction
 
 from .module import Module
@@ -95,14 +95,15 @@ class ObjectsFromPsi4(Module):
         ref_wfn = kwargs.pop("ref_wfn", None)
         # we store the basis information in kwargs, so we can pass it to the psi4 wavefunction
         # we can use the basis set from the options or the one passed in kwargs, but if both are provided, we throw an error
-        basis = data.options.get_str("BASIS")
-        if "basis" not in kwargs and basis == "":
-            basis = psi4.core.get_global_option("BASIS")
+        if "basis" not in kwargs:
+            basis = data.options.get_str("BASIS")
+            if not basis:
+                basis = psi4.core.get_global_option("BASIS")
+                p4print(f" Using basis set {basis} from Psi4 global options.")
             kwargs["basis"] = basis
-            p4print(f"  Using basis set {basis} from Psi4 global options.")
-
-        elif "basis" in kwargs and basis != "":
-            raise ValueError("Both basis set in options and kwargs are provided. Please provide only one.")
+        else:
+            if data.options.get_str("BASIS"):
+                raise ValueError("Both basis set in options and kwargs are provided. Please provide only one.")
 
         if "basis" not in kwargs:
             kwargs["basis"] = basis
@@ -203,8 +204,8 @@ class ObjectsFromPsi4(Module):
 
             pCa = new_wfn.basis_projection(ref_wfn.Ca(), ref_wfn.nmopi(), ref_wfn.basisset(), new_wfn.basisset())
             pCb = new_wfn.basis_projection(ref_wfn.Cb(), ref_wfn.nmopi(), ref_wfn.basisset(), new_wfn.basisset())
-            new_wfn.guess_Ca(pCa)
-            new_wfn.guess_Cb(pCb)
+            new_wfn.Ca().copy(pCa)
+            new_wfn.Cb().copy(pCb)
 
             return new_wfn
         else:
