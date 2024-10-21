@@ -233,8 +233,7 @@ Block2DMRGSolver::Block2DMRGSolver(StateInfo state, size_t nroot, std::shared_pt
         options_->get_bool("BLOCK2_SPIN_ADAPTED");
     std::string scratch = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
                           std::to_string(getpid()) + ".block2." +
-                          std::to_string(mo_space_info_->size("ACTIVE")) + "." +
-                          state.str_short();
+                          std::to_string(mo_space_info_->size("ACTIVE"));
     Block2ScratchManager::manager().scratch_folders.insert(scratch);
     size_t stack_mem =
         static_cast<size_t>(options_->get_double("BLOCK2_STACK_MEM") * 1024 * 1024 * 1024);
