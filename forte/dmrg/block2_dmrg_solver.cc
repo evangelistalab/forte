@@ -195,6 +195,78 @@ struct Block2DMRGSolverImpl {
             return driver_sz_->expectation(ket_, mpo_, ket_, iprint);
         }
     }
+    std::vector<std::pair<std::string, double>> csf_coeffs(std::shared_ptr<void> ket, int nroot,
+                                                           int iroot, double cutoff = 0.05) {
+        std::vector<std::pair<std::string, double>> out;
+        if (is_spin_adapted_) {
+            auto ket_ = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
+            auto iket_ = split_mps(ket_, nroot, iroot, ket_->info->tag + "@TMP-CSF");
+            ket_ = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(iket_);
+            if (ket_->center != 0) {
+                ket_ = ket_->deep_copy("CSF-TMP");
+                ket_->info->bond_dim =
+                    max(ket_->info->bond_dim, ket_->info->get_max_bond_dimension());
+                if (ket_->dot == 2) {
+                    ket_->center++;
+                    ket_->canonical_form[ket_->n_sites - 1] = 'S';
+                }
+                while (ket_->center != 0)
+                    ket_->move_left(driver_su2_->ghamil->opf->cg, nullptr);
+                ket_->save_data();
+                ket_->info->save_data(scratch_ + "/" + ket_->info->tag + "-mps_info.bin");
+            }
+            block2::DeterminantTRIE<block2::SU2, double> dtrie(ket_->n_sites, true);
+            auto ufmps = std::make_shared<block2::UnfusedMPS<block2::SU2, double>>(ket_);
+            dtrie.evaluate(ufmps, cutoff);
+            std::vector<size_t> gidx(dtrie.vals.size()); // argsort CSF coefficients
+            std::iota(gidx.begin(), gidx.end(), 0);
+            std::sort(gidx.begin(), gidx.end(), [&dtrie](int left, int right) -> bool {
+                return fabs(dtrie.vals[left]) > fabs(dtrie.vals[right]);
+            });
+            std::string ddstr = "0+-2";
+            for (size_t ii = 0, size = gidx.size(); ii < size; ++ii) {
+                auto arr = dtrie[gidx[ii]];
+                std::string csf = "";
+                for (auto x : dtrie[gidx[ii]])
+                    csf += ddstr[x];
+                out.emplace_back(csf, dtrie.vals[gidx[ii]]);
+            }
+        } else {
+            auto ket_ = std::static_pointer_cast<block2::MPS<block2::SZ, double>>(ket);
+            auto iket_ = split_mps(ket_, nroot, iroot, ket_->info->tag + "@TMP-DET");
+            ket_ = std::static_pointer_cast<block2::MPS<block2::SZ, double>>(iket_);
+            if (ket_->center != 0) {
+                ket_ = ket_->deep_copy("DET-TMP");
+                ket_->info->bond_dim =
+                    max(ket_->info->bond_dim, ket_->info->get_max_bond_dimension());
+                if (ket_->dot == 2) {
+                    ket_->center++;
+                    ket_->canonical_form[ket_->n_sites - 1] = 'S';
+                }
+                while (ket_->center != 0)
+                    ket_->move_left(driver_sz_->ghamil->opf->cg, nullptr);
+                ket_->save_data();
+                ket_->info->save_data(scratch_ + "/" + ket_->info->tag + "-mps_info.bin");
+            }
+            block2::DeterminantTRIE<block2::SZ, double> dtrie(ket_->n_sites, true);
+            auto ufmps = std::make_shared<block2::UnfusedMPS<block2::SZ, double>>(ket_);
+            dtrie.evaluate(ufmps, cutoff);
+            std::vector<size_t> gidx(dtrie.vals.size()); // argsort DET coefficients
+            std::iota(gidx.begin(), gidx.end(), 0);
+            std::sort(gidx.begin(), gidx.end(), [&dtrie](int left, int right) -> bool {
+                return fabs(dtrie.vals[left]) > fabs(dtrie.vals[right]);
+            });
+            std::string ddstr = "0ab2";
+            for (size_t ii = 0, size = gidx.size(); ii < size; ++ii) {
+                auto arr = dtrie[gidx[ii]];
+                std::string det = "";
+                for (auto x : dtrie[gidx[ii]])
+                    det += ddstr[x];
+                out.emplace_back(det, dtrie.vals[gidx[ii]]);
+            }
+        }
+        return out;
+    }
 };
 
 struct Block2ScratchManager {
@@ -204,8 +276,8 @@ struct Block2ScratchManager {
         // remove scratch files when just before the program quits
         // TODO may cause problem for MPI
         const std::vector<std::string> file_name_patterns = std::vector<std::string>{
-            ".NPDM.FRAG.", ".MPS.",         ".MPS.INFO.", ".MMPS.", ".MMPS.INFO.",
-            ".MMPS-WFN.",  "-mps_info.bin", "@TMP.",      "@TMP-",  "DSRG-"};
+            ".NPDM.FRAG.",   ".MPS.", ".MPS.INFO.", ".MMPS.", ".MMPS.INFO.", ".MMPS-WFN.",
+            "-mps_info.bin", "@TMP.", "@TMP-",      "CSF-",   "DET-",        "DSRG-"};
         for (auto& path : scratch_folders)
             if (block2::Parsing::path_exists(path)) {
                 for (const auto& file : fs::directory_iterator(path))
@@ -515,6 +587,25 @@ double Block2DMRGSolver::compute_energy() {
             spin2_[ir] = impl_->get_spin_square(ket, nroot_, ir);
         else
             spin2_[ir] = impl_->get_spin_square(ket, nroot_, ir);
+    }
+
+    // print CI coefficients
+    if (print_ >= PrintLevel::Default) {
+        print_h2("CI Coefficients for " + state_.multiplicity_label() + " " + state_.irrep_label());
+        std::string dname = impl_->is_spin_adapted_ ? "CSF" : "DET";
+        double cutoff = 0.05;
+        for (size_t ir = 0; ir < nroot_; ir++) {
+            psi::outfile->Printf("\n    ---- Root No. %zu ----\n", ir);
+            auto csf_coeffs = impl_->csf_coeffs(ket, nroot_, ir, cutoff);
+            double sum = 0.0;
+            for (const auto& [csf, coeff] : csf_coeffs) {
+                psi::outfile->Printf("\n    %s %12.8f", csf.c_str(), coeff);
+                sum += coeff * coeff;
+            }
+            psi::outfile->Printf(
+                "\n\n    Sum of weights from %zu %s included (cutoff = %.2e): %.15f",
+                csf_coeffs.size(), dname.c_str(), cutoff, sum);
+        }
     }
 
     double energy = energies_[root_];

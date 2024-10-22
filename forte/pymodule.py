@@ -311,7 +311,7 @@ def gradient_forte(name, **kwargs):
     derivobj = psi4.core.Deriv(data.psi_wfn)
     derivobj.set_deriv_density_backtransformed(True)
     derivobj.set_ignore_reference(True)
-    if int_type == "DF":
+    if "DF" in int_type:
         grad = derivobj.compute_df("DF_BASIS_SCF", "DF_BASIS_MP2")
     else:
         grad = derivobj.compute(psi4.core.DerivCalcType.Correlated)
