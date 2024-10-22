@@ -44,7 +44,7 @@ set forte{
   print                   0
 }
 Ecas_1 = energy('forte')
-compare_values(psi4_mcscf_1, Ecas_1, 6, "FORTE CASSCF energy @ 1.5")
+compare_values(psi4_mcscf_1, Ecas_1, 6, "FORTE 2-step MCSCF energy @ 1.5")
 
 HF.R = 1.6
 

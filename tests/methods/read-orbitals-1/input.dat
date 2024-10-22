@@ -1,9 +1,9 @@
-# Test read_orbitals keyword without a ref_wfn and
-# the orbitals on disk were generated at a different geometry.
+# Test reading a reference wave function from a file 
+# the orbitals on disk were generated at a different geometry (R = 1.5).
 
 import forte
 
-psi4_casscf = -99.925009149448968
+ref_casscf = -99.92406606396537
 
 memory 500 mb
 
@@ -19,18 +19,25 @@ set globals{
   scf_type                df
   d_convergence           8
   e_convergence           9
-  df_basis_scf            cc-pvdz-jkfit
+  df_basis_mp2            cc-pvdz-jkfit
 }
 
 set forte{
   int_type                df
   active_space_solver     fci
-  frozen_docc             [1,0,0,0]
-  restricted_docc         [1,0,1,1]
+  frozen_docc             [0,0,0,0]
+  restricted_docc         [2,0,1,1]
   active                  [2,0,0,0]
-  read_orbitals           true  # generated @ 1.5
-  mcscf_reference         false
 }
 
-Ecas = energy('forte')
-compare_values(psi4_casscf, Ecas, 8, "FORTE 2-step MCSCF energy")
+# read Wavefunction from disk
+ref_wfn = psi4.core.Wavefunction.from_file('scf_ref.npy')
+
+Ecas, wfn = energy('forte', ref_wfn=ref_wfn, return_wfn=True)
+compare_values(ref_casscf, variable("CURRENT ENERGY"), 10, "CASSCF energy")
+
+# check orthonormality of the orbitals
+S = psi4.core.triplet(wfn.Ca(), wfn.S(), wfn.Ca(), True, False, False)
+Sref = S.clone()
+Sref.identity()
+compare_matrices(Sref, S, 10, "Orthonormality of MO overlap matrix")

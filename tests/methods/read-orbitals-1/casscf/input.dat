@@ -1,0 +1,27 @@
+import forte
+
+molecule HF{
+  0 1
+  F
+  H  1 1.6
+}
+
+set globals{
+  basis                   cc-pvdz
+  df_basis_scf            cc-pvdz-jkfit
+  df_basis_mp2            cc-pvdz-jkfit
+  reference               rhf
+  scf_type                df
+  d_convergence           8
+  e_convergence           9
+}
+
+set forte{
+  int_type                df
+  active_space_solver     fci
+  frozen_docc             [0,0,0,0]
+  restricted_docc         [2,0,1,1]
+  active                  [2,0,0,0]
+}
+
+energy('forte')
