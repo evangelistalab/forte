@@ -458,9 +458,12 @@ class ProcedureDSRG:
                 psi_io = psi4.core.IOManager.shared_object()
                 fperm = psi_io.get_default_path() + f"forte.{os.getpid()}.block2"
                 fperm += f".{self.mo_space_info.size('ACTIVE')}.{state.str_short()}.perm.txt"
-                permutation = [int(i) for i in open(fperm)]
-                check_pass = len(permutation) == len(set(permutation))
-                os.remove(fperm)
+                try:
+                    permutation = [int(i) for i in open(fperm)]
+                    check_pass = len(permutation) == len(set(permutation))
+                    os.remove(fperm)
+                except FileNotFoundError:
+                    check_pass = False
             else:
                 # compute overlap between two sets of CI vectors <this|prior>
                 overlap = psi4.core.doublet(state_ci_wfn_map[state], self.state_ci_wfn_map[state], True, False)
