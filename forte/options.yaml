@@ -1761,6 +1761,14 @@ BLOCK2:
     type: double
     default: 1.0e-12
     help: "Consider those integrals as zero if the absolute value is smaller than this value"
+  BLOCK2_CI_PRINT_CUTOFF:
+    type: double
+    default: 0.01
+    help: "Cutoff value for printing CI coefficients (only printed when PRINT > 1)"
+  BLOCK2_TEST_OVERLAP:
+    type: bool
+    default: False
+    help: "Test overlap between two MPSs, one of which must be available in scratch directory (used to identify corresponding states after DSRG)"
 
 
 DEPRECATED:

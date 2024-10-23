@@ -130,6 +130,17 @@ struct Block2DMRGSolverImpl {
         return is_spin_adapted_ ? std::static_pointer_cast<void>(driver_su2_->load_mps(tag, nroots))
                                 : std::static_pointer_cast<void>(driver_sz_->load_mps(tag, nroots));
     }
+    void rename_mps(std::shared_ptr<void> ket, const std::string& tag_new) const {
+        if (is_spin_adapted_) {
+            auto ket_ = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
+            auto ket_new = ket_->deep_copy(tag_new);
+            ket_new->info->save_data(scratch_ + "/" + tag_new + "-mps_info.bin");
+        } else {
+            auto ket_ = std::static_pointer_cast<block2::MPS<block2::SZ, double>>(ket);
+            auto ket_new = ket_->deep_copy(tag_new);
+            ket_new->info->save_data(scratch_ + "/" + tag_new + "-mps_info.bin");
+        }
+    }
     std::vector<double> dmrg(std::shared_ptr<void> mpo, std::shared_ptr<void> ket,
                              int n_sweeps = 10, double tol = 1E-8,
                              std::vector<int> bond_dims = vector<int>(),
@@ -268,7 +279,7 @@ struct Block2DMRGSolverImpl {
         return out;
     }
     double mps_overlap(std::shared_ptr<void> bra, std::shared_ptr<void> ket, int nroot,
-                       int iroot_bra, int iroot_ket, int iprint) {
+                       int iroot_bra, int iroot_ket, int iprint = 1) {
         auto expr_id = expr_builder();
         expr_id->exprs.push_back("");
         expr_id->indices.push_back({});
@@ -278,20 +289,26 @@ struct Block2DMRGSolverImpl {
         if (is_spin_adapted_) {
             auto impo = driver_su2_->get_mpo(expr_id, iprint);
             auto ket_ = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
-            auto iket_ = split_mps(ket_, nroot, iroot_ket, ket_->info->tag + "@TMP-SKET");
+            auto iket_tag = ket_->info->tag + "@TMP-SKET." + std::to_string(iroot_ket);
+            auto iket_ = split_mps(ket_, nroot, iroot_ket, iket_tag);
             ket_ = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(iket_);
             auto bra_ = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(bra);
-            auto ibra_ = split_mps(bra_, nroot, iroot_bra, bra_->info->tag + "@TMP-SBRA");
+            auto ibra_tag = bra_->info->tag + "@TMP-SBRA." + std::to_string(iroot_bra);
+            auto ibra_ = split_mps(bra_, nroot, iroot_bra, ibra_tag);
             bra_ = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ibra_);
+            driver_su2_->align_mps_center(bra_, ket_);
             return driver_su2_->expectation(bra_, impo, ket_, iprint);
         } else {
             auto impo = driver_sz_->get_mpo(expr_id, iprint);
             auto ket_ = std::static_pointer_cast<block2::MPS<block2::SZ, double>>(ket);
-            auto iket_ = split_mps(ket_, nroot, iroot_ket, ket_->info->tag + "@TMP-SKET");
+            auto iket_tag = ket_->info->tag + "@TMP-SKET." + std::to_string(iroot_ket);
+            auto iket_ = split_mps(ket_, nroot, iroot_ket, iket_tag);
             ket_ = std::static_pointer_cast<block2::MPS<block2::SZ, double>>(iket_);
             auto bra_ = std::static_pointer_cast<block2::MPS<block2::SZ, double>>(bra);
-            auto ibra_ = split_mps(bra_, nroot, iroot_bra, bra_->info->tag + "@TMP-SBRA");
+            auto ibra_tag = bra_->info->tag + "@TMP-SBRA." + std::to_string(iroot_bra);
+            auto ibra_ = split_mps(bra_, nroot, iroot_bra, ibra_tag);
             bra_ = std::static_pointer_cast<block2::MPS<block2::SZ, double>>(ibra_);
+            driver_sz_->align_mps_center(bra_, ket_);
             return driver_sz_->expectation(bra_, impo, ket_, iprint);
         }
     }
@@ -507,25 +524,15 @@ double Block2DMRGSolver::compute_energy() {
 
     // save a copy of the wave function for overlap analysis
     fs::path dir_from{impl_->scratch_};
-    bool save_copy = false;
+    bool test_overlap = false;
     for (const auto& file : fs::directory_iterator(dir_from)) {
         if (file.path().filename().string().find("KET") != std::string::npos and
             file.path().filename().string().find(state_.str_short()) != std::string::npos) {
-            save_copy = true;
+            test_overlap = true;
             break;
         }
     }
-    if (save_copy) {
-        fs::path dir_to{impl_->scratch_ + "/old"};
-        fs::create_directory(dir_to);
-        for (const auto& file : fs::directory_iterator(dir_from)) {
-            if (file.path().filename().string().find("KET") != std::string::npos and
-                file.path().filename().string().find(state_.str_short()) != std::string::npos) {
-                fs::copy_file(file.path(), dir_to / file.path().filename(),
-                              fs::copy_options::overwrite_existing);
-            }
-        }
-    }
+    test_overlap &= options_->get_bool("BLOCK2_TEST_OVERLAP");
 
     // print sweep schedule
     if (print_ >= PrintLevel::Default) {
@@ -623,6 +630,8 @@ double Block2DMRGSolver::compute_energy() {
                    ? impl_->load_mps(ket_tag, nroot_)
                    : impl_->get_random_mps(ket_tag, bond_dims.size() != 0 ? bond_dims[0] : 500, 0,
                                            2, nroot_, occs);
+    if (test_overlap)
+        impl_->rename_mps(ket, ket_tag + ".old");
 
     // do dmrg
     auto mpo = impl_->get_mpo(r, dmrg_verbose);
@@ -643,7 +652,7 @@ double Block2DMRGSolver::compute_energy() {
     if (print_ >= PrintLevel::Default) {
         print_h2("CI Coefficients for " + state_.multiplicity_label() + " " + state_.irrep_label());
         std::string dname = impl_->is_spin_adapted_ ? "CSF" : "DET";
-        double cutoff = 0.05;
+        double cutoff = options_->get_double("BLOCK2_CI_PRINT_CUTOFF");
         for (size_t ir = 0; ir < nroot_; ir++) {
             psi::outfile->Printf("\n    ---- Root No. %zu ----\n", ir);
             auto csf_coeffs = impl_->csf_coeffs(ket, nroot_, ir, cutoff);
@@ -659,53 +668,44 @@ double Block2DMRGSolver::compute_energy() {
     }
 
     // compute overlap between current and previous MPSs
-    if (save_copy) {
-        auto impl_old = std::make_shared<Block2DMRGSolverImpl>(
-            impl_->is_spin_adapted_, impl_->stack_mem_, impl_->scratch_ + "/old");
-        impl_old->initialize_system(n_sites, n_elec, spin, pg_irrep, actv_irreps,
-                                    singlet_embedding);
-        auto ket_old = impl_old->load_mps(ket_tag, nroot_);
+    if (test_overlap) {
+        print_h2("Testing MPS overlap between current and previous MPSs");
 
-        auto expr_id = impl_old->expr_builder();
-        expr_id->exprs.push_back("");
-        expr_id->indices.push_back({});
-        expr_id->data.push_back({1.0});
-        expr_id = expr_id->adjust_order();
-
+        auto ket_old = impl_->load_mps(ket_tag + ".old", nroot_);
+        std::vector<size_t> perm(nroot_);
+        bool large_enough = true;
         auto S = std::make_shared<psi::Matrix>("MPS Overlap", nroot_, nroot_);
-
-        if (impl_->is_spin_adapted_) {
-            auto impo = impl_->driver_su2_->get_mpo(expr_id, dmrg_verbose);
-            // auto impo = std::make_shared<block2::IdentityMPO<block2::SU2, double>>(impl_->driver_su2_->ghamil);
-            for (size_t i = 0; i < nroot_; ++i) {
-                for (size_t j = 0; j < nroot_; ++j) {
-                    psi::outfile->Printf("\n i = %d, j = %d", i, j);
-                    auto bra_ = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(
-                        impl_old->split_mps(impl_old->load_mps(ket_tag, nroot_), nroot_, i,
-                                            ket_tag + "@TMP-SBRA"));
-                    auto ket_ = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(
-                        impl_->split_mps(ket, nroot_, j, ket_tag + "@TMP-SKET"));
-
-                    // auto ket_ = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
-                    // auto iket_ = split_mps(ket_, nroot, iroot_ket, ket_->info->tag +
-                    // "@TMP-SKET"); ket_ = std::static_pointer_cast<block2::MPS<block2::SU2,
-                    // double>>(iket_); auto bra_ =
-                    // std::static_pointer_cast<block2::MPS<block2::SU2, double>>(bra); auto ibra_ =
-                    // split_mps(bra_, nroot, iroot_bra, bra_->info->tag + "@TMP-SBRA"); bra_ =
-                    // std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ibra_); return
-                    // driver_su2_->expectation(bra_, impo, ket_, iprint);
-                    // S->set(i, j, impl_old->mps_overlap(ket, ket_old, nroot_, i, j,
-                    // dmrg_verbose));
-                    S->set(i, j, impl_->driver_su2_->expectation(bra_, impo, ket_, dmrg_verbose));
-                    psi::outfile->Printf("\n S = %.15f", S->get(i, j));
+        for (size_t i = 0; i < nroot_; ++i) {
+            auto vj_max = 0.0;
+            for (size_t j = 0; j < nroot_; ++j) {
+                auto v = impl_->mps_overlap(ket, ket_old, nroot_, i, j, dmrg_verbose);
+                S->set(i, j, v);
+                if (fabs(v) > vj_max) {
+                    vj_max = fabs(v);
+                    perm[i] = j;
                 }
             }
-        } else {
-            auto impo = std::static_pointer_cast<block2::MPO<block2::SZ, double>>(
-                impl_->get_mpo(expr_id, dmrg_verbose));
+            large_enough &= vj_max > 0.5;
         }
-
-        S->print();
+        psi::outfile->Printf("\n    Permutation:");
+        for (size_t i = 0; i < nroot_; ++i) {
+            psi::outfile->Printf(" %3zu", perm[i]);
+        }
+        std::set<size_t> perm_set(perm.begin(), perm.end());
+        if (!large_enough or perm.size() != perm_set.size()) {
+            psi::outfile->Printf(
+                "\n  Forte Warning: Some old MPSs may not be found properly in the current MPSs\n");
+            S->print();
+        } else {
+            // dump permutation to disk
+            std::ofstream fperm(psi::PSIOManager::shared_object()->get_default_path() + "forte." +
+                                std::to_string(getpid()) + ".block2." +
+                                std::to_string(mo_space_info_->size("ACTIVE")) + "." +
+                                state_.str_short() + ".perm.txt");
+            for (size_t i = 0; i < nroot_; ++i) {
+                fperm << std::to_string(perm[i]) << (i == (nroot_ - 1) ? "" : "\n");
+            }
+        }
     }
 
     double energy = energies_[root_];
