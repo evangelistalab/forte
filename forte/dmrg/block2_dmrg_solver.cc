@@ -662,7 +662,7 @@ double Block2DMRGSolver::compute_energy() {
                 sum += coeff * coeff;
             }
             psi::outfile->Printf(
-                "\n\n    Sum of weights from %zu %s included (cutoff = %.2e): %.15f",
+                "\n\n    Sum of weights from %zu %s included (cutoff = %.2e): %.15f\n",
                 csf_coeffs.size(), dname.c_str(), cutoff, sum);
         }
     }
