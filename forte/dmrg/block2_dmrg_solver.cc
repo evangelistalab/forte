@@ -737,7 +737,6 @@ Block2DMRGSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& 
     int n_elec = na_ + nb_;
     int spin = state_.multiplicity() - 1;
     int pg_irrep = state_.irrep();
-    impl_->reset();
     impl_->initialize_system(n_sites, n_elec, spin, pg_irrep, actv_irreps, singlet_embedding);
 
     std::vector<std::shared_ptr<RDMs>> rdms;
