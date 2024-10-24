@@ -439,7 +439,8 @@ class ProcedureDSRG:
             e_diff_u = abs(self.energies[-1][0] - self.energies[-2][0])
             e_diff_r = abs(self.energies[-1][1] - self.energies[-2][1])
             e_diff = abs(self.energies[-1][0] - self.energies[-1][1])
-            if all(e < self.relax_convergence for e in [e_diff_u, e_diff_r, e_diff]):
+            tests = [e_diff_u, e_diff_r] if self.options.get_str("ACTIVE_SPACE_SOLVER") in ["BLOCK2", "DMRG"] else [e_diff_u, e_diff_r, e_diff]
+            if all(e < self.relax_convergence for e in tests):
                 self.converged = True
 
         return self.converged
