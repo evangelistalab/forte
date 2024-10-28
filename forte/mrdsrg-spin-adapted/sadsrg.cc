@@ -1206,6 +1206,59 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
     return T;
 }
 
+void SADSRG::apply_denominator(ambit::BlockedTensor& T, const std::vector<std::string>& Tblocks,
+                               std::function<double(double)> func) {
+    for (const std::string& block : Tblocks) {
+        auto _bsize = block.size();
+        if (!T.is_block(block) or (_bsize != 2 and _bsize != 4))
+            continue;
+
+        auto size = T.block(block).numel();
+        size_t _size = 1;
+        for (char i : block) {
+            if (label_to_spacemo_.find(i) != label_to_spacemo_.end())
+                _size *= label_to_spacemo_[i].size();
+        }
+        if (size != _size)
+            continue;
+
+        auto& data = T.block(block).data();
+
+        if (_bsize == 2) {
+            auto s0 = label_to_spacemo_[block[0]].size();
+            auto s1 = label_to_spacemo_[block[1]].size();
+#pragma omp parallel for collapse(2)
+            for (size_t i0 = 0; i0 < s0; ++i0) {
+                for (size_t i1 = 0; i1 < s1; ++i1) {
+                    auto n0 = label_to_spacemo_[block[0]][i0];
+                    auto n1 = label_to_spacemo_[block[1]][i1];
+                    data[i0 * s1 + i1] *= func(Fdiag_[n0] - Fdiag_[n1]);
+                }
+            }
+        } else if (_bsize == 4) {
+            auto s0 = label_to_spacemo_[block[0]].size();
+            auto s1 = label_to_spacemo_[block[1]].size();
+            auto s2 = label_to_spacemo_[block[2]].size();
+            auto s3 = label_to_spacemo_[block[3]].size();
+#pragma omp parallel for collapse(4)
+            for (size_t i0 = 0; i0 < s0; ++i0) {
+                for (size_t i1 = 0; i1 < s1; ++i1) {
+                    for (size_t i2 = 0; i2 < s2; ++i2) {
+                        for (size_t i3 = 0; i3 < s3; ++i3) {
+                            auto n0 = label_to_spacemo_[block[0]][i0];
+                            auto n1 = label_to_spacemo_[block[1]][i1];
+                            auto n2 = label_to_spacemo_[block[2]][i2];
+                            auto n3 = label_to_spacemo_[block[3]][i3];
+                            data[i0 * s1 * s2 * s3 + i1 * s2 * s3 + i2 * s3 + i3] *=
+                                func(Fdiag_[n0] + Fdiag_[n1] - Fdiag_[n2] - Fdiag_[n3]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 void SADSRG::print_contents(const std::string& str, size_t size) {
     if (str.size() + 4 > size)
         size = str.size() + 4;
