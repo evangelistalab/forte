@@ -120,26 +120,12 @@ void SA_DSRGPT::compute_t2_full() {
     std::vector<std::string> T2blocks(T2_.block_labels());
     if (ccvv_source_ == "ZERO") {
         T2blocks.erase(std::remove(T2blocks.begin(), T2blocks.end(), "ccvv"), T2blocks.end());
-        T2_.block("ccvv").iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = core_mos_[i[0]];
-            size_t i1 = core_mos_[i[1]];
-            size_t i2 = virt_mos_[i[2]];
-            size_t i3 = virt_mos_[i[3]];
-            value /= Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
-        });
+        apply_denominator(T2_, {"ccvv"}, [&](double d) { return 1.0 / d; });
     }
 
     // build T2
-    for (const std::string& block : T2blocks) {
-        T2_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = label_to_spacemo_[block[0]][i[0]];
-            size_t i1 = label_to_spacemo_[block[1]][i[1]];
-            size_t i2 = label_to_spacemo_[block[2]][i[2]];
-            size_t i3 = label_to_spacemo_[block[3]][i[3]];
-            double denom = Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
-            value *= dsrg_source_->compute_renormalized_denominator(denom);
-        });
-    }
+    apply_denominator(T2_, T2blocks,
+                      [&](double v) { return dsrg_source_->compute_renormalized_denominator(v); });
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
@@ -230,27 +216,11 @@ void SA_DSRGPT::renormalize_integrals(bool add) {
     }
 
     if (add) {
-        for (const std::string& block : Vblocks) {
-            V_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-                size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                size_t i2 = label_to_spacemo_[block[2]][i[2]];
-                size_t i3 = label_to_spacemo_[block[3]][i[3]];
-                double denom = Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
-                value *= 1.0 + dsrg_source_->compute_renormalized(denom);
-            });
-        }
+        apply_denominator(V_, Vblocks,
+                          [&](double d) { return 1.0 + dsrg_source_->compute_renormalized(d); });
     } else {
-        for (const std::string& block : Vblocks) {
-            V_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-                size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                size_t i2 = label_to_spacemo_[block[2]][i[2]];
-                size_t i3 = label_to_spacemo_[block[3]][i[3]];
-                double denom = Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
-                value *= dsrg_source_->compute_renormalized(denom);
-            });
-        }
+        apply_denominator(V_, Vblocks,
+                          [&](double d) { return dsrg_source_->compute_renormalized(d); });
     }
 
     // transform back if necessary
