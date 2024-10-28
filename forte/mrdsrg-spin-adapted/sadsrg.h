@@ -479,8 +479,8 @@ class SADSRG : public DynamicCorrelationSolver {
 
     // ==> common amplitudes analysis and printing <==
 
-    /// Apply denominator to BlockedTensor T2
-    void apply_denominator(ambit::BlockedTensor& T2, const std::vector<std::string>& T2blocks,
+    /// Apply denominator to BlockedTensor T (only 1- and 2-body)
+    void apply_denominator(ambit::BlockedTensor& T, const std::vector<std::string>& Tblocks,
                            std::function<double(double)> func);
 
     /// Prune internal amplitudes for T1

@@ -169,21 +169,12 @@ void SA_DSRGPT::compute_t1() {
     std::vector<std::string> T1blocks(T1_.block_labels());
     if (ccvv_source_ == "ZERO") {
         T1blocks.erase(std::remove(T1blocks.begin(), T1blocks.end(), "cv"), T1blocks.end());
-        T1_.block("cv").iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = core_mos_[i[0]];
-            size_t i1 = virt_mos_[i[1]];
-            value /= Fdiag_[i0] - Fdiag_[i1];
-        });
+        apply_denominator(T1_, {"cv"}, [](double d) { return 1.0 / d; });
     }
 
     // build T1
-    for (const std::string& block : T1blocks) {
-        T1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = label_to_spacemo_[block[0]][i[0]];
-            size_t i1 = label_to_spacemo_[block[1]][i[1]];
-            value *= dsrg_source_->compute_renormalized_denominator(Fdiag_[i0] - Fdiag_[i1]);
-        });
-    }
+    apply_denominator(T1_, T1blocks,
+                      [&](double d) { return dsrg_source_->compute_renormalized_denominator(d); });
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
@@ -253,10 +244,8 @@ void SA_DSRGPT::renormalize_integrals(bool add) {
     }
 
     // scale by exp(-s * D^2)
-    temp.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        double denom = Fdiag_[i[0]] - Fdiag_[i[1]];
-        value *= dsrg_source_->compute_renormalized(denom);
-    });
+    apply_denominator(temp, temp.block_labels(),
+                      [&](double d) { return dsrg_source_->compute_renormalized(d); });
 
     // transform back if necessary
     if (!semi_canonical_) {
