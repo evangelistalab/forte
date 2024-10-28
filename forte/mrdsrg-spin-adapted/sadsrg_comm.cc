@@ -448,18 +448,30 @@ void SADSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
 void SADSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, const double& alpha,
                       BlockedTensor& C2) {
     local_timer timer;
+    auto a = timer.get();
 
     // particle-particle contractions
     C2["ijrs"] += alpha * H2["abrs"] * T2["ijab"];
+    outfile->Printf("\n H2_T2_C2 pp 1: %f", timer.get() - a);
 
+    a = timer.get();
     C2["ijrs"] -= 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["ybrs"];
+    outfile->Printf("\n H2_T2_C2 pp 2: %f", timer.get() - a);
+    a = timer.get();
     C2["jisr"] -= 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["ybrs"];
+    outfile->Printf("\n H2_T2_C2 pp 3: %f", timer.get() - a);
 
     // hole-hole contractions
+    a = timer.get();
     C2["pqab"] += alpha * H2["pqij"] * T2["ijab"];
+    outfile->Printf("\n H2_T2_C2 hh 1: %f", timer.get() - a);
 
+    a = timer.get();
     C2["pqab"] -= 0.5 * alpha * Eta1_["xy"] * T2["yjab"] * H2["pqxj"];
+    outfile->Printf("\n H2_T2_C2 hh 2: %f", timer.get() - a);
+    a = timer.get();
     C2["qpba"] -= 0.5 * alpha * Eta1_["xy"] * T2["yjab"] * H2["pqxj"];
+    outfile->Printf("\n H2_T2_C2 hh 3: %f", timer.get() - a);
 
     // hole-particle contractions
     std::vector<std::string> blocks;
@@ -471,12 +483,24 @@ void SADSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, c
     }
 
     auto temp = ambit::BlockedTensor::build(tensor_type_, "temp", blocks);
+    a = timer.get();
     temp["qjsb"] += alpha * H2["aqms"] * S2["mjab"];
+    outfile->Printf("\n H2_T2_C2 qjsb S2 1: %f", timer.get() - a);
+    a = timer.get();
     temp["qjsb"] -= alpha * H2["aqsm"] * T2["mjab"];
+    outfile->Printf("\n H2_T2_C2 qjsb T2 2: %f", timer.get() - a);
+    a = timer.get();
     temp["qjsb"] += 0.5 * alpha * L1_["xy"] * S2["yjab"] * H2["aqxs"];
+    outfile->Printf("\n H2_T2_C2 qjsb S2 3: %f", timer.get() - a);
+    a = timer.get();
     temp["qjsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * H2["aqsx"];
+    outfile->Printf("\n H2_T2_C2 qjsb T2 4: %f", timer.get() - a);
+    a = timer.get();
     temp["qjsb"] -= 0.5 * alpha * L1_["xy"] * S2["ijxb"] * H2["yqis"];
+    outfile->Printf("\n H2_T2_C2 qjsb S2 5: %f", timer.get() - a);
+    a = timer.get();
     temp["qjsb"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["yqsi"];
+    outfile->Printf("\n H2_T2_C2 qjsb T2 6: %f", timer.get() - a);
 
     C2["qjsb"] += temp["qjsb"];
     C2["jqbs"] += temp["qjsb"];
@@ -490,9 +514,15 @@ void SADSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, c
     }
 
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", blocks);
+    a = timer.get();
     temp["jqsb"] -= alpha * H2["aqsm"] * T2["mjba"];
+    outfile->Printf("\n H2_T2_C2 jqsb T2 1: %f", timer.get() - a);
+    a = timer.get();
     temp["jqsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjba"] * H2["aqsx"];
+    outfile->Printf("\n H2_T2_C2 jqsb T2 2: %f", timer.get() - a);
+    a = timer.get();
     temp["jqsb"] += 0.5 * alpha * L1_["xy"] * T2["ijbx"] * H2["yqsi"];
+    outfile->Printf("\n H2_T2_C2 jqsb T2 3: %f", timer.get() - a);
 
     C2["jqsb"] += temp["jqsb"];
     C2["qjbs"] += temp["jqsb"];
@@ -677,9 +707,15 @@ void SADSRG::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, 
     local_timer timer;
 
     // particle-particle contractions
+    auto a = timer.get();
     C2["ijes"] += batched("e", alpha * B["gae"] * B["gbs"] * T2["ijab"]);
+    outfile->Printf("\n V_T2_C2_DF pp batched e: %f", timer.get() - a);
+    a = timer.get();
     C2["ijus"] += batched("u", alpha * B["gau"] * B["gbs"] * T2["ijab"]);
+    outfile->Printf("\n V_T2_C2_DF pp batched u: %f", timer.get() - a);
+    a = timer.get();
     C2["ijms"] += batched("m", alpha * B["gam"] * B["gbs"] * T2["ijab"]);
+    outfile->Printf("\n V_T2_C2_DF pp batched m: %f", timer.get() - a);
 
     std::vector<std::string> C2blocks;
     for (const std::string& block : C2.block_labels()) {
@@ -688,9 +724,13 @@ void SADSRG::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, 
         C2blocks.push_back(block);
     }
 
+    a = timer.get();
     auto temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222", C2blocks);
     temp["ijes"] += batched("e", L1_["xy"] * T2["ijxb"] * B["gye"] * B["gbs"]);
+    outfile->Printf("\n V_T2_C2_DF pp batched e: %f", timer.get() - a);
+    a = timer.get();
     temp["ijks"] += L1_["xy"] * T2["ijxb"] * B["gyk"] * B["gbs"];
+    outfile->Printf("\n V_T2_C2_DF pp batched k: %f", timer.get() - a);
 
     C2["ijrs"] -= 0.5 * alpha * temp["ijrs"];
     C2["jisr"] -= 0.5 * alpha * temp["ijrs"];
@@ -705,22 +745,34 @@ void SADSRG::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, 
             Vblocks.push_back(s);
     }
 
+    a = timer.get();
     temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222", Vblocks);
     temp["pqij"] = B["gpi"] * B["gqj"];
+    outfile->Printf("\n V_T2_C2_DF hh build pqij: %f", timer.get() - a);
 
+    a = timer.get();
     C2["pqab"] += alpha * temp["pqij"] * T2["ijab"];
+    outfile->Printf("\n V_T2_C2_DF hh build pqab: %f", timer.get() - a);
 
+    a = timer.get();
     C2["pqab"] -= 0.5 * alpha * Eta1_["xy"] * T2["yjab"] * temp["pqxj"];
+    outfile->Printf("\n V_T2_C2_DF hh build pqab eta J: %f", timer.get() - a);
+    a = timer.get();
     C2["qpba"] -= 0.5 * alpha * Eta1_["xy"] * T2["yjab"] * temp["pqxj"];
+    outfile->Printf("\n V_T2_C2_DF hh build pqab eta K: %f", timer.get() - a);
 
     // hole-particle contractions
+    a = timer.get();
     temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222", {"Lhp"});
     temp["gjb"] += alpha * B["gam"] * S2["mjab"];
     temp["gjb"] += 0.5 * alpha * L1_["xy"] * S2["yjab"] * B["gax"];
     temp["gjb"] -= 0.5 * alpha * L1_["xy"] * S2["ijxb"] * B["gyi"];
+    outfile->Printf("\n V_T2_C2_DF ph build gjb: %f", timer.get() - a);
 
+    a = timer.get();
     C2["qjsb"] += temp["gjb"] * B["gqs"];
     C2["jqbs"] += temp["gjb"] * B["gqs"];
+    outfile->Printf("\n V_T2_C2_DF ph qjsb: %f", timer.get() - a);
 
     // exchange like terms
     V_T2_C2_DF_PH_X(B, T2, alpha, C2);
@@ -733,6 +785,8 @@ void SADSRG::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, 
 
 void SADSRG::V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
                              BlockedTensor& C2) {
+    local_timer timer;
+    auto a = timer.get();
 
     std::vector<std::string> qjsb_small, qjsb_large, jqsb_small, jqsb_large;
 
@@ -775,59 +829,100 @@ void SADSRG::V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& 
      * C2["jqsb"] += temp["jqsb"];
      * C2["qjbs"] += temp["jqsb"];
      */
+    a = timer.get();
     auto t2_h = ambit::BlockedTensor::build(tensor_type_, "t2_h", {"ahpp"});
     auto t2_p = ambit::BlockedTensor::build(tensor_type_, "t2_p", {"hhpa"});
     t2_h["xjab"] = L1_["xy"] * T2["yjab"];
     t2_p["ijby"] = L1_["xy"] * T2["ijbx"];
+    outfile->Printf("\n V_T2_C2_DF_PH_X build t2_h t2_p: %f", timer.get() - a);
 
+    a = timer.get();
     auto v = ambit::BlockedTensor::build(tensor_type_, "V_alki", {"phhh"});
     v["alki"] = B["gal"] * B["gki"];
+    outfile->Printf("\n V_T2_C2_DF_PH_X build V_alki: %f", timer.get() - a);
+    a = timer.get();
     auto temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"hhhp"});
+    outfile->Printf("\n V_T2_C2_DF_PH_X init temp hhhp: %f", timer.get() - a);
+    a = timer.get();
     temp["kjlb"] -= v["alkm"] * T2["mjab"];
     temp["kjlb"] -= 0.5 * t2_h["xjab"] * v["alkx"];
     temp["kjlb"] += 0.5 * t2_p["jiby"] * v["ylki"];
+    outfile->Printf("\n V_T2_C2_DF_PH_X temp kjlb: %f", timer.get() - a);
+    a = timer.get();
     temp["jlkb"] -= v["aklm"] * T2["mjba"];
     temp["jlkb"] -= 0.5 * t2_h["xjba"] * v["aklx"];
     temp["jlkb"] += 0.5 * t2_p["ijby"] * v["ykli"];
+    outfile->Printf("\n V_T2_C2_DF_PH_X temp jlkb: %f", timer.get() - a);
     C2["kjlb"] += alpha * temp["kjlb"];
     C2["jkbl"] += alpha * temp["kjlb"];
 
+    a = timer.get();
     v = ambit::BlockedTensor::build(tensor_type_, "V_aeki", {"pvhh"});
     v["aeki"] = B["gae"] * B["gki"];
+    outfile->Printf("\n V_T2_C2_DF_PH_X build V_aeki: %f", timer.get() - a);
+    a = timer.get();
     temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"hhvp"});
+    outfile->Printf("\n V_T2_C2_DF_PH_X init temp hhvp: %f", timer.get() - a);
+    a = timer.get();
     temp["kjeb"] -= v["aekm"] * T2["mjab"];
     temp["kjeb"] -= 0.5 * t2_h["xjab"] * v["aekx"];
     temp["kjeb"] += 0.5 * t2_p["jiby"] * v["yeki"];
+    outfile->Printf("\n V_T2_C2_DF_PH_X temp kjeb: %f", timer.get() - a);
+    a = timer.get();
     temp["jleb"] -= v["aelm"] * T2["mjba"];
     temp["jleb"] -= 0.5 * t2_h["xjba"] * v["aelx"];
     temp["jleb"] += 0.5 * t2_p["ijby"] * v["yeli"];
+    outfile->Printf("\n V_T2_C2_DF_PH_X temp jleb: %f", timer.get() - a);
     C2["kjeb"] += alpha * temp["kjeb"];
     C2["jkbe"] += alpha * temp["kjeb"];
 
+    a = timer.get();
     v = ambit::BlockedTensor::build(tensor_type_, "V_alfi", {"phvh"});
     v["alfi"] = B["gal"] * B["gfi"];
+    outfile->Printf("\n V_T2_C2_DF_PH_X build V_alfi: %f", timer.get() - a);
+    a = timer.get();
     temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"vhhp"});
+    outfile->Printf("\n V_T2_C2_DF_PH_X init temp vhhp: %f", timer.get() - a);
+    a = timer.get();
     temp["fjlb"] -= v["alfm"] * T2["mjab"];
     temp["fjlb"] -= 0.5 * t2_h["xjab"] * v["alfx"];
     temp["fjlb"] += 0.5 * t2_p["jiby"] * v["ylfi"];
+    outfile->Printf("\n V_T2_C2_DF_PH_X temp fjlb: %f", timer.get() - a);
+    a = timer.get();
     C2["fjlb"] += alpha * temp["fjlb"];
     C2["jfbl"] += alpha * temp["fjlb"];
+    outfile->Printf("\n V_T2_C2_DF_PH_X C2 fjlb: %f", timer.get() - a);
+    a = timer.get();
     temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"hvhp"});
+    outfile->Printf("\n V_T2_C2_DF_PH_X init temp hvhp: %f", timer.get() - a);
+    a = timer.get();
     temp["jfkb"] -= v["akfm"] * T2["mjba"];
     temp["jfkb"] -= 0.5 * t2_h["xjba"] * v["akfx"];
     temp["jfkb"] += 0.5 * t2_p["ijby"] * v["ykfi"];
+    outfile->Printf("\n V_T2_C2_DF_PH_X temp jfkb: %f", timer.get() - a);
+    a = timer.get();
     C2["jfkb"] += alpha * temp["jfkb"];
     C2["fjbk"] += alpha * temp["jfkb"];
+    outfile->Printf("\n V_T2_C2_DF_PH_X C2 jfkb: %f", timer.get() - a);
+    a = timer.get();
 
     v = ambit::BlockedTensor::build(tensor_type_, "V_aefi", {"avvh"});
     v["zefi"] = B["gze"] * B["gfi"];
+    outfile->Printf("\n V_T2_C2_DF_PH_X build V_aefi: %f", timer.get() - a);
+    a = timer.get();
     temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"vhva", "hvva"});
+    outfile->Printf("\n V_T2_C2_DF_PH_X init temp vhva hvva: %f", timer.get() - a);
+    a = timer.get();
     temp["fjew"] -= v["zefm"] * T2["mjzw"];
     temp["fjew"] -= 0.5 * t2_h["xjzw"] * v["zefx"];
     temp["fjew"] += 0.5 * t2_p["jiwy"] * v["yefi"];
+    outfile->Printf("\n V_T2_C2_DF_PH_X temp fjew: %f", timer.get() - a);
+    a = timer.get();
     temp["jfew"] -= v["zefm"] * T2["mjwz"];
     temp["jfew"] -= 0.5 * t2_h["xjwz"] * v["zefx"];
     temp["jfew"] += 0.5 * t2_p["ijwy"] * v["yefi"];
+    outfile->Printf("\n V_T2_C2_DF_PH_X temp jfew: %f", timer.get() - a);
+    a = timer.get();
 
     // free memory for v
     for (const std::string& block : v.block_labels()) {
@@ -854,6 +949,8 @@ void SADSRG::V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& 
             break;
         }
     }
+    outfile->Printf("\n V_T2_C2_DF_PH_X do batching V_aefi: %d", batching);
+    a = timer.get();
     if (batching) {
         auto nQ = aux_mos_.size();
         auto nv = virt_mos_.size();
@@ -939,40 +1036,76 @@ void SADSRG::V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& 
             }
         }
     }
+    outfile->Printf("\n V_T2_C2_DF_PH_X done batching: %f", timer.get() - a);
+    a = timer.get();
 
     C2["fjew"] += alpha * temp["fjew"];
     C2["jfwe"] += alpha * temp["fjew"];
     C2["jfew"] += alpha * temp["jfew"];
     C2["fjwe"] += alpha * temp["jfew"];
+    outfile->Printf("\n V_T2_C2_DF_PH_X C2 fjew: %f", timer.get() - a);
+    a = timer.get();
 
     if (!qjsb_large.empty()) {
         C2["e,j,f,v0"] -= batched("e", alpha * B["g,a,f"] * B["g,e,m"] * T2["m,j,a,v0"]);
+        outfile->Printf("\n V_T2_C2_DF_PH_X C2 e,j,f,v0 batched e: %f", timer.get() - a);
+        a = timer.get();
         C2["j,e,v0,f"] -= batched("e", alpha * B["g,a,f"] * B["g,e,m"] * T2["m,j,a,v0"]);
+        outfile->Printf("\n V_T2_C2_DF_PH_X C2 j,e,v0,f batched e: %f", timer.get() - a);
+        a = timer.get();
 
         temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"ahpv"});
         temp["xjae"] = L1_["xy"] * T2["yjae"];
+        outfile->Printf("\n V_T2_C2_DF_PH_X temp xjae: %f", timer.get() - a);
+        a = timer.get();
         C2["e,j,f,v0"] -= batched("e", 0.5 * alpha * temp["x,j,a,v0"] * B["g,a,f"] * B["g,e,x"]);
+        outfile->Printf("\n V_T2_C2_DF_PH_X C2 e,j,f,v0 batched e: %f", timer.get() - a);
+        a = timer.get();
         C2["j,e,v0,f"] -= batched("e", 0.5 * alpha * temp["x,j,a,v0"] * B["g,a,f"] * B["g,e,x"]);
+        outfile->Printf("\n V_T2_C2_DF_PH_X C2 j,e,v0,f batched e: %f", timer.get() - a);
+        a = timer.get();
 
         temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"hhav"});
         temp["ijye"] = L1_["xy"] * T2["ijxe"];
+        outfile->Printf("\n V_T2_C2_DF_PH_X temp ijye: %f", timer.get() - a);
+        a = timer.get();
         C2["e,j,f,v0"] += batched("e", 0.5 * alpha * temp["i,j,y,v0"] * B["g,y,f"] * B["g,e,i"]);
+        outfile->Printf("\n V_T2_C2_DF_PH_X C2 e,j,f,v0 batched e: %f", timer.get() - a);
+        a = timer.get();
         C2["j,e,v0,f"] += batched("e", 0.5 * alpha * temp["i,j,y,v0"] * B["g,y,f"] * B["g,e,i"]);
+        outfile->Printf("\n V_T2_C2_DF_PH_X C2 j,e,v0,f batched e: %f", timer.get() - a);
+        a = timer.get();
     }
 
     if (!jqsb_large.empty()) {
         C2["j,e,f,v0"] -= batched("e", alpha * B["g,a,f"] * B["g,e,m"] * T2["m,j,v0,a"]);
+        outfile->Printf("\n V_T2_C2_DF_PH_X C2 j,e,f,v0 batched e: %f", timer.get() - a);
+        a = timer.get();
         C2["e,j,v0,f"] -= batched("e", alpha * B["g,a,f"] * B["g,e,m"] * T2["m,j,v0,a"]);
+        outfile->Printf("\n V_T2_C2_DF_PH_X C2 e,j,v0,f batched e: %f", timer.get() - a);
+        a = timer.get();
 
         temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"ahvp"});
         temp["xjea"] = L1_["xy"] * T2["yjea"];
+        outfile->Printf("\n V_T2_C2_DF_PH_X temp xjea: %f", timer.get() - a);
+        a = timer.get();
         C2["j,e,f,v0"] -= batched("e", 0.5 * alpha * temp["x,j,v0,a"] * B["g,a,f"] * B["g,e,x"]);
+        outfile->Printf("\n V_T2_C2_DF_PH_X C2 j,e,f,v0 batched e: %f", timer.get() - a);
+        a = timer.get();
         C2["e,j,v0,f"] -= batched("e", 0.5 * alpha * temp["x,j,v0,a"] * B["g,a,f"] * B["g,e,x"]);
+        outfile->Printf("\n V_T2_C2_DF_PH_X C2 e,j,v0,f batched e: %f", timer.get() - a);
+        a = timer.get();
 
         temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222PHX", {"hhva"});
         temp["ijey"] = L1_["xy"] * T2["ijex"];
+        outfile->Printf("\n V_T2_C2_DF_PH_X temp ijey: %f", timer.get() - a);
+        a = timer.get();
         C2["j,e,f,v0"] += batched("e", 0.5 * alpha * temp["i,j,v0,y"] * B["g,y,f"] * B["g,e,i"]);
+        outfile->Printf("\n V_T2_C2_DF_PH_X C2 j,e,f,v0 batched e: %f", timer.get() - a);
+        a = timer.get();
         C2["e,j,v0,f"] += batched("e", 0.5 * alpha * temp["i,j,v0,y"] * B["g,y,f"] * B["g,e,i"]);
+        outfile->Printf("\n V_T2_C2_DF_PH_X C2 e,j,v0,f batched e: %f", timer.get() - a);
+        a = timer.get();
     }
 }
 

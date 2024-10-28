@@ -71,6 +71,10 @@ struct Block2DMRGSolverImpl {
         else
             driver_sz_ =
                 std::make_shared<block2::DMRGDriver<block2::SZ, double>>(stack_mem, scratch);
+        int n_threads = block2::threading_()->n_threads_global;
+        block2::threading_() = std::make_shared<block2::Threading>(
+            block2::ThreadingTypes::OperatorBatchedGEMM | block2::ThreadingTypes::Global, n_threads,
+            n_threads, n_threads);
     }
     void reset() {
         if (is_spin_adapted_) {
@@ -84,6 +88,10 @@ struct Block2DMRGSolverImpl {
             driver_sz_ =
                 std::make_shared<block2::DMRGDriver<block2::SZ, double>>(stack_mem_, scratch_);
         }
+        int n_threads = block2::threading_()->n_threads_global;
+        block2::threading_() = std::make_shared<block2::Threading>(
+            block2::ThreadingTypes::OperatorBatchedGEMM | block2::ThreadingTypes::Global, n_threads,
+            n_threads, n_threads);
     }
     void initialize_system(int n_sites, int n_elec, int spin, int pg_irrep,
                            const vector<int>& actv_irreps, bool singlet_embedding = true,
@@ -385,6 +393,8 @@ double Block2DMRGSolver::compute_energy() {
     timer t("BLOCK2 Solver Compute Energy");
 
     impl_->reset();
+    block2::threading_()->activate_normal();
+    std::cout << *block2::threading_();
 
     // system initialization
     bool singlet_embedding = dmrg_options_->get_bool("BLOCK2_SINGLET_EMBEDDING");
@@ -724,7 +734,6 @@ std::vector<std::shared_ptr<RDMs>>
 Block2DMRGSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                   std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
                                   RDMsType type) {
-
     timer t("BLOCK2 Solver Compute RDMs");
 
     if (max_rdm_level < 1)
