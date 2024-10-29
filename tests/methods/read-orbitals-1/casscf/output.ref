@@ -31,9 +31,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Tuesday, 15 October 2024 06:02PM
+    Psi4 started on: Tuesday, 15 October 2024 06:01PM
 
-    Process ID: 78657
+    Process ID: 78618
     Host:       MacBook-Pro-347.attlocal.net
     PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
     Memory:     500.0 MiB
@@ -42,14 +42,7 @@
   ==> Input File <==
 
 --------------------------------------------------------------------------
-# Test read_orbitals keyword without a ref_wfn and
-# the orbitals on disk were generated at a different geometry.
-
 import forte
-
-ref_casscf = -99.92406606396537
-
-memory 500 mb
 
 molecule HF{
   0 1
@@ -59,11 +52,12 @@ molecule HF{
 
 set globals{
   basis                   cc-pvdz
+  df_basis_scf            cc-pvdz-jkfit
+  df_basis_mp2            cc-pvdz-jkfit
   reference               rhf
   scf_type                df
   d_convergence           8
   e_convergence           9
-  df_basis_mp2            cc-pvdz-jkfit
 }
 
 set forte{
@@ -74,25 +68,8 @@ set forte{
   active                  [2,0,0,0]
 }
 
-ref_wfn = psi4.core.Wavefunction.from_file('scf_wfn.npy')
-Ecas, wfn = energy('forte', ref_wfn=ref_wfn, return_wfn=True)
-compare_values(ref_casscf, variable("CURRENT ENERGY"), 10, "CASSCF energy")
-
-S = psi4.core.triplet(wfn.Ca(), wfn.S(), wfn.Ca(), True, False, False)
-Sref = S.clone()
-Sref.identity()
-compare_matrices(Sref, S, 10, "Orthonormality of MO overlap matrix")
+energy('forte')
 --------------------------------------------------------------------------
-
-  Memory set to 476.837 MiB by Python driver.
-   => Loading Basis Set <=
-
-    Name: CC-PVDZ
-    Role: ORBITAL
-    Keyword: BASIS
-    atoms 1 entry F          line   228 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
-    atoms 2 entry H          line    22 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
-
 
 Scratch directory: /tmp/
 
@@ -109,15 +86,7 @@ Scratch directory: /tmp/
   ----------------------------------------------------------------------------
 
 
-  Preparing forte objects from a Psi4 Wavefunction object   => Loading Basis Set <=
-
-    Name: CC-PVDZ
-    Role: ORBITAL
-    Keyword: BASIS
-    atoms 1 entry F          line   228 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
-    atoms 2 entry H          line    22 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
-
-   => Libint2 <=
+  Preparing forte objects from a Psi4 Wavefunction object   => Libint2 <=
 
     Primary   basis highest AM E, G, H:  6, 6, 3
     Auxiliary basis highest AM E, G, H:  7, 7, 4
@@ -125,7 +94,7 @@ Scratch directory: /tmp/
     Solid Harmonics ordering:            Gaussian
 
 *** tstart() called on MacBook-Pro-347.attlocal.net
-*** at Tue Oct 15 18:02:42 2024
+*** at Tue Oct 15 18:01:19 2024
 
    => Loading Basis Set <=
 
@@ -141,7 +110,7 @@ Scratch directory: /tmp/
                by Justin Turney, Rob Parrish, Andy Simmonett
                           and Daniel G. A. Smith
                               RHF Reference
-                        1 Threads,    476 MiB Core
+                        1 Threads,    500 MiB Core
          ---------------------------------------------------------
 
   ==> Geometry <==
@@ -191,7 +160,7 @@ Scratch directory: /tmp/
 
    => Loading Basis Set <=
 
-    Name: (CC-PVDZ AUX)
+    Name: CC-PVDZ-JKFIT
     Role: JKFIT
     Keyword: DF_BASIS_SCF
     atoms 1 entry F          line   271 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
@@ -199,7 +168,7 @@ Scratch directory: /tmp/
 
   ==> Integral Setup <==
 
-  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.349 GiB. 
+  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.366 GiB. 
   SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
   Using in-core AOs.
 
@@ -209,7 +178,7 @@ Scratch directory: /tmp/
     K tasked:                   Yes
     wK tasked:                   No
     OpenMP threads:               1
-    Memory [MiB]:               357
+    Memory [MiB]:               375
     Algorithm:                 Core
     Schwarz Cutoff:           1E-12
     Mask sparsity (%):       0.0000
@@ -217,7 +186,7 @@ Scratch directory: /tmp/
 
    => Auxiliary Basis Set <=
 
-  Basis Set: (CC-PVDZ AUX)
+  Basis Set: CC-PVDZ-JKFIT
     Blend: CC-PVDZ-JKFIT
     Number of shells: 33
     Number of basis functions: 93
@@ -317,13 +286,13 @@ Properties computed using the SCF density matrix
 
  ------------------------------------------------------------------------------------
 
-*** tstop() called on MacBook-Pro-347.attlocal.net at Tue Oct 15 18:02:42 2024
+*** tstop() called on MacBook-Pro-347.attlocal.net at Tue Oct 15 18:01:19 2024
 Module time:
-	user time   =       0.09 seconds =       0.00 minutes
+	user time   =       0.08 seconds =       0.00 minutes
 	system time =       0.01 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.09 seconds =       0.00 minutes
+	user time   =       0.08 seconds =       0.00 minutes
 	system time =       0.01 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 
@@ -377,7 +346,7 @@ Total time:
 
 
   JK created using MemDF integrals
-  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.373 GiB. 
+  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.391 GiB. 
   SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
   Using in-core AOs.
 
@@ -387,7 +356,7 @@ Total time:
     K tasked:                   Yes
     wK tasked:                   No
     OpenMP threads:               1
-    Memory [MiB]:               381
+    Memory [MiB]:               400
     Algorithm:                 Core
     Schwarz Cutoff:           1E-12
     Mask sparsity (%):       0.0000
@@ -418,7 +387,7 @@ Total time:
 
   Number of auxiliary basis functions:  93
   Need 268.58 KB to store DF integrals
-  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.419 GiB. 
+  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.439 GiB. 
   SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
   Using in-core AOs.
 
@@ -427,7 +396,7 @@ Total time:
     NAux:                             93
     Schwarz Cutoff:                1E-12
     Mask sparsity (%):                 0
-    DFH Avail. Memory [GiB]:       0.419
+    DFH Avail. Memory [GiB]:       0.439
     OpenMP threads:                    1
     Algorithm:                     STORE
     AO Core:                        True
@@ -554,7 +523,7 @@ Total time:
     ba     -0.08904609
 
     Total Energy:     -99.895749522054, <S^2>: 0.000000
-    Time for FCI:       0.000252792000
+    Time for FCI:       0.000295792000
 
   ==> Energy Summary <==
 
@@ -734,7 +703,7 @@ Total time:
     ab      0.10309877
 
     Total Energy:     -99.924066063965, <S^2>: -0.000000
-    Time for FCI:       0.000157916000
+    Time for FCI:       0.000146416000
 
   ==> Energy Summary <==
 
@@ -782,7 +751,7 @@ Total time:
 
   Number of auxiliary basis functions:  93
   Need 268.58 KB to store DF integrals
-  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.419 GiB. 
+  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.439 GiB. 
   SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
   Using in-core AOs.
 
@@ -791,7 +760,7 @@ Total time:
     NAux:                             93
     Schwarz Cutoff:                1E-12
     Mask sparsity (%):                 0
-    DFH Avail. Memory [GiB]:       0.419
+    DFH Avail. Memory [GiB]:       0.439
     OpenMP threads:                    1
     Algorithm:                     STORE
     AO Core:                        True
@@ -879,7 +848,7 @@ Total time:
     ab     -0.09953865
 
     Total Energy:     -99.924066063965, <S^2>: 0.000000
-    Time for FCI:       0.000206958000
+    Time for FCI:       0.000188166000
 
   ==> Energy Summary <==
 
@@ -898,13 +867,11 @@ Total time:
      Nuclear     0.00000000     0.00000000     1.50042549     1.50042549
     --------------------------------------------------------------------
 
-  Time to prepare integrals:        0.139 seconds
-  Time to run job          :        0.129 seconds
-  Total                    :        0.268 seconds
-    CASSCF energy.........................................................................PASSED
-    Orthonormality of MO overlap matrix...................................................PASSED
+  Time to prepare integrals:        0.126 seconds
+  Time to run job          :        0.124 seconds
+  Total                    :        0.251 seconds
 
-    Psi4 stopped on: Tuesday, 15 October 2024 06:02PM
-    Psi4 wall time for execution: 0:00:00.59
+    Psi4 stopped on: Tuesday, 15 October 2024 06:01PM
+    Psi4 wall time for execution: 0:00:00.56
 
 *** Psi4 exiting successfully. Buy a developer a beer!
