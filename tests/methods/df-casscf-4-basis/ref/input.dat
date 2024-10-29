@@ -30,7 +30,7 @@ set forte{
   mcscf_e_convergence     12
   mcscf_g_convergence     7
   print                   0
-  mcscf_ignore_frozen_orbs false
+#  mcscf_ignore_frozen_orbs false
 }
 
 _,wfn = energy('forte',return_wfn=True)

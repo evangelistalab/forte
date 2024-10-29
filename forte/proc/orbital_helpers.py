@@ -148,11 +148,53 @@ def ortho_orbs_new(Ca, S, Cinit, mo_space_info, space_priority=None):
             u, s, vh = np.linalg.svd(Cp[h].T @ S[h] @ C0[h][:, mos], full_matrices=True)
             if abs(np.min(s)) < 1.0e-6:
                 print(f"Linear dependency for {space} at irrep {h}, singular values: {s}")
-            Csub = Cp[h] @ u[:, :len(s)] @ vh
+            Csub = Cp[h] @ u[:, : len(s)] @ vh
             Cp[h] = Cp[h] - Csub @ (Csub.T @ S[h] @ Cp[h])
             C[h][:, mos] = Csub
 
     return psi4.core.Matrix.from_array(C)
+
+
+def add_orthogonal_vectors(C, S):
+    """Add orthogonal vectors to the given set of vectors
+
+    Args:
+        C (np.ndarray): The set of vectors
+        S (np.ndarray): The overlap matrix
+    Returns:
+        np.ndarray: The set of vectors with orthogonal vectors added
+    """
+    from scipy.linalg import solve_triangular
+
+    # Cholesky decomposition of the overlap matrix
+    L = np.linalg.cholesky(S)
+    # Rotate the vectors to the orthogonal space
+    V_tilde = L.T @ C
+    # SVD of the rotated vectors
+    U, s, Vh = np.linalg.svd(V_tilde.T)
+    # Rank = number of columns of C that are linearly independent
+    rank = C.shape[1]
+    # Null space of the rotated vectors
+    N_null = Vh[rank:].T  # Shape (N, N - k)
+    # Solve for the orthogonal vectors that give the null space
+    W = solve_triangular(L.T, N_null, lower=False)
+
+    C_ortho = np.zeros_like(W)
+
+    # Orthogonalize the columns of W against previous vectors
+    for i in range(W.shape[1]):
+        wi = W[:, i]
+        for j in range(i):
+            wj = C_ortho[:, j]
+            proj = wj.T @ S @ wi
+            wi = wi - proj * wj
+        # Normalize
+        norm = np.sqrt(wi.T @ S @ wi)
+        wi = wi / norm
+        C_ortho[:, i] = wi
+
+    fullC = np.hstack((C, C_ortho))
+    return fullC
 
 
 def basis_projection(wfn_old, wfn_new, mo_space_info):

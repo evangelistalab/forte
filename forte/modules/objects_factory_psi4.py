@@ -18,7 +18,7 @@ from forte._forte import (
 
 from forte.data import ForteData
 
-from forte.proc.orbital_helpers import orbital_projection
+from forte.proc.orbital_helpers import orbital_projection, add_orthogonal_vectors
 from forte.proc.external_active_space_solver import write_wavefunction, read_wavefunction
 
 from .module import Module
@@ -181,7 +181,9 @@ class ObjectsFromPsi4(Module):
             return ref_wfn
         elif ref_wfn:
             # to test if we can use the orbitals directly, we compare the SO overlap matrices
+            # metric matrix for the molecule built using the basis set from kwargs
             mol_S = psi4.core.Wavefunction.build(data.molecule, kwargs["basis"]).S()
+            # metric matrix for the reference wavefunction
             ref_S = ref_wfn.S()
 
             # catch the case where the number of irreps is different
@@ -202,10 +204,61 @@ class ObjectsFromPsi4(Module):
             # compute a new Wavefunction object
             new_wfn = self.run_psi4("scf", data.molecule, False, **kwargs)
 
+            # project the orbitals from the reference wavefunction to the new wavefunction
+            # std::shared_ptr<IntegralFactory> newfactory =
+            # std::make_shared<IntegralFactory>(new_basis, new_basis, new_basis, new_basis);
+            #    std::shared_ptr<IntegralFactory> hybfactory =
+            #         std::make_shared<IntegralFactory>(old_basis, new_basis, old_basis, new_basis);
+            #     std::shared_ptr<OneBodySOInt> intBB(newfactory->so_overlap());
+            #     std::shared_ptr<OneBodySOInt> intAB(hybfactory->so_overlap());
+
+            #     auto pet = std::make_shared<PetiteList>(new_basis, newfactory);
+            #     SharedMatrix AO2USO(pet->aotoso());
+
+            #     auto SAB = std::make_shared<Matrix>("S_AB", C_A->nirrep(), C_A-.rowdim(), AO2USO->colspi());
+            #     auto SBB = std::make_shared<Matrix>("S_BB", C_A->nirrep(), AO2USO->colspi(), AO2USO->colspi());
+
+            #     intAB->compute(SAB);
+            #     intBB->compute(SBB);
+
+            # newfactory = psi4.core.IntegralFactory(
+            #     new_wfn.basisset(), new_wfn.basisset(), new_wfn.basisset(), new_wfn.basisset()
+            # )
+            # intBB = newfactory.so_overlap()
+
+            # SBB = psi4.core.Matrix("S_BB", new_wfn.nmopi(), new_wfn.nmopi())
+            # intBB.compute(SBB)
+
+            # hybfactory = psi4.core.IntegralFactory(
+            #     ref_wfn.basisset(), new_wfn.basisset(), ref_wfn.basisset(), new_wfn.basisset()
+            # )
+            # intAB = hybfactory.so_overlap()
+
+            # # SAB = psi4.core.Matrix("S_AB", ref_wfn.nirrep(), ref_wfn.nmo(), AO2USO.ncol())
+            # SBB.print_out()
+            # SBB.print_out()
             pCa = new_wfn.basis_projection(ref_wfn.Ca(), ref_wfn.nmopi(), ref_wfn.basisset(), new_wfn.basisset())
             pCb = new_wfn.basis_projection(ref_wfn.Cb(), ref_wfn.nmopi(), ref_wfn.basisset(), new_wfn.basisset())
+
+            # check if the projected orbitals have the same dimensions as the new wavefunction
+            if pCa.coldim() != new_wfn.Ca().coldim():
+
+                nirrep = new_wfn.nirrep()
+                Snp = new_wfn.S().nph
+                pCanp = pCa.nph
+                pCbnp = pCb.nph
+
+                fullCa = []
+                fullCb = []
+
+                for h in range(nirrep):
+                    fullCa_h = add_orthogonal_vectors(pCanp[h], Snp[h])
+                    fullCa.append(fullCa_h)
+
+                pCa = psi4.core.Matrix.from_array(fullCa)
+
             new_wfn.Ca().copy(pCa)
-            new_wfn.Cb().copy(pCb)
+            new_wfn.Cb().copy(pCa)
 
             return new_wfn
         else:
