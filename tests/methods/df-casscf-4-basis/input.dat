@@ -1,4 +1,8 @@
 # Test DF-CASSCF reading orbitals from different geometry and basis set
+# The reference orbitals are computed with a smaller basis and using
+# freezing one core orbital in the MCSCF procedure
+# Here we do not freeze core orbitals in MCSCF since projection cannot
+# guarantee that the core orbitals will be consistent with an SCF procedure
 
 import forte
 

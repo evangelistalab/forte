@@ -18,7 +18,7 @@ from forte._forte import (
 
 from forte.data import ForteData
 
-from forte.proc.orbital_helpers import orbital_projection, add_orthogonal_vectors
+from forte.proc.orbital_helpers import add_orthogonal_vectors
 from forte.proc.external_active_space_solver import write_wavefunction, read_wavefunction
 
 from .module import Module
