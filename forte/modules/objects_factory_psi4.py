@@ -18,8 +18,7 @@ from forte._forte import (
 
 from forte.data import ForteData
 
-from forte.proc.orbital_helpers import orbital_projection
-from forte.proc.orbital_helpers import read_orbitals, ortho_orbs_forte
+from forte.proc.orbital_helpers import add_orthogonal_vectors, orbital_projection
 from forte.proc.external_active_space_solver import write_wavefunction, read_wavefunction
 
 from .module import Module
@@ -69,12 +68,6 @@ class ObjectsFromPsi4(Module):
             # Make an integral object from the psi4 wavefunction object
             data.ints = make_ints_from_psi4(data.psi_wfn, data.options, data.scf_info, data.mo_space_info)
 
-        # print(data.options)
-        # print(data.scf_info)
-        # print(data.state_weights_map)
-        # print(data.ints)
-        # print(data.mo_space_info)
-
         return data
 
     def prepare_forte_objects(self, data, **kwargs):
@@ -97,29 +90,32 @@ class ObjectsFromPsi4(Module):
         options = data.options
         p4print("\n\n  Preparing forte objects from a Psi4 Wavefunction object")
 
-        # Here we handle different scenarios:
-        # The user specifies a molecule and guess orbitals via the psi_wfn
-        # The user specifies a molecule and we compute the reference wavefunction with psi4
+        # Step 1. Check if a molecule and a psi4 wavefunction are passed in the kwargs and if the basis set is specified in the options
+        molecule = kwargs.pop("molecule", None)
+        ref_wfn = kwargs.pop("ref_wfn", None)
+        # we store the basis information in kwargs, so we can pass it to the psi4 wavefunction
+        # we can use the basis set from the options or the one passed in kwargs, but if both are provided, we throw an error
+        if "basis" not in kwargs:
+            basis = data.options.get_str("BASIS")
+            if not basis:
+                basis = psi4.core.get_global_option("BASIS")
+                p4print(f" Using basis set {basis} from Psi4 global options.")
+            kwargs["basis"] = basis
+        else:
+            if data.options.get_str("BASIS"):
+                raise ValueError("Both basis set in options and kwargs are provided. Please provide only one.")
 
-        # Step 1. Get the molecule from the kwargs or molecule in the psi_wfn
-        data.molecule = self.get_molecule(**kwargs)
-        kwargs.pop("molecule", None)
+        if "basis" not in kwargs:
+            kwargs["basis"] = basis
 
-        # Step 2. Get or compute the reference wavefunction
-        psi_wfn, is_psi_wfn_fresh = self.get_psi4_wavefunction(data, **kwargs)
-        kwargs.pop("ref_wfn", None)
-        data.psi_wfn = psi_wfn
+        # Step 2: Get the molecule object from the kwargs or the ref_wfn
+        data.molecule = self.get_molecule(molecule, ref_wfn)
 
-        # Step 3: Create MO space information (this should be avoided if possible)
+        # Step 3. Get or compute the reference Psi4 Wavefunction
+        data.psi_wfn = self.get_psi4_wavefunction(data, ref_wfn, **kwargs)
+
+        # Step 4: Create MO space information (this should be avoided if possible)
         temp_mo_space_info = self.create_mo_space_info(data, **kwargs)
-
-        # Step 4: Read the orbitals from a file if READ_ORBITALS is set. If not reading orbitals, Ca is None.
-        Ca = self.get_orbitals_from_file(data)
-
-        # Step 5: Check if the orbitals we plan to use (which might come from a file or a computation done at at different geometry/state)
-        # are orthonormal. If not, orthonormalize them. If the psi_wfn is not fresh, we will perform a new SCF at the current geometry.
-        # This is necessary because there seems to be a memory effect in Psi4 when using different geometries.
-        self.add_and_orthonormalize_orbitals(data, is_psi_wfn_fresh, Ca, temp_mo_space_info, **kwargs)
 
         # Step 6: Inject DF and MINAO basis sets in the psi4 wavefunction if specified in options
         self.set_basis_sets(data)
@@ -135,7 +131,7 @@ class ObjectsFromPsi4(Module):
         # Once we are done, all the objects are stored in the ForteData object
         return data
 
-    def get_molecule(self, **kwargs):
+    def get_molecule(self, molecule, ref_wfn):
         """
         Get the molecule object from the kwargs or the ref_wfn.
         Keyword arguments supersede the ref_wfn.
@@ -143,47 +139,99 @@ class ObjectsFromPsi4(Module):
 
         Parameters
         ----------
-        kwargs : dict
+        molecule : psi4.core.Molecule
+            The molecule object
+        ref_wfn : psi4.core.Wavefunction
+            The reference wavefunction object
 
         Returns
         -------
         molecule : psi4.core.Molecule
             The molecule object
         """
-        molecule = kwargs.pop("molecule", None)
-        if molecule:
+        # molecule provided in kwargs takes precedence
+        if molecule is not None:
             return molecule
 
         # no molecule provided, try to get it from a ref_wfn passed in kwargs
-        ref_wfn = kwargs.get("ref_wfn", None)
-        if ref_wfn:
+        if ref_wfn is not None:
             return ref_wfn.molecule()
         raise ValueError("No molecule provided to prepare_forte_objects.")
 
-    def get_psi4_wavefunction(self, data, **kwargs):
+    def get_psi4_wavefunction(self, data, ref_wfn, **kwargs):
         """
         Get or compute the reference Psi4 Wavefunction.
-
-        Returns a tuple of (ref_wfn, is_fresh) where is_fresh is a boolean indicating whether the ref_wfn is fresh.
 
         Parameters
         ----------
         data : ForteData
             The ForteData object containing options and molecule
-        kwargs : dict
-            Keyword arguments
         """
-        ref_wfn = kwargs.get("ref_wfn", None)
-        if ref_wfn:
-            return ref_wfn, False
-        # if no ref_wfn provided, compute it
-        ref_type = data.options.get_str("REF_TYPE")
-        p4print(f"\n  No reference wavefunction provided. Computing {ref_type} orbitals using Psi4...\n")
-        # Decide whether to run SCF or MCSCF based on REF_TYPE
-        job_type = data.options.get_str("JOB_TYPE")
-        do_mcscf = job_type in ["CASSCF", "MCSCF_TWO_STEP"] or data.options.get_bool("MCSCF_REFERENCE")
-        ref_wfn = self.run_psi4(ref_type, data.molecule, not do_mcscf, **kwargs)
-        return ref_wfn, True
+        #  Here we handle twp different scenarios:
+        #  Case | ref_wfn | Action
+        #  -------------------------------------
+        #  1    | None    | Run new SCF or MCSCF from Psi4 and return the wavefunction
+        #  2    | Passed  | Use ref_wfn
+
+        if not ref_wfn:
+            ref_type = data.options.get_str("REF_TYPE")
+            job_type = data.options.get_str("JOB_TYPE")
+            do_mcscf = job_type in ["CASSCF", "MCSCF_TWO_STEP"] or data.options.get_bool("MCSCF_REFERENCE")
+            ref_wfn = self.run_psi4(ref_type, data.molecule, not do_mcscf, **kwargs)
+            return ref_wfn
+        elif ref_wfn:
+            # to test if we can use the orbitals directly, we compare the SO overlap matrices
+            # metric matrix for the molecule built using the basis set from kwargs
+            mol_S = psi4.core.Wavefunction.build(data.molecule, kwargs["basis"]).S()
+            # metric matrix for the reference wavefunction
+            ref_S = ref_wfn.S()
+
+            # catch the case where the number of irreps is different
+            if mol_S.nirrep() != ref_S.nirrep():
+                raise ValueError(
+                    "Different number of irreps in the overlap matrices of the reference wavefunction and the molecule."
+                )
+
+            # if the dimensions are the same, compute the difference between the two matrices
+            if mol_S.rowdim() == ref_S.rowdim() and mol_S.coldim() == ref_S.coldim():
+                diff_S = mol_S.clone()
+                diff_S.subtract(ref_S)
+                norm = diff_S.rms()
+                # if the norm of the difference is less than 1e-6, we can use the orbitals directly
+                if norm < 1e-10:
+                    return ref_wfn
+
+            # compute a new Wavefunction object
+            new_wfn = self.run_psi4("scf", data.molecule, False, **kwargs)
+
+            # project the orbitals from the reference wavefunction to the new wavefunction
+            # note that this function may produce fewer orbitals than the new wavefunction
+            pCa = new_wfn.basis_projection(ref_wfn.Ca(), ref_wfn.nmopi(), ref_wfn.basisset(), new_wfn.basisset())
+            pCb = new_wfn.basis_projection(ref_wfn.Cb(), ref_wfn.nmopi(), ref_wfn.basisset(), new_wfn.basisset())
+
+            # If the number of orbitals is different, we add orthogonal vectors to the projected orbitals
+            if pCa.coldim() != new_wfn.Ca().coldim():
+                nirrep = new_wfn.nirrep()
+                Snp = new_wfn.S().nph
+                pCanp = pCa.nph
+                pCbnp = pCb.nph
+                fullCa = []
+                fullCb = []
+                for h in range(nirrep):
+                    fullCa.append(add_orthogonal_vectors(pCanp[h], Snp[h]))
+                    fullCb.append(add_orthogonal_vectors(pCbnp[h], Snp[h]))
+
+                # redefine the projected orbitals
+                pCa = psi4.core.Matrix.from_array(fullCa)
+                pCb = psi4.core.Matrix.from_array(fullCb)
+
+            # copy the projected orbitals to the new wavefunction
+            new_wfn.Ca().copy(pCa)
+            new_wfn.Cb().copy(pCa)
+
+            return new_wfn
+        else:
+            raise ValueError("Other cases not supported yet.")
 
     def run_psi4(self, ref_type, molecule, print_warning=False, **kwargs):
         """
@@ -206,8 +254,6 @@ class ObjectsFromPsi4(Module):
             The Psi4 Wavefunction object from the fresh Psi4 run
         """
         ref_type = ref_type.lower().strip()
-
-        print(self.options)
 
         # capitalize the options
         psi4_options = {k.upper(): v for k, v in self.options.items()} if self.options else {}
@@ -236,37 +282,6 @@ class ObjectsFromPsi4(Module):
 
         return wfn
 
-    def get_orbitals_from_file(self, data):
-        """
-        Read orbitals from a file if the option READ_ORBITALS is set to True.
-
-        Parameters
-        ----------
-        data : ForteData
-            The ForteData object containing options or reference wavefunction
-        """
-        # Read orbitals from file if specified or else use the orbitals from the psi_wfn
-        Ca = read_orbitals() if data.options.get_bool("READ_ORBITALS") else None
-        if Ca:
-            # test if input Ca has the correct dimension
-            nsopi = data.psi_wfn.nsopi()
-            nmopi = data.psi_wfn.nmopi()
-
-            if Ca.rowdim() != nsopi or Ca.coldim() != nmopi:
-                p4print("\n  Expecting orbital dimensions:\n")
-                p4print("\n  row:    ")
-                nsopi.print_out()
-                p4print("  column: ")
-                nmopi.print_out()
-                p4print("\n  Actual orbital dimensions:\n")
-                p4print("\n  row:    ")
-                Ca.rowdim().print_out()
-                p4print("  column: ")
-                Ca.coldim().print_out()
-                msg = "Invalid orbitals: different basis set / molecule! Check output for more."
-                raise ValueError(msg)
-        return Ca
-
     def create_mo_space_info(self, data, **kwargs):
         """
         Create the MOSpaceInfo object from options or kwargs.
@@ -285,53 +300,6 @@ class ObjectsFromPsi4(Module):
             mo_spaces = make_mo_spaces_from_options(data.options)
         mo_space_info = make_mo_space_info_from_map(nmopi, point_group, mo_spaces)
         return mo_space_info
-
-    def add_and_orthonormalize_orbitals(self, data, is_psi_wfn_fresh, Ca, temp_mo_space_info, **kwargs):
-        """
-        Check if orbitals are orthonormal and orthonormalize them if necessary.
-
-        Parameters
-        ----------
-        data : ForteData
-            The ForteData object
-        is_psi_wfn_fresh : bool
-            A boolean indicating whether the reference wavefunction is freshly computed
-        Ca : psi4.core.Matrix
-            The MO coefficient matrix
-        temp_mo_space_info : Forte MOSpaceInfo
-            The MO space information
-        kwargs : dict
-            Keyword arguments
-        """
-        # no orbitals read, then we use the orbitals from the psi_wfn
-        if Ca is None:
-            Ca = data.psi_wfn.Ca()
-            # if this is the first time we are using the psi_wfn, we can use the orbitals directly
-            if is_psi_wfn_fresh:
-                return
-
-        # Build overlap matrix
-        new_S = psi4.core.Wavefunction.build(data.molecule, data.options.get_str("BASIS")).S()
-
-        # if the orbitals are orthonormal, we can use them directly
-        if check_mo_orthonormality(new_S, Ca):
-            data.psi_wfn.Ca().copy(Ca)
-        else:
-            # if the psi_wfn is fresh just orthonormalize the orbitals
-            if is_psi_wfn_fresh:
-                data.psi_wfn.Ca().copy(ortho_orbs_forte(data.psi_wfn, temp_mo_space_info, Ca))
-            # if the psi_wfn is not fresh, we need to perform a new SCF and orthonormalize the orbitals
-            else:
-                p4print("\n  Perform new SCF at current geometry ...\n")
-
-                # run a new SCF
-                wfn_new = self.run_psi4("scf", data.molecule, False, **kwargs)
-
-                # orthonormalize orbitals
-                wfn_new.Ca().copy(ortho_orbs_forte(wfn_new, temp_mo_space_info, Ca))
-
-                # copy wfn_new to psi_wfn
-                data.psi_wfn.shallow_copy(wfn_new)
 
     def set_basis_sets(self, data):
         """

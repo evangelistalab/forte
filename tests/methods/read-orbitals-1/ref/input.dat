@@ -1,0 +1,17 @@
+molecule HF{
+  0 1
+  F
+  H  1 1.5
+}
+
+set globals{
+  basis                   cc-pvdz
+  df_basis_scf            cc-pvdz-jkfit
+  reference               rhf
+  scf_type                df
+  d_convergence           8
+  e_convergence           9
+}
+
+_, scf_wfn = energy('scf', return_wfn=True)
+scf_wfn.to_file('scf_ref.npy') 
