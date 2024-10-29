@@ -1,37 +1,30 @@
-import forte
+# Reference result for this test case
 
-memory 500 mb
+import forte
 
 molecule HF{
 F
-H  1 R
-symmetry c1
+H 1 1.5
 }
 
 set {
-  basis                   6-31G
+  basis                   cc-pvdz
   reference               rhf
   scf_type                df
   df_basis_scf            cc-pvdz-jkfit
-  df_basis_mp2            cc-pvdz-jkfit
   d_convergence           8
   e_convergence           9
 }
 
-HF.R = 1.5
-
 set forte{
+  job_type                mcscf_two_step
   int_type                df
-  frozen_docc             [1]
-  restricted_docc         [3]
-  active                  [2]
+  frozen_docc             [0,0,0,0]
+  restricted_docc         [2,0,1,1]
+  active                  [2,0,0,0]
   active_space_solver     fci
   mcscf_maxiter           25
   mcscf_e_convergence     12
   mcscf_g_convergence     7
-  print                   0
-#  mcscf_ignore_frozen_orbs false
 }
-
-_,wfn = energy('forte',return_wfn=True)
-wfn.to_file('cas_ref.npy')
+Ecas_1 = energy('forte')

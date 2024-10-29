@@ -205,58 +205,27 @@ class ObjectsFromPsi4(Module):
             new_wfn = self.run_psi4("scf", data.molecule, False, **kwargs)
 
             # project the orbitals from the reference wavefunction to the new wavefunction
-            # std::shared_ptr<IntegralFactory> newfactory =
-            # std::make_shared<IntegralFactory>(new_basis, new_basis, new_basis, new_basis);
-            #    std::shared_ptr<IntegralFactory> hybfactory =
-            #         std::make_shared<IntegralFactory>(old_basis, new_basis, old_basis, new_basis);
-            #     std::shared_ptr<OneBodySOInt> intBB(newfactory->so_overlap());
-            #     std::shared_ptr<OneBodySOInt> intAB(hybfactory->so_overlap());
-
-            #     auto pet = std::make_shared<PetiteList>(new_basis, newfactory);
-            #     SharedMatrix AO2USO(pet->aotoso());
-
-            #     auto SAB = std::make_shared<Matrix>("S_AB", C_A->nirrep(), C_A-.rowdim(), AO2USO->colspi());
-            #     auto SBB = std::make_shared<Matrix>("S_BB", C_A->nirrep(), AO2USO->colspi(), AO2USO->colspi());
-
-            #     intAB->compute(SAB);
-            #     intBB->compute(SBB);
-
-            # newfactory = psi4.core.IntegralFactory(
-            #     new_wfn.basisset(), new_wfn.basisset(), new_wfn.basisset(), new_wfn.basisset()
-            # )
-            # intBB = newfactory.so_overlap()
-
-            # SBB = psi4.core.Matrix("S_BB", new_wfn.nmopi(), new_wfn.nmopi())
-            # intBB.compute(SBB)
-
-            # hybfactory = psi4.core.IntegralFactory(
-            #     ref_wfn.basisset(), new_wfn.basisset(), ref_wfn.basisset(), new_wfn.basisset()
-            # )
-            # intAB = hybfactory.so_overlap()
-
-            # # SAB = psi4.core.Matrix("S_AB", ref_wfn.nirrep(), ref_wfn.nmo(), AO2USO.ncol())
-            # SBB.print_out()
-            # SBB.print_out()
+            # note that this function may produce fewer orbitals than the new wavefunction
             pCa = new_wfn.basis_projection(ref_wfn.Ca(), ref_wfn.nmopi(), ref_wfn.basisset(), new_wfn.basisset())
             pCb = new_wfn.basis_projection(ref_wfn.Cb(), ref_wfn.nmopi(), ref_wfn.basisset(), new_wfn.basisset())
 
-            # check if the projected orbitals have the same dimensions as the new wavefunction
+            # If the number of orbitals is different, we add orthogonal vectors to the projected orbitals
             if pCa.coldim() != new_wfn.Ca().coldim():
-
                 nirrep = new_wfn.nirrep()
                 Snp = new_wfn.S().nph
                 pCanp = pCa.nph
                 pCbnp = pCb.nph
-
                 fullCa = []
                 fullCb = []
-
                 for h in range(nirrep):
-                    fullCa_h = add_orthogonal_vectors(pCanp[h], Snp[h])
-                    fullCa.append(fullCa_h)
+                    fullCa.append(add_orthogonal_vectors(pCanp[h], Snp[h]))
+                    fullCb.append(add_orthogonal_vectors(pCbnp[h], Snp[h]))
 
+                # redefine the projected orbitals
                 pCa = psi4.core.Matrix.from_array(fullCa)
+                pCb = psi4.core.Matrix.from_array(fullCb)
 
+            # copy the projected orbitals to the new wavefunction
             new_wfn.Ca().copy(pCa)
             new_wfn.Cb().copy(pCa)
 
