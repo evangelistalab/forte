@@ -38,6 +38,7 @@ class Matrix;
 class Vector;
 } // namespace psi
 
+#include "forte-def.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "integrals/active_space_integrals.h"
@@ -63,6 +64,7 @@ struct Block2DMRGSolverImpl {
     bool is_spin_adapted_;
     std::string scratch_;
     size_t stack_mem_;
+    int nthreads_ = omp_get_max_threads();
     Block2DMRGSolverImpl(bool is_spin_adapted, size_t stack_mem, std::string scratch)
         : is_spin_adapted_(is_spin_adapted), scratch_(scratch), stack_mem_(stack_mem) {
         if (is_spin_adapted_)
@@ -71,10 +73,6 @@ struct Block2DMRGSolverImpl {
         else
             driver_sz_ =
                 std::make_shared<block2::DMRGDriver<block2::SZ, double>>(stack_mem, scratch);
-        int n_threads = block2::threading_()->n_threads_global;
-        block2::threading_() = std::make_shared<block2::Threading>(
-            block2::ThreadingTypes::OperatorBatchedGEMM | block2::ThreadingTypes::Global, n_threads,
-            n_threads, n_threads);
     }
     void reset() {
         if (is_spin_adapted_) {
@@ -88,10 +86,6 @@ struct Block2DMRGSolverImpl {
             driver_sz_ =
                 std::make_shared<block2::DMRGDriver<block2::SZ, double>>(stack_mem_, scratch_);
         }
-        int n_threads = block2::threading_()->n_threads_global;
-        block2::threading_() = std::make_shared<block2::Threading>(
-            block2::ThreadingTypes::OperatorBatchedGEMM | block2::ThreadingTypes::Global, n_threads,
-            n_threads, n_threads);
     }
     void initialize_system(int n_sites, int n_elec, int spin, int pg_irrep,
                            const vector<int>& actv_irreps, bool singlet_embedding = true,
@@ -320,6 +314,19 @@ struct Block2DMRGSolverImpl {
             return driver_sz_->expectation(bra_, impo, ket_, iprint);
         }
     }
+    void set_num_threads(bool init) {
+        if (init) {
+            block2::threading_()->activate_normal();
+        } else {
+            block2::threading_()->activate_global_mkl();
+#ifdef _OPENMP
+            omp_set_num_threads(nthreads_);
+#endif
+#ifdef _HAS_INTEL_MKL
+            mkl_set_num_threads(nthreads_);
+#endif
+        }
+    }
 };
 
 struct Block2ScratchManager {
@@ -392,9 +399,8 @@ double Block2DMRGSolver::compute_energy() {
 
     timer t("BLOCK2 Solver Compute Energy");
 
+    impl_->set_num_threads(true);
     impl_->reset();
-    block2::threading_()->activate_normal();
-    std::cout << *block2::threading_();
 
     // system initialization
     bool singlet_embedding = dmrg_options_->get_bool("BLOCK2_SINGLET_EMBEDDING");
@@ -718,6 +724,8 @@ double Block2DMRGSolver::compute_energy() {
         }
     }
 
+    impl_->set_num_threads(false);
+
     double energy = energies_[root_];
     psi::Process::environment.globals["CURRENT ENERGY"] = energy;
     psi::Process::environment.globals["DMRG ENERGY"] = energy;
@@ -738,6 +746,8 @@ Block2DMRGSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& 
 
     if (max_rdm_level < 1)
         return std::vector<std::shared_ptr<RDMs>>(root_list.size());
+
+    impl_->set_num_threads(true);
 
     // system initialization
     bool singlet_embedding = dmrg_options_->get_bool("BLOCK2_SINGLET_EMBEDDING");
@@ -939,16 +949,17 @@ Block2DMRGSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& 
             print_natural_orbitals(mo_space_info_, rdms.back());
     }
 
+    impl_->set_num_threads(false);
     return rdms;
 }
 
 std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
     const std::vector<size_t>& roots, ambit::Tensor Tbra, ambit::Tensor Tket,
     const std::vector<int>& p_syms, const std::string& name, bool load) {
+    impl_->set_num_threads(true);
     /// |bra_{pσ}> = \sum_{uvw} Tbra_{pwuv} \sum_{σ1} w^+_{σ1} v_{σ1} u_{σ} |Ψ>
     /// |ket_{pσ}> = \sum_{uvw} Tket_{pwuv} \sum_{σ1} w^+_{σ1} v_{σ1} u_{σ} |Ψ>
     /// energy <- \sum_{p} \sum_{σ} <bra_{pσ}|ket_{pσ}>
-
     auto dims_bra = Tbra.dims();
     auto dims_ket = Tket.dims();
     auto nactv = mo_space_info_->size("ACTIVE");
@@ -1182,6 +1193,8 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
         }
         out[ir] = value;
     }
+
+    impl_->set_num_threads(false);
     return out;
 }
 
