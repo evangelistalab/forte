@@ -91,6 +91,141 @@ def orbital_projection(ref_wfn, options, mo_space_info):
         return mo_space_info
 
 
+def ortho_orbs_new(Ca, S, Cinit, mo_space_info, space_priority=None):
+    """Orthonormalize between orbitals
+
+    Args:
+        Ca (psi4.core.Matrix): The orbital coefficients from the current wave function
+        S (psi4.core.Matrix): The SO overlap matrix from the current wave function
+        Cinit (psi4.core.Matrix): The guess orbital coefficients
+        mo_space_info (forte.MOSpaceInfo): The Forte MOSpaceInfo object
+        space_priority (list, optional): A list of MO spaces that defines the projection order. Defaults to None.
+
+    Raises:
+        ValueError: when inconsistent number of irreps are found in Ca, S, Cinit
+
+    Returns:
+        psi4.core.Matrix: The new orthonormalized orbital coefficients
+    """
+    nirrep = mo_space_info.nirrep()
+    msg = []
+    if Ca.nirrep() != nirrep:
+        msg.append(f"Wrong number of irrep in Ca: expected {nirrep} but got {Ca.nirrep()}")
+    if S.nirrep() != nirrep:
+        msg.append(f"Wrong number of irrep in S: expected {nirrep} but got {S.nirrep()}")
+    if Cinit.nirrep() != nirrep:
+        msg.append(f"Wrong number of irrep in Cinit: expected {nirrep} but got {Cinit.nirrep()}")
+    if len(msg) > 0:
+        raise ValueError("\n".join(msg))
+
+    if space_priority is None:
+        space_priority = ["FROZEN_DOCC", "FROZEN_UOCC"]
+        space_priority += [f"GAS{i}" for i in range(1, 7)]
+        space_priority += ["RESTRICTED_DOCC", "RESTRICTED_UOCC"]
+
+    relative_mos = {k: [[] for i in range(nirrep)] for k in space_priority}
+    for space in space_priority:
+        for h, i in mo_space_info.relative_mo(space):
+            relative_mos[space][h].append(i)
+
+    Cp = Ca.to_array()
+    C0 = Cinit.to_array()
+    S = S.to_array()
+    if nirrep == 1:
+        Cp = [Cp]
+        C0 = [C0]
+        S = [S]
+    else:
+        Cp = list(Cp)
+
+    C = [np.zeros(Cp[h].shape) for h in range(nirrep)]
+
+    for space in space_priority:
+        for h in range(nirrep):
+            mos = relative_mos[space][h]
+            if len(mos) == 0:
+                continue
+            u, s, vh = np.linalg.svd(Cp[h].T @ S[h] @ C0[h][:, mos], full_matrices=True)
+            if abs(np.min(s)) < 1.0e-6:
+                print(f"Linear dependency for {space} at irrep {h}, singular values: {s}")
+            Csub = Cp[h] @ u[:, : len(s)] @ vh
+            Cp[h] = Cp[h] - Csub @ (Csub.T @ S[h] @ Cp[h])
+            C[h][:, mos] = Csub
+
+    return psi4.core.Matrix.from_array(C)
+
+
+def add_orthogonal_vectors(C, S):
+    """Add orthogonal vectors to the given set of vectors
+
+    Args:
+        C (np.ndarray): The set of vectors
+        S (np.ndarray): The overlap matrix
+    Returns:
+        np.ndarray: The set of vectors with orthogonal vectors added
+    """
+    from scipy.linalg import solve_triangular
+
+    # Cholesky decomposition of the overlap matrix
+    L = np.linalg.cholesky(S)
+    # Rotate the vectors to the orthogonal space
+    V_tilde = L.T @ C
+    # SVD of the rotated vectors
+    U, s, Vh = np.linalg.svd(V_tilde.T)
+    # Rank = number of columns of C that are linearly independent
+    rank = C.shape[1]
+    # Null space of the rotated vectors
+    N_null = Vh[rank:].T  # Shape (N, N - k)
+    # Solve for the orthogonal vectors that give the null space
+    W = solve_triangular(L.T, N_null, lower=False)
+
+    C_ortho = np.zeros_like(W)
+
+    # Orthogonalize the columns of W against previous vectors
+    for i in range(W.shape[1]):
+        wi = W[:, i]
+        for j in range(i):
+            wj = C_ortho[:, j]
+            proj = wj.T @ S @ wi
+            wi = wi - proj * wj
+        # Normalize
+        norm = np.sqrt(wi.T @ S @ wi)
+        wi = wi / norm
+        C_ortho[:, i] = wi
+
+    fullC = np.hstack((C, C_ortho))
+    return fullC
+
+
+def basis_projection(wfn_old, wfn_new, mo_space_info):
+    """Project the orbitals from the old to new basis
+
+    Args:
+        wfn_old (psi4.Wavefunction): the old wave function
+        wfn_new (psi4.Wavefunction): the new wave function
+        mo_space_info (forte.MOSpaceInfo): the Forte MOSpaceInfo object
+
+    Returns:
+        psi4.core.Matrix: the new orbitals
+    """
+    dim_zero = psi4.core.Dimension([0] * wfn_new.nirrep())
+    slice_so_ref = psi4.core.Slice(dim_zero, wfn_old.nsopi())
+    slice_so_new = psi4.core.Slice(dim_zero, wfn_new.nsopi())
+
+    dim_docc = mo_space_info.dimension("INACTIVE_DOCC")
+    dim_actv = mo_space_info.dimension("ACTIVE")
+    dim_occ = dim_docc + dim_actv
+
+    slice_occ = psi4.core.Slice(dim_zero, dim_occ)
+    Cocc_target = wfn_old.Ca().get_block(slice_so_ref, slice_occ)
+    Cocc = wfn_new.basis_projection(Cocc_target, dim_occ, wfn_old.basisset(), wfn_new.basisset())
+
+    Cp = projectout(wfn_new.Ca(), Cocc, wfn_new.S())
+    Ca = ortho_orbs_new(Cp, wfn_new.S(), wfn_new.Ca(), mo_space_info, ["INACTIVE_UOCC"])
+    Ca.set_block(slice_so_new, slice_occ, Cocc)
+    return Ca
+
+
 def ortho_orbs_forte(wfn, mo_space_info, Cold):
     """
     Read the set of orbitals from file and

@@ -403,7 +403,7 @@ template <typename Derived, typename T, typename F> class VectorSpaceList {
     VectorSpaceList adjoint() const {
         VectorSpaceList result;
         for (const auto& [e, c] : elements_) {
-            result.insert(e.adjoint(), conjugate(c));
+            result.add(e.adjoint(), conjugate(c));
         }
         return result;
     }
