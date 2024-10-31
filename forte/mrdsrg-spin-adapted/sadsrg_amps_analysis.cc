@@ -112,20 +112,14 @@ std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t2(BlockedTens
 
                 // for blocks like ccvv, only test c0 < c1 or (c0 = c1 and v0 <= v1)
                 if ((!sym) or (sym && (i[0] <= i[1]) && (i[0] != i[1] or i[2] <= i[3]))) {
-                    std::vector<size_t> indices{idx0, idx1, idx2, idx3};
-                    std::pair<std::vector<size_t>, double> idx_value =
-                        std::make_pair(indices, value);
-
                     if (std::fabs(value) >= std::fabs(t2[0].second)) {
                         std::pop_heap(t2.begin(), t2.end(), sort_pair_second_descend);
                         t2.pop_back();
-
-                        t2.push_back(idx_value);
+                        t2.emplace_back(std::vector<size_t>{idx0, idx1, idx2, idx3}, value);
                         std::push_heap(t2.begin(), t2.end(), sort_pair_second_descend);
                     }
-
                     if (std::fabs(value) > std::fabs(intruder_tamp_)) {
-                        lt2.push_back(idx_value);
+                        lt2.emplace_back(std::vector<size_t>{idx0, idx1, idx2, idx3}, value);
                     }
                 }
             }
@@ -159,19 +153,15 @@ std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t1(BlockedTens
                 size_t idx0 = label_to_spacemo_[block[0]][i[0]];
                 size_t idx1 = label_to_spacemo_[block[1]][i[1]];
 
-                std::vector<size_t> indices{idx0, idx1};
-                std::pair<std::vector<size_t>, double> idx_value = std::make_pair(indices, value);
-
                 if (std::fabs(value) >= std::fabs(t1[0].second)) {
                     std::pop_heap(t1.begin(), t1.end(), sort_pair_second_descend);
                     t1.pop_back();
-
-                    t1.push_back(idx_value);
+                    t1.emplace_back(std::vector<size_t>{idx0, idx1}, value);
                     std::push_heap(t1.begin(), t1.end(), sort_pair_second_descend);
                 }
 
                 if (std::fabs(value) > std::fabs(intruder_tamp_)) {
-                    lt1.push_back(idx_value);
+                    lt1.emplace_back(std::vector<size_t>{idx0, idx1}, value);
                 }
             }
         });

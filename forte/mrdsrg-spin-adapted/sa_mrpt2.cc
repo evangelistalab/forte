@@ -377,10 +377,8 @@ void SA_MRPT2::compute_t2_df_minimal() {
     }
 
     // build T2
-    T2_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        double denom = Fdiag_[i[0]] + Fdiag_[i[1]] - Fdiag_[i[2]] - Fdiag_[i[3]];
-        value *= dsrg_source_->compute_renormalized_denominator(denom);
-    });
+    apply_denominator(T2_, T2_.block_labels(),
+                      [&](double v) { return dsrg_source_->compute_renormalized_denominator(v); });
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
