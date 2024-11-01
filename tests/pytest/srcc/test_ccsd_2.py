@@ -42,7 +42,7 @@ def test_ccsd2():
     print(f"  CCSD energy: {energy}")
     print(f"  E - Eref:    {energy - ref_energy}")
 
-    # assert energy == pytest.approx(ref_energy, 1.0e-11)
+    assert energy == pytest.approx(ref_energy, 1.0e-11)
 
 
 if __name__ == "__main__":
