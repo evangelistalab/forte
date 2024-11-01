@@ -474,7 +474,7 @@ std::shared_ptr<ActiveSpaceIntegrals> SADSRG::compute_Heff_actv() {
     return fci_ints;
 }
 
-std::tuple<BlockedTensor,BlockedTensor> SADSRG::compute_Heff_full() {
+std::tuple<double, BlockedTensor,BlockedTensor> SADSRG::compute_Heff_full() {
     // de-normal-order DSRG transformed Hamiltonian
     double Edsrg = Eref_ + Hbar0_;
     if (foptions_->get_bool("FORM_HBAR3")) {
@@ -482,7 +482,7 @@ std::tuple<BlockedTensor,BlockedTensor> SADSRG::compute_Heff_full() {
     } else {
         deGNO_ints_full("Hamiltonian", Edsrg, Hbar1_, Hbar2_);
     }
-    return std::make_tuple(Hbar1_, Hbar2_);
+    return std::make_tuple(Edsrg, Hbar1_, Hbar2_);
 
 /*
     auto Hbar1g = BTF_->build(tensor_type_, "Hbar1g", spin_cases({"gg"}));

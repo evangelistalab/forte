@@ -245,9 +245,9 @@ class ProcedureDSRG:
 
         if self.options.get_bool("FORM_DEGNO_FULL_HBAR") and self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
             psi4.core.print_out(f"\n\n    Computing full dressed integrals for SA-MR-LDSRG(2)")
-            Hbar1_full, Hbar2_full = self.dsrg_solver.compute_Heff_full()
-            np.savez("Hbar1_full.npz", **Hbar1_full)
-            np.savez("Hbar2_full.npz", **Hbar2_full)
+            E_dsrg, Hbar1_full, Hbar2_full = self.dsrg_solver.compute_Heff_full()
+            np.savez("Hbar_full.npz", scalar=E_dsrg, **Hbar1_full, **Hbar2_full)
+            
 
         # Reference relaxation procedure
         for n in range(self.relax_maxiter):
