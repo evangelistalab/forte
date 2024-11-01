@@ -232,7 +232,9 @@ void SADSRG::read_MOSpaceInfo() {
     core_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
     actv_mos_ = mo_space_info_->corr_absolute_mo("ACTIVE");
     virt_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
+    gen_mos_ = mo_space_info_->corr_absolute_mo("CORRELATED");
     actv_mos_sym_ = mo_space_info_->symmetry("ACTIVE");
+    gen_mos_sym_ = mo_space_info_->symmetry("CORRELATED");
 
     if (eri_df_) {
         aux_mos_ = std::vector<size_t>(ints_->nthree());
@@ -472,6 +474,41 @@ std::shared_ptr<ActiveSpaceIntegrals> SADSRG::compute_Heff_actv() {
     return fci_ints;
 }
 
+std::tuple<BlockedTensor,BlockedTensor> SADSRG::compute_Heff_full() {
+    // de-normal-order DSRG transformed Hamiltonian
+    double Edsrg = Eref_ + Hbar0_;
+    if (foptions_->get_bool("FORM_HBAR3")) {
+        throw psi::PSIEXCEPTION("FORM_HBAR3 is not implemented for full Hamiltonian.");
+    } else {
+        deGNO_ints_full("Hamiltonian", Edsrg, Hbar1_, Hbar2_);
+    }
+    return std::make_tuple(Hbar1_, Hbar2_);
+
+/*
+    auto Hbar1g = BTF_->build(tensor_type_, "Hbar1g", spin_cases({"gg"}));
+    auto Hbar2g = BTF_->build(tensor_type_, "Hbar2g", spin_cases({"gggg"}));
+
+    // copy all blocks of Hbar1 and Hbar2 to Hbar1g and Hbar2g
+    Hbar1g["pq"] = Hbar1_["pq"];
+    Hbar2g["pqrs"] = Hbar2_["pqrs"];
+
+    // create FCIIntegral shared_ptr
+    std::vector<size_t> null_core = {};
+    auto fci_ints =
+        std::make_shared<ActiveSpaceIntegrals>(ints_, gen_mos_, gen_mos_sym_, null_core);
+    fci_ints->set_scalar_energy(Edsrg - Enuc_ - Efrzc_);
+    fci_ints->set_restricted_one_body_operator(Hbar1g.block("gg").data(),
+                                               Hbar1g.block("gg").data());
+
+    auto Hbar2aa = Hbar2g.block("gggg").clone();
+    Hbar2aa("pqrs") -= Hbar2g.block("gggg")("pqsr");
+    fci_ints->set_active_integrals(Hbar2aa, Hbar2g.block("gggg"), Hbar2aa);
+
+    return fci_ints;
+    */
+}
+
+
 std::shared_ptr<ActiveMultipoleIntegrals> SADSRG::compute_mp_eff_actv() {
     /**
      * DSRG transform multipole integrals: Mbar = e^{-A} M e^{A}
@@ -614,6 +651,45 @@ void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, 
     H1.block("aa")("uv") -= 0.5 * temp("uxvy") * L1a("yx");
     print_done(t1.get());
 }
+
+void SADSRG::deGNO_ints_full(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2) {
+    print_h2("De-Normal-Order full 2-Body DSRG Transformed " + name);
+
+    // compute scalar
+    local_timer t0;
+    print_contents("Computing the scalar term");
+
+    ambit::BlockedTensor L1h = BTF_->build(tensor_type_, "L1h", {"hh"});
+    L1h.block("aa") = L1_.block("aa");
+    L1h.block("cc").iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 2.0 : 0.0; });
+    
+    // build a temp["pqrs"] = 2 * H2["pqrs"] - H2["pqsr"]
+    auto temp = H2.clone();
+    temp.scale(2.0);
+    temp["pqrs"] -= H2["pqsr"];
+
+    // scalar from H1
+    double scalar1 = 0.0;
+    scalar1 -= H1["ji"] * L1h["ij"];
+
+    // scalar from H2
+    double scalar2 = 0.0;
+    scalar2 += 0.25 * L1h["ij"] * temp["ljki"] * L1h["kl"];
+
+    scalar2 -= 0.5 * H2["xyuv"] * L2_["uvxy"];
+
+    H0 += scalar1 + scalar2;
+    print_done(t0.get());
+
+    // compute 1-body term
+    local_timer t1;
+    print_contents("Computing the 1-body term");
+
+    H1["pq"] -= 0.5 * temp["piqj"] * L1h["ji"];
+    print_done(t1.get());
+}
+
 
 void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2,
                         BlockedTensor& /*H3*/) {

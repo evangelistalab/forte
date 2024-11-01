@@ -1122,6 +1122,10 @@ DSRG:
     type: bool
     default: False
     help: "Form 3-body mbar (only used in dsrg-mrpt2 for testing)"
+  FORM_DEGNO_FULL_HBAR:
+    type: bool
+    default: False
+    help: "Form the de-normal-ordered full Hbar (only used in SA-MR-LDSRG(2))"
   DSRGPT:
     type: bool
     default: True

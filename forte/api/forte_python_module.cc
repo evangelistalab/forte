@@ -275,6 +275,12 @@ PYBIND11_MODULE(_forte, m) {
         .def("compute_energy", &SADSRG::compute_energy, "Compute the DSRG energy")
         .def("compute_Heff_actv", &SADSRG::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals")
+        .def("compute_Heff_full", [](SADSRG& self) {
+            const auto [Hbar1, Hbar2] = self.compute_Heff_full();
+            return py::make_tuple(blockedtensor_to_np(Hbar1), blockedtensor_to_np(Hbar2));
+        })
+        .def("compute_Heff_full", &SADSRG::compute_Heff_full,
+             "Return the full DSRG dressed ActiveSpaceIntegrals")
         .def("compute_mp_eff_actv", &SADSRG::compute_mp_eff_actv,
              "Return the DSRG dressed ActiveMultipoleIntegrals")
         .def("set_Uactv", &SADSRG::set_Uactv, "Ua"_a,
