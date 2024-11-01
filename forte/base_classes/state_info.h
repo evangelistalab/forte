@@ -32,6 +32,8 @@
 #include <string>
 #include <vector>
 
+#include "helpers/symmetry.h"
+
 namespace psi {
 class Wavefunction;
 }
@@ -107,10 +109,9 @@ class StateInfo {
 };
 
 /**
- * @brief make_state_info_from_psi Make a StateInfo object by reading variables set in the psi4
- *        environmental variables
+ * @brief make_state_info_from_options Make a StateInfo object by reading ForteOptions
  * @return a StateInfo object
  */
-StateInfo make_state_info_from_psi(std::shared_ptr<ForteOptions> options);
+StateInfo make_state_info_from_options(std::shared_ptr<ForteOptions> options, const Symmetry& symmetry);
 
 } // namespace forte

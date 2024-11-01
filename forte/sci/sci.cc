@@ -32,10 +32,12 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/matrix.h"
 
-#include "helpers/printing.h"
+#include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
 
+#include "helpers/printing.h"
 #include "helpers/timer.h"
+
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sci.h"
 

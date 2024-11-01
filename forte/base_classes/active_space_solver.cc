@@ -35,9 +35,7 @@
 
 #include "psi4/psi4-dec.h"
 #include "psi4/physconst.h"
-#include "psi4/libmints/molecule.h"
 #include "psi4/libmints/vector.h"
-#include "psi4/libpsi4util/process.h"
 
 #include "base_classes/forte_options.h"
 #include "base_classes/rdms.h"
@@ -54,13 +52,13 @@
 
 namespace forte {
 
-ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
+ActiveSpaceSolver::ActiveSpaceSolver(const std::string& solver_type,
                                      const std::map<StateInfo, size_t>& state_nroots_map,
                                      std::shared_ptr<SCFInfo> scf_info,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info,
                                      std::shared_ptr<ForteOptions> options,
                                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : method_(method), state_nroots_map_(state_nroots_map), scf_info_(scf_info),
+    : solver_type_(solver_type), state_nroots_map_(state_nroots_map), scf_info_(scf_info),
       mo_space_info_(mo_space_info), options_(options), as_ints_(as_ints) {
 
     print_ = int_to_print_level(options->get_int("PRINT"));
@@ -82,6 +80,8 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
         Ub_data[i * nactv + i] = 1.0;
     }
 }
+
+const std::string& ActiveSpaceSolver::solver_type() const { return solver_type_; }
 
 void ActiveSpaceSolver::set_print(PrintLevel level) { print_ = level; }
 
@@ -127,15 +127,15 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         size_t nroot = state_nroot.second;
 
         // so far only FCI and DETCI supports restarting from a previous wavefunction
-        if ((method_ == "FCI") or (method_ == "DETCI")) {
+        if ((solver_type_ == "FCI") or (solver_type_ == "DETCI")) {
             auto [it, inserted] = state_method_map_.try_emplace(state);
             if (inserted) {
-                it->second = make_active_space_method(method_, state, nroot, scf_info_,
+                it->second = make_active_space_method(solver_type_, state, nroot, scf_info_,
                                                       mo_space_info_, as_ints_, options_);
             }
         } else {
-            state_method_map_[state] = make_active_space_method(method_, state, nroot, scf_info_,
-                                                                mo_space_info_, as_ints_, options_);
+            state_method_map_[state] = make_active_space_method(
+                solver_type_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
         }
         auto method = state_method_map_[state];
         // set the convergence criteria
@@ -695,9 +695,9 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info) {
     std::map<StateInfo, std::vector<double>> state_weights_map;
 
-    // make a StateInfo object using the information from psi4
+    // make a StateInfo object using the information
     // TODO: need to optimize for spin-free RDMs
-    auto state = make_state_info_from_psi(options); // assumes low-spin
+    auto state = make_state_info_from_options(options, mo_space_info->point_group_label()); // assumes low-spin
 
     // check if the user provided a AVG_STATE list
     py::list avg_state = options->get_gen_list("AVG_STATE");

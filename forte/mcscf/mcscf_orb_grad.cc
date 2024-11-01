@@ -49,9 +49,13 @@
 #include "helpers/lbfgs/lbfgs.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
+
+#include "base_classes/forte_options.h"
+#include "base_classes/scf_info.h"
+#include "base_classes/rdms.h"
+
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
-#include "base_classes/rdms.h"
 
 #include "mcscf/mcscf_orb_grad.h"
 
@@ -61,9 +65,11 @@ using namespace ambit;
 namespace forte {
 
 MCSCF_ORB_GRAD::MCSCF_ORB_GRAD(std::shared_ptr<ForteOptions> options,
+                               std::shared_ptr<SCFInfo> scf_info,
                                std::shared_ptr<MOSpaceInfo> mo_space_info,
                                std::shared_ptr<ForteIntegrals> ints, bool ignore_frozen)
-    : options_(options), mo_space_info_(mo_space_info), ints_(ints), ignore_frozen_(ignore_frozen) {
+    : options_(options), scf_info_(scf_info), mo_space_info_(mo_space_info), ints_(ints),
+      ignore_frozen_(ignore_frozen) {
     startup();
 }
 
@@ -78,7 +84,9 @@ void MCSCF_ORB_GRAD::startup() {
     nonredundant_pairs();
 
     // setup JK
-    JK_ = ints_->jk();
+    if (ints_->integral_type() != IntegralType::Custom) {
+        JK_ = ints_->jk();
+    }
     if (ints_->integral_type() == IntegralType::DF or
         ints_->integral_type() == IntegralType::DiskDF) {
         tei_alg_ = options_->get_bool("MCSCF_DF_TEIALG") ? TEIALG::DF : TEIALG::JK;
@@ -806,11 +814,13 @@ bool MCSCF_ORB_GRAD::update_orbitals(std::shared_ptr<psi::Vector> x) {
     // update orbitals
     C_->gemm(false, false, 1.0, C0_, U_, 0.0);
     if (ints_->integral_type() == Custom) {
-        ints_->update_orbitals(C_, C_);
+        scf_info_->update_orbitals(C_, C_);
+        // ints_->update_orbitals(C_, C_);
     } else {
         // here we push the new orbitals to the integrals object but do not update the integrals
         // for efficiency
-        ints_->update_orbitals(C_, C_, false);
+        // ints_->update_orbitals(C_, C_, false);
+        scf_info_->update_orbitals(C_, C_, false);
     }
 
     // printing
@@ -1148,9 +1158,9 @@ void MCSCF_ORB_GRAD::canonicalize_final(const std::shared_ptr<psi::Matrix>& U) {
     C_->gemm(false, false, 1.0, C0_, U_, 0.0);
 
     if (ints_->integral_type() == Custom) {
-        ints_->update_orbitals(C_, C_);
+        scf_info_->update_orbitals(C_, C_);
     } else {
-        ints_->update_orbitals(C_, C_, false);
+        scf_info_->update_orbitals(C_, C_, false);
     }
     build_mo_integrals();
 }

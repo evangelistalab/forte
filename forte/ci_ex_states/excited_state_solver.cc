@@ -36,6 +36,8 @@
 #include "psi4/physconst.h"
 
 #include "base_classes/mo_space_info.h"
+#include "base_classes/forte_options.h"
+
 #include "sci/sci.h"
 #include "sparse_ci/determinant_substitution_lists.h"
 #include "helpers/helpers.h"

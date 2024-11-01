@@ -36,6 +36,7 @@ set {
   reference     rhf
   scf_type      df
   d_convergence 10
+  guess         sadno
 }
 Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refscf, variable("CURRENT ENERGY"), 8, "SCF energy")
