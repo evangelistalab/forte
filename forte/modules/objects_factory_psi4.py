@@ -363,12 +363,12 @@ class ObjectsFromPsi4(Module):
         # Call methods that project the orbitals (AVAS, embedding)
         data.mo_space_info = orbital_projection(data.psi_wfn, data.options, temp_mo_space_info)
 
-        # Build Forte SCFInfo object
-        data.scf_info = SCFInfo(data.psi_wfn)
-
         # Reorder active orbitals for DMRG after AVAS
         if data.options.get_str("ACTIVE_SPACE_SOLVER") in ["DMRG", "BLOCK2"]:
             dmrg_initial_orbitals(data.psi_wfn, data.options, data.mo_space_info)
+
+        # Build Forte SCFInfo object
+        data.scf_info = SCFInfo(data.psi_wfn)
 
         # Build a map from Forte StateInfo to the weights
         data.state_weights_map = make_state_weights_map(data.options, data.mo_space_info)
