@@ -47,15 +47,23 @@ Localize::Localize(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteI
     : OrbitalTransform(ints, mo_space_info) {
 
     if (ints_->nirrep() > 1) {
-        throw psi::PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");
+        throw std::runtime_error("ERROR: Localizer only implemented for C1 symmetry!");
     }
 
     orbital_spaces_ = options->get_int_list("LOCALIZE_SPACE");
     local_method_ = options->get_str("LOCALIZE");
 
-    print_h2("Orbital Localizer");
+    if (print_ > PrintLevel::Quiet) {
+        print_h2("Orbital Localizer");
 
-    outfile->Printf("\n  Localize method: %s", local_method_.c_str());
+        outfile->Printf("\n  Localize method: %s", local_method_.c_str());
+        if (orbital_spaces_.empty()) {
+            outfile->Printf("\n  No orbital space for localization is set!");
+            outfile->Printf("\n  Assume localizing active orbitals by default!");
+            std::vector<std::string> labels{"ACTIVE"};
+            set_orbital_space(labels);
+        }
+    }
 }
 
 void Localize::set_orbital_space(std::vector<int>& orbital_spaces) {
@@ -63,7 +71,6 @@ void Localize::set_orbital_space(std::vector<int>& orbital_spaces) {
 }
 
 void Localize::set_orbital_space(std::vector<std::string>& labels) {
-
     for (const auto& label : labels) {
         std::vector<size_t> mos = mo_space_info_->corr_absolute_mo(label);
         orbital_spaces_.push_back(mos[0]);
@@ -72,13 +79,12 @@ void Localize::set_orbital_space(std::vector<std::string>& labels) {
 }
 
 void Localize::compute_transformation() {
-
     if (orbital_spaces_.size() == 0) {
         outfile->Printf("\n  Error: Orbital space for localization is not set!");
-        exit(1);
+        throw std::runtime_error("Error: Orbital space for localization is not set!");
     } else if ((orbital_spaces_.size() % 2) != 0) {
         outfile->Printf("\n  Error: Orbital space for localization not properly set!");
-        exit(1);
+        throw std::runtime_error("Error: Orbital space for localization not properly set!");
     }
 
     auto Ca = ints_->Ca()->clone();
@@ -89,6 +95,9 @@ void Localize::compute_transformation() {
     Ua_->identity();
     Ub_->identity();
 
+    auto basisset = ints_->wfn()->basisset();
+    auto S = ints_->wfn()->S();
+
     // loop through each space
     for (size_t f_idx = 0, max = orbital_spaces_.size(); f_idx < max - 1; f_idx += 2) {
 
@@ -97,15 +106,17 @@ void Localize::compute_transformation() {
         size_t last = orbital_spaces_[f_idx + 1];
 
         // print
-        outfile->Printf("\n  Localizing orbitals: ");
-        for (size_t orb = first; orb <= last; ++orb) {
-            outfile->Printf(" %d", orb);
+        if (print_ > PrintLevel::Quiet) {
+            outfile->Printf("\n  Localizing orbitals: ");
+            for (size_t orb = first; orb <= last; ++orb) {
+                outfile->Printf(" %d", orb);
+            }
+            outfile->Printf("\n");
         }
-        outfile->Printf("\n");
 
         if (last < first) {
             outfile->Printf("\n  Error: Orbital space for localization not properly set!");
-            exit(1);
+            throw std::runtime_error("Error: Orbital space for localization not properly set!");
         }
 
         // number of orbitals to localize
@@ -120,13 +131,18 @@ void Localize::compute_transformation() {
         }
 
         // localize
-        std::shared_ptr<psi::BasisSet> primary = ints_->wfn()->basisset();
-        std::shared_ptr<psi::Localizer> loc_a =
-            psi::Localizer::build(local_method_, primary, Ca_loc);
-        loc_a->localize();
-
-        // Grab the transformation and localized matrices
-        auto Ua_loc = loc_a->U();
+        std::shared_ptr<psi::Matrix> Ua_loc;
+        if (local_method_ != "CHOLESKY") {
+            auto loc_a = psi::Localizer::build(local_method_, basisset, Ca_loc);
+            loc_a->set_print(static_cast<int>(print_));
+            loc_a->localize();
+            Ua_loc = loc_a->U();
+        } else {
+            // Cholesky orbitals: J. Chem. Phys. 125, 174101 (2006)
+            auto D = psi::linalg::doublet(Ca_loc, Ca_loc, false, true);
+            auto X = D->partial_cholesky_factorize(1.0e-6);
+            Ua_loc = psi::linalg::triplet(Ca_loc, S, X, true, false, false);
+        }
 
         // Set Ua, Ub
         for (size_t i = 0; i < orb_dim; ++i) {
@@ -137,34 +153,4 @@ void Localize::compute_transformation() {
         }
     }
 }
-
-CholeskyLocal::CholeskyLocal(std::shared_ptr<ForteOptions>, std::shared_ptr<ForteIntegrals> ints,
-                             std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(ints, mo_space_info) {}
-
-void CholeskyLocal::compute_transformation() {
-    psi::outfile->Printf("\n\n    Forming Cholesky orbitals ...");
-    auto Ca = ints_->Ca()->clone();
-
-    auto dim_c = mo_space_info_->dimension("INACTIVE_DOCC");
-    auto dim_a = mo_space_info_->dimension("ACTIVE");
-    auto slice_a = psi::Slice(dim_c, dim_c + dim_a);
-    auto slice = psi::Slice(psi::Dimension(mo_space_info_->nirrep()), Ca->rowspi());
-
-    auto C = Ca->get_block(slice, slice_a);
-    auto D = psi::linalg::doublet(C, C, false, true);
-    auto X = D->partial_cholesky_factorize(1.0e-8);
-
-    auto Uactv = psi::linalg::triplet(C, ints_->wfn()->S(), X, true, false, false);
-
-    Ua_ = std::make_shared<psi::Matrix>("Ua", Ca->colspi(), Ca->colspi());
-    Ua_->identity();
-    Ua_->set_block(slice_a, *Uactv);
-
-    Ub_ = std::make_shared<psi::Matrix>("Ub", Ca->colspi(), Ca->colspi());
-    Ub_->identity();
-    Ub_->set_block(slice_a, *Uactv);
-    psi::outfile->Printf(" Done.\n");
-}
-
 } // namespace forte
