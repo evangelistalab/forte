@@ -92,12 +92,8 @@ void MCSCF_2STEP::read_options() {
 
     orb_type_redundant_ = options_->get_str("MCSCF_FINAL_ORBITAL");
 
-    ci_type_ = options_->get_str("ACTIVE_SPACE_SOLVER");
-    if (ci_type_ == "") {
-        throw std::runtime_error("ACTIVE_SPACE_SOLVER is not specified!");
-    }
     mci_maxiter_ = options_->get_int("MCSCF_MCI_MAXITER");
-    if (ci_type_ == "BLOCK2")
+    if (as_solver_->solver_type() == "BLOCK2")
         mci_maxiter_ = options_->get_int("BLOCK2_N_TOTAL_SWEEPS");
 
     opt_orbs_ = not options_->get_bool("MCSCF_NO_ORBOPT");
@@ -135,7 +131,7 @@ void MCSCF_2STEP::print_options() {
                              {"Max value for rotation", max_rot_}});
     printer.add_string_data({{"Print level", to_string(print_)},
                              {"Integral type", int_type_},
-                             {"CI solver type", ci_type_},
+                             {"CI solver type", as_solver_->solver_type()},
                              {"Final orbital type", orb_type_redundant_},
                              {"Derivative type", der_type_}});
     printer.add_bool_data({{"Optimize orbitals", opt_orbs_},
@@ -169,7 +165,7 @@ double MCSCF_2STEP::compute_energy() {
 
     // prepare for orbital gradients
     const bool ignore_frozen = options_->get_bool("MCSCF_IGNORE_FROZEN_ORBS");
-    MCSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_, ignore_frozen);
+    MCSCF_ORB_GRAD cas_grad(options_, scf_info_, mo_space_info_, ints_, ignore_frozen);
     auto nrot = cas_grad.nrot();
     auto dG = std::make_shared<psi::Vector>("dG", nrot);
 
@@ -182,7 +178,7 @@ double MCSCF_2STEP::compute_energy() {
     // convergence for final CI
     auto r_conv = options_->get_double("R_CONVERGENCE");
     auto as_maxiter = options_->get_int("DL_MAXITER");
-    if (ci_type_ == "BLOCK2")
+    if (as_solver_->solver_type() == "BLOCK2")
         as_maxiter = options_->get_int("BLOCK2_N_TOTAL_SWEEPS");
 
     auto active_space_ints = cas_grad.active_space_ints();
@@ -191,7 +187,7 @@ double MCSCF_2STEP::compute_energy() {
     as_solver_->set_print(PrintLevel::Default);
     as_solver_->set_e_convergence(e_conv_);
     as_solver_->set_r_convergence(r_conv);
-    as_solver_->set_maxiter(no_orb_opt ? as_maxiter : mci_maxiter_);
+    as_solver_->set_maxiter(as_maxiter);
 
     // initial CI and resulting RDMs
     const auto state_energies_map = as_solver_->compute_energy();
@@ -246,8 +242,9 @@ double MCSCF_2STEP::compute_energy() {
         }
 
         // CI solver set up
-        bool restart = (ci_type_ == "FCI" or ci_type_ == "DETCI");
+        bool restart = (as_solver_->solver_type() == "FCI" or as_solver_->solver_type() == "DETCI");
         as_solver_->set_maxiter(restart ? mci_maxiter_ : as_maxiter);
+        as_solver_->set_die_if_not_converged(not restart);
 
         // CI convergence criteria along the way
         double dl_e_conv = 5.0e-7;
@@ -256,8 +253,8 @@ double MCSCF_2STEP::compute_energy() {
         // start iterations
         lbfgs_param->maxiter = micro_maxiter_;
         int bad_count = 0;
-        bool skip_de_conv = (ci_type_.find("DMRG") != std::string::npos or
-                             ci_type_.find("BLOCK2") != std::string::npos);
+        bool skip_de_conv = (as_solver_->solver_type().find("DMRG") != std::string::npos or
+                             as_solver_->solver_type().find("BLOCK2") != std::string::npos);
 
         std::vector<MCSCF_HISTORY> history;
 
@@ -329,29 +326,33 @@ double MCSCF_2STEP::compute_energy() {
             }
 
             // nail down results for DMRG
-            if (ci_type_ == "BLOCK2" or ci_type_ == "DMRG") {
-                if (std::fabs(de_c) < 1.0e-2 or g_rms < 1.0e-3) {
+            if (as_solver_->solver_type() == "BLOCK2" or as_solver_->solver_type() == "DMRG") {
+                if (std::fabs(de_c) < 1.0e-3 or g_rms < 1.0e-3) {
                     options_->set_bool("READ_ACTIVE_WFN_GUESS", true);
-                    mci_maxiter_ = 14;
+                    mci_maxiter_ = options_->get_int("MCSCF_DMRG_FOCUS_NSWEEPS");
+                    as_solver_->set_maxiter(mci_maxiter_);
+                    int n_steady = mci_maxiter_ / 2;
+                    int n_warmup1 = n_steady / 2, n_warmup2 = mci_maxiter_ - n_steady - n_warmup1;
                     // focus on the last bond dimension
-                    if (ci_type_ == "BLOCK2") {
+                    if (as_solver_->solver_type() == "BLOCK2") {
                         auto nsweeps = options_->get_int_list("BLOCK2_SWEEP_N_SWEEPS");
                         auto bond_dims = options_->get_int_list("BLOCK2_SWEEP_BOND_DIMS");
                         auto noises = options_->get_double_list("BLOCK2_SWEEP_NOISES");
                         auto dltols = options_->get_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS");
                         if (bond_dims.size() == 0) {
                             options_->set_int_list("BLOCK2_SWEEP_BOND_DIMS", {500});
-                            options_->set_int_list("BLOCK2_SWEEP_N_SWEEPS", {10});
+                            options_->set_int_list("BLOCK2_SWEEP_N_SWEEPS", {mci_maxiter_});
                             options_->set_double_list("BLOCK2_SWEEP_NOISES", {0.0});
-                            options_->set_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS", {1.0e-8});
+                            options_->set_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS", {1.0e-10});
                         } else {
                             auto bond_dim = bond_dims.back();
                             options_->set_int_list("BLOCK2_SWEEP_BOND_DIMS",
                                                    {bond_dim, bond_dim, bond_dim});
-                            options_->set_int_list("BLOCK2_SWEEP_N_SWEEPS", {4, 4, 6});
-                            options_->set_double_list("BLOCK2_SWEEP_NOISES", {1.0e-6, 1.0e-7, 0.0});
+                            options_->set_int_list("BLOCK2_SWEEP_N_SWEEPS",
+                                                   {n_warmup1, n_warmup2, n_steady});
+                            options_->set_double_list("BLOCK2_SWEEP_NOISES", {1.0e-4, 1.0e-5, 0.0});
                             options_->set_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS",
-                                                      {1.0e-7, 1.0e-8, 1.0e-9});
+                                                      {1.0e-8, 1.0e-9, 1.0e-10});
                         }
                     } else {
                         auto nsweeps = options_->get_int_list("DMRG_SWEEP_MAX_SWEEPS");
@@ -362,15 +363,14 @@ double MCSCF_2STEP::compute_energy() {
                         auto bond_dim = bond_dims.back();
                         options_->set_int_list("DMRG_SWEEP_MAX_SWEEPS",
                                                {bond_dim, bond_dim, bond_dim});
-                        options_->set_int_list("DMRG_SWEEP_MAX_SWEEPS", {4, 4, 6});
+                        options_->set_int_list("DMRG_SWEEP_MAX_SWEEPS",
+                                               {n_warmup1, n_warmup2, n_steady});
                         options_->set_double_list("DMRG_SWEEP_NOISE_PREFAC", {1.0e-2, 5.0e-3, 0.0});
                         options_->set_double_list("DMRG_SWEEP_DVDSON_RTOL",
-                                                  {1.0e-5, 1.0e-6, 1.0e-7});
+                                                  {1.0e-6, 1.0e-7, 1.0e-8});
                         options_->set_double_list("DMRG_SWEEP_ENERGY_CONV",
                                                   {1.0e-6, 1.0e-7, 1.0e-8});
                     }
-                } else {
-                    as_solver_->set_maxiter(++mci_maxiter_);
                 }
             }
 
@@ -415,8 +415,7 @@ double MCSCF_2STEP::compute_energy() {
             auto print_level = debug_print_ ? PrintLevel::Debug
                                             : (print_ >= PrintLevel::Verbose ? PrintLevel::Verbose
                                                                              : PrintLevel::Quiet);
-            e_c = diagonalize_hamiltonian(as_solver_, fci_ints,
-                                          {print_level, dl_e_conv, dl_r_conv, false});
+            e_c = diagonalize_hamiltonian(fci_ints, {print_level, dl_e_conv, dl_r_conv, false});
             rdms = as_solver_->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
         }
 
@@ -428,33 +427,30 @@ double MCSCF_2STEP::compute_energy() {
     if (print_ >= PrintLevel::Default)
         psi::outfile->Printf("\n\n  Performing final CI Calculation using converged orbitals");
 
+    as_solver_->set_maxiter(as_maxiter);
+    as_solver_->set_die_if_not_converged(true);
     energy_ =
-        diagonalize_hamiltonian(as_solver_, cas_grad.active_space_ints(),
+        diagonalize_hamiltonian(cas_grad.active_space_ints(),
                                 {print_, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
 
     if (ints_->integral_type() != Custom) {
-        auto final_orbs = options_->get_str("MCSCF_FINAL_ORBITAL");
+        // fix orbitals for redundant pairs
+        rdms = as_solver_->compute_average_rdms(state_weights_map_, 1, RDMsType::spin_free);
+        auto F = cas_grad.fock(rdms);
+        ints_->set_fock_matrix(F, F);
 
-        if (final_orbs != "UNSPECIFIED" or der_type_ == "FIRST") {
-            // fix orbitals for redundant pairs
-            rdms = as_solver_->compute_average_rdms(state_weights_map_, 1, RDMsType::spin_free);
-            auto F = cas_grad.fock(rdms);
-            ints_->set_fock_matrix(F, F);
+        // if we do not freeze orbitals, we need to set the inactive_mix flag to make sure
+        // the frozen and non-frozen core/virtual orbitals are canonicalized together.
+        auto inactive_mix =
+            ignore_frozen ? ignore_frozen : options_->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
+        auto active_mix = options_->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
 
-            // if we do not freeze orbitals, we need to set the inactive_mix flag to make sure
-            // the frozen and non-frozen core/virtual orbitals are canonicalized together.
-            auto inactive_mix = ignore_frozen;
+        psi::outfile->Printf("\n  Canonicalizing final MCSCF orbitals");
+        ActiveOrbitalType actv_orb_type(options_->get_str("MCSCF_FINAL_ORBITAL"));
+        SemiCanonical semi(mo_space_info_, ints_, scf_info_, inactive_mix, active_mix);
+        semi.semicanonicalize(rdms, false, actv_orb_type, false);
 
-            if (!ignore_frozen)
-                inactive_mix = options_->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
-            auto active_mix = options_->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
-
-            psi::outfile->Printf("\n  Canonicalizing final MCSCF orbitals");
-            SemiCanonical semi(mo_space_info_, ints_, options_, inactive_mix, active_mix);
-            semi.semicanonicalize(rdms, false, final_orbs == "NATURAL", false);
-
-            cas_grad.canonicalize_final(semi.Ua());
-        }
+        cas_grad.canonicalize_final(semi.Ua());
 
         // pass to wave function
         auto Ca = cas_grad.Ca();
@@ -470,7 +466,7 @@ double MCSCF_2STEP::compute_energy() {
             // TODO: remove this re-diagonalization if CI transformation is impelementd
             if (not is_single_reference()) {
                 diagonalize_hamiltonian(
-                    as_solver_, cas_grad.active_space_ints(),
+                    cas_grad.active_space_ints(),
                     {PrintLevel::Quiet, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
             }
 
@@ -519,8 +515,7 @@ bool MCSCF_2STEP::is_single_reference() {
 }
 
 double
-MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver_,
-                                     std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                      const std::tuple<PrintLevel, double, double, bool>& params) {
     const auto& [print, e_conv, r_conv, dump_wfn] = params;
 

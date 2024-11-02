@@ -31,7 +31,18 @@ Driver:
     type: str
     default: ""
     choices:
-      ["FCI", "GENCI", "ACI", "ASCI", "PCI", "DETCI", "CAS", "DMRG", "BLOCK2", "EXTERNAL"]
+      [
+        "FCI",
+        "GENCI",
+        "ACI",
+        "ASCI",
+        "PCI",
+        "DETCI",
+        "CAS",
+        "DMRG",
+        "BLOCK2",
+        "EXTERNAL",
+      ]
     help: "Active space solver type"
   CORRELATION_SOLVER:
     type: str
@@ -327,6 +338,14 @@ MO_Space_Info:
     help: "An array of MOs to swap in the format [irrep, mo_1, mo_2, irrep, mo_3, mo_4]. Irrep and MOs are all 1-based (NOT 0-based)!"
 
 Active_Space_Solver:
+  NACT_ORB:
+    type: int
+    default: None
+    help: "The number of orbitals in the active space."
+  NACT_EL:
+    type: int
+    default: None
+    help: "The number of electrons in the active space."
   NROOT:
     type: int
     default: 1
@@ -355,10 +374,18 @@ Active_Space_Solver:
     type: bool
     default: false
     help: "Read CI wave function of ActiveSpaceSolver from disk."
+  MULTIPOLE_MOMENT_LEVEL:
+    type: int
+    default: 1
+    help: "Permanent dipole (= 1) and quadrupole (= 2) moments of ActiveSpaceSolver"
   TRANSITION_DIPOLES:
-    type: bool
-    default: false
-    help: "Compute the transition dipole moments and oscillator strengths."
+    type: list
+    default: []
+    help: >
+      "A list of integer triplets that specify the irrep (0-based), multiplicity,"
+      "and the state number (0-based) for the transition dipole moment and oscillator strengths."
+      "Example: [[0,1,0], [2,3,1]] for computing all transition elements involving"
+      "the first singlet A1 and second triplet B2 states (assuming C2v point group)"
   PRINT_DIFFERENT_GAS_ONLY:
     type: bool
     default: false
@@ -1212,6 +1239,10 @@ DSRG:
     default: "EXPLICIT"
     choices: ["EXPLICIT", "DIRECT"]
     help: "Algorithm to compute 3-RDM contributions in fully contracted [H2, T2]"
+  DSRG_3RDM_BLOCK2_CPS_BOND_DIMENSION:
+    type: int
+    default: 1000
+    help: "Bond dimension of the compressed (N-1)-electron wave function"
   DSRG_RDM_MS_AVG:
     type: bool
     default: false
@@ -1220,6 +1251,46 @@ DSRG:
     type: bool
     default: false
     help: "Save SA-DSRG dressed integrals to dsrg_ints.json"
+  DSRG_FNO:
+    type: bool
+    default: false
+    help: "Perform frozen-natural-orbital truncated MR-DSRG based on DSRG-MRPT2 unrelaxed 1-RDM"
+  DSRG_FNO_PT2_S:
+    type: double
+    default: 1.5
+    help: "The DSRG flow parameter for generating FNOs and PT2 correction"
+  DSRG_FNO_PT2_CORRECTION:
+    type: bool
+    default: true
+    help: "Perform PT2 corrections to the discarded natural virtual orbitals"
+  DSRG_FNO_SCHEME:
+    type: str
+    default: "PO"
+    choices: ["PO", "NK", "PV"]
+    help: >
+      "The FNO truncation scheme."
+      "The cutoff value will be read from DSRG_FNO_X (X = PO, PV, NK)."
+      "NK should be used for size-consistent results."
+  DSRG_FNO_PO:
+    type: double
+    default: 98.0
+    help: "The percentage of the cumulative virtual occupancy kept unfrozen. Recommended value: 97-99%"
+  DSRG_FNO_PV:
+    type: double
+    default: 50.0
+    help: "The percentage of the number of virtual orbitals kept unfrozen. Recommended value: 40-60%"
+  DSRG_FNO_NK:
+    type: double
+    default: 1.0e-4
+    help: "Virtual orbitals with natural occupations smaller than this cutoff will be discarded."
+  DSRG_FNO_PT2_CU3:
+    type: bool
+    default: false
+    help: "Whether to include the 3-cumulant terms in DSRG-MRPT2 related steps in the FNO procedure."
+  MRPT2NO_ACTV_ROTATE:
+    type: bool
+    default: false
+    help: "Rotate orbitals so that the active is in the position suggested by MRPT2 NOs"
 
 DWMS:
   DWMS_ZETA:
@@ -1284,7 +1355,7 @@ Localize:
   LOCALIZE:
     type: str
     default: "PIPEK_MEZEY"
-    choices: ["PIPEK_MEZEY", "BOYS"]
+    choices: ["PIPEK_MEZEY", "BOYS", "CHOLESKY"]
     help: "The method used to localize the orbitals"
   LOCALIZE_SPACE:
     type: int_list
@@ -1382,6 +1453,10 @@ MCSCF:
     type: bool
     default: True
     help: "Ignore frozen orbitals in the input file for MCSCF or not"
+  MCSCF_DMRG_FOCUS_NSWEEPS:
+    type: int
+    default: 20
+    help: "Max number of sweeps in DMRGSCF near convergence (de < 1.0e-3, dg < 1.0e-3)"
   MCSCF_MULTIPLICITY:
     type: int
     default: 0
@@ -1481,6 +1556,10 @@ Old:
     type: bool
     default: False
     help: "Treat all GAS orbitals together for semi-canonicalization"
+  SEMI_CANONICAL_THRESHOLD:
+    type: double
+    default: 1.0e-8
+    help: "Threshold for testing semi-canonical orbitals"
   TWOPDC:
     type: str
     default: "MK"
@@ -1624,6 +1703,10 @@ DMRG:
     type: bool
     default: False
     help: "Whether or not to print the correlation functions after the DMRG calculation"
+  DMRG_REORDER_INIT_ORBS:
+    type: bool
+    default: True
+    help: "Whether or not to automatically reorder active orbitals (localize + Fiedler, C1 symmetry only)"
 
 BLOCK2:
   BLOCK2_STACK_MEM:
@@ -1637,7 +1720,11 @@ BLOCK2:
   BLOCK2_INITIAL_GUESS:
     type: double
     default: -1
-    help: "Shift (0 ~ 1) of occupation number for DMRG initial guess. -1 = random initial guess"
+    help: "Shift (0 ~ 1) of occupation number for DMRG initial guess: n + dn for n < 0.75 and n - dn for n > 1.25. dn < 0 for random initial guess"
+  BLOCK2_INITIAL_GUESS_OCC:
+    type: double_list
+    default: []
+    help: "Active occupation numbers (in Pitzer order) for DMRG initial guess; We use Hartree-Fock occupation numbers if not given."
   BLOCK2_CUTOFF:
     type: double
     default: 1E-20
@@ -1678,8 +1765,10 @@ BLOCK2:
     type: bool
     default: True
     help: "Whether to use low memory algorithm to compute RDMs"
-
-
+  BLOCK2_INTERGRAL_CUTOFF:
+    type: double
+    default: 1.0e-12
+    help: "Consider those integrals as zero if the absolute value is smaller than this value"
 
 DEPRECATED:
   CASSCF_MAXITER:

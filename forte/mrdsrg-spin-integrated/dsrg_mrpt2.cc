@@ -42,6 +42,8 @@
 #define FMT_HEADER_ONLY
 #include "lib/fmt/core.h"
 
+#include "base_classes/forte_options.h"
+
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
 #include "fci/fci_solver.h"

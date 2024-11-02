@@ -14,10 +14,14 @@ def test_ccsdtqp():
 
     ref_energy = -128.679025538  # from Evangelista, J. Chem. Phys. 134, 224102 (2011).
 
-    geom = "Ne"
+    molecule = psi4.geometry(
+        """
+     Ne 0.0 0.0 0.0"""
+    )
 
-    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis="cc-pVDZ", reference="RHF")
-    data = forte.modules.ObjectsUtilPsi4(ref_wnf=psi4_wfn, mo_spaces={"FROZEN_DOCC": [1, 0, 0, 0, 0, 0, 0, 0]}).run()
+    data = forte.modules.ObjectsUtilPsi4(
+        molecule=molecule, basis="cc-pVDZ", mo_spaces={"FROZEN_DOCC": [1, 0, 0, 0, 0, 0, 0, 0]}
+    ).run()
     calc_data = scc.run_cc(
         data.as_ints, data.scf_info, data.mo_space_info, cc_type="cc", max_exc=5, e_convergence=1.0e-10
     )

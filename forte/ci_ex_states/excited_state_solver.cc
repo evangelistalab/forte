@@ -36,6 +36,8 @@
 #include "psi4/physconst.h"
 
 #include "base_classes/mo_space_info.h"
+#include "base_classes/forte_options.h"
+
 #include "sci/sci.h"
 #include "sparse_ci/determinant_substitution_lists.h"
 #include "helpers/helpers.h"
@@ -82,7 +84,7 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     test_rdms_ = options->get_bool("SCI_TEST_RDMS");
     save_final_wfn_ = options->get_bool("SCI_SAVE_FINAL_WFN");
     first_iter_roots_ = options->get_bool("SCI_FIRST_ITER_ROOTS");
-    transition_dipole_ = options->get_bool("TRANSITION_DIPOLES");
+    transition_dipole_ = options->get_gen_list("TRANSITION_DIPOLES").size();
     sparse_solver_ = std::make_shared<SparseCISolver>();
     sparse_solver_->set_options(options);
     sci_->set_options(options);

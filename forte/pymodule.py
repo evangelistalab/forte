@@ -42,6 +42,7 @@ from forte.modules import (
     ActiveSpaceInts,
     ActiveSpaceSolver,
     ActiveSpaceRDMs,
+    ActiveSpaceSelector,
     OrbitalTransformation,
     MCSCF,
     TDACI,
@@ -60,6 +61,7 @@ from forte.proc.external_active_space_solver import (
     make_hamiltonian,
 )
 from forte.proc.dsrg import ProcedureDSRG
+from forte.proc.orbital_helpers import dump_orbitals
 
 
 def forte_driver(data: ForteData):
@@ -169,7 +171,6 @@ def energy_forte(name, **kwargs):
         data = ObjectsFromFCIDUMP(options=kwargs).run(data)
     elif data.options.get_str("INT_TYPE") == "PYSCF":
         data = ObjectsFromPySCF(kwargs.get("pyscf_obj"), options=kwargs).run(data)
-        #data = MCSCF(data.options.get_str("ACTIVE_SPACE_SOLVER")).run(data)
     else:
         data = ObjectsFromPsi4(**kwargs).run(data)
 
@@ -201,7 +202,7 @@ def energy_forte(name, **kwargs):
             psi4.core.print_out(msg)
 
         data = MCSCF(active_space_solver_type).run(data)
-        energy = data.results.value("energy")
+        energy = data.results.value("mcscf energy")
 
     # Run a method
     if job_type == "NONE":
@@ -278,13 +279,17 @@ def gradient_forte(name, **kwargs):
     # if job_type not in {"CASSCF", "MCSCF_TWO_STEP"} and correlation_solver != "DSRG-MRPT2":
     #     raise Exception("Analytic energy gradients are only implemented for" " CASSCF, MCSCF_TWO_STEP, or DSRG-MRPT2.")
 
+    if "FCIDUMP" in int_type:
+        raise Exception("Analytic gradients with FCIDUMP are not theoretically possible.")
+    if int_type == "PYSCF":
+        raise "Analytic gradients with PySCF are not yet implemented."
     # Prepare Forte objects: state_weights_map, mo_space_info, scf_info
     data = ObjectsFromPsi4(**kwargs).run(data)
 
     # Make an integral object
     time_pre_ints = time.time()
 
-    data.ints = forte.make_ints_from_psi4(data.psi_wfn, data.options, data.mo_space_info)
+    data.ints = forte.make_ints_from_psi4(data.psi_wfn, data.options, data.scf_info, data.mo_space_info)
 
     start = time.time()
 
@@ -296,7 +301,7 @@ def gradient_forte(name, **kwargs):
     active_space_solver_type = data.options.get_str("ACTIVE_SPACE_SOLVER")
     mcscf_ignore_frozen = data.options.get_bool("MCSCF_IGNORE_FROZEN_ORBS")
     data = MCSCF(active_space_solver_type).run(data)
-    energy = data.results.value("energy")
+    energy = data.results.value("mcscf energy")
 
     if job_type == "NEWDRIVER" and correlation_solver == "DSRG-MRPT2":
         forte_driver(data)
@@ -306,7 +311,7 @@ def gradient_forte(name, **kwargs):
     derivobj = psi4.core.Deriv(data.psi_wfn)
     derivobj.set_deriv_density_backtransformed(True)
     derivobj.set_ignore_reference(True)
-    if int_type == "DF":
+    if "DF" in int_type:
         grad = derivobj.compute_df("DF_BASIS_SCF", "DF_BASIS_MP2")
     else:
         grad = derivobj.compute(psi4.core.DerivCalcType.Correlated)
@@ -337,44 +342,43 @@ def gradient_forte(name, **kwargs):
     return data.psi_wfn
 
 
-def mr_dsrg_pt2(job_type, data):
-    """
-    Driver to perform a MCSRGPT2_MO computation.
+# def mr_dsrg_pt2(job_type, data):
+#     """
+#     Driver to perform a MCSRGPT2_MO computation.
 
-    :return: the computed energy
-    """
-    final_energy = 0.0
+#     :return: the computed energy
+#     """
+#     final_energy = 0.0
 
-    options = data.options
-    ref_wfn = data.psi_wfn
-    state_weights_map = data.state_weights_map
-    mo_space_info = data.mo_space_info
-    scf_info = data.scf_info
-    ints = data.ints
+#     options = data.options
+#     ref_wfn = data.psi_wfn
+#     state_weights_map = data.state_weights_map
+#     mo_space_info = data.mo_space_info
+#     scf_info = data.scf_info
+#     ints = data.ints
 
-    state = forte.make_state_info_from_psi(options)
-    # generate a list of states with their own weights
-    state_map = forte.to_state_nroots_map(state_weights_map)
+# generate a list of states with their own weights
+# state_map = forte.to_state_nroots_map(state_weights_map)
 
-    cas_type = options.get_str("ACTIVE_SPACE_SOLVER")
-    actv_type = options.get_str("FCIMO_ACTV_TYPE")
-    if actv_type == "CIS" or actv_type == "CISD":
-        raise Exception("Forte: VCIS/VCISD is not supported for MR-DSRG-PT2")
-    max_rdm_level = 2 if options.get_str("THREEPDC") == "ZERO" else 3
-    data = ActiveSpaceInts(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
-    ci = forte.make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, options, data.as_ints)
-    ci.compute_energy()
+#     cas_type = options.get_str("ACTIVE_SPACE_SOLVER")
+#     actv_type = options.get_str("FCIMO_ACTV_TYPE")
+#     if actv_type == "CIS" or actv_type == "CISD":
+#         raise Exception("Forte: VCIS/VCISD is not supported for MR-DSRG-PT2")
+#     max_rdm_level = 2 if options.get_str("THREEPDC") == "ZERO" else 3
+#     data = ActiveSpaceInts(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
+#     ci = forte.make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, options, data.as_ints)
+#     ci.compute_energy()
 
-    rdms = ci.compute_average_rdms(state_weights_map, max_rdm_level, forte.RDMsType.spin_dependent)
-    inactive_mix = options.get_bool("SEMI_CANONICAL_MIX_INACTIVE")
-    active_mix = options.get_bool("SEMI_CANONICAL_MIX_ACTIVE")
-    # Semi-canonicalize orbitals and rotation matrices
-    semi = forte.SemiCanonical(mo_space_info, ints, options, inactive_mix, active_mix)
-    semi.semicanonicalize(rdms)
+#     rdms = ci.compute_average_rdms(state_weights_map, max_rdm_level, forte.RDMsType.spin_dependent)
+#     inactive_mix = options.get_bool("SEMI_CANONICAL_MIX_INACTIVE")
+#     active_mix = options.get_bool("SEMI_CANONICAL_MIX_ACTIVE")
+#     # Semi-canonicalize orbitals and rotation matrices
+#     semi = forte.SemiCanonical(mo_space_info, ints, options, inactive_mix, active_mix)
+#     semi.semicanonicalize(rdms)
 
-    mcsrgpt2_mo = forte.MCSRGPT2_MO(rdms, options, ints, mo_space_info)
-    energy = mcsrgpt2_mo.compute_energy()
-    return energy
+#     mcsrgpt2_mo = forte.MCSRGPT2_MO(rdms, options, ints, mo_space_info)
+#     energy = mcsrgpt2_mo.compute_energy()
+#     return energy
 
 
 # Integration with driver routines

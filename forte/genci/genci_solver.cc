@@ -30,6 +30,8 @@
 
 #include "psi4/libpsi4util/process.h"
 
+#include "base_classes/forte_options.h"
+
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/ci_spin_adaptation.h"
 #include "helpers/davidson_liu_solver.h"

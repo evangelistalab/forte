@@ -73,6 +73,7 @@ casscf:
       - df-casscf-1
       - df-casscf-2-rdm
       - df-casscf-3-edge
+      - df-casscf-4-basis
       - casscf-fcidump-1
       - casscf-gradient-1
       - casscf-gradient-3
@@ -148,10 +149,14 @@ df-dsrg-mrpt2:
    unused:
       - df-dsrg-mrpt2-testccvv
 dmrg:
-   short:
-      - dmrg-dsrg-mrpt2-1
    medium:
       - dmrg-ci-1
+      - dmrg-ci-2
+dmrg-dsrg:
+   short:
+      - dmrg-dsrg-mrpt2-1
+   long:
+      - dmrg-ldsrg2-1
 dsrg-mrpt2_spin_adapted:
    short:
       - dsrg-mrpt2_spin_adapted-1
@@ -221,6 +226,12 @@ dwms-dsrgpt:
       - dwms-dsrgpt2-2
       - dwms-dsrgpt2-3
       - dwms-dsrgpt2-4
+fno-dsrg:
+  short:
+      - fno-dsrg-1
+      - fno-dsrg-2
+      - fno-dsrg-3
+
 embedding:
    short:
       - embedding-1
@@ -329,10 +340,10 @@ mp2-nos:
    medium:
       - mrpt2-nos-2
 mr-dsrg-pt2:
-   short:
+   # this module is deprecated
+   unused:
       - mr-dsrg-pt2-1
       - mr-dsrg-pt2-3
-   medium:
       - mr-dsrg-pt2-2
 # this uses the active-dsrg code which is not compiled   - mr-dsrg-pt2-4
 mrdsrg_so:
@@ -422,10 +433,10 @@ read-orbitals:
    short:
       - read-orbitals-1
       - read-orbitals-2
-srg:
-   short:
-      - mr-srg-pt2-1
-      - mrdsrg-srgpt2-1
+#srg:
+#   short:
+#      - mr-srg-pt2-1
+#      - mrdsrg-srgpt2-1
 tdci:
    short:
       - tdci-1

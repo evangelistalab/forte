@@ -248,8 +248,8 @@ bool DavidsonLiuSolver::solve() {
         // if we do not add any new vector then we are in trouble and we better finish the
         // computation
         if (added == 0) {
+            print_footer();
             if (is_residual_converged) {
-                print_footer();
                 psi::outfile->Printf(
                     "\n\n  Davidson-Liu solver:  No new vectors added, but residual converged. "
                     "Finishing computation.");
@@ -259,13 +259,16 @@ bool DavidsonLiuSolver::solve() {
                 psi::outfile->Printf("\n\n  Davidson-Liu solver:  No new vectors added, and "
                                      "energy not converged. "
                                      "Finishing computation.");
+                get_results();
                 return false;
             }
         }
         lambda_old_->copy(*lambda_);
     }
 
+    print_footer();
     psi::outfile->Printf("\n\n  Davidson-Liu solver:  Maximum number of iterations reached.");
+    get_results();
     return false;
 }
 
@@ -308,7 +311,7 @@ void DavidsonLiuSolver::setup_guesses() {
         }
         basis_size_ += added;
     } else if (basis_size_ >= nroot_) {
-        // psi::outfile->Printf("\n\n  Davidson-Liu solver: restarting from previous calculation.");
+        psi::outfile->Printf("\n\n  Davidson-Liu solver: restarting from previous calculation.");
         basis_size_ = nroot_; // first nroot_ vectors from the previous calculation
         sigma_size_ = 0;      // trigger computation of all sigma vectors
     } else {

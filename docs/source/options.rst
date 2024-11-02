@@ -6,207 +6,12 @@ List of Forte options
 .. sectionauthor:: Francesco A. Evangelista
 
 
-General options
-===============
-
-**ACTIVE_REF_TYPE**
-
-Initial guess for active space wave functions
-
-Type: str
-
-Default value: CAS
-
-Allowed values: ['HF', 'CAS', 'GAS', 'GAS_SINGLE', 'CIS', 'CID', 'CISD', 'DOCI']
-
-**ACTIVE_SPACE_SOLVER**
-
-Active space solver type
-
-Type: str
-
-Default value: 
-
-Allowed values: ['FCI', 'ACI', 'ASCI', 'PCI', 'DETCI', 'CAS', 'DMRG']
-
-**CALC_TYPE**
-
-The type of computation
-
-Type: str
-
-Default value: SS
-
-Allowed values: ['SS', 'SA', 'MS', 'DWMS']
-
-**CHARGE**
-
-The charge of the molecule. If a value is provided it overrides the charge of Psi4.
-
-Type: int
-
-Default value: None
-
-**CORRELATION_SOLVER**
-
-Dynamical correlation solver type
-
-Type: str
-
-Default value: NONE
-
-Allowed values: ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG', 'SA-MRDSRG', 'DSRG_MRPT', 'MRDSRG_SO', 'SOMRDSRG']
-
-**DERTYPE**
-
-Derivative order
-
-Type: str
-
-Default value: NONE
-
-Allowed values: ['NONE', 'FIRST']
-
-**DUMP_ORBITALS**
-
-Save orbitals to file if true
-
-Type: bool
-
-Default value: False
-
-**D_CONVERGENCE**
-
-The density convergence criterion
-
-Type: float
-
-Default value: 1e-06
-
-**E_CONVERGENCE**
-
-The energy convergence criterion
-
-Type: float
-
-Default value: 1e-09
-
-**JOB_TYPE**
-
-Specify the job type
-
-Type: str
-
-Default value: NEWDRIVER
-
-Allowed values: ['NONE', 'NEWDRIVER', 'MR-DSRG-PT2', 'CASSCF', 'MCSCF_TWO_STEP']
-
-**MINAO_BASIS**
-
-The basis used to define an orbital subspace
-
-Type: str
-
-Default value: STO-3G
-
-**MS**
-
-Projection of spin onto the z axis
-
-Type: float
-
-Default value: None
-
-**MULTIPLICITY**
-
-The multiplicity = (2S + 1) of the electronic state. For example, 1 = singlet, 2 = doublet, 3 = triplet, ... If a value is provided it overrides the multiplicity of Psi4.
-
-Type: int
-
-Default value: None
-
-**NEL**
-
-The number of electrons. Used when reading from FCIDUMP files.
-
-Type: int
-
-Default value: None
-
-**ORBITAL_TYPE**
-
-Type of orbitals to use
-
-Type: str
-
-Default value: CANONICAL
-
-Allowed values: ['CANONICAL', 'LOCAL', 'MP2NO', 'MRPT2NO']
-
-**PRINT**
-
-Set the print level.
-
-Type: int
-
-Default value: 1
-
-**READ_ORBITALS**
-
-Read orbitals from file if true
-
-Type: bool
-
-Default value: False
-
-**REF_TYPE**
-
-The type of reference used by forte if a psi4 wave function is missing
-
-Type: str
-
-Default value: SCF
-
-Allowed values: ['SCF', 'CASSCF']
-
-**ROOT_SYM**
-
-The symmetry of the electronic state. (zero based)
-
-Type: int
-
-Default value: None
-
-**SCF_TYPE**
-
-The integrals used in the SCF calculation
-
-Type: str
-
-Default value: None
-
-**SUBSPACE**
-
-A list of orbital subspaces
-
-Type: gen_list
-
-Default value: []
-
-**SUBSPACE_PI_PLANES**
-
-A list of arrays of atoms composing the plane
-
-Type: gen_list
-
-Default value: []
-
 ACI options
 ===========
 
 **ACI_ADD_AIMED_DEGENERATE**
 
-Add degenerate determinants not included in the aimed selection
+Add degenerate determinants not included in the aimed selection.
 
 Type: bool
 
@@ -222,7 +27,7 @@ Default value: False
 
 **ACI_AVERAGE_OFFSET**
 
-Offset for state averaging
+Offset for state averaging.
 
 Type: int
 
@@ -230,7 +35,7 @@ Default value: 0
 
 **ACI_CONVERGENCE**
 
-ACI Convergence threshold
+ACI Convergence threshold.
 
 Type: float
 
@@ -246,7 +51,7 @@ Default value: False
 
 **ACI_MAX_MEM**
 
-Sets max memory for batching algorithm (MB)
+Sets max memory for batching algorithm (MB).
 
 Type: int
 
@@ -254,7 +59,7 @@ Default value: 1000
 
 **ACI_NBATCH**
 
-Number of batches in screening
+Number of batches in screening.
 
 Type: int
 
@@ -262,7 +67,7 @@ Default value: 0
 
 **ACI_NFROZEN_CORE**
 
-Number of orbitals to freeze for core excitations
+Number of orbitals to freeze for core excitations.
 
 Type: int
 
@@ -278,7 +83,7 @@ Default value: False
 
 **ACI_NO_THRESHOLD**
 
-Threshold for active space prediction
+Threshold for active space prediction.
 
 Type: float
 
@@ -286,7 +91,7 @@ Default value: 0.02
 
 **ACI_N_AVERAGE**
 
-Number of roots to average. When set to zero (default) it averages over all roots
+Number of roots to average. When set to zero (default), it averages over all roots.
 
 Type: int
 
@@ -294,7 +99,7 @@ Default value: 0
 
 **ACI_PQ_FUNCTION**
 
-Function of q-space criteria, per root for SA-ACI
+Function of q-space criteria, per root for SA-ACI.
 
 Type: str
 
@@ -304,7 +109,7 @@ Allowed values: ['AVERAGE', 'MAX']
 
 **ACI_PRESCREEN_THRESHOLD**
 
-The SD space prescreening threshold
+The SD space prescreening threshold.
 
 Type: float
 
@@ -352,7 +157,7 @@ Default value: False
 
 **ACI_RELAX_SIGMA**
 
-Sigma for reference relaxation
+Sigma for reference relaxation.
 
 Type: float
 
@@ -360,7 +165,7 @@ Default value: 0.01
 
 **ACI_ROOTS_PER_CORE**
 
-Number of roots to compute per frozen orbital
+Number of roots to compute per frozen orbital.
 
 Type: int
 
@@ -368,7 +173,7 @@ Default value: 1
 
 **ACI_SCALE_SIGMA**
 
-Scales sigma in batched algorithm
+Scales sigma in batched algorithm.
 
 Type: float
 
@@ -376,7 +181,7 @@ Default value: 0.5
 
 **ACI_SCREEN_ALG**
 
-The screening algorithm to use
+The screening algorithm to use.
 
 Type: str
 
@@ -386,11 +191,7 @@ Allowed values: ['AVERAGE', 'SR', 'RESTRICTED', 'CORE', 'BATCH_HASH', 'BATCH_VEC
 
 **ACI_SPIN_PROJECTION**
 
-Type of spin projection
-     0 - None
-     1 - Project initial P spaces at each iteration
-     2 - Project only after converged PQ space
-     3 - Do 1 and 2
+Type of spin projection (0 - None, 1 - Project initial P spaces, 2 - Project only after converged PQ space, 3 - Do 1 and 2).
 
 Type: int
 
@@ -398,7 +199,7 @@ Default value: 0
 
 **ACI_SPIN_TOL**
 
-Tolerance for S^2 value
+Tolerance for S^2 value.
 
 Type: float
 
@@ -406,7 +207,7 @@ Default value: 0.02
 
 **ACTIVE_GUESS_SIZE**
 
-Number of determinants for CI guess
+Number of determinants for CI guess.
 
 Type: int
 
@@ -414,7 +215,7 @@ Default value: 1000
 
 **CORR_LIMIT**
 
-Correlation limit for considering if two orbitals are correlated in the post calculation analysis.
+Correlation limit for considering if two orbitals are correlated in the post-calculation analysis.
 
 Type: float
 
@@ -422,7 +223,7 @@ Default value: -0.01
 
 **DIAG_ALGORITHM**
 
-The diagonalization method
+The diagonalization method.
 
 Type: str
 
@@ -448,23 +249,15 @@ Default value: False
 
 **GAMMA**
 
-The threshold for the selection of the Q space
+The threshold for the selection of the Q space.
 
 Type: float
 
 Default value: 1.0
 
-**N_GUESS_VEC**
-
-Number of guess vectors for Sparse CI solver
-
-Type: int
-
-Default value: 10
-
 **OCC_ANALYSIS**
 
-Doing post calcualtion occupation analysis?
+Doing post-calculation occupation analysis?
 
 Type: bool
 
@@ -472,7 +265,7 @@ Default value: False
 
 **OCC_LIMIT**
 
-Occupation limit for considering if an orbital is occupied/unoccupied in the post calculation analysis.
+Occupation limit for considering if an orbital is occupied/unoccupied in the post-calculation analysis.
 
 Type: float
 
@@ -504,7 +297,7 @@ Default value: True
 
 **SIGMA**
 
-The energy selection threshold for the P space
+The energy selection threshold for the P space.
 
 Type: float
 
@@ -520,7 +313,7 @@ Default value: False
 
 **SPIN_BASIS**
 
-Basis for spin analysis
+Basis for spin analysis.
 
 Type: str
 
@@ -546,7 +339,7 @@ Default value: False
 
 **SPIN_TEST**
 
-Do test validity of correlation analysis
+Test validity of correlation analysis.
 
 Type: bool
 
@@ -565,7 +358,7 @@ ASCI options
 
 **ASCI_CDET**
 
-ASCI Max reference det
+ASCI Max reference det.
 
 Type: int
 
@@ -573,7 +366,7 @@ Default value: 200
 
 **ASCI_E_CONVERGENCE**
 
-ASCI energy convergence threshold
+ASCI energy convergence threshold.
 
 Type: float
 
@@ -581,7 +374,7 @@ Default value: 1e-05
 
 **ASCI_PRESCREEN_THRESHOLD**
 
-ASCI prescreening threshold
+ASCI prescreening threshold.
 
 Type: float
 
@@ -589,7 +382,7 @@ Default value: 1e-12
 
 **ASCI_TDET**
 
-ASCI Max det
+ASCI Max det.
 
 Type: int
 
@@ -662,12 +455,12 @@ Type: float
 
 Default value: 0.98
 
-Active Space Solver options
+Active_Space_Solver options
 ===========================
 
 **AVG_STATE**
 
-A list of integer triplets that specify the irrep, multiplicity, and the number of states requested.Uses the format [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...]
+A list of integer triplets that specify the irrep, multiplicity, and the number of states requested. Uses the format [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...].
 
 Type: gen_list
 
@@ -675,7 +468,7 @@ Default value: []
 
 **AVG_WEIGHT**
 
-A list of lists that specify the weights assigned to all the states requested with AVG_STATE [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...]
+A list of lists that specify the weights assigned to all the states requested with AVG_STATE. [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...].
 
 Type: gen_list
 
@@ -683,7 +476,7 @@ Default value: []
 
 **DUMP_ACTIVE_WFN**
 
-Save CI wave function of ActiveSpaceSolver to disk
+Save CI wave function of ActiveSpaceSolver to disk.
 
 Type: bool
 
@@ -699,7 +492,7 @@ Default value: False
 
 **NROOT**
 
-The number of roots computed
+The number of roots computed.
 
 Type: int
 
@@ -715,7 +508,7 @@ Default value: False
 
 **READ_ACTIVE_WFN_GUESS**
 
-Read CI wave function of ActiveSpaceSolver from disk
+Read CI wave function of ActiveSpaceSolver from disk.
 
 Type: bool
 
@@ -723,7 +516,7 @@ Default value: False
 
 **ROOT**
 
-The root selected for state-specific computations
+The root selected for state-specific computations.
 
 Type: int
 
@@ -739,280 +532,134 @@ Default value: 0.25
 
 **TRANSITION_DIPOLES**
 
-Compute the transition dipole moments and oscillator strengths
+Compute the transition dipole moments and oscillator strengths.
 
 Type: bool
 
 Default value: False
 
-CASSCF options
+BLOCK2 options
 ==============
 
-**MCSCF_ACTIVE_FROZEN_ORBITAL**
+**BLOCK2_CUTOFF**
 
-A list of active orbitals to be frozen in the MCSCF optimization (in Pitzer order, zero based). Useful when doing core-excited state computations.
+Cutoff for MPS bond dimension
+
+Type: float
+
+Default value: 1e-20
+
+**BLOCK2_INITIAL_GUESS**
+
+Shift (0 ~ 1) of occupation number for DMRG initial guess: n + dn for n < 0.75 and n - dn for n > 1.25. dn < 0 for random initial guess
+
+Type: float
+
+Default value: -1.0
+
+**BLOCK2_INITIAL_GUESS_OCC**
+
+Active occupation numbers (in Pitzer order) for DMRG initial guess; We use Hartree-Fock occupation numbers if not given.
+
+Type: float_list
+
+Default value: []
+
+**BLOCK2_INTERGRAL_CUTOFF**
+
+Consider those integrals as zero if the absolute value is smaller than this value
+
+Type: float
+
+Default value: 1e-14
+
+**BLOCK2_N_TOTAL_SWEEPS**
+
+Max number of DMRG sweeps
+
+Type: int
+
+Default value: 16
+
+**BLOCK2_RDM_LOW_MEM_ALG**
+
+Whether to use low memory algorithm to compute RDMs
+
+Type: bool
+
+Default value: True
+
+**BLOCK2_SINGLET_EMBEDDING**
+
+Whether to use singlet embedding for non-singlet states
+
+Type: bool
+
+Default value: True
+
+**BLOCK2_SPIN_ADAPTED**
+
+Whether to use spin-adapted DMRG for restricted integrals
+
+Type: bool
+
+Default value: True
+
+**BLOCK2_STACK_MEM**
+
+DMRG stack memory (in GB)
+
+Type: float
+
+Default value: 2.0
+
+**BLOCK2_SWEEP_BOND_DIMS**
+
+MPS bond dimension used for one instruction during DMRG sweeps
 
 Type: int_list
 
 Default value: []
 
-**MCSCF_CI_FREQ**
+**BLOCK2_SWEEP_DAVIDSON_TOLS**
 
-How often to solve CI?
-< 1: do CI in the first macro iteration ONLY
-= n: do CI every n macro iteration
+The residual tolerances for the Davidson diagonalization used for one instruction during DMRG sweeps
 
-Type: int
-
-Default value: 1
-
-**MCSCF_CI_STEP**
-
-Do a CAS step for every MCSCF_CI_FREQ
-
-Type: bool
-
-Default value: False
-
-**MCSCF_CI_STEP_START**
-
-When to start skipping CI steps
-
-Type: int
-
-Default value: -1
-
-**MCSCF_DEBUG_PRINTING**
-
-Enable debug printing if True
-
-Type: bool
-
-Default value: False
-
-**MCSCF_DIE_IF_NOT_CONVERGED**
-
-Stop Forte if MCSCF is not converged
-
-Type: bool
-
-Default value: True
-
-**MCSCF_DIIS_FREQ**
-
-How often to do DIIS extrapolation
-
-Type: int
-
-Default value: 1
-
-**MCSCF_DIIS_MAX_VEC**
-
-Maximum size of DIIS vectors for orbital rotations
-
-Type: int
-
-Default value: 8
-
-**MCSCF_DIIS_MIN_VEC**
-
-Minimum size of DIIS vectors for orbital rotations
-
-Type: int
-
-Default value: 3
-
-**MCSCF_DIIS_NORM**
-
-Do DIIS when the orbital gradient norm is below this value
-
-Type: float
-
-Default value: 0.001
-
-**MCSCF_DIIS_START**
-
-Iteration number to start adding error vectors (< 1 will not do DIIS)
-
-Type: int
-
-Default value: 15
-
-**MCSCF_DO_DIIS**
-
-Use DIIS in CASSCF orbital optimization
-
-Type: bool
-
-Default value: True
-
-**MCSCF_E_CONVERGENCE**
-
-The energy convergence criterion (two consecutive energies)
-
-Type: float
-
-Default value: 1e-08
-
-**MCSCF_FINAL_ORBITAL**
-
-Constraints for redundant orbital pairs at the end of macro iteration
-
-Type: str
-
-Default value: CANONICAL
-
-Allowed values: ['CANONICAL', 'NATURAL', 'UNSPECIFIED']
-
-**MCSCF_G_CONVERGENCE**
-
-The orbital gradient convergence criterion (RMS of gradient vector)
-
-Type: float
-
-Default value: 1e-07
-
-**MCSCF_INTERNAL_ROT**
-
-Keep GASn-GASn orbital rotations if true
-
-Type: bool
-
-Default value: False
-
-**MCSCF_MAXITER**
-
-The maximum number of CASSCF macro iterations
-
-Type: int
-
-Default value: 100
-
-**MCSCF_MAX_ROTATION**
-
-Max value in orbital update vector
-
-Type: float
-
-Default value: 0.2
-
-**MCSCF_MICRO_MAXITER**
-
-The maximum number of CASSCF micro iterations
-
-Type: int
-
-Default value: 40
-
-**MCSCF_MICRO_MINITER**
-
-The minimum number of CASSCF micro iterations
-
-Type: int
-
-Default value: 6
-
-**MCSCF_MULTIPLICITY**
-
-Multiplicity for the CASSCF solution (if different from multiplicity)
-    You should not use this if you are interested in having a CASSCF
-    solution with the same multiplicitity as the DSRG-MRPT2
-
-Type: int
-
-Default value: 0
-
-**MCSCF_NO_ORBOPT**
-
-No orbital optimization if true
-
-Type: bool
-
-Default value: False
-
-**MCSCF_ORB_ORTHO_TRANS**
-
-Ways to compute the orthogonal transformation U from orbital rotation R
-
-Type: str
-
-Default value: CAYLEY
-
-Allowed values: ['CAYLEY', 'POWER', 'PADE']
-
-**MCSCF_REFERENCE**
-
-Run a FCI followed by CASSCF computation?
-
-Type: bool
-
-Default value: False
-
-**MCSCF_SOSCF**
-
-Run a complete SOSCF (form full Hessian)?
-
-Type: bool
-
-Default value: False
-
-**MCSCF_ZERO_ROT**
-
-An array of MOs [[irrep1, mo1, mo2], [irrep2, mo3, mo4], ...]
-
-Type: gen_list
+Type: float_list
 
 Default value: []
 
-**CPSCF_CONVERGENCE**
+**BLOCK2_SWEEP_ENERGY_CONV**
 
-Convergence criterion for CP-SCF equation
+DMRG energy convergence threshold
 
 Type: float
 
 Default value: 1e-08
 
-**CPSCF_MAXITER**
+**BLOCK2_SWEEP_NOISES**
 
-Max iteration of solving coupled perturbed SCF equation
+Noise used for one instruction during DMRG sweeps
+
+Type: float_list
+
+Default value: []
+
+**BLOCK2_SWEEP_N_SWEEPS**
+
+Number of sweeps used for one instruction during DMRG sweeps
+
+Type: int_list
+
+Default value: []
+
+**BLOCK2_VERBOSE**
+
+Level of verbosity for DMRG calculations
 
 Type: int
 
-Default value: 50
-
-**MONITOR_SA_SOLUTION**
-
-Monitor the CAS-CI solutions through iterations
-
-Type: bool
-
-Default value: False
-
-**OPTIMIZE_FROZEN_CORE**
-
-Ignore frozen core option and optimize orbitals?
-
-Type: bool
-
-Default value: False
-
-**ORB_ROTATION_ALGORITHM**
-
-Orbital rotation algorithm
-
-Type: str
-
-Default value: DIAGONAL
-
-Allowed values: ['DIAGONAL', 'AUGMENTED_HESSIAN']
-
-**RESTRICTED_DOCC_JK**
-
-Use JK builder for restricted docc (EXPERT)?
-
-Type: bool
-
-Default value: True
+Default value: 2
 
 CINO options
 ============
@@ -1035,7 +682,7 @@ Default value: False
 
 **CINO_NROOT**
 
-The number of roots computed
+The number of roots computed.
 
 Type: int
 
@@ -1043,7 +690,7 @@ Default value: 1
 
 **CINO_ROOTS_PER_IRREP**
 
-The number of excited states per irreducible representation
+The number of excited states per irreducible representation.
 
 Type: int_list
 
@@ -1051,7 +698,7 @@ Default value: []
 
 **CINO_THRESHOLD**
 
-The fraction of NOs to include in the active space
+The fraction of NOs to include in the active space.
 
 Type: float
 
@@ -1067,12 +714,231 @@ Default value: CIS
 
 Allowed values: ['CIS', 'CISD']
 
+DEPRECATED options
+==================
+
+**CASSCF_ACTIVE_FROZEN_ORBITAL**
+
+Replaced by MCSCF_ACTIVE_FROZEN_ORBITAL
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_CI_FREQ**
+
+Replaced by MCSCF_CI_FREQ
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_CI_SOLVER**
+
+Since version 0.4.0, the CI solver for MCSCF is selected with the ACTIVE_SPACE_SOLVER option. If you want to use another solver, you might have to modify your input to contain two forte calls.
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_CI_STEP**
+
+Replaced by MCSCF_CI_STEP
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_CI_STEP_START**
+
+Replaced by MCSCF_CI_STEP_START
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_DEBUG_PRINTING**
+
+Replaced by MCSCF_DEBUG_PRINTING
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_DIE_IF_NOT_CONVERGED**
+
+Replaced by MCSCF_DIE_IF_NOT_CONVERGED
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_DIIS_FREQ**
+
+Replaced by MCSCF_DIIS_FREQ
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_DIIS_MAX_VEC**
+
+Replaced by MCSCF_DIIS_MAX_VEC
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_DIIS_MIN_VEC**
+
+Replaced by MCSCF_DIIS_MIN_VEC
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_DIIS_NORM**
+
+Replaced by MCSCF_DIIS_NORM
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_DIIS_START**
+
+Replaced by MCSCF_DIIS_START
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_DO_DIIS**
+
+Replaced by MCSCF_DO_DIIS
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_E_CONVERGENCE**
+
+Replaced by MCSCF_E_CONVERGENCE
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_FINAL_ORBITAL**
+
+Replaced by MCSCF_FINAL_ORBITAL
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_G_CONVERGENCE**
+
+Replaced by MCSCF_G_CONVERGENCE
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_INTERNAL_ROT**
+
+Replaced by MCSCF_INTERNAL_ROT
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_MAXITER**
+
+Replaced by MCSCF_MAXITER
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_MAX_ROTATION**
+
+Replaced by MCSCF_MAX_ROTATION
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_MICRO_MAXITER**
+
+Replaced by MCSCF_MICRO_MAXITER
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_MICRO_MINITER**
+
+Replaced by MCSCF_MICRO_MINITER
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_MULTIPLICITY**
+
+Replaced by MCSCF_MULTIPLICITY
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_NO_ORBOPT**
+
+Replaced by MCSCF_NO_ORBOPT
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_ORB_ORTHO_TRANS**
+
+Replaced by MCSCF_ORB_ORTHO_TRANS
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_REFERENCE**
+
+Replaced by MCSCF_REFERENCE
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_SOSCF**
+
+Replaced by MCSCF_SOSCF
+
+Type: deprecated
+
+Default value: None
+
+**CASSCF_ZERO_ROT**
+
+Replaced by MCSCF_ZERO_ROT
+
+Type: deprecated
+
+Default value: None
+
 DETCI options
 =============
 
 **DETCI_CISD_NO_HF**
 
-Exclude HF determinant in active CID/CISD space
+Exclude HF determinant in active CID/CISD space.
 
 Type: bool
 
@@ -1080,7 +946,7 @@ Default value: False
 
 **DETCI_PRINT_CIVEC**
 
-The printing threshold for CI vectors
+The printing threshold for CI vectors.
 
 Type: float
 
@@ -1156,8 +1022,6 @@ Type: str
 
 Default value: FLY_AMBIT
 
-Allowed values: ['CORE', 'FLY_AMBIT', 'FLY_LOOP', 'BATCH_CORE', 'BATCH_VIRTUAL', 'BATCH_CORE_GA', 'BATCH_VIRTUAL_GA', 'BATCH_VIRTUAL_MPI', 'BATCH_CORE_MPI', 'BATCH_CORE_REP', 'BATCH_VIRTUAL_REP']
-
 **CCVV_BATCH_NUMBER**
 
 Batches for CCVV_ALGORITHM
@@ -1174,17 +1038,14 @@ Type: str
 
 Default value: NORMAL
 
-Allowed values: ['ZERO', 'NORMAL']
-
 **CORR_LEVEL**
 
-Correlation level of MR-DSRG (used in mrdsrg code, LDSRG2_P3 and QDSRG2_P3 not implemented)
+"Correlation level of MR-DSRG (used in mrdsrg code, " "LDSRG2_P3 and QDSRG2_P3 not implemented)"
+
 
 Type: str
 
 Default value: PT2
-
-Allowed values: ['PT2', 'PT3', 'LDSRG2', 'LDSRG2_QC', 'LSRG2', 'SRG_PT2', 'QDSRG2', 'LDSRG2_P3', 'QDSRG2_P3']
 
 **DSRGPT**
 
@@ -1203,6 +1064,38 @@ Type: str
 Default value: EXPLICIT
 
 Allowed values: ['EXPLICIT', 'DIRECT']
+
+**DSRG_3RDM_BLOCK2_CPS_BOND_DIMENSION**
+
+Bond dimension of the compressed (N-1)-electron wave function
+
+Type: int
+
+Default value: 1000
+
+**DSRG_ADAPTIVE_RSC**
+
+Make the threshold adaptive for terminating the recursive single commutator approximation
+
+Type: bool
+
+Default value: True
+
+**DSRG_ADAPTIVE_RSC_DELTA_E_START**
+
+The energy difference for the adaptive RSC to kick in
+
+Type: float
+
+Default value: 5e-05
+
+**DSRG_ADAPTIVE_RSC_THRESHOLD**
+
+The upper threshold for the adaptive termination of the recursive single commutator approximation
+
+Type: float
+
+Default value: 0.001
 
 **DSRG_DIIS_FREQ**
 
@@ -1276,6 +1169,22 @@ Type: int
 
 Default value: 50
 
+**DSRG_MAX_DIPOLE_LEVEL**
+
+The max body level of DSRG transformed dipole moment (skip if < 1)
+
+Type: int
+
+Default value: 0
+
+**DSRG_MAX_QUADRUPOLE_LEVEL**
+
+The max body level of DSRG transformed quadrupole moment (skip if < 1)
+
+Type: int
+
+Default value: 0
+
 **DSRG_MRPT2_DEBUG**
 
 Excssive printing for three-dsrg-mrpt2
@@ -1294,19 +1203,12 @@ Default value: False
 
 **DSRG_MULTI_STATE**
 
-Multi-state DSRG options (MS and XMS recouple states after single-state computations)
-  - State-average approach
-    - SA_SUB:  form H_MN = <M|Hbar|N>; M, N are CAS states of interest
-    - SA_FULL: redo a CASCI
-  - Multi-state approach (currently only for MRPT2)
-    - MS:  form 2nd-order Heff_MN = <M|H|N> + 0.5 * [<M|(T_M)^+ H|N> + <M|H T_N|N>]
-    - XMS: rotate references such that <M|F|N> is diagonal before MS procedure
+"Multi-state DSRG options (MS and XMS recouple states after single-state computations)\n" "  - State-average approach\n" "    - SA_SUB:  form H_MN = <M|Hbar|N>; M, N are CAS states of interest\n" "    - SA_FULL: redo a CASCI\n" "  - Multi-state approach (currently only for MRPT2)\n" "    - MS:  form 2nd-order Heff_MN = <M|H|N> + 0.5 * [<M|(T_M)^+ H|N> + <M|H T_N|N>]\n" "    - XMS: rotate references such that <M|F|N> is diagonal before MS procedure"
+
 
 Type: str
 
 Default value: SA_FULL
-
-Allowed values: ['SA_FULL', 'SA_SUB', 'MS', 'XMS']
 
 **DSRG_NIVO**
 
@@ -1331,8 +1233,6 @@ Different Zeroth-order Hamiltonian of DSRG-MRPT (used in mrdsrg code)
 Type: str
 
 Default value: FDIAG
-
-Allowed values: ['FDIAG', 'FFULL', 'FDIAG_VACTV', 'FDIAG_VDIAG']
 
 **DSRG_RDM_MS_AVG**
 
@@ -1360,7 +1260,8 @@ Default value: True
 
 **DSRG_RSC_NCOMM**
 
-The maximum number of commutators in the recursive single commutator approximation
+"The maximum number of commutators in the recursive single commutator approximation"
+
 
 Type: int
 
@@ -1368,7 +1269,7 @@ Default value: 20
 
 **DSRG_RSC_THRESHOLD**
 
-The treshold for terminating the recursive single commutator approximation
+The threshold for terminating the recursive single commutator approximation
 
 Type: float
 
@@ -1434,21 +1335,14 @@ Type: str
 
 Default value: NONE
 
-Allowed values: ['NONE', 'SINGLES_DOUBLES', 'SINGLES', 'DOUBLES']
-
 **INTERNAL_AMP_SELECT**
 
-Excitation types considered when internal amplitudes are included
-- Select only part of the asked internal amplitudes (IAs) in V-CIS/CISD
-  - AUTO: all IAs that changes excitations (O->V; OO->VV, OO->OV, OV->VV)
-  - ALL:  all IAs (O->O, V->V, O->V; OO->OO, OV->OV, VV->VV, OO->VV, OO->OV, OV->VV)
-  - OOVV: pure external (O->V; OO->VV)
+"Excitation types considered when internal amplitudes are included\n" "- Select only part of the asked internal amplitudes (IAs) in V-CIS/CISD\n" "  - AUTO: all IAs that changes excitations (O->V; OO->VV, OO->OV, OV->VV)\n" "  - ALL:  all IAs (O->O, V->V, O->V; OO->OO, OV->OV, VV->VV, OO->VV, OO->OV, OV->VV)\n" "  - OOVV: pure external (O->V; OO->VV)"
+
 
 Type: str
 
 Default value: AUTO
-
-Allowed values: ['AUTO', 'ALL', 'OOVV']
 
 **INTRUDER_TAMP**
 
@@ -1460,7 +1354,8 @@ Default value: 0.1
 
 **ISA_B**
 
-Intruder state avoidance parameter when use ISA to form amplitudes (only in toy code mcsrgpt2)
+"Intruder state avoidance parameter when use ISA to" " form amplitudes (only in toy code mcsrgpt2)"
+
 
 Type: float
 
@@ -1522,8 +1417,6 @@ Type: str
 
 Default value: NONE
 
-Allowed values: ['NONE', 'ONCE', 'TWICE', 'ITERATE']
-
 **R_CONVERGENCE**
 
 Residue convergence criteria for amplitudes
@@ -1531,6 +1424,14 @@ Residue convergence criteria for amplitudes
 Type: float
 
 Default value: 1e-06
+
+**SAVE_SA_DSRG_INTS**
+
+Save SA-DSRG dressed integrals to dsrg_ints.json
+
+Type: bool
+
+Default value: False
 
 **SMART_DSRG_S**
 
@@ -1540,17 +1441,14 @@ Type: str
 
 Default value: DSRG_S
 
-Allowed values: ['DSRG_S', 'MIN_DELTA1', 'MAX_DELTA1', 'DAVG_MIN_DELTA1', 'DAVG_MAX_DELTA1']
-
 **SOURCE**
 
-Source operator used in DSRG (AMP, EMP2, LAMP, LEMP2 only available in toy code mcsrgpt2)
+"Source operator used in DSRG (AMP, EMP2, LAMP, LEMP2 " "only available in toy code mcsrgpt2)"
+
 
 Type: str
 
 Default value: STANDARD
-
-Allowed values: ['STANDARD', 'LABS', 'DYSON', 'AMP', 'EMP2', 'LAMP', 'LEMP2']
 
 **T1_AMP**
 
@@ -1559,8 +1457,6 @@ The way of forming T1 amplitudes (only in toy code mcsrgpt2)
 Type: str
 
 Default value: DSRG
-
-Allowed values: ['DSRG', 'SRG', 'ZERO']
 
 **TAYLOR_THRESHOLD**
 
@@ -1578,8 +1474,6 @@ Type: str
 
 Default value: CORE
 
-Allowed values: ['CORE', 'BATCH']
-
 **THREE_MRPT2_TIMINGS**
 
 Detailed printing (if true) in three-dsrg-mrpt2
@@ -1590,27 +1484,22 @@ Default value: False
 
 **T_ALGORITHM**
 
-The way of forming T amplitudes (DSRG_NOSEMI, SELEC, ISA only available in toy code mcsrgpt2)
+"The way of forming T amplitudes (DSRG_NOSEMI, SELEC, ISA " "only available in toy code mcsrgpt2)"
+
 
 Type: str
 
 Default value: DSRG
-
-Allowed values: ['DSRG', 'DSRG_NOSEMI', 'SELEC', 'ISA']
 
 DWMS options
 ============
 
 **DWMS_ALGORITHM**
 
-DWMS algorithms:
-  - SA: state average Hαβ = 0.5 * ( <α|Hbar(β)|β> + <β|Hbar(α)|α> )
-  - XSA: extended state average (rotate Fαβ to a diagonal form)
-  - MS: multi-state (single-state single-reference)
-  - XMS: extended multi-state (single-state single-reference)
-  - To Be Deprecated:
-    - SH-0: separated diagonalizations, non-orthogonal final solutions
-    - SH-1: separated diagonalizations, orthogonal final solutions
+DWMS algorithms: - SA: state average Hαβ = 0.5 * ( <α|Hbar(β)|β> + <β|Hbar(α)|α> ) - XSA: extended state average (rotate Fαβ to a diagonal form) - MS: multi-state (single-state single-reference) - XMS: extended multi-state (single-state single-reference) - To Be Deprecated:
+  - SH-0: separated diagonalizations, non-orthogonal final solutions
+  - SH-1: separated diagonalizations, orthogonal final solutions
+
 
 Type: str
 
@@ -1632,6 +1521,7 @@ Allowed values: ['PT2', 'PT3']
 
 Consider (if true) amplitudes difference between states X(αβ) = A(β) - A(α) in SA algorithm, testing in non-DF DSRG-MRPT2
 
+
 Type: bool
 
 Default value: False
@@ -1648,6 +1538,7 @@ Default value: 1e-07
 
 Iterative update the reference CI coefficients in SA algorithm, testing in non-DF DSRG-MRPT2
 
+
 Type: bool
 
 Default value: False
@@ -1656,17 +1547,15 @@ Default value: False
 
 Max number of iteration in the update of the reference CI coefficients in SA algorithm, testing in non-DF DSRG-MRPT2
 
+
 Type: int
 
 Default value: 10
 
 **DWMS_REFERENCE**
 
-Energies to compute dynamic weights and CI vectors to do multi-state
-  CAS: CASCI energies and CI vectors
-  PT2: SA-DSRG-PT2 energies and SA-DSRG-PT2/CASCI vectors
-  PT3: SA-DSRG-PT3 energies and SA-DSRG-PT3/CASCI vectors
-  PT2D: Diagonal SA-DSRG-PT2c effective Hamiltonian elements and original CASCI vectors
+Energies to compute dynamic weights and CI vectors to do multi-state CAS: CASCI energies and CI vectors PT2: SA-DSRG-PT2 energies and SA-DSRG-PT2/CASCI vectors PT3: SA-DSRG-PT3 energies and SA-DSRG-PT3/CASCI vectors PT2D: Diagonal SA-DSRG-PT2c effective Hamiltonian elements and original CASCI vectors
+
 
 Type: str
 
@@ -1676,9 +1565,8 @@ Allowed values: ['CASCI', 'PT2', 'PT3', 'PT2D']
 
 **DWMS_ZETA**
 
-Automatic Gaussian width cutoff for the density weights
-Weights of state α:
-Wi = exp(-ζ * (Eα - Ei)^2) / sum_j exp(-ζ * (Eα - Ej)^2)Energies (Eα, Ei, Ej) can be CASCI or SA-DSRG-PT2/3 energies.
+Automatic Gaussian width cutoff for the density weights Weights of state α: Wi = exp(-ζ * (Eα - Ei)^2) / sum_j exp(-ζ * (Eα - Ej)^2) Energies (Eα, Ei, Ej) can be CASCI or SA-DSRG-PT2/3 energies.
+
 
 Type: float
 
@@ -1689,23 +1577,31 @@ Davidson-Liu options
 
 **DL_COLLAPSE_PER_ROOT**
 
-The number of trial vector to retain after collapsing
+The number of trial vectors to retain after collapsing.
 
 Type: int
 
 Default value: 2
 
-**DL_GUESS_SIZE**
+**DL_DETS_PER_GUESS**
 
-Set the number of determinants in the initial guess space for the DL solver
+The number of determinants to use for each guess state.
 
 Type: int
 
 Default value: 50
 
+**DL_GUESS_PER_ROOT**
+
+The number of trial vectors per target root.
+
+Type: int
+
+Default value: 1
+
 **DL_MAXITER**
 
-The maximum number of Davidson-Liu iterations
+The maximum number of Davidson-Liu iterations.
 
 Type: int
 
@@ -1713,7 +1609,7 @@ Default value: 100
 
 **DL_SUBSPACE_PER_ROOT**
 
-The maxim number of trial vectors
+The maximum number of trial vectors.
 
 Type: int
 
@@ -1721,18 +1617,263 @@ Default value: 10
 
 **SIGMA_VECTOR_MAX_MEMORY**
 
-The maximum number of doubles stored in memory in the sigma vector algorithm
+The maximum number of doubles stored in memory in the sigma vector algorithm.
 
 Type: int
 
 Default value: 67108864
+
+Driver options
+==============
+
+**ACTIVE_REF_TYPE**
+
+Initial guess for active space wave functions
+
+Type: str
+
+Default value: CAS
+
+Allowed values: ['HF', 'CAS', 'GAS', 'GAS_SINGLE', 'CIS', 'CID', 'CISD', 'DOCI']
+
+**ACTIVE_SPACE_SOLVER**
+
+Active space solver type
+
+Type: str
+
+Default value: 
+
+Allowed values: ['FCI', 'GENCI', 'ACI', 'ASCI', 'PCI', 'DETCI', 'CAS', 'DMRG', 'BLOCK2', 'EXTERNAL']
+
+**CALC_TYPE**
+
+The type of computation
+
+Type: str
+
+Default value: SS
+
+Allowed values: ['SS', 'SA', 'MS', 'DWMS']
+
+**CHARGE**
+
+The charge of the molecule. If a value is provided it overrides the charge of Psi4.
+
+Type: int
+
+Default value: None
+
+**CORRELATION_SOLVER**
+
+Dynamical correlation solver type
+
+Type: str
+
+Default value: NONE
+
+Allowed values: ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG', 'SA-MRDSRG', 'DSRG_MRPT', 'MRDSRG_SO']
+
+**DERTYPE**
+
+Derivative order
+
+Type: str
+
+Default value: NONE
+
+Allowed values: ['NONE', 'FIRST']
+
+**DUMP_ORBITALS**
+
+Save orbitals to file if true
+
+Type: bool
+
+Default value: False
+
+**D_CONVERGENCE**
+
+The density convergence criterion
+
+Type: float
+
+Default value: 1e-06
+
+**EXTERNAL_PARTIAL_RELAX**
+
+Perform one relaxation step after building the DSRG effective Hamiltonian when using `external` active space solver
+
+Type: bool
+
+Default value: False
+
+**EXT_RELAX_SOLVER**
+
+Active space solver used in the relaxation when using `external` active space solver
+
+Type: str
+
+Default value: FCI
+
+Allowed values: ['FCI', 'DETCI', 'CAS']
+
+**E_CONVERGENCE**
+
+The energy convergence criterion
+
+Type: float
+
+Default value: 1e-09
+
+**JOB_TYPE**
+
+Specify the job type
+
+Type: str
+
+Default value: NEWDRIVER
+
+Allowed values: ['NONE', 'NEWDRIVER', 'MR-DSRG-PT2', 'CASSCF', 'MCSCF_TWO_STEP', 'TDCI']
+
+**MCSCF_REFERENCE**
+
+Whether to use MCSCF reference in Forte or not
+
+Type: bool
+
+Default value: True
+
+**MINAO_BASIS**
+
+The basis used to define an orbital subspace
+
+Type: str
+
+Default value: STO-3G
+
+**MS**
+
+Projection of spin onto the z axis
+
+Type: float
+
+Default value: None
+
+**MULTIPLICITY**
+
+The multiplicity = (2S + 1) of the electronic state. For example, 1 = singlet, 2 = doublet, 3 = triplet, ... If a value is provided it overrides the multiplicity of Psi4.
+
+Type: int
+
+Default value: None
+
+**NEL**
+
+The number of electrons. Used when reading from FCIDUMP files.
+
+Type: int
+
+Default value: None
+
+**ORBITAL_TYPE**
+
+Type of orbitals to use
+
+Type: str
+
+Default value: CANONICAL
+
+Allowed values: ['CANONICAL', 'LOCAL', 'CHOLESKY_ACTIVE', 'MP2NO', 'MRPT2NO']
+
+**PRINT**
+
+Set the print level. (0 = quiet, 1 = brief, 2 = default, 3 = verbose, 4 = debug)
+
+Type: int
+
+Default value: 2
+
+**READ_ORBITALS**
+
+Read orbitals from file if true
+
+Type: bool
+
+Default value: False
+
+**READ_WFN**
+
+Read ref_wfn.Ca()/ref_wfn.Cb() from coeff.json for `external` active space solver
+
+Type: bool
+
+Default value: False
+
+**REF_TYPE**
+
+The type of reference used by forte if a psi4 wave function is missing
+
+Type: str
+
+Default value: SCF
+
+Allowed values: ['SCF', 'CASSCF']
+
+**ROOT_SYM**
+
+The symmetry of the electronic state. (zero based)
+
+Type: int
+
+Default value: None
+
+**SCF_TYPE**
+
+The integrals used in the SCF calculation
+
+Type: str
+
+Default value: None
+
+**SUBSPACE**
+
+A list of orbital subspaces
+
+Type: gen_list
+
+Default value: []
+
+**SUBSPACE_PI_PLANES**
+
+A list of arrays of atoms composing the plane
+
+Type: gen_list
+
+Default value: []
+
+**WRITE_RDM**
+
+Save RDMs to ref_rdms.json for external computations
+
+Type: bool
+
+Default value: False
+
+**WRITE_WFN**
+
+Save ref_wfn.Ca() to coeff.json for external computations
+
+Type: bool
+
+Default value: False
 
 Embedding options
 =================
 
 **EMBEDDING**
 
-Whether to perform embedding partition and projection
+Whether to perform embedding partition and projection.
 
 Type: bool
 
@@ -1740,7 +1881,7 @@ Default value: False
 
 **EMBEDDING_ADJUST_B_DOCC**
 
-Adjust number of occupied orbitals between A and B, +: move to B, -: move to A
+Adjust the number of occupied orbitals between A and B, +: move to B, -: move to A.
 
 Type: int
 
@@ -1748,7 +1889,7 @@ Default value: 0
 
 **EMBEDDING_ADJUST_B_UOCC**
 
-Adjust number of virtual orbitals between A and B, +: move to B, -: move to A
+Adjust the number of virtual orbitals between A and B, +: move to B, -: move to A.
 
 Type: int
 
@@ -1756,7 +1897,7 @@ Default value: 0
 
 **EMBEDDING_CUTOFF_METHOD**
 
-Cut off by: threshold ,cum_threshold or num_of_orbitals.
+Cut off by: threshold, cum_threshold, or num_of_orbitals.
 
 Type: str
 
@@ -1772,7 +1913,7 @@ Default value: CASSCF
 
 **EMBEDDING_SEMICANONICALIZE_ACTIVE**
 
-Perform semi-canonicalization on active space or not
+Perform semi-canonicalization on the active space or not.
 
 Type: bool
 
@@ -1780,7 +1921,7 @@ Default value: True
 
 **EMBEDDING_SEMICANONICALIZE_FROZEN**
 
-Perform semi-canonicalization on frozen core/virtual space or not
+Perform semi-canonicalization on frozen core/virtual space or not.
 
 Type: bool
 
@@ -1788,7 +1929,7 @@ Default value: True
 
 **EMBEDDING_THRESHOLD**
 
-Projector eigenvalue threshold for both simple and cumulative threshold
+Projector eigenvalue threshold for both simple and cumulative threshold.
 
 Type: float
 
@@ -1796,7 +1937,7 @@ Default value: 0.5
 
 **EMBEDDING_VIRTUAL_SPACE**
 
-Vitual space scheme
+Virtual space scheme.
 
 Type: str
 
@@ -1806,7 +1947,7 @@ Allowed values: ['ASET', 'PAO', 'IAO']
 
 **NUM_A_DOCC**
 
-Number of occupied orbitals in A fixed to this value when embedding method is num_of_orbitals
+Number of occupied orbitals in A fixed to this value when embedding method is num_of_orbitals.
 
 Type: int
 
@@ -1814,7 +1955,7 @@ Default value: 0
 
 **NUM_A_UOCC**
 
-Number of virtual orbitals in A fixed to this value when embedding method is num_of_orbitals
+Number of virtual orbitals in A fixed to this value when embedding method is num_of_orbitals.
 
 Type: int
 
@@ -1822,7 +1963,7 @@ Default value: 0
 
 **PAO_FIX_VIRTUAL_NUMBER**
 
-Enable this option will generate PAOs equivlent to ASET virtuals, instead of using threshold
+Enable this option to generate PAOs equivalent to ASET virtuals, instead of using threshold.
 
 Type: bool
 
@@ -1839,6 +1980,22 @@ Default value: 1e-08
 FCI options
 ===========
 
+**CI_SPIN_ADAPT**
+
+Spin-adapt the CI wavefunction?
+
+Type: bool
+
+Default value: False
+
+**CI_SPIN_ADAPT_FULL_PRECONDITIONER**
+
+Use a full preconditioner for spin-adapted CI?
+
+Type: bool
+
+Default value: False
+
 **FCI_TEST_RDMS**
 
 Test the FCI reduced density matrices?
@@ -1847,17 +2004,9 @@ Type: bool
 
 Default value: False
 
-**NTRIAL_PER_ROOT**
-
-The number of trial guess vectors to generate per root
-
-Type: int
-
-Default value: 10
-
 **PRINT_NO**
 
-Print the NO from the rdm of FCI
+Print the natural orbitals from the reduced density matrices of FCI.
 
 Type: bool
 
@@ -1868,7 +2017,7 @@ FCIMO options
 
 **FCIMO_ACTV_TYPE**
 
-The active space type
+The active space type.
 
 Type: str
 
@@ -1878,7 +2027,7 @@ Allowed values: ['COMPLETE', 'CIS', 'CISD', 'DOCI']
 
 **FCIMO_CISD_NOHF**
 
-Ground state: HF; Excited states: no HF determinant in CISD space
+Ground state: HF; Excited states: no HF determinant in CISD space.
 
 Type: bool
 
@@ -1886,7 +2035,7 @@ Default value: True
 
 **FCIMO_IPEA**
 
-Generate IP/EA CIS/CISD space
+Generate IP/EA CIS/CISD space.
 
 Type: str
 
@@ -1896,7 +2045,7 @@ Allowed values: ['NONE', 'IP', 'EA']
 
 **FCIMO_PRINT_CIVEC**
 
-The printing threshold for CI vectors
+The printing threshold for CI vectors.
 
 Type: float
 
@@ -2006,7 +2155,8 @@ Integrals options
 
 **FCIDUMP_DOCC**
 
-The number of doubly occupied orbitals assumed for a FCIDUMP file. This information is used to build orbital energies.
+"The number of doubly occupied orbitals assumed for a FCIDUMP file." " This information is used to build orbital energies."
+
 
 Type: int_list
 
@@ -2022,7 +2172,8 @@ Default value: INTDUMP
 
 **FCIDUMP_SOCC**
 
-The number of singly occupied orbitals assumed for a FCIDUMP file. This information is used to build orbital energies.
+"The number of singly occupied orbitals assumed for a FCIDUMP file." " This information is used to build orbital energies."
+
 
 Type: int_list
 
@@ -2030,13 +2181,12 @@ Default value: []
 
 **INT_TYPE**
 
-The type of molecular integrals used in a computation- CONVENTIONAL Conventional four-index two-electron integrals- DF Density fitted two-electron integrals- CHOLESKY Cholesky decomposed two-electron integrals- FCIDUMP Read integrals from a file in the FCIDUMP format
+"The type of molecular integrals used in a computation" "- CONVENTIONAL: Conventional four-index two-electron integrals" "- DF: Density fitted two-electron integrals" "- CHOLESKY: Cholesky decomposed two-electron integrals" "- FCIDUMP: Read integrals from a file in the FCIDUMP format"
+
 
 Type: str
 
 Default value: CONVENTIONAL
-
-Allowed values: ['CONVENTIONAL', 'CHOLESKY', 'DF', 'DISKDF', 'FCIDUMP']
 
 **PRINT_INTS**
 
@@ -2067,12 +2217,295 @@ Type: int_list
 
 Default value: []
 
-MO Space Info options
+MCSCF options
+=============
+
+**CPSCF_CONVERGENCE**
+
+Convergence criterion for CP-SCF equation
+
+Type: float
+
+Default value: 1e-08
+
+**CPSCF_MAXITER**
+
+Max iteration of solving coupled perturbed SCF equation
+
+Type: int
+
+Default value: 50
+
+**MCSCF_ACTIVE_FROZEN_ORBITAL**
+
+A list of active orbitals to be frozen in the MCSCF optimization (in Pitzer order, zero based). Useful when doing core-excited state computations.
+
+Type: int_list
+
+Default value: []
+
+**MCSCF_CI_FREQ**
+
+How often to solve CI?
+< 1: do CI in the first macro iteration ONLY
+= n: do CI every n macro iteration
+
+Type: int
+
+Default value: 1
+
+**MCSCF_CI_STEP**
+
+Do a CI step for every MCSCF_CI_FREQ
+
+Type: bool
+
+Default value: False
+
+**MCSCF_CI_STEP_START**
+
+When to start skipping CI steps
+
+Type: int
+
+Default value: -1
+
+**MCSCF_DEBUG_PRINTING**
+
+Enable debug printing if True
+
+Type: bool
+
+Default value: False
+
+**MCSCF_DF_TEIALG**
+
+Algorithm to build (pu|xy) integrals in DF-MCSCF. Use (Q|pu) if True; Otherwise use JK build for every xy pair
+
+Type: bool
+
+Default value: True
+
+**MCSCF_DIE_IF_NOT_CONVERGED**
+
+Stop Forte if MCSCF is not converged
+
+Type: bool
+
+Default value: True
+
+**MCSCF_DIIS_FREQ**
+
+How often to do DIIS extrapolation
+
+Type: int
+
+Default value: 1
+
+**MCSCF_DIIS_MAX_VEC**
+
+Maximum size of DIIS vectors for orbital rotations
+
+Type: int
+
+Default value: 8
+
+**MCSCF_DIIS_MIN_VEC**
+
+Minimum size of DIIS vectors for orbital rotations
+
+Type: int
+
+Default value: 3
+
+**MCSCF_DIIS_NORM**
+
+Do DIIS when the orbital gradient norm is below this value
+
+Type: float
+
+Default value: 0.001
+
+**MCSCF_DIIS_START**
+
+Iteration number to start adding error vectors (< 1 will not do DIIS)
+
+Type: int
+
+Default value: 15
+
+**MCSCF_DMRG_FOCUS_NSWEEPS**
+
+Max number of sweeps in DMRGSCF near convergence (de < 1.0e-3, dg < 1.0e-3)
+
+Type: int
+
+Default value: 20
+
+**MCSCF_DO_DIIS**
+
+Use DIIS in MCSCF orbital optimization
+
+Type: bool
+
+Default value: True
+
+**MCSCF_E_CONVERGENCE**
+
+The energy convergence criterion (two consecutive energies)
+
+Type: float
+
+Default value: 1e-08
+
+**MCSCF_FINAL_ORBITAL**
+
+Constraints for redundant orbital pairs at the end of macro iteration
+
+Type: str
+
+Default value: CANONICAL
+
+Allowed values: ['CANONICAL', 'NATURAL', 'UNSPECIFIED']
+
+**MCSCF_G_CONVERGENCE**
+
+The orbital gradient convergence criterion (RMS of gradient vector)
+
+Type: float
+
+Default value: 1e-07
+
+**MCSCF_IGNORE_FROZEN_ORBS**
+
+Ignore frozen orbitals in the input file for MCSCF or not
+
+Type: bool
+
+Default value: True
+
+**MCSCF_INTERNAL_ROT**
+
+Keep GASn-GASn orbital rotations if true
+
+Type: bool
+
+Default value: False
+
+**MCSCF_MAXITER**
+
+The maximum number of MCSCF macro iterations
+
+Type: int
+
+Default value: 100
+
+**MCSCF_MAX_ROTATION**
+
+Max value in orbital update vector
+
+Type: float
+
+Default value: 0.2
+
+**MCSCF_MCI_MAXITER**
+
+The maximum number of micro CI iterations in every macro iteration
+
+Type: int
+
+Default value: 12
+
+**MCSCF_MICRO_MAXITER**
+
+The maximum number of micro iterations (orbital optimization) for a given CI
+
+Type: int
+
+Default value: 6
+
+**MCSCF_MULTIPLICITY**
+
+Multiplicity for the CASSCF solution (if different from multiplicity)
+
+Type: int
+
+Default value: 0
+
+**MCSCF_NO_ORBOPT**
+
+No orbital optimization if true
+
+Type: bool
+
+Default value: False
+
+**MCSCF_ORB_ORTHO_TRANS**
+
+Ways to compute the orthogonal transformation U from orbital rotation R
+
+Type: str
+
+Default value: CAYLEY
+
+Allowed values: ['CAYLEY', 'POWER', 'PADE']
+
+**MCSCF_SOSCF**
+
+Run a complete SOSCF (form full Hessian)?
+
+Type: bool
+
+Default value: False
+
+**MCSCF_ZERO_ROT**
+
+Zero mixing for orbital pairs
+
+Type: gen_list
+
+Default value: []
+
+**MONITOR_SA_SOLUTION**
+
+Monitor the MC-CI solutions through iterations
+
+Type: bool
+
+Default value: False
+
+**OPTIMIZE_FROZEN_CORE**
+
+Ignore frozen core option and optimize orbitals?
+
+Type: bool
+
+Default value: False
+
+**ORB_ROTATION_ALGORITHM**
+
+Orbital rotation algorithm
+
+Type: str
+
+Default value: DIAGONAL
+
+Allowed values: ['DIAGONAL', 'AUGMENTED_HESSIAN']
+
+**RESTRICTED_DOCC_JK**
+
+Use JK builder for restricted docc (EXPERT)?
+
+Type: bool
+
+Default value: True
+
+MO_Space_Info options
 =====================
 
 **ACTIVE**
 
- Number of active orbitals per irrep (in Cotton order)
+Number of active orbitals per irrep (in Cotton order).
 
 Type: int_list
 
@@ -2080,7 +2513,7 @@ Default value: []
 
 **FROZEN_DOCC**
 
-Number of frozen occupied orbitals per irrep (in Cotton order)
+Number of frozen occupied orbitals per irrep (in Cotton order).
 
 Type: int_list
 
@@ -2088,7 +2521,7 @@ Default value: []
 
 **FROZEN_UOCC**
 
-Number of frozen unoccupied orbitals per irrep (in Cotton order)
+Number of frozen unoccupied orbitals per irrep (in Cotton order).
 
 Type: int_list
 
@@ -2096,7 +2529,7 @@ Default value: []
 
 **GAS1**
 
-Number of GAS1 orbitals per irrep (in Cotton order)
+Number of GAS1 orbitals per irrep (in Cotton order).
 
 Type: int_list
 
@@ -2104,7 +2537,7 @@ Default value: []
 
 **GAS2**
 
-Number of GAS2 orbitals per irrep (in Cotton order)
+Number of GAS2 orbitals per irrep (in Cotton order).
 
 Type: int_list
 
@@ -2112,7 +2545,7 @@ Default value: []
 
 **GAS3**
 
-Number of GAS3 orbitals per irrep (in Cotton order)
+Number of GAS3 orbitals per irrep (in Cotton order).
 
 Type: int_list
 
@@ -2120,7 +2553,7 @@ Default value: []
 
 **GAS4**
 
-Number of GAS4 orbitals per irrep (in Cotton order)
+Number of GAS4 orbitals per irrep (in Cotton order).
 
 Type: int_list
 
@@ -2128,7 +2561,7 @@ Default value: []
 
 **GAS5**
 
-Number of GAS5 orbitals per irrep (in Cotton order)
+Number of GAS5 orbitals per irrep (in Cotton order).
 
 Type: int_list
 
@@ -2136,7 +2569,7 @@ Default value: []
 
 **GAS6**
 
-Number of GAS6 orbitals per irrep (in Cotton order)
+Number of GAS6 orbitals per irrep (in Cotton order).
 
 Type: int_list
 
@@ -2144,7 +2577,7 @@ Default value: []
 
 **RESTRICTED_DOCC**
 
-Number of restricted doubly occupied orbitals per irrep (in Cotton order)
+Number of restricted doubly occupied orbitals per irrep (in Cotton order).
 
 Type: int_list
 
@@ -2152,7 +2585,7 @@ Default value: []
 
 **RESTRICTED_UOCC**
 
-Number of restricted unoccupied orbitals per irrep (in Cotton order)
+Number of restricted unoccupied orbitals per irrep (in Cotton order).
 
 Type: int_list
 
@@ -2179,7 +2612,7 @@ Default value: False
 
 **MRCINO_AUTO**
 
-Allow the users to choosewhether pass frozen_doccactice_docc and restricted_doccor not
+Allow the users to choose whether to pass frozen_docc, active_docc, and restricted_docc or not.
 
 Type: bool
 
@@ -2187,7 +2620,7 @@ Default value: False
 
 **MRCINO_NROOT**
 
-The number of roots computed
+The number of roots computed.
 
 Type: int
 
@@ -2195,7 +2628,7 @@ Default value: 1
 
 **MRCINO_ROOTS_PER_IRREP**
 
-The number of excited states per irreducible representation
+The number of excited states per irreducible representation.
 
 Type: int_list
 
@@ -2203,7 +2636,7 @@ Default value: []
 
 **MRCINO_THRESHOLD**
 
-The fraction of NOs to include in the active space
+The fraction of NOs to include in the active space.
 
 Type: float
 
@@ -2222,56 +2655,6 @@ Allowed values: ['CIS', 'CISD']
 Old options
 ===========
 
-**BASIS**
-
-The primary basis set
-
-Type: str
-
-Default value: 
-
-**BASIS_RELATIVISTIC**
-
-The basis set used to run relativistic computations
-
-Type: str
-
-Default value: 
-
-**CHOLESKY_TOLERANCE**
-
-Tolerance for Cholesky integrals
-
-Type: float
-
-Default value: 1e-06
-
-**DF_BASIS_MP2**
-
-Auxiliary basis set for density fitting computations
-
-Type: str
-
-Default value: 
-
-**DF_FITTING_CONDITION**
-
-Eigenvalue threshold for RI basis
-
-Type: float
-
-Default value: 1e-10
-
-**DF_INTS_IO**
-
-IO caching for CP corrections
-
-Type: str
-
-Default value: NONE
-
-Allowed values: ['NONE', 'SAVE', 'LOAD']
-
 **DIIS_MAX_VECS**
 
 The maximum number of DIIS vectors
@@ -2288,14 +2671,6 @@ Type: int
 
 Default value: 2
 
-**INTS_TOLERANCE**
-
-Schwarz screening threshold
-
-Type: float
-
-Default value: 1e-12
-
 **MAXITER**
 
 The maximum number of iterations
@@ -2307,6 +2682,22 @@ Default value: 100
 **MEMORY_SUMMARY**
 
 Print summary of memory
+
+Type: bool
+
+Default value: False
+
+**NAT_ACT**
+
+Use Natural Orbitals to suggest active space?
+
+Type: bool
+
+Default value: False
+
+**NAT_ORBS_PRINT**
+
+View the natural orbitals with their symmetry information
 
 Type: bool
 
@@ -2327,22 +2718,6 @@ Occupancy greater than which is considered as active
 Type: float
 
 Default value: 0.02
-
-**NAT_ACT**
-
-Use Natural Orbitals to suggest active space?
-
-Type: bool
-
-Default value: False
-
-**NAT_ORBS_PRINT**
-
-View the natural orbitals with their symmetry information
-
-Type: bool
-
-Default value: False
 
 **REFERENCE**
 
@@ -2469,7 +2844,7 @@ Default value: False
 
 **PCI_CHEBYSHEV_ORDER**
 
-The order of Chebyshev truncation
+The order of Chebyshev truncation.
 
 Type: int
 
@@ -2477,7 +2852,7 @@ Default value: 5
 
 **PCI_COLINEAR_THRESHOLD**
 
-The minimum norm of orthogonal vector
+The minimum norm of orthogonal vector.
 
 Type: float
 
@@ -2485,7 +2860,7 @@ Default value: 1e-06
 
 **PCI_DL_COLLAPSE_PER_ROOT**
 
-The number of trial vector to retain after Davidson-Liu collapsing
+The number of trial vector to retain after Davidson-Liu collapsing.
 
 Type: int
 
@@ -2493,7 +2868,7 @@ Default value: 2
 
 **PCI_DL_SUBSPACE_PER_ROOT**
 
-The maxim number of trial Davidson-Liu vectors
+The maxim number of trial Davidson-Liu vectors.
 
 Type: int
 
@@ -2509,7 +2884,7 @@ Default value: False
 
 **PCI_ENERGY_ESTIMATE_FREQ**
 
-Iterations in between variational estimation of the energy
+Iterations in between variational estimation of the energy.
 
 Type: int
 
@@ -2525,7 +2900,7 @@ Default value: 1e-06
 
 **PCI_EVAR_MAX_ERROR**
 
-The max allowed error for variational energy
+The max allowed error for variational energy.
 
 Type: float
 
@@ -2533,7 +2908,7 @@ Default value: 0.0
 
 **PCI_E_CONVERGENCE**
 
-The energy convergence criterion
+The energy convergence criterion.
 
 Type: float
 
@@ -2549,7 +2924,7 @@ Default value: False
 
 **PCI_FUNCTIONAL**
 
-The functional for determinant coupling importance evaluation
+The functional for determinant coupling importance evaluation.
 
 Type: str
 
@@ -2559,7 +2934,7 @@ Allowed values: ['MAX', 'SUM', 'SQUARE', 'SQRT', 'SPECIFY-ORDER']
 
 **PCI_FUNCTIONAL_ORDER**
 
-The functional order of PCI_FUNCTIONAL is SPECIFY-ORDER
+The functional order of PCI_FUNCTIONAL is SPECIFY-ORDER.
 
 Type: float
 
@@ -2567,7 +2942,7 @@ Default value: 1.0
 
 **PCI_GENERATOR**
 
-The propagation algorithm
+The propagation algorithm.
 
 Type: str
 
@@ -2577,7 +2952,7 @@ Allowed values: ['LINEAR', 'QUADRATIC', 'CUBIC', 'QUARTIC', 'POWER', 'TROTTER', 
 
 **PCI_GUESS_SPAWNING_THRESHOLD**
 
-The determinant importance threshold
+The determinant importance threshold for guess spawning.
 
 Type: float
 
@@ -2593,7 +2968,7 @@ Default value: False
 
 **PCI_INITIATOR_APPROX_FACTOR**
 
-The initiator approximation factor
+The initiator approximation factor.
 
 Type: float
 
@@ -2601,7 +2976,7 @@ Default value: 1.0
 
 **PCI_KRYLOV_ORDER**
 
-The order of Krylov truncation
+The order of Krylov truncation.
 
 Type: int
 
@@ -2609,7 +2984,7 @@ Default value: 5
 
 **PCI_MAXBETA**
 
-The maximum value of beta
+The maximum value of beta.
 
 Type: float
 
@@ -2617,7 +2992,7 @@ Default value: 1000.0
 
 **PCI_MAX_DAVIDSON_ITER**
 
-The maximum value of Davidson generator iteration
+The maximum value of Davidson generator iteration.
 
 Type: int
 
@@ -2625,7 +3000,7 @@ Default value: 12
 
 **PCI_MAX_GUESS_SIZE**
 
-The maximum number of determinants used to form the guess wave function
+The maximum number of determinants used to form the guess wave function.
 
 Type: int
 
@@ -2633,7 +3008,7 @@ Default value: 10000
 
 **PCI_NROOT**
 
-The number of roots computed
+The number of roots computed.
 
 Type: int
 
@@ -2673,7 +3048,7 @@ Default value: False
 
 **PCI_R_CONVERGENCE**
 
-The residual 2-norm convergence criterion
+The residual 2-norm convergence criterion.
 
 Type: float
 
@@ -2681,7 +3056,7 @@ Default value: 1.0
 
 **PCI_SCHWARZ_PRESCREENING**
 
-Use schwarz prescreening?
+Use Schwarz prescreening?
 
 Type: bool
 
@@ -2697,7 +3072,7 @@ Default value: False
 
 **PCI_SPAWNING_THRESHOLD**
 
-The determinant importance threshold
+The determinant importance threshold.
 
 Type: float
 
@@ -2721,7 +3096,7 @@ Default value: False
 
 **PCI_TAU**
 
-The time step in imaginary time (a.u.)
+The time step in imaginary time (a.u.).
 
 Type: float
 
@@ -2751,6 +3126,67 @@ Type: bool
 
 Default value: False
 
+PSI options
+===========
+
+**BASIS**
+
+The primary basis set
+
+Type: str
+
+Default value: 
+
+**BASIS_RELATIVISTIC**
+
+The basis set used to run relativistic computations
+
+Type: str
+
+Default value: 
+
+**CHOLESKY_TOLERANCE**
+
+Tolerance for Cholesky integrals
+
+Type: float
+
+Default value: 1e-06
+
+**DF_BASIS_MP2**
+
+Auxiliary basis set for density fitting computations
+
+Type: str
+
+Default value: 
+
+**DF_FITTING_CONDITION**
+
+Eigenvalue threshold for RI basis
+
+Type: float
+
+Default value: 1e-10
+
+**DF_INTS_IO**
+
+IO caching for CP corrections
+
+Type: str
+
+Default value: NONE
+
+Allowed values: ['NONE', 'SAVE', 'LOAD']
+
+**INTS_TOLERANCE**
+
+Schwarz screening threshold
+
+Type: float
+
+Default value: 1e-12
+
 PT2 options
 ===========
 
@@ -2767,7 +3203,7 @@ SCI options
 
 **SCI_CORE_EX**
 
-Use core excitation algorithm
+Use core excitation algorithm?
 
 Type: bool
 
@@ -2775,7 +3211,7 @@ Default value: False
 
 **SCI_DIRECT_RDMS**
 
-Computes RDMs without coupling lists?
+Compute RDMs without coupling lists?
 
 Type: bool
 
@@ -2799,7 +3235,7 @@ Default value: False
 
 **SCI_EXCITED_ALGORITHM**
 
-The selected CI excited state algorithm
+The selected CI excited state algorithm.
 
 Type: str
 
@@ -2809,7 +3245,7 @@ Allowed values: ['AVERAGE', 'ROOT_ORTHOGONALIZE', 'ROOT_COMBINE', 'MULTISTATE']
 
 **SCI_FIRST_ITER_ROOTS**
 
-Compute all roots on first iteration?
+Compute all roots on the first iteration?
 
 Type: bool
 
@@ -2817,7 +3253,7 @@ Default value: False
 
 **SCI_MAX_CYCLE**
 
-Maximum number of cycles
+Maximum number of cycles.
 
 Type: int
 
@@ -2825,7 +3261,7 @@ Default value: 20
 
 **SCI_PREITERATIONS**
 
-Number of iterations to run SA-ACI before SS-ACI
+Number of iterations to run SA-ACI before SS-ACI.
 
 Type: int
 
@@ -2857,8 +3293,109 @@ Default value: False
 
 **SCI_TEST_RDMS**
 
-Run test for the RDMs?
+Run tests for the RDMs?
 
 Type: bool
 
 Default value: False
+
+TDCI options
+============
+
+**TDCI_CN_CONVERGENCE**
+
+Convergence threshold for CN iterations.
+
+Type: float
+
+Default value: 1e-12
+
+**TDCI_ETA_P**
+
+Path filtering threshold for P space.
+
+Type: float
+
+Default value: 1e-12
+
+**TDCI_ETA_PQ**
+
+Path filtering threshold for Q space.
+
+Type: float
+
+Default value: 1e-12
+
+**TDCI_HOLE**
+
+Orbital used to ionize initial state. Number is indexed by the same ordering of orbitals in the determinants.
+
+Type: int
+
+Default value: 0
+
+**TDCI_KRYLOV_DIM**
+
+Dimension of Krylov subspace for Lanczos method.
+
+Type: int
+
+Default value: 5
+
+**TDCI_NSTEP**
+
+Number of time-steps.
+
+Type: int
+
+Default value: 20
+
+**TDCI_OCC_ORB**
+
+Print the occupation at integral time intervals for these orbitals.
+
+Type: int_list
+
+Default value: []
+
+**TDCI_PRESCREEN_THRESH**
+
+Prescreening threshold.
+
+Type: float
+
+Default value: 1e-12
+
+**TDCI_PRINT_WFN**
+
+Print coefficients to files.
+
+Type: bool
+
+Default value: False
+
+**TDCI_PROPAGATOR**
+
+Type of propagator.
+
+Type: str
+
+Default value: EXACT
+
+Allowed values: ['EXACT', 'CN', 'QCN', 'LINEAR', 'QUADRATIC', 'RK4', 'LANCZOS', 'EXACT_SELECT', 'RK4_SELECT', 'RK4_SELECT_LIST', 'ALL']
+
+**TDCI_TEST_OCC**
+
+Test the occupation vectors.
+
+Type: bool
+
+Default value: False
+
+**TDCI_TIMESTEP**
+
+Timestep length in attosecond.
+
+Type: float
+
+Default value: 1.0

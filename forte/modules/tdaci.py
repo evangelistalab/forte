@@ -1,7 +1,7 @@
 from typing import List
 
 from forte.data import ForteData
-from forte._forte import make_state_info_from_psi, to_state_nroots_map, make_active_space_method, TDCI
+from forte._forte import to_state_nroots_map, make_active_space_method, TDCI
 
 from .module import Module
 from .active_space_ints import ActiveSpaceInts
@@ -21,8 +21,12 @@ class TDACI(Module):
         super().__init__()
 
     def _run(self, data: ForteData) -> ForteData:
-        state = make_state_info_from_psi(data.options)
         data = ActiveSpaceInts(active="ACTIVE", core=["RESTRICTED_DOCC"]).run(data)
+        # As long as TDCI takes ActiveSpaceMethod rather than ActiveSpaceSolver, this error message must stay.
+        if len(data.state_weights_map) != 1:
+            raise("TDACI does not support multi-state computations yet. File an issue if you need this!")
+        else:
+            state = next(iter(data.state_weights_map))
         state_map = to_state_nroots_map(data.state_weights_map)
         active_space_method = make_active_space_method(
             "ACI", state, data.options.get_int("NROOT"), data.scf_info, data.mo_space_info, data.as_ints, data.options

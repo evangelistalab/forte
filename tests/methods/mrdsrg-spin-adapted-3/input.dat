@@ -1,12 +1,9 @@
 import forte
 
 refmcscf   = -99.406065223640
-refudsrg   = -99.498870943028  # use default dsrg_rsc_ncomm
-refprdsrg  = -99.500372786457  # use default dsrg_rsc_ncomm
-refrdsrg   = -99.500190629197  # use default dsrg_rsc_ncomm
-refudsrg   = -99.498863733468  # truncate dsrg_rsc_ncomm to 4
-refprdsrg  = -99.500365370010  # truncate dsrg_rsc_ncomm to 4
-refrdsrg   = -99.500183053364  # truncate dsrg_rsc_ncomm to 4
+refudsrg   = -99.498863722874  # truncate dsrg_rsc_ncomm to 4
+refprdsrg  = -99.500365361250  # truncate dsrg_rsc_ncomm to 4
+refrdsrg   = -99.500183053072  # truncate dsrg_rsc_ncomm to 4
 
 molecule HF{
 0 1
