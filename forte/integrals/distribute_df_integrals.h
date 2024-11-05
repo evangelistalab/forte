@@ -29,14 +29,14 @@
 
 #pragma once
 
-#include "integrals.h"
+#include "psi4_integrals.h"
 
 namespace forte {
 
 #ifdef HAVE_GA
 class DistDFIntegrals : public Psi4Integrals {
   public:
-    DistDFIntegrals(std::shared_ptr<ForteOptions> options,
+    DistDFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
                     std::shared_ptr<psi::Wavefunction> ref_wfn, IntegralSpinRestriction restricted,
                     std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -76,11 +76,6 @@ class DistDFIntegrals : public Psi4Integrals {
     virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& /*A*/,
                                                          size_t /*p*/,
                                                          const std::vector<size_t>& /*q*/) {}
-
-    virtual void set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
-        outfile->Printf("DistributedDF will not work with set_tei");
-        throw psi::PSIEXCEPTION("DistDF can not use set_tei");
-    }
 
     /// Make a Fock matrix computed with respect to a given determinant
     virtual size_t nthree() const { return nthree_; }

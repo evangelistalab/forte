@@ -1,0 +1,30 @@
+# Reference result for this test case
+
+import forte
+
+molecule HF{
+F
+H 1 1.5
+}
+
+set {
+  basis                   cc-pvdz
+  reference               rhf
+  scf_type                df
+  df_basis_scf            cc-pvdz-jkfit
+  d_convergence           8
+  e_convergence           9
+}
+
+set forte{
+  job_type                mcscf_two_step
+  int_type                df
+  frozen_docc             [0,0,0,0]
+  restricted_docc         [2,0,1,1]
+  active                  [2,0,0,0]
+  active_space_solver     fci
+  mcscf_maxiter           25
+  mcscf_e_convergence     12
+  mcscf_g_convergence     7
+}
+Ecas_1 = energy('forte')

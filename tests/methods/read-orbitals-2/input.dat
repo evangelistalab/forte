@@ -1,41 +1,37 @@
-# Test read_orbitals keyword in C1 symmetry with user provided ref_wfn
-
+# test passing a refeference wave function computed in the same file
 import forte
 
-refscf     =  -99.87285247449552
-refdsrgpt2 = -100.10085804081345
+reffci = -14.595808852754013
 
-memory 500 mb
-
-molecule HF{
+molecule {
 0 1
-F
-H  1 R
-R = 1.50
-symmetry c1
+Li
+Li 1 R
+R = 2.9
+units bohr
 }
 
 set {
-  basis                cc-pvdz
-  scf_type             pk
-  d_convergence        8
-  e_convergence        12
+  basis sto-3g
+  scf_type pk
+  reference rohf
+  e_convergence 12
 }
 
-set forte{
-  active_space_solver  detci
-  correlation_solver   dsrg-mrpt2
-  frozen_docc          [1]
-  restricted_docc      [3]
-  active               [2]
-  root_sym             0
-  nroot                1
-  dsrg_s               1.0
-  read_orbitals        true
+e, ref_wfn = energy('scf',return_wfn=True)
+
+molecule {
+0 1
+Li
+Li 1 R
+R = 3.0
+units bohr
 }
 
-Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refscf, variable("CURRENT ENERGY"), 10, "SCF energy")
+set forte {
+  active_space_solver genci
+  mcscf_reference false
+}
 
-energy('forte', ref_wfn=wfn)
-compare_values(refdsrgpt2, variable("CURRENT ENERGY"), 10, "DSRG-MRPT2 energy")
+energy('forte',ref_wfn=ref_wfn)
+compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST

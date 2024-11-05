@@ -37,7 +37,9 @@
 #define FMT_HEADER_ONLY
 #include "lib/fmt/core.h"
 
+#include "base_classes/forte_options.h"
 #include "base_classes/active_space_solver.h"
+
 #include "fci/fci_solver.h"
 #include "helpers/printing.h"
 #include "orbital-helpers/semi_canonicalize.h"

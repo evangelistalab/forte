@@ -138,9 +138,6 @@ class MCSCF_2STEP {
     /// Orbital gradient convergence criteria
     double g_conv_;
 
-    /// The name of CI solver
-    std::string ci_type_;
-
     /// Final total energy
     double energy_;
 

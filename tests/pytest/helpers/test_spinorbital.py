@@ -12,17 +12,21 @@ def test_spinorbital_mp2():
 
     import numpy as np
 
-    geom = """0 1
+    psi4.core.clean()
+
+    molecule = psi4.geometry(
+        """0 1
     H
     F 1 1.0
     symmetry c1
     """
+    )
 
-    basis = "6-31g"
-    Escf, wfn = forte.utils.psi4_scf(geom, basis, "rhf")
-    # having options={} is a hack and should not be required.
     data = forte.modules.ObjectsUtilPsi4(
-        ref_wfn=wfn, options={}, mo_spaces={"RESTRICTED_DOCC": [5], "ACTIVE": [0]}
+        molecule=molecule,
+        basis="6-31G",
+        mo_spaces={"RESTRICTED_DOCC": [5], "ACTIVE": [0]},
+        options={"E_CONVERGENCE": 1e-12},
     ).run()
 
     mo_space_info = data.mo_space_info
@@ -53,6 +57,7 @@ def test_spinorbital_mp2():
                     d[i][j][a][b] = 1.0 / (Fc[i] + Fc[j] - Fv[a] - Fv[b])
     T = {"ccvv": np.einsum("ijab,ijab->ijab", d, H["ccvv"])}
     E = 0.25 * np.einsum("ijab,ijab->", T["ccvv"], H["ccvv"])
+
     assert math.isclose(E, -0.13305567213152, abs_tol=1e-09)
 
     psi4.core.clean()

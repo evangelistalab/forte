@@ -36,6 +36,7 @@ import forte
 from forte.proc.external_active_space_solver import write_external_active_space_file
 from forte.proc.dsrg_fno import dsrg_fno_procrouting
 
+
 class ProcedureDSRG:
     def __init__(self, active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info):
         """
@@ -159,22 +160,24 @@ class ProcedureDSRG:
         inactive_mix = options.get_bool("SEMI_CANONICAL_MIX_INACTIVE")
         active_mix = options.get_bool("SEMI_CANONICAL_MIX_ACTIVE")
         semi_threshold = options.get_double("SEMI_CANONICAL_THRESHOLD")
-        self.semi = forte.SemiCanonical(mo_space_info, ints, inactive_mix, active_mix, semi_threshold)
+        self.semi = forte.SemiCanonical(mo_space_info, ints, scf_info, inactive_mix, active_mix, semi_threshold)
         if self.do_semicanonical:
             self.semi.semicanonicalize(self.rdms)
         self.Ua, self.Ub = self.semi.Ua_t(), self.semi.Ub_t()
-        
+
         # Perform FNO-DSRG
         if options.get_bool("DSRG_FNO"):
-            fno_data = dsrg_fno_procrouting(state_weights_map, scf_info, options, ints,
-                                            mo_space_info, active_space_solver, self.rdms,
-                                            self.Ua)
+            fno_data = dsrg_fno_procrouting(
+                state_weights_map, scf_info, options, ints, mo_space_info, active_space_solver, self.rdms, self.Ua
+            )
             self.mo_space_info, self.ints, dept2, dhpt2 = fno_data
             if options.get_bool("DSRG_FNO_PT2_CORRECTION"):
                 self.fno_pt2_energy_shift = dept2
                 self.fno_pt2_Heff_shift = dhpt2
                 psi4.core.set_scalar_variable("FNO ENERGY CORRECTION", dept2)
-            self.semi = forte.SemiCanonical(self.mo_space_info, self.ints, inactive_mix, active_mix, semi_threshold)
+            self.semi = forte.SemiCanonical(
+                self.mo_space_info, self.ints, self.scf_info, inactive_mix, active_mix, semi_threshold
+            )
 
     def make_dsrg_solver(self):
         """Make a DSRG solver."""

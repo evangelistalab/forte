@@ -29,14 +29,16 @@
 #include <cmath>
 #include <fstream>
 
-#include "psi4/libdpd/dpd.h"
-#include "psi4/libmints/mintshelper.h"
+// #include "psi4/libmints/mintshelper.h"
 #include "psi4/libmints/matrix.h"
-#include "psi4/libpsio/psio.hpp"
+// #include "psi4/libpsio/psio.hpp"
 #include "psi4/psi4-dec.h"
-#include "psi4/psifiles.h"
+// #include "psi4/psifiles.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "base_classes/mo_space_info.h"
+#include "base_classes/scf_info.h"
+
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/string_algorithms.h"
 #include "helpers/timer.h"
@@ -53,27 +55,35 @@ using namespace psi;
 namespace forte {
 
 CustomIntegrals::CustomIntegrals(std::shared_ptr<ForteOptions> options,
+                                 std::shared_ptr<SCFInfo> scf_info,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
                                  IntegralSpinRestriction restricted, double scalar,
                                  const std::vector<double>& oei_a, const std::vector<double>& oei_b,
                                  const std::vector<double>& tei_aa,
                                  const std::vector<double>& tei_ab,
                                  const std::vector<double>& tei_bb)
-    : ForteIntegrals(options, mo_space_info, Custom, restricted), full_aphys_tei_aa_(tei_aa),
-      full_aphys_tei_ab_(tei_ab), full_aphys_tei_bb_(tei_bb) {
+    : ForteIntegrals(options, scf_info, mo_space_info, Custom, restricted),
+      original_full_one_electron_integrals_a_(oei_a),
+      original_full_one_electron_integrals_b_(oei_b), original_full_aphys_tei_aa_(tei_aa),
+      original_full_aphys_tei_ab_(tei_ab), original_full_aphys_tei_bb_(tei_bb)
+//   full_aphys_tei_aa_(tei_aa),
+//   full_aphys_tei_ab_(tei_ab), full_aphys_tei_bb_(tei_bb)
+{
     set_nuclear_repulsion(scalar);
-    set_oei_all(oei_a, oei_b);
-    initialize();
 }
 
 void CustomIntegrals::initialize() {
-    Ca_ = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
-    Cb_ = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
-    Ca_->identity();
-    Cb_->identity();
+    ForteIntegrals::common_initialize();
+
+    // Store the original integrals
+    full_one_electron_integrals_a_ = original_full_one_electron_integrals_a_;
+    full_one_electron_integrals_b_ = original_full_one_electron_integrals_b_;
+    full_aphys_tei_aa_ = original_full_aphys_tei_aa_;
+    full_aphys_tei_ab_ = original_full_aphys_tei_ab_;
+    full_aphys_tei_bb_ = original_full_aphys_tei_bb_;
+
     nsopi_ = nmopi_;
     nso_ = nmo_;
-
     print_info();
     local_timer int_timer;
     gather_integrals();
@@ -88,15 +98,15 @@ std::shared_ptr<psi::Matrix> CustomIntegrals::Ca_AO() const {
     return Ca_ao;
 }
 
-double CustomIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
+double CustomIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) const {
     return aphys_tei_aa_[aptei_index(p, q, r, s)];
 }
 
-double CustomIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
+double CustomIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) const {
     return aphys_tei_ab_[aptei_index(p, q, r, s)];
 }
 
-double CustomIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
+double CustomIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) const {
     return aphys_tei_bb_[aptei_index(p, q, r, s)];
 }
 
@@ -134,17 +144,6 @@ ambit::Tensor CustomIntegrals::aptei_bb_block(const std::vector<size_t>& p,
         value = aptei_bb(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
     });
     return ReturnTensor;
-}
-
-void CustomIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
-                              bool alpha2) {
-    size_t index = aptei_index(p, q, r, s);
-    if (alpha1 == true and alpha2 == true)
-        aphys_tei_aa_[index] = value;
-    if (alpha1 == true and alpha2 == false)
-        aphys_tei_ab_[index] = value;
-    if (alpha1 == false and alpha2 == false)
-        aphys_tei_bb_[index] = value;
 }
 
 void CustomIntegrals::gather_integrals() {
@@ -471,8 +470,8 @@ void CustomIntegrals::transform_one_electron_integrals() {
     }
 
     // transform the one-electron integrals
-    Ha->transform(Ca_);
-    Hb->transform(Cb_);
+    Ha->transform(scf_info_->_Ca());
+    Hb->transform(scf_info_->_Cb());
 
     OneBody_symm_ = Ha;
 
@@ -518,8 +517,8 @@ void CustomIntegrals::transform_two_electron_integrals() {
             for (int q = 0; q < nmopi_[h]; ++q) {
                 int p_full = p + offset;
                 int q_full = q + offset;
-                Ca_data[p_full * nmo_ + q_full] = Ca_->get(h, p, q);
-                Cb_data[p_full * nmo_ + q_full] = Cb_->get(h, p, q);
+                Ca_data[p_full * nmo_ + q_full] = this->Ca()->get(h, p, q);
+                Cb_data[p_full * nmo_ + q_full] = this->Cb()->get(h, p, q);
             }
         }
         offset += nmopi_[h];
@@ -537,17 +536,12 @@ void CustomIntegrals::transform_two_electron_integrals() {
     full_aphys_tei_bb_ = T.data();
 }
 
-void CustomIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
-                                      std::shared_ptr<psi::Matrix> Cb, bool re_transform) {
-    // 1. Copy orbitals and, if necessary, test they meet the spin restriction condition
-    Ca_->copy(Ca);
-    Cb_->copy(Cb);
+void CustomIntegrals::__update_orbitals(bool transform_ints) {
     ints_consistent_ = false;
-
     if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
-        if (not test_orbital_spin_restriction(Ca, Cb)) {
-            Ca->print();
-            Cb->print();
+        if (not test_orbital_spin_restriction(_Ca(), _Cb())) {
+            Ca()->print();
+            Cb()->print();
             auto msg = "CustomIntegrals::update_orbitals was passed two different sets of orbitals"
                        "\n  but the integral object assumes restricted orbitals";
             throw std::runtime_error(msg);
@@ -555,7 +549,7 @@ void CustomIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
     }
 
     // 2. Re-transform the integrals
-    if (re_transform) {
+    if (transform_ints) {
         ints_consistent_ = true;
         aptei_idx_ = nmo_;
         local_timer int_timer;

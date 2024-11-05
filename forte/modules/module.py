@@ -1,18 +1,19 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import List, Type, Union
 
 from forte.data import ForteData
 from forte.core import flog, increase_log_depth
 
 
-class Module:
+class Module(ABC):
     """
-    Represents a module in a computational graph.
-
-    A `Module` can store a list of input modules and the features needed and provided.
+    Represents a module that can be used in a workflow.
     """
 
-    def __init__(self, input_modules: Union["Module", List["Module"]] = None, options=None):
+    def __init__(
+        self,
+        options=None,
+    ):
         """
         Parameters
         ----------
@@ -21,32 +22,12 @@ class Module:
         options: dict
             A dictionary of options. Defaults to None.
         """
-        if input_modules is None:
-            self._input_modules = []
-        elif isinstance(input_modules, Module):
-            self._input_modules = [input_modules]
-        else:
-            self._input_modules = input_modules
         self._options = options
-
-    @property
-    def input_modules(self) -> List["Module"]:
-        return self._input_modules
+        self._executed = False
 
     @property
     def options(self) -> dict:
         return self._options
-
-    def _check_input(self):
-        """
-        Verify that this module can get all that it needs from its inputs.
-        """
-        for need in self.needs:
-            if not any(need in input_module.provides for input_module in self.input_modules):
-                missing_feature_error = (
-                    f"{self.__class__.__name__} needs {need}, " "which is not provided by input modules."
-                )
-                raise AssertionError(missing_feature_error)
 
     # decorate to increase the log depth
     @increase_log_depth
@@ -63,9 +44,6 @@ class Module:
         """
         # log call to run()
         flog("info", f"{type(self).__name__}: calling run()")
-
-        for input_module in self.input_modules:
-            data = input_module.run(data)
 
         # call derived class implementation of _run()
         data = self._run(data)

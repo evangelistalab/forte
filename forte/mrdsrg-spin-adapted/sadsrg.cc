@@ -28,6 +28,8 @@
 
 #include <numeric>
 
+#include "base_classes/forte_options.h"
+
 #include "psi4/libmints/matrix.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -146,7 +148,9 @@ void SADSRG::build_fock_from_ints() {
     local_timer lt;
     print_contents("Computing Fock matrix and cleaning JK");
     ints_->make_fock_matrix(rdms_->g1a(), rdms_->g1b());
-    ints_->jk_finalize();
+    if (ints_->integral_type() != IntegralType::Custom) {
+        ints_->jk_finalize();
+    }
     print_done(lt.get());
 }
 
@@ -774,7 +778,7 @@ bool SADSRG::check_semi_orbs() {
     bool semi_actv = true;
     auto nactv = actv_mos_.size();
     auto& Faa_data = Fd.block("aa").data();
-    auto actv_subspace = mo_space_info_->composite_space_names().at("ACTIVE");
+    auto actv_subspace = mo_space_info_->composite_spaces_def().at("ACTIVE");
     for (const auto& space : actv_subspace) {
         if (mo_space_info_->size(space) == 0)
             continue;
@@ -865,7 +869,7 @@ std::vector<double> SADSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
     // loop each correlated elementary space
     int nirrep = mo_space_info_->nirrep();
 
-    auto elementary_spaces = mo_space_info_->composite_space_names()["CORRELATED"];
+    auto elementary_spaces = mo_space_info_->composite_spaces_def().at("CORRELATED");
     for (const std::string& space : elementary_spaces) {
         if (mo_space_info_->size(space) == 0 or semi_checked_results_[space])
             continue;
@@ -1223,37 +1227,31 @@ void SADSRG::apply_denominator(ambit::BlockedTensor& T, const std::vector<std::s
             continue;
 
         auto& data = T.block(block).data();
+        int nthreads = omp_get_max_threads();
+        if (size < static_cast<size_t>(nthreads))
+            nthreads = size;
 
         if (_bsize == 2) {
-            auto s0 = label_to_spacemo_[block[0]].size();
             auto s1 = label_to_spacemo_[block[1]].size();
-#pragma omp parallel for collapse(2)
-            for (size_t i0 = 0; i0 < s0; ++i0) {
-                for (size_t i1 = 0; i1 < s1; ++i1) {
-                    auto n0 = label_to_spacemo_[block[0]][i0];
-                    auto n1 = label_to_spacemo_[block[1]][i1];
-                    data[i0 * s1 + i1] *= func(Fdiag_[n0] - Fdiag_[n1]);
-                }
+#pragma omp parallel for num_threads(nthreads)
+            for (size_t i = 0; i < size; ++i) {
+                auto n0 = label_to_spacemo_[block[0]][i / s1];
+                auto n1 = label_to_spacemo_[block[1]][i % s1];
+                data[i] *= func(Fdiag_[n0] - Fdiag_[n1]);
             }
         } else if (_bsize == 4) {
-            auto s0 = label_to_spacemo_[block[0]].size();
-            auto s1 = label_to_spacemo_[block[1]].size();
-            auto s2 = label_to_spacemo_[block[2]].size();
             auto s3 = label_to_spacemo_[block[3]].size();
-#pragma omp parallel for collapse(4)
-            for (size_t i0 = 0; i0 < s0; ++i0) {
-                for (size_t i1 = 0; i1 < s1; ++i1) {
-                    for (size_t i2 = 0; i2 < s2; ++i2) {
-                        for (size_t i3 = 0; i3 < s3; ++i3) {
-                            auto n0 = label_to_spacemo_[block[0]][i0];
-                            auto n1 = label_to_spacemo_[block[1]][i1];
-                            auto n2 = label_to_spacemo_[block[2]][i2];
-                            auto n3 = label_to_spacemo_[block[3]][i3];
-                            data[i0 * s1 * s2 * s3 + i1 * s2 * s3 + i2 * s3 + i3] *=
-                                func(Fdiag_[n0] + Fdiag_[n1] - Fdiag_[n2] - Fdiag_[n3]);
-                        }
-                    }
-                }
+            auto s2 = label_to_spacemo_[block[2]].size();
+            auto s1 = label_to_spacemo_[block[1]].size();
+            auto s23 = s2 * s3;
+            auto s123 = s1 * s23;
+#pragma omp parallel for num_threads(nthreads)
+            for (size_t i = 0; i < size; ++i) {
+                auto n0 = label_to_spacemo_[block[0]][i / s123];
+                auto n1 = label_to_spacemo_[block[1]][(i / s23) % s1];
+                auto n2 = label_to_spacemo_[block[2]][(i % s23) / s3];
+                auto n3 = label_to_spacemo_[block[3]][i % s3];
+                data[i] *= func(Fdiag_[n0] + Fdiag_[n1] - Fdiag_[n2] - Fdiag_[n3]);
             }
         }
     }

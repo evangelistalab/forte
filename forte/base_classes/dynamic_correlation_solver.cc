@@ -34,6 +34,7 @@
 #include "base_classes/mo_space_info.h"
 #include "base_classes/rdms.h"
 #include "base_classes/state_info.h"
+#include "base_classes/forte_options.h"
 
 namespace forte {
 DynamicCorrelationSolver::DynamicCorrelationSolver(std::shared_ptr<RDMs> rdms,

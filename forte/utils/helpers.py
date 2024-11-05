@@ -238,7 +238,7 @@ def prepare_forte_objects(
     if mo_spaces is None:
         mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
     else:
-        mo_space_info = forte.make_mo_space_info_from_map(nmopi, point_group, mo_spaces, [])
+        mo_space_info = forte.make_mo_space_info_from_map(nmopi, point_group, mo_spaces)
 
     state_weights_map = forte.make_state_weights_map(options, mo_space_info)
 
@@ -250,7 +250,7 @@ def prepare_forte_objects(
         localizer.set_orbital_space(localize_spaces)
         localizer.compute_transformation()
         Ua = localizer.get_Ua()
-        ints.rotate_orbitals(Ua, Ua)
+        scf_info.rotate_orbitals(Ua, Ua)
 
     # the space that defines the active orbitals. We select only the 'ACTIVE' part
     # the space(s) with non-active doubly occupied orbitals
@@ -267,7 +267,9 @@ def prepare_forte_objects(
     }
 
 
-def prepare_ints_rdms(wfn, mo_spaces, rdm_level=3, rdm_type=forte.RDMsType.spin_dependent, mix_inactive=False, mix_active=False):
+def prepare_ints_rdms(
+    wfn, mo_spaces, rdm_level=3, rdm_type=forte.RDMsType.spin_dependent, mix_inactive=False, mix_active=False
+):
     """
     Preparation step for DSRG: compute a CAS and its RDMs.
     :param wfn: reference wave function from psi4
@@ -306,7 +308,7 @@ def prepare_ints_rdms(wfn, mo_spaces, rdm_level=3, rdm_type=forte.RDMsType.spin_
     rdms = as_solver.compute_average_rdms(state_weights_map, rdm_level, rdm_type)
 
     # semicanonicalize orbitals
-    semi = forte.SemiCanonical(mo_space_info, ints, forte.forte_options, mix_inactive, mix_active)
+    semi = forte.SemiCanonical(mo_space_info, ints, forte.forte_options, scf_info, mix_inactive, mix_active)
     semi.semicanonicalize(rdms, rdm_level)
 
     return {"reference_energy": Eref, "mo_space_info": mo_space_info, "ints": ints, "rdms": rdms}

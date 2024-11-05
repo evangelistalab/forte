@@ -29,6 +29,8 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
+#include "base_classes/forte_options.h"
+
 #include "forte-def.h"
 #include "helpers/disk_io.h"
 #include "helpers/helpers.h"
@@ -944,7 +946,7 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
 
     // sum of occupation numbers of virtuals
     double virt_on = 0.0;
-    for (int h = 0; h < nirrep; ++h) {
+    for (size_t h = 0; h < nirrep; ++h) {
         for (int i = 0; i < dim_virt[h]; ++i) {
             virt_on += D1v_evals->get(h, i);
         }
@@ -959,7 +961,7 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
     if (scheme != "NK") {
         // sort natural occupation numbers
         std::vector<double> occ_list(nvirt);
-        for (int h = 0, m = 0; h < nirrep; ++h) {
+        for (size_t h = 0, m = 0; h < nirrep; ++h) {
             for (int i = 0; i < dim_virt[h]; ++i) {
                 occ_list[m++] = D1v_evals->get(h, i);
             }
@@ -998,7 +1000,7 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
     // actual dimension for frozen virtuals
     psi::Dimension dim_frzv(nirrep, "FNO");
     auto frzv_on = 0.0;
-    for (int h = 0; h < nirrep; ++h) {
+    for (size_t h = 0; h < nirrep; ++h) {
         for (int i = 0; i < dim_virt[h]; ++i) {
             if (D1v_evals->get(h, i) < nk) {
                 dim_frzv[h] += 1;
@@ -1033,7 +1035,7 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
     // build transformation matrix to FNO
     auto dim_virt_small = dim_virt - dim_frzv;
     auto Va = std::make_shared<psi::Matrix>("Va", dim_virt, dim_virt_small);
-    for (int h = 0; h < nirrep; ++h) {
+    for (size_t h = 0; h < nirrep; ++h) {
         for (int i = 0; i < dim_virt_small[h]; ++i) {
             Va->set_column(h, i, D1v_evecs->get_column(h, i));
         }
