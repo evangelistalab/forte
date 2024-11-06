@@ -156,9 +156,9 @@ std::shared_ptr<RDMs> RDMs::build_from_disk(size_t max_rdm_level, RDMsType type,
             rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab,
                                                        g3abb, g3bbb);
         } else {
-            rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab,
-                                                       g3abb, g3bbb, g4aaaa, g4aaab, g4aabb, g4abbb,
-                                                       g4bbbb);
+            rdms =
+                std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb,
+                                                    g3bbb, g4aaaa, g4aaab, g4aabb, g4abbb, g4bbbb);
         }
     } else {
         ambit::Tensor g1, g2, g3;
@@ -1237,7 +1237,7 @@ void RDMsSpinDependent::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub)
     g4T("pqrStuvW") = Ua("ap") * Ua("bq") * Ua("cr") * Ub("DS") * g4aaab_("abcDijkL") * Ua("it") *
                       Ua("ju") * Ua("kv") * Ub("LW");
     g4aaab_("pqrStuvW") = g4T("pqrStuvW");
-    g4T("pqRStuVW") = Ua("ap") * Ua("bq") * Ub("CR") * Ub("DS") * g4aabb_("abCDijkL") * Ua("it") *
+    g4T("pqRStuVW") = Ua("ap") * Ua("bq") * Ub("CR") * Ub("DS") * g4aabb_("abCDijKL") * Ua("it") *
                       Ua("ju") * Ub("KV") * Ub("LW");
     g4aabb_("pqRStuVW") = g4T("pqRStuVW");
     g4T("pQRStUVW") = Ua("ap") * Ub("BQ") * Ub("CR") * Ub("DS") * g4abbb_("aBCDiJKL") * Ua("it") *
