@@ -248,7 +248,6 @@ class ProcedureDSRG:
             E_dsrg, Hbar1_full, Hbar2_full = self.dsrg_solver.compute_Heff_full()
             np.savez("Hbar_full.npz", scalar=E_dsrg, **Hbar1_full, **Hbar2_full)
             
-
         # Reference relaxation procedure
         for n in range(self.relax_maxiter):
             psi4.core.print_out("\n  =>** In reference relaxation loop **<=\n")
@@ -259,6 +258,16 @@ class ProcedureDSRG:
             #       However, the ForteIntegrals object and the dipole integrals always refer to the current semi-canonical basis.
             #       so to compute the dipole moment correctly, we need to make the RDMs and orbital basis consistent
             ints_dressed = self.dsrg_solver.compute_Heff_actv()
+            nact = len(self.mo_space_info.corr_absolute_mo("ACTIVE"))
+            hbar1_actv = np.zeros((nact, nact))
+            hbar2_actv = np.zeros((nact, nact, nact, nact))
+            for i in range(nact):
+                for j in range(nact):
+                    hbar1_actv[i, j] = ints_dressed.oei_a(i, j)
+                    for k in range(nact):
+                        for l in range(nact):
+                            hbar2_actv[i, j, k, l] = ints_dressed.tei_ab(i, j, k, l)
+            np.savez("Hbar_actv.npz", scalar=ints_dressed.scalar_energy()+ints_dressed.frozen_core_energy()+ints_dressed.nuclear_repulsion_energy(), hbar1=hbar1_actv, hbar2=hbar2_actv)
             if self.fno_pt2_Heff_shift is not None:
                 ints_dressed.add(self.fno_pt2_Heff_shift, 1.0)
                 psi4.core.print_out("\n\n  Applied DSRG-MRPT2 FNO corrections to dressed integrals.")

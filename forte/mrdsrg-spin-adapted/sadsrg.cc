@@ -483,29 +483,6 @@ std::tuple<double, BlockedTensor,BlockedTensor> SADSRG::compute_Heff_full() {
         deGNO_ints_full("Hamiltonian", Edsrg, Hbar1_, Hbar2_);
     }
     return std::make_tuple(Edsrg, Hbar1_, Hbar2_);
-
-/*
-    auto Hbar1g = BTF_->build(tensor_type_, "Hbar1g", spin_cases({"gg"}));
-    auto Hbar2g = BTF_->build(tensor_type_, "Hbar2g", spin_cases({"gggg"}));
-
-    // copy all blocks of Hbar1 and Hbar2 to Hbar1g and Hbar2g
-    Hbar1g["pq"] = Hbar1_["pq"];
-    Hbar2g["pqrs"] = Hbar2_["pqrs"];
-
-    // create FCIIntegral shared_ptr
-    std::vector<size_t> null_core = {};
-    auto fci_ints =
-        std::make_shared<ActiveSpaceIntegrals>(ints_, gen_mos_, gen_mos_sym_, null_core);
-    fci_ints->set_scalar_energy(Edsrg - Enuc_ - Efrzc_);
-    fci_ints->set_restricted_one_body_operator(Hbar1g.block("gg").data(),
-                                               Hbar1g.block("gg").data());
-
-    auto Hbar2aa = Hbar2g.block("gggg").clone();
-    Hbar2aa("pqrs") -= Hbar2g.block("gggg")("pqsr");
-    fci_ints->set_active_integrals(Hbar2aa, Hbar2g.block("gggg"), Hbar2aa);
-
-    return fci_ints;
-    */
 }
 
 
@@ -653,21 +630,21 @@ void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, 
 }
 
 void SADSRG::deGNO_ints_full(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2) {
-    print_h2("De-Normal-Order full 2-Body DSRG Transformed " + name);
+    print_h2("De-Normal-Order Full 2-Body DSRG Transformed " + name);
 
     // compute scalar
     local_timer t0;
     print_contents("Computing the scalar term");
 
-    ambit::BlockedTensor L1h = BTF_->build(tensor_type_, "L1h", {"hh"});
-    L1h.block("aa") = L1_.block("aa");
-    L1h.block("cc").iterate(
-        [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 2.0 : 0.0; });
-    
     // build a temp["pqrs"] = 2 * H2["pqrs"] - H2["pqsr"]
     auto temp = H2.clone();
     temp.scale(2.0);
     temp["pqrs"] -= H2["pqsr"];
+
+    auto L1h = BTF_->build(tensor_type_, "L1h", spin_cases({"hh"}));
+    L1h.block("aa")("uv") = L1_.block("aa")("uv");
+    L1h.block("cc").iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 2.0 : 0.0; });
 
     // scalar from H1
     double scalar1 = 0.0;
@@ -675,7 +652,7 @@ void SADSRG::deGNO_ints_full(const std::string& name, double& H0, BlockedTensor&
 
     // scalar from H2
     double scalar2 = 0.0;
-    scalar2 += 0.25 * L1h["ij"] * temp["ljki"] * L1h["kl"];
+    scalar2 += 0.25 * L1h["ij"] * temp["jlik"] * L1h["kl"];
 
     scalar2 -= 0.5 * H2["xyuv"] * L2_["uvxy"];
 
