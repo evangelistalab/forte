@@ -1,0 +1,86 @@
+import forte
+memory 3 gb
+
+eref_scf  = -10.730608558941103
+eref_avas = -10.968919558792528
+eref_chol = -10.989277852589446
+eref_pm1  = -10.990304489386713 # MAC-M3
+eref_pm2  = -10.990357718722230 # Linux-Intel
+eref_boys = -10.990376529580459
+
+molecule H20 {
+H  0.0 0.0  0.0
+H  0.0 0.0  1.0
+H  0.0 0.0  2.0
+H  0.0 0.0  3.0
+H  0.0 0.0  4.0
+H  0.0 0.0  5.0
+H  0.0 0.0  6.0
+H  0.0 0.0  7.0
+H  0.0 0.0  8.0
+H  0.0 0.0  9.0
+H  0.0 0.0 10.0
+H  0.0 0.0 11.0
+H  0.0 0.0 12.0
+H  0.0 0.0 13.0
+H  0.0 0.0 14.0
+H  0.0 0.0 15.0
+H  0.0 0.0 16.0
+H  0.0 0.0 17.0
+H  0.0 0.0 18.0
+H  0.0 0.0 19.0
+symmetry c1
+}
+
+set {
+scf_type          df
+reference         rhf
+basis             cc-pvdz
+df_basis_scf      cc-pvdz-jkfit
+local_convergence 1.0e-8
+}
+escf, wfn = energy('scf', return_wfn=True)
+compare_values(eref_scf, escf, 6, "RHF/cc-pVDZ on H20")
+
+set forte {
+job_type        none
+subspace        ["H(1s)"]
+avas            true
+mcscf_reference false
+avas_cutoff     0.4
+}
+_, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+Ca_avas = wfn.Ca().clone()
+
+set forte {
+job_type                   newdriver
+subspace                   []
+avas                       false
+int_type                   df
+restricted_docc            [0]
+active                     [20]
+active_space_solver        block2
+block2_sweep_energy_conv   1.0e-7
+block2_sweep_bond_dims     [50,100,100,100]
+block2_sweep_n_sweeps      [4,6,6,8]
+block2_n_total_sweeps      24
+block2_sweep_noises        [1e-4,1e-5,1e-6,0.0]
+block2_sweep_davidson_tols [1e-9,1e-9,1e-9,1e-10]
+block2_stack_mem           2
+block2_verbose             2
+dmrg_reorder_init_orbs     false
+}
+edmrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(eref_avas, edmrg, 2, "DMRG-CI(20,20)/cc-pVDZ on H20, AVAS canonical orbitals")
+
+set forte dmrg_reorder_init_orbs true
+
+wfn.Ca().copy(Ca_avas)
+set forte localize cholesky
+edmrg = energy('forte', ref_wfn=wfn)
+compare_values(eref_chol, edmrg, 6, "DMRG-CI(20,20)/cc-pVDZ on H20, Cholesky + Fiedler")
+
+wfn.Ca().copy(Ca_avas)
+set forte localize boys
+edmrg = energy('forte', ref_wfn=wfn)
+compare_values(eref_boys, edmrg, 6, "DMRG-CI(20,20)/cc-pVDZ on H20, Boys + Fiedler")

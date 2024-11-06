@@ -1,0 +1,1362 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.10a1.dev60 
+
+                         Git: Rev {master} 36ddfd8 dirty
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Monday, 28 October 2024 09:32PM
+
+    Process ID: 21997
+    Host:       MacBook-Pro-347.attlocal.net
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+# Test DF-CASSCF reading orbitals from different geometry and basis set
+
+import forte
+
+psi4_mcscf_1 = -99.939310302585 # @1.5
+psi4_mcscf_2 = -99.977673695213 # @1.3
+
+memory 500 mb
+
+molecule HF{
+F
+H  1 R
+}
+
+set {
+  basis                   cc-pvdz
+  reference               rhf
+  scf_type                df
+  df_basis_scf            cc-pvdz-jkfit
+  d_convergence           8
+  e_convergence           9
+}
+
+HF.R = 1.5
+wfn = psi4.Wavefunction.from_file('cas_ref.npy')  # CASSCF/6-31G @ 1.5
+
+set forte{
+  job_type                mcscf_two_step
+  int_type                df
+  frozen_docc             [1,0,0,0]
+  restricted_docc         [1,0,1,1]
+  active                  [2,0,0,0]
+  active_space_solver     fci
+  mcscf_maxiter           25
+  mcscf_e_convergence     12
+  mcscf_g_convergence     7
+  print                   0
+}
+
+Ecas_1 = energy('forte', ref_wfn=wfn)
+compare_values(psi4_mcscf_1, Ecas_1, 6, "FORTE CASSCF energy @ 1.5")
+
+HF.R = 1.3
+set forte {
+  frozen_docc             [0,0,0,0]
+  restricted_docc         [2,0,1,1]
+}
+
+Ecas_2 = energy('forte', ref_wfn=wfn)
+compare_values(psi4_mcscf_2, Ecas_2, 6, "FORTE CASSCF energy @ 1.3")
+--------------------------------------------------------------------------
+
+  Memory set to 476.837 MiB by Python driver.
+Molecule: geometry: Molecule is not complete, please use 'update_geometry'
+                    once all variables are set.
+Molecule: Setting geometry variable R to 1.500000
+   => Loading Basis Set <=
+
+    Name: 6-31G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry F          line   132 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
+    atoms 2 entry H          line    26 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/6-31g.gbs 
+
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: ortho_orbs_fe - git commit: 5c365f5c
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+
+  Preparing forte objects from a Psi4 Wavefunction object   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry F          line   228 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
+    atoms 2 entry H          line    22 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
+
+   => Libint2 <=
+
+    Primary   basis highest AM E, G, H:  6, 6, 3
+    Auxiliary basis highest AM E, G, H:  7, 7, 4
+    Onebody   basis highest AM E, G, H:  -, -, -
+    Solid Harmonics ordering:            Gaussian
+
+*** tstart() called on MacBook-Pro-347.attlocal.net
+*** at Mon Oct 28 21:32:58 2024
+
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry F          line   228 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
+    atoms 2 entry H          line    22 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,    476 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         F            0.000000000000     0.000000000000    -0.075563346255    18.998403162730
+         H            0.000000000000     0.000000000000     1.424436653745     1.007825032230
+
+  Running in c2v symmetry.
+
+  Rotational constants: A = ************  B =      7.82847  C =      7.82847 [cm^-1]
+  Rotational constants: A = ************  B = 234691.66104  C = 234691.66104 [MHz]
+  Nuclear repulsion =    3.175063264020000
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 10
+  Nalpha       = 5
+  Nbeta        = 5
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is DF.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-09
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 9
+    Number of basis functions: 19
+    Number of Cartesian functions: 20
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ-JKFIT
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1 entry F          line   271 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 2 entry H          line    51 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
+
+  ==> Integral Setup <==
+
+  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.349 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:               357
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       0.0000
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: CC-PVDZ-JKFIT
+    Blend: CC-PVDZ-JKFIT
+    Number of shells: 33
+    Number of basis functions: 93
+    Number of Cartesian functions: 106
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+  Minimum eigenvalue in the overlap matrix is 1.3340269817E-01.
+  Reciprocal condition number of the overlap matrix is 5.7946734818E-02.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     A1        10      10 
+     A2         1       1 
+     B1         4       4 
+     B2         4       4 
+   -------------------------
+    Total      19      19
+   -------------------------
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+   @DF-RHF iter SAD:   -99.70805449894107   -9.97081e+01   0.00000e+00 
+   @DF-RHF iter   1:   -99.83744369817957   -1.29389e-01   1.71889e-02 ADIIS/DIIS
+   @DF-RHF iter   2:   -99.86809486641766   -3.06512e-02   9.06765e-03 ADIIS/DIIS
+   @DF-RHF iter   3:   -99.87166903387578   -3.57417e-03   2.63502e-03 ADIIS/DIIS
+   @DF-RHF iter   4:   -99.87261799277211   -9.48959e-04   1.83968e-03 ADIIS/DIIS
+   @DF-RHF iter   5:   -99.87284613084512   -2.28138e-04   1.79350e-04 ADIIS/DIIS
+   @DF-RHF iter   6:   -99.87285074389283   -4.61305e-06   1.53185e-05 DIIS
+   @DF-RHF iter   7:   -99.87285077641208   -3.25193e-08   1.40251e-06 DIIS
+   @DF-RHF iter   8:   -99.87285077654460   -1.32516e-10   1.15917e-07 DIIS
+   @DF-RHF iter   9:   -99.87285077654646   -1.86162e-12   3.06599e-08 DIIS
+   @DF-RHF iter  10:   -99.87285077654660   -1.42109e-13   1.10162e-09 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1A1   -26.279410     2A1    -1.484572     1B2    -0.593968  
+       1B1    -0.593968     3A1    -0.565054  
+
+    Virtual:                                                              
+
+       4A1     0.016631     5A1     0.576874     2B1     1.315550  
+       2B2     1.315550     6A1     1.464142     3B1     1.599468  
+       3B2     1.599468     7A1     1.633209     8A1     2.301112  
+       4B2     4.038915     4B1     4.038915     1A2     4.041504  
+       9A1     4.041504    10A1     4.220351  
+
+    Final Occupation by Irrep:
+             A1    A2    B1    B2 
+    DOCC [     3,    0,    1,    1 ]
+    NA   [     3,    0,    1,    1 ]
+    NB   [     3,    0,    1,    1 ]
+
+  @DF-RHF Final Energy:   -99.87285077654660
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              3.1750632640200003
+    One-Electron Energy =                -147.0618843489889400
+    Two-Electron Energy =                  44.0139703084223513
+    Total Energy =                        -99.8728507765465849
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :         -0.2426716            1.4066489            1.1639773
+ Magnitude           :                                                    1.1639773
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on MacBook-Pro-347.attlocal.net at Mon Oct 28 21:32:58 2024
+Module time:
+	user time   =       0.13 seconds =       0.00 minutes
+	system time =       0.04 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.13 seconds =       0.00 minutes
+	system time =       0.04 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         1     0     0     0     1
+    RESTRICTED_DOCC     1     0     1     1     3
+    GAS1                2     0     0     0     2
+    GAS2                0     0     0     0     0
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC     6     1     3     3    13
+    FROZEN_UOCC         0     0     0     0     0
+    Total              10     1     4     4    19
+  -------------------------------------------------   => Loading Basis Set <=
+
+    Name: (CC-PVDZ AUX)
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1 entry F          line   273 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+    atoms 2 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry F          line    91 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 9
+    Number of basis functions: 19
+    Number of Cartesian functions: 20
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+
+  JK created using MemDF integrals
+  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.373 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:               381
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       0.0000
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: CC-PVDZ-JKFIT
+    Blend: CC-PVDZ-JKFIT
+    Number of shells: 33
+    Number of basis functions: 93
+    Number of Cartesian functions: 106
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         19
+  Number of correlated molecular orbitals:              18
+  Number of frozen occupied orbitals:                    1
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:              Density fitting
+
+
+  Skip integral allocation and transformation for AO-driven CASSCF.
+  WARNING: By default, Forte will not freeze core/virtual orbitals in MCSCF,
+  unless the option MCSCF_IGNORE_FROZEN_ORBS is set to False.
+
+  Your input file specifies the FROZEN_DOCC (1 MOs) / FROZEN_UOCC (0 MOs) arrays in the
+  MO_SPACE_INFO block, but the option MCSCF_IGNORE_FROZEN_ORBS is set to True.
+
+  If you want to freeze the core/virtual orbitals in MCSCF, set MCSCF_IGNORE_FROZEN_ORBS to False,
+  otherwise change the FROZEN_DOCC/FROZEN_UOCC arrays to zero(s) and update the RESTRICTED_DOCC/RESTRICTED_UOCC arrays.
+
+
+          -----------------------------------------------------------
+                  Multi-Configurational Self Consistent Field
+                Two-Step Approximate Second-Order AO Algorithm
+            written by Chenyang Li, Kevin P. Hannon, and Shuhe Wang
+          -----------------------------------------------------------
+
+
+  ==> MCSCF Calculation Information <==
+
+    --------------------------------------------------------
+    Print level                                        Quiet
+    Integral type                                         DF
+    CI solver type                                       FCI
+    Final orbital type                             CANONICAL
+    Derivative type                                     NONE
+    Optimize orbitals                                   TRUE
+    Include internal rotations                         FALSE
+    Debug printing                                     FALSE
+    Energy convergence                             1.000e-12
+    Gradient convergence                           1.000e-07
+    Max value for rotation                         2.000e-01
+    Max number of macro iter.                             25
+    Max number of micro iter. for orbitals                 6
+    Max number of micro iter. for CI                      12
+    DIIS start                                            15
+    Min DIIS vectors                                       3
+    Max DIIS vectors                                       8
+    Frequency of DIIS extrapolation                        1
+    --------------------------------------------------------
+
+  ==> Independent Orbital Rotations <==
+
+    ORBITAL SPACES                        A1     A2     B1     B2
+    -------------------------------------------------------------
+             ACTIVE / RESTRICTED_DOCC      4      0      0      0
+    RESTRICTED_UOCC /          ACTIVE     12      0      0      0
+    RESTRICTED_UOCC / RESTRICTED_DOCC     12      0      3      3
+    -------------------------------------------------------------
+
+  DF-MCSCF adopts integrals from DFHelper of Psi4.
+
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              1
+    number of beta electrons                               1
+    number of alpha strings                                2
+    number of beta strings                                 2
+    --------------------------------------------------------
+
+  ==> FCI Solver <==
+
+    --------------------------------------------------------
+    Spin adapt                                         FALSE
+    Number of determinants                                 4
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         4
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+     3       1       *
+     1       3        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   singlet    0      -99.935288053322  +0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-12
+    Residual convergence threshold                 1.000e-06
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                      4
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                  4
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0      -99.935288053322       99.935288053322        0.000000000000      1
+       1      -99.935288053322        0.000000000000        0.000000000000      2
+  ---------------------------------------------------------------------------------
+
+  ==> Root No. 0 <==
+
+    20      0.94764818
+    02     -0.30000086
+    ab      0.07733824
+    ba      0.07733824
+
+    Total Energy:     -99.935288053322, <S^2>: 0.000000
+    Time for FCI:       0.000243458000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.935288053322   0.000000
+    --------------------------------------------------------
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.62705794     0.62705794
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.40664889     1.40664889
+    --------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        3A1     1.814222      4A1     0.185778  
+
+
+  ==> MCSCF Iterations <==
+
+                      Energy CI                    Energy Orbital
+           ------------------------------  ------------------------------
+    Iter.        Total Energy       Delta        Total Energy       Delta  Orb. Grad.  Micro
+    ----------------------------------------------------------------------------------------
+       1     -99.935288053322 -9.9935e+01    -99.939216161268 -9.9939e+01  4.8711e-02    6/N
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.65458155     0.65458155
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.40664889     1.40664889
+    --------------------------------------------------------------------
+       2     -99.939279119732 -3.9911e-03    -99.939299865143 -8.3704e-05  8.5133e-05    6/N
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.66390747     0.66390747
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.40664889     1.40664889
+    --------------------------------------------------------------------
+       3     -99.939306767525 -2.7648e-05    -99.939309102710 -9.2376e-06  4.4253e-06    6/N
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.66707802     0.66707802
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.40664889     1.40664889
+    --------------------------------------------------------------------
+       4     -99.939309894338 -3.1268e-06    -99.939310163480 -1.0608e-06  1.4690e-06    6/N
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.66815808     0.66815808
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.40664889     1.40664889
+    --------------------------------------------------------------------
+       5     -99.939310255188 -3.6085e-07    -99.939310286415 -1.2293e-07  4.9783e-07    6/N
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.66852636     0.66852636
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.40664889     1.40664889
+    --------------------------------------------------------------------
+       6     -99.939310297073 -4.1885e-08    -99.939310300704 -1.4289e-08  1.6956e-07    6/N
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.66865198     0.66865198
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.40664889     1.40664889
+    --------------------------------------------------------------------
+       7     -99.939310301944 -4.8710e-09    -99.939310302366 -1.6625e-09  5.7827e-08    6/N
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.66869484     0.66869484
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.40664889     1.40664889
+    --------------------------------------------------------------------
+       8     -99.939310302511 -5.6686e-10    -99.939310302560 -1.9352e-10  1.9728e-08    5/Y
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.66870946     0.66870946
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.40664889     1.40664889
+    --------------------------------------------------------------------
+       9     -99.939310302577 -6.6052e-11    -99.939310302582 -2.2524e-11  8.9644e-09    4/Y
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.66871444     0.66871444
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.40664889     1.40664889
+    --------------------------------------------------------------------
+      10     -99.939310302584 -7.6170e-12    -99.939310302585 -2.6006e-12  9.8938e-09    3/Y
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.66871612     0.66871612
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.40664889     1.40664889
+    --------------------------------------------------------------------
+      11     -99.939310302585 -8.9528e-13    -99.939310302585 -3.5527e-13  1.3472e-08    2/Y
+    ----------------------------------------------------------------------------------------
+
+  A miracle has come to pass: MCSCF iterations have converged!
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.66871671     0.66871671
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.40664889     1.40664889
+    --------------------------------------------------------------------
+  Canonicalizing final MCSCF orbitals
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS          TRUE
+    MIX GAS ACTIVE ORBITALS       FALSE
+    GAS1                          CANONICAL
+    INACTIVE_DOCC                 CANONICAL
+    INACTIVE_UOCC                 CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    GAS1                 0.0017897622   0.0025311060
+    INACTIVE_DOCC        0.0009975680   0.0014107742
+    INACTIVE_UOCC        0.6196474200   1.2445632177
+    ------------------------------------------------
+
+    Canonicalization test failed
+
+  Warning: Failed to fix orbital phase and order.
+  Timing for orbital canonicalization:                        0.000 s.
+
+  Time to prepare integrals:        0.246 seconds
+  Time to run job          :        0.147 seconds
+  Total                    :        0.394 seconds
+    FORTE CASSCF energy @ 1.5.............................................................PASSED
+Molecule: Setting geometry variable R to 1.300000
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: ortho_orbs_fe - git commit: 5c365f5c
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+
+  Preparing forte objects from a Psi4 Wavefunction object   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry F          line   228 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
+    atoms 2 entry H          line    22 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
+
+   => Libint2 <=
+
+    Primary   basis highest AM E, G, H:  6, 6, 3
+    Auxiliary basis highest AM E, G, H:  7, 7, 4
+    Onebody   basis highest AM E, G, H:  -, -, -
+    Solid Harmonics ordering:            Gaussian
+
+*** tstart() called on MacBook-Pro-347.attlocal.net
+*** at Mon Oct 28 21:32:58 2024
+
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry F          line   228 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
+    atoms 2 entry H          line    22 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,    476 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         F            0.000000000000     0.000000000000    -0.065488233421    18.998403162730
+         H            0.000000000000     0.000000000000     1.234511766579     1.007825032230
+
+  Running in c2v symmetry.
+
+  Rotational constants: A = ************  B =     10.42252  C =     10.42252 [cm^-1]
+  Rotational constants: A = ************  B = 312459.31204  C = 312459.31204 [MHz]
+  Nuclear repulsion =    3.663534535407692
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 10
+  Nalpha       = 5
+  Nbeta        = 5
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is DF.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-09
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 9
+    Number of basis functions: 19
+    Number of Cartesian functions: 20
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ-JKFIT
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1 entry F          line   271 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 2 entry H          line    51 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
+
+  ==> Integral Setup <==
+
+  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.349 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:               357
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       0.0000
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: CC-PVDZ-JKFIT
+    Blend: CC-PVDZ-JKFIT
+    Number of shells: 33
+    Number of basis functions: 93
+    Number of Cartesian functions: 106
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+  Minimum eigenvalue in the overlap matrix is 1.0589088771E-01.
+  Reciprocal condition number of the overlap matrix is 4.2430270851E-02.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     A1        10      10 
+     A2         1       1 
+     B1         4       4 
+     B2         4       4 
+   -------------------------
+    Total      19      19
+   -------------------------
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+   @DF-RHF iter SAD:   -99.83900101534709   -9.98390e+01   0.00000e+00 
+   @DF-RHF iter   1:   -99.89925233391618   -6.02513e-02   1.89373e-02 ADIIS/DIIS
+   @DF-RHF iter   2:   -99.92782442382330   -2.85721e-02   4.90113e-03 ADIIS/DIIS
+   @DF-RHF iter   3:   -99.92959448695368   -1.77006e-03   1.51906e-03 ADIIS/DIIS
+   @DF-RHF iter   4:   -99.92995606172434   -3.61575e-04   8.07481e-04 ADIIS/DIIS
+   @DF-RHF iter   5:   -99.92999794806714   -4.18863e-05   1.59729e-04 ADIIS/DIIS
+   @DF-RHF iter   6:   -99.93000174507119   -3.79700e-06   1.79446e-05 DIIS
+   @DF-RHF iter   7:   -99.93000178828423   -4.32130e-08   1.22977e-06 DIIS
+   @DF-RHF iter   8:   -99.93000178840694   -1.22711e-10   1.08016e-07 DIIS
+   @DF-RHF iter   9:   -99.93000178840816   -1.22213e-12   2.03773e-08 DIIS
+   @DF-RHF iter  10:   -99.93000178840818   -1.42109e-14   7.43821e-10 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1A1   -26.280485     2A1    -1.502667     3A1    -0.615613  
+       1B2    -0.601910     1B1    -0.601910  
+
+    Virtual:                                                              
+
+       4A1     0.075566     5A1     0.602666     2B2     1.319398  
+       2B1     1.319398     6A1     1.571182     3B1     1.628523  
+       3B2     1.628523     7A1     1.699095     8A1     2.280758  
+       9A1     4.032990     1A2     4.032990     4B2     4.063289  
+       4B1     4.063289    10A1     4.471960  
+
+    Final Occupation by Irrep:
+             A1    A2    B1    B2 
+    DOCC [     3,    0,    1,    1 ]
+    NA   [     3,    0,    1,    1 ]
+    NB   [     3,    0,    1,    1 ]
+
+  @DF-RHF Final Energy:   -99.93000178840818
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              3.6635345354076922
+    One-Electron Energy =                -147.9819029267128769
+    Two-Electron Energy =                  44.3883666028969870
+    Total Energy =                        -99.9300017884081910
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :         -0.1736907            1.2190957            1.0454050
+ Magnitude           :                                                    1.0454050
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on MacBook-Pro-347.attlocal.net at Mon Oct 28 21:32:58 2024
+Module time:
+	user time   =       0.11 seconds =       0.00 minutes
+	system time =       0.00 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.95 seconds =       0.02 minutes
+	system time =       0.08 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0
+    RESTRICTED_DOCC     2     0     1     1     4
+    GAS1                2     0     0     0     2
+    GAS2                0     0     0     0     0
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC     6     1     3     3    13
+    FROZEN_UOCC         0     0     0     0     0
+    Total              10     1     4     4    19
+  -------------------------------------------------   => Loading Basis Set <=
+
+    Name: (CC-PVDZ AUX)
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1 entry F          line   273 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+    atoms 2 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry F          line    91 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 9
+    Number of basis functions: 19
+    Number of Cartesian functions: 20
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+
+  JK created using MemDF integrals
+  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.373 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:               381
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       0.0000
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: CC-PVDZ-JKFIT
+    Blend: CC-PVDZ-JKFIT
+    Number of shells: 33
+    Number of basis functions: 93
+    Number of Cartesian functions: 106
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         19
+  Number of correlated molecular orbitals:              19
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:              Density fitting
+
+
+  Skip integral allocation and transformation for AO-driven CASSCF.
+
+          -----------------------------------------------------------
+                  Multi-Configurational Self Consistent Field
+                Two-Step Approximate Second-Order AO Algorithm
+            written by Chenyang Li, Kevin P. Hannon, and Shuhe Wang
+          -----------------------------------------------------------
+
+
+  ==> MCSCF Calculation Information <==
+
+    --------------------------------------------------------
+    Print level                                        Quiet
+    Integral type                                         DF
+    CI solver type                                       FCI
+    Final orbital type                             CANONICAL
+    Derivative type                                     NONE
+    Optimize orbitals                                   TRUE
+    Include internal rotations                         FALSE
+    Debug printing                                     FALSE
+    Energy convergence                             1.000e-12
+    Gradient convergence                           1.000e-07
+    Max value for rotation                         2.000e-01
+    Max number of macro iter.                             25
+    Max number of micro iter. for orbitals                 6
+    Max number of micro iter. for CI                      12
+    DIIS start                                            15
+    Min DIIS vectors                                       3
+    Max DIIS vectors                                       8
+    Frequency of DIIS extrapolation                        1
+    --------------------------------------------------------
+
+  ==> Independent Orbital Rotations <==
+
+    ORBITAL SPACES                        A1     A2     B1     B2
+    -------------------------------------------------------------
+             ACTIVE / RESTRICTED_DOCC      4      0      0      0
+    RESTRICTED_UOCC /          ACTIVE     12      0      0      0
+    RESTRICTED_UOCC / RESTRICTED_DOCC     12      0      3      3
+    -------------------------------------------------------------
+
+  DF-MCSCF adopts integrals from DFHelper of Psi4.
+
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              1
+    number of beta electrons                               1
+    number of alpha strings                                2
+    number of beta strings                                 2
+    --------------------------------------------------------
+
+  ==> FCI Solver <==
+
+    --------------------------------------------------------
+    Spin adapt                                         FALSE
+    Number of determinants                                 4
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         4
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+     3       1       *
+     1       3        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   singlet    0      -99.842254963354  +0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-12
+    Residual convergence threshold                 1.000e-06
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                      4
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                  4
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0      -99.842254963354       99.842254963354        0.000000000000      1
+       1      -99.842254963354        0.000000000000        0.000000000000      2
+  ---------------------------------------------------------------------------------
+
+  ==> Root No. 0 <==
+
+    20      0.96914092
+    02     -0.24620994
+
+    Total Energy:     -99.842254963354, <S^2>: 0.000000
+    Time for FCI:       0.000167667000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.842254963354   0.000000
+    --------------------------------------------------------
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.73530093     0.73530093
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.21909571     1.21909571
+    --------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+        3A1     1.878702      4A1     0.121298  
+
+
+  ==> MCSCF Iterations <==
+
+                      Energy CI                    Energy Orbital
+           ------------------------------  ------------------------------
+    Iter.        Total Energy       Delta        Total Energy       Delta  Orb. Grad.  Micro
+    ----------------------------------------------------------------------------------------
+       1     -99.842254963354 -9.9842e+01    -99.976369164560 -9.9976e+01  6.0470e-01    6/N
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.82199306     0.82199306
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.21909571     1.21909571
+    --------------------------------------------------------------------
+       2     -99.977272742887 -1.3502e-01    -99.977538860216 -1.1697e-03  6.4865e-04    6/N
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.85316188     0.85316188
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.21909571     1.21909571
+    --------------------------------------------------------------------
+       3     -99.977624566514 -3.5182e-04    -99.977655720896 -1.1686e-04  2.0967e-05    6/N
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.86462320     0.86462320
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.21909571     1.21909571
+    --------------------------------------------------------------------
+       4     -99.977667030987 -4.2464e-05    -99.977671222808 -1.5502e-05  7.2838e-06    6/N
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.86887379     0.86887379
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.21909571     1.21909571
+    --------------------------------------------------------------------
+       5     -99.977672774704 -5.7437e-06    -99.977673352291 -2.1295e-06  2.7159e-06    6/N
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.87045627     0.87045627
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.21909571     1.21909571
+    --------------------------------------------------------------------
+       6     -99.977673567394 -7.9269e-07    -99.977673647567 -2.9528e-07  1.0166e-06    6/N
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.87104643     0.87104643
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.21909571     1.21909571
+    --------------------------------------------------------------------
+       7     -99.977673677488 -1.1009e-07    -99.977673688646 -4.1079e-08  3.8018e-07    6/N
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.87126667     0.87126667
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.21909571     1.21909571
+    --------------------------------------------------------------------
+       8     -99.977673692814 -1.5326e-08    -99.977673694368 -5.7221e-09  1.4205e-07    6/N
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.87134888     0.87134888
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.21909571     1.21909571
+    --------------------------------------------------------------------
+       9     -99.977673694949 -2.1353e-09    -99.977673695166 -7.9746e-10  5.3055e-08    6/N
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.87137957     0.87137957
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.21909571     1.21909571
+    --------------------------------------------------------------------
+      10     -99.977673695247 -2.9759e-10    -99.977673695277 -1.1114e-10  1.9811e-08    5/Y
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.87139104     0.87139104
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.21909571     1.21909571
+    --------------------------------------------------------------------
+      11     -99.977673695288 -4.1481e-11    -99.977673695292 -1.5532e-11  7.3608e-09    5/Y
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.87139531     0.87139531
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.21909571     1.21909571
+    --------------------------------------------------------------------
+      12     -99.977673695294 -5.8407e-12    -99.977673695294 -2.1032e-12  1.6160e-08    3/Y
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.87139688     0.87139688
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.21909571     1.21909571
+    --------------------------------------------------------------------
+      13     -99.977673695295 -7.3896e-13    -99.977673695295 -2.8422e-13  9.7165e-09    3/Y
+    ----------------------------------------------------------------------------------------
+
+  A miracle has come to pass: MCSCF iterations have converged!
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.87139749     0.87139749
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.21909571     1.21909571
+    --------------------------------------------------------------------
+  Canonicalizing final MCSCF orbitals
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS          TRUE
+    MIX GAS ACTIVE ORBITALS       FALSE
+    GAS1                          CANONICAL
+    INACTIVE_DOCC                 CANONICAL
+    INACTIVE_UOCC                 CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    GAS1                 0.0367657949   0.0519946858
+    INACTIVE_DOCC        0.0181806316   0.0257112958
+    INACTIVE_UOCC        0.3483328674   1.1639392906
+    ------------------------------------------------
+
+    Canonicalization test failed
+
+  Timing for orbital canonicalization:                        0.000 s.
+
+  Time to prepare integrals:        0.122 seconds
+  Time to run job          :        0.169 seconds
+  Total                    :        0.291 seconds
+    FORTE CASSCF energy @ 1.3.............................................................PASSED
+
+    Psi4 stopped on: Monday, 28 October 2024 09:32PM
+    Psi4 wall time for execution: 0:00:00.94
+
+*** Psi4 exiting successfully. Buy a developer a beer!

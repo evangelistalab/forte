@@ -95,26 +95,11 @@ void SA_MRDSRG::guess_t2_impl(BlockedTensor& T2) {
     std::vector<std::string> T2blocks(T2.block_labels());
     if (ccvv_source_ == "ZERO") {
         T2blocks.erase(std::remove(T2blocks.begin(), T2blocks.end(), "ccvv"), T2blocks.end());
-        T2.block("ccvv").iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = core_mos_[i[0]];
-            size_t i1 = core_mos_[i[1]];
-            size_t i2 = virt_mos_[i[2]];
-            size_t i3 = virt_mos_[i[3]];
-
-            value /= Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
-        });
+        apply_denominator(T2, {"ccvv"}, [](double d) { return 1.0 / d; });
     }
 
-    for (const std::string& block : T2blocks) {
-        T2.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = label_to_spacemo_[block[0]][i[0]];
-            size_t i1 = label_to_spacemo_[block[1]][i[1]];
-            size_t i2 = label_to_spacemo_[block[2]][i[2]];
-            size_t i3 = label_to_spacemo_[block[3]][i[3]];
-            double denom = Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
-            value *= dsrg_source_->compute_renormalized_denominator(denom);
-        });
-    }
+    apply_denominator(T2, T2blocks,
+                      [&](double d) { return dsrg_source_->compute_renormalized_denominator(d); });
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
@@ -161,22 +146,12 @@ void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
             std::vector<std::string> T1blocks(T1.block_labels());
             if (ccvv_source_ == "ZERO") {
                 T1blocks.erase(std::remove(T1blocks.begin(), T1blocks.end(), "cv"), T1blocks.end());
-                T1.block("cv").iterate([&](const std::vector<size_t>& i, double& value) {
-                    size_t i0 = core_mos_[i[0]];
-                    size_t i1 = virt_mos_[i[1]];
-
-                    value /= Fdiag_[i0] - Fdiag_[i1];
-                });
+                apply_denominator(T1, {"cv"}, [](double d) { return 1.0 / d; });
             }
 
-            for (const std::string& block : T1blocks) {
-                T1.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-                    size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                    size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                    value *=
-                        dsrg_source_->compute_renormalized_denominator(Fdiag_[i0] - Fdiag_[i1]);
-                });
-            }
+            apply_denominator(T1, T1blocks, [&](double d) {
+                return dsrg_source_->compute_renormalized_denominator(d);
+            });
 
             // transform back to non-canonical basis
             if (!semi_canonical_) {
@@ -230,25 +205,11 @@ void SA_MRDSRG::update_t2() {
     timer t2("scale Hbar2 by renormalized denominator");
     // scale Hbar2 by renormalized denominator
     if (ccvv_source_ == "ZERO") {
-        DT2_.block("ccvv").iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = core_mos_[i[0]];
-            size_t i1 = core_mos_[i[1]];
-            size_t i2 = virt_mos_[i[2]];
-            size_t i3 = virt_mos_[i[3]];
-            value /= Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
-        });
+        apply_denominator(DT2_, {"ccvv"}, [](double d) { return 1.0 / d; });
     }
 
-    for (const std::string& block : T2blocks) {
-        DT2_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = label_to_spacemo_[block[0]][i[0]];
-            size_t i1 = label_to_spacemo_[block[1]][i[1]];
-            size_t i2 = label_to_spacemo_[block[2]][i[2]];
-            size_t i3 = label_to_spacemo_[block[3]][i[3]];
-            double denom = Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
-            value *= dsrg_source_->compute_renormalized_denominator(denom);
-        });
-    }
+    apply_denominator(DT2_, T2blocks,
+                      [&](double d) { return dsrg_source_->compute_renormalized_denominator(d); });
     t2.stop();
 
     // Step 2: work on T2 where Hbar2 is treated as intermediate
@@ -269,16 +230,8 @@ void SA_MRDSRG::update_t2() {
 
     timer t6("scale T2 by delta exponential");
     // scale T2 by delta exponential
-    for (const std::string& block : T2blocks) {
-        T2_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = label_to_spacemo_[block[0]][i[0]];
-            size_t i1 = label_to_spacemo_[block[1]][i[1]];
-            size_t i2 = label_to_spacemo_[block[2]][i[2]];
-            size_t i3 = label_to_spacemo_[block[3]][i[3]];
-            double denom = Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
-            value *= dsrg_source_->compute_renormalized(denom);
-        });
-    }
+    apply_denominator(T2_, T2blocks,
+                      [&](double d) { return dsrg_source_->compute_renormalized(d); });
     if (ccvv_source_ == "ZERO") {
         T2_.block("ccvv").zero();
     }
@@ -349,21 +302,11 @@ void SA_MRDSRG::update_t1() {
 
     // scale Hbar1 by renormalized denominator
     if (ccvv_source_ == "ZERO") {
-        DT1_.block("cv").iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = core_mos_[i[0]];
-            size_t i1 = virt_mos_[i[1]];
-            value /= Fdiag_[i0] - Fdiag_[i1];
-        });
+        apply_denominator(DT1_, {"cv"}, [](double d) { return 1.0 / d; });
     }
 
-    for (const std::string& block : T1blocks) {
-        DT1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = label_to_spacemo_[block[0]][i[0]];
-            size_t i1 = label_to_spacemo_[block[1]][i[1]];
-            double denom = Fdiag_[i0] - Fdiag_[i1];
-            value *= dsrg_source_->compute_renormalized_denominator(denom);
-        });
-    }
+    apply_denominator(DT1_, T1blocks,
+                      [&](double d) { return dsrg_source_->compute_renormalized_denominator(d); });
 
     // Step 2: work on T1 where Hbar1 is treated as intermediate
 
@@ -379,14 +322,9 @@ void SA_MRDSRG::update_t1() {
     }
 
     // scale T1 by delta exponential
-    for (const std::string& block : T1blocks) {
-        T1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = label_to_spacemo_[block[0]][i[0]];
-            size_t i1 = label_to_spacemo_[block[1]][i[1]];
-            double denom = Fdiag_[i0] - Fdiag_[i1];
-            value *= dsrg_source_->compute_renormalized(denom);
-        });
-    }
+    apply_denominator(T1_, T1blocks,
+                      [&](double d) { return dsrg_source_->compute_renormalized(d); });
+
     if (ccvv_source_ == "ZERO") {
         T1_.block("cv").zero();
     }

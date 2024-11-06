@@ -1210,6 +1210,53 @@ ambit::Tensor SADSRG::read_Bcanonical(const std::string& block,
     return T;
 }
 
+void SADSRG::apply_denominator(ambit::BlockedTensor& T, const std::vector<std::string>& Tblocks,
+                               std::function<double(double)> func) {
+    for (const std::string& block : Tblocks) {
+        auto _bsize = block.size();
+        if (!T.is_block(block) or (_bsize != 2 and _bsize != 4))
+            continue;
+
+        auto size = T.block(block).numel();
+        size_t _size = 1;
+        for (char i : block) {
+            if (label_to_spacemo_.find(i) != label_to_spacemo_.end())
+                _size *= label_to_spacemo_[i].size();
+        }
+        if (size != _size)
+            continue;
+
+        auto& data = T.block(block).data();
+        int nthreads = omp_get_max_threads();
+        if (size < static_cast<size_t>(nthreads))
+            nthreads = size;
+
+        if (_bsize == 2) {
+            auto s1 = label_to_spacemo_[block[1]].size();
+#pragma omp parallel for num_threads(nthreads)
+            for (size_t i = 0; i < size; ++i) {
+                auto n0 = label_to_spacemo_[block[0]][i / s1];
+                auto n1 = label_to_spacemo_[block[1]][i % s1];
+                data[i] *= func(Fdiag_[n0] - Fdiag_[n1]);
+            }
+        } else if (_bsize == 4) {
+            auto s3 = label_to_spacemo_[block[3]].size();
+            auto s2 = label_to_spacemo_[block[2]].size();
+            auto s1 = label_to_spacemo_[block[1]].size();
+            auto s23 = s2 * s3;
+            auto s123 = s1 * s23;
+#pragma omp parallel for num_threads(nthreads)
+            for (size_t i = 0; i < size; ++i) {
+                auto n0 = label_to_spacemo_[block[0]][i / s123];
+                auto n1 = label_to_spacemo_[block[1]][(i / s23) % s1];
+                auto n2 = label_to_spacemo_[block[2]][(i % s23) / s3];
+                auto n3 = label_to_spacemo_[block[3]][i % s3];
+                data[i] *= func(Fdiag_[n0] + Fdiag_[n1] - Fdiag_[n2] - Fdiag_[n3]);
+            }
+        }
+    }
+}
+
 void SADSRG::print_contents(const std::string& str, size_t size) {
     if (str.size() + 4 > size)
         size = str.size() + 4;

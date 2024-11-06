@@ -162,10 +162,11 @@ class ProcedureDSRG:
             print("Warning DSRG Python driver:", err)
             self.state_ci_wfn_map = None
 
+        # Semi-canonicalize orbitals and rotation matrices
         inactive_mix = options.get_bool("SEMI_CANONICAL_MIX_INACTIVE")
         active_mix = options.get_bool("SEMI_CANONICAL_MIX_ACTIVE")
-        # Semi-canonicalize orbitals and rotation matrices
-        self.semi = forte.SemiCanonical(mo_space_info, ints, options, scf_info, inactive_mix, active_mix)
+        semi_threshold = options.get_double("SEMI_CANONICAL_THRESHOLD")
+        self.semi = forte.SemiCanonical(mo_space_info, ints, scf_info, inactive_mix, active_mix, semi_threshold)
         if self.do_semicanonical:
             self.semi.semicanonicalize(self.rdms)
         self.Ua, self.Ub = self.semi.Ua_t(), self.semi.Ub_t()
@@ -181,7 +182,7 @@ class ProcedureDSRG:
                 self.fno_pt2_Heff_shift = dhpt2
                 psi4.core.set_scalar_variable("FNO ENERGY CORRECTION", dept2)
             self.semi = forte.SemiCanonical(
-                self.mo_space_info, self.ints, options, self.scf_info, inactive_mix, active_mix
+                self.mo_space_info, self.ints, self.scf_info, inactive_mix, active_mix, semi_threshold
             )
 
     def make_dsrg_solver(self):

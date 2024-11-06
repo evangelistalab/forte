@@ -73,6 +73,7 @@ casscf:
       - df-casscf-1
       - df-casscf-2-rdm
       - df-casscf-3-edge
+      - df-casscf-4-basis
       - casscf-fcidump-1
       - casscf-gradient-1
       - casscf-gradient-3
@@ -147,6 +148,9 @@ df-dsrg-mrpt2:
       - diskdf-dsrg-mrpt2-threading1
    unused:
       - df-dsrg-mrpt2-testccvv
+dmrg:
+   medium:
+      - dmrg-ci-2
 dmrg-dsrg:
    short:
       - dmrg-dsrg-mrpt2-1

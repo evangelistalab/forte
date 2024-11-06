@@ -64,8 +64,6 @@ FCISolver::FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo>
     nb_ = state.nb() - mo_space_info->size("INACTIVE_DOCC");
 }
 
-void FCISolver::set_maxiter_davidson(int value) { maxiter_davidson_ = value; }
-
 void FCISolver::set_ndets_per_guess_state(size_t value) { ndets_per_guess_ = value; }
 
 void FCISolver::set_guess_per_root(int value) { guess_per_root_ = value; }
@@ -156,6 +154,7 @@ void FCISolver::startup() {
 }
 
 void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
+    set_maxiter(options->get_int("DL_MAXITER"));
     set_e_convergence(options->get_double("E_CONVERGENCE"));
     set_r_convergence(options->get_double("R_CONVERGENCE"));
     set_spin_adapt(options->get_bool("CI_SPIN_ADAPT"));
@@ -168,7 +167,6 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_ndets_per_guess_state(options->get_int("DL_DETS_PER_GUESS"));
     set_collapse_per_root(options->get_int("DL_COLLAPSE_PER_ROOT"));
     set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
-    set_maxiter_davidson(options->get_int("DL_MAXITER"));
 
     set_print(int_to_print_level(options->get_int("PRINT")));
 }
@@ -213,7 +211,7 @@ double FCISolver::compute_energy() {
     dl_solver_->set_e_convergence(e_convergence_);
     dl_solver_->set_r_convergence(r_convergence_);
     dl_solver_->set_print_level(print_);
-    dl_solver_->set_maxiter(maxiter_davidson_);
+    dl_solver_->set_maxiter(maxiter_);
 
     // determine the number of guess vectors
     const size_t num_guess_states = std::min(guess_per_root_ * nroot_, basis_size);
@@ -268,7 +266,7 @@ double FCISolver::compute_energy() {
     dl_solver_->add_sigma_builder(sigma_builder);
 
     auto converged = dl_solver_->solve();
-    if (not converged) {
+    if (not converged and die_if_not_converged_) {
         throw std::runtime_error(
             "Davidson-Liu solver did not converge.\nPlease try to increase the number of "
             "Davidson-Liu iterations (DL_MAXITER). You can also try to increase:\n - the "
