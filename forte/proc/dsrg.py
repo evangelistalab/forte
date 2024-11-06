@@ -433,7 +433,9 @@ class ProcedureDSRG:
             if self.fno_pt2_energy_shift != 0.0:
                 psi4.core.print_out(f"\n\n    DSRG-MRPT2 FNO energy correction:  {self.fno_pt2_energy_shift:20.15f}")
                 psi4.core.print_out(f"\n    DSRG-MRPT2 FNO corrected energy:   {e_dsrg:20.15f}")
+
             if self.options.get_bool("FULL_HBAR"):
+                self.rdms.rotate(self.Ua, self.Ub)
                 psi4.core.print_out("\n  =>** Saving Full Hbar **<=\n")
                 Heff = self.dsrg_solver.compute_Heff_full()
                 Heff_dict = forte.Heff_dict(Heff)
