@@ -24,19 +24,12 @@ def test_uccsdt():
     ).run()
 
     scf_energy = data.psi_wfn.energy()
-
-    calc_data = scc.run_cc(
-        data.as_ints,
-        data.scf_info,
-        data.mo_space_info,
-        cc_type="ucc",
-        max_exc=3,
-        e_convergence=1.0e-10,
-    )
+    cc = forte.modules.GeneralCC(cc_type="ucc", max_exc=3, e_convergence=1.0e-10)
+    data = cc.run(data)
 
     psi4.core.clean()
 
-    energy = calc_data[-1][1]
+    energy = data.results.value("energy")
 
     print(f"  HF energy:     {scf_energy}")
     print(f"  UCCSDT energy: {energy}")
