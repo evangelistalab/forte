@@ -187,7 +187,7 @@ double MCSCF_2STEP::compute_energy() {
     as_solver_->set_print(PrintLevel::Default);
     as_solver_->set_e_convergence(e_conv_);
     as_solver_->set_r_convergence(r_conv);
-    as_solver_->set_maxiter(no_orb_opt ? as_maxiter : mci_maxiter_);
+    as_solver_->set_maxiter(as_maxiter);
 
     // initial CI and resulting RDMs
     const auto state_energies_map = as_solver_->compute_energy();
@@ -244,6 +244,7 @@ double MCSCF_2STEP::compute_energy() {
         // CI solver set up
         bool restart = (as_solver_->solver_type() == "FCI" or as_solver_->solver_type() == "DETCI");
         as_solver_->set_maxiter(restart ? mci_maxiter_ : as_maxiter);
+        as_solver_->set_die_if_not_converged(not restart);
 
         // CI convergence criteria along the way
         double dl_e_conv = 5.0e-7;
@@ -349,7 +350,7 @@ double MCSCF_2STEP::compute_energy() {
                                                    {bond_dim, bond_dim, bond_dim});
                             options_->set_int_list("BLOCK2_SWEEP_N_SWEEPS",
                                                    {n_warmup1, n_warmup2, n_steady});
-                            options_->set_double_list("BLOCK2_SWEEP_NOISES", {1.0e-5, 1.0e-7, 0.0});
+                            options_->set_double_list("BLOCK2_SWEEP_NOISES", {1.0e-4, 1.0e-5, 0.0});
                             options_->set_double_list("BLOCK2_SWEEP_DAVIDSON_TOLS",
                                                       {1.0e-8, 1.0e-9, 1.0e-10});
                         }
@@ -414,8 +415,7 @@ double MCSCF_2STEP::compute_energy() {
             auto print_level = debug_print_ ? PrintLevel::Debug
                                             : (print_ >= PrintLevel::Verbose ? PrintLevel::Verbose
                                                                              : PrintLevel::Quiet);
-            e_c = diagonalize_hamiltonian(as_solver_, fci_ints,
-                                          {print_level, dl_e_conv, dl_r_conv, false});
+            e_c = diagonalize_hamiltonian(fci_ints, {print_level, dl_e_conv, dl_r_conv, false});
             rdms = as_solver_->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
         }
 
@@ -427,8 +427,10 @@ double MCSCF_2STEP::compute_energy() {
     if (print_ >= PrintLevel::Default)
         psi::outfile->Printf("\n\n  Performing final CI Calculation using converged orbitals");
 
+    as_solver_->set_maxiter(as_maxiter);
+    as_solver_->set_die_if_not_converged(true);
     energy_ =
-        diagonalize_hamiltonian(as_solver_, cas_grad.active_space_ints(),
+        diagonalize_hamiltonian(cas_grad.active_space_ints(),
                                 {print_, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
 
     if (ints_->integral_type() != Custom) {
@@ -464,7 +466,7 @@ double MCSCF_2STEP::compute_energy() {
             // TODO: remove this re-diagonalization if CI transformation is impelementd
             if (not is_single_reference()) {
                 diagonalize_hamiltonian(
-                    as_solver_, cas_grad.active_space_ints(),
+                    cas_grad.active_space_ints(),
                     {PrintLevel::Quiet, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
             }
 
@@ -513,8 +515,7 @@ bool MCSCF_2STEP::is_single_reference() {
 }
 
 double
-MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver_,
-                                     std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                      const std::tuple<PrintLevel, double, double, bool>& params) {
     const auto& [print, e_conv, r_conv, dump_wfn] = params;
 

@@ -190,6 +190,9 @@ class ActiveSpaceSolver {
     /// Set the maximum number of iterations
     void set_maxiter(int maxiter);
 
+    /// Set if throw an error when Davidson-Liu not converged
+    void set_die_if_not_converged(bool value) { die_if_not_converged_ = value; }
+
     /// Set if read wave function from file as initial guess
     void set_read_initial_guess(bool read_guess) { read_initial_guess_ = read_guess; }
 
@@ -258,6 +261,9 @@ class ActiveSpaceSolver {
 
     /// The maximum number of iterations
     size_t maxiter_ = 100;
+
+    /// Stop if Davidson-Liu not converged
+    bool die_if_not_converged_ = true;
 
     /// Read wave function from disk as initial guess
     bool read_initial_guess_;

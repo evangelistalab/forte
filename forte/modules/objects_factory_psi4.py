@@ -18,7 +18,7 @@ from forte._forte import (
 
 from forte.data import ForteData
 
-from forte.proc.orbital_helpers import add_orthogonal_vectors, orbital_projection
+from forte.proc.orbital_helpers import add_orthogonal_vectors, orbital_projection, dmrg_initial_orbitals
 from forte.proc.external_active_space_solver import write_wavefunction, read_wavefunction
 
 from .module import Module
@@ -362,6 +362,10 @@ class ObjectsFromPsi4(Module):
         """
         # Call methods that project the orbitals (AVAS, embedding)
         data.mo_space_info = orbital_projection(data.psi_wfn, data.options, temp_mo_space_info)
+
+        # Reorder active orbitals for DMRG after AVAS
+        if data.options.get_str("ACTIVE_SPACE_SOLVER") in ["DMRG", "BLOCK2"]:
+            dmrg_initial_orbitals(data.psi_wfn, data.options, data.mo_space_info)
 
         # Build Forte SCFInfo object
         data.scf_info = SCFInfo(data.psi_wfn)

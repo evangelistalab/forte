@@ -213,6 +213,9 @@ class MCSCF_ORB_GRAD {
     /// vector of irrep, map from index i to other indices uncoupled with index i
     std::vector<std::unordered_map<size_t, std::unordered_set<size_t>>> zero_rots_;
 
+    /// Integral cutoff
+    double ints_cutoff_;
+
     // => Tensors and matrices <=
 
     /// Initial orbital coefficients

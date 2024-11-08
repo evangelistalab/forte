@@ -251,7 +251,6 @@ void Psi4Integrals::make_psi4_JK() {
         throw psi::PSIEXCEPTION("Unknown Psi4 integral type to initialize JK in Forte");
     }
 
-    JK_->set_cutoff(schwarz_cutoff_);
     jk_initialize();
     JK_->print_header();
 }
@@ -261,6 +260,7 @@ void Psi4Integrals::jk_initialize(double mem_percentage, int print_level) {
         throw std::runtime_error("Invalid mem_percentage: must be 0 < value < 1.");
     }
     JK_->set_print(print_level);
+    JK_->set_cutoff(schwarz_cutoff_);
     JK_->set_memory(psi::Process::environment.get_memory() * mem_percentage / sizeof(double));
     JK_->initialize();
     JK_status_ = JKStatus::initialized;

@@ -1,4 +1,6 @@
-#pragma once 
+#pragma once
+
+#include "helpers/printing.h"
 
 namespace psi {
 class Matrix;
@@ -30,6 +32,8 @@ class OrbitalTransform {
 
     std::shared_ptr<psi::Matrix> get_Ub() { return Ub_; };
 
+    void set_print(PrintLevel level) { print_ = level; }
+
   protected:
     // The integrals
     std::shared_ptr<ForteIntegrals> ints_;
@@ -40,6 +44,9 @@ class OrbitalTransform {
     std::shared_ptr<psi::Matrix> Ua_;
     /// @brief Unitary matrix for beta orbital rotations
     std::shared_ptr<psi::Matrix> Ub_;
+
+    /// Printing level
+    PrintLevel print_ = PrintLevel::Brief;
 };
 
 std::unique_ptr<OrbitalTransform>
