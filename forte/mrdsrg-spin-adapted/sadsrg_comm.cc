@@ -230,125 +230,12 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
                                     i[0], i[1], i[2], i[3], i[4], i[5], value);
                     value = 0;
                 }
-                // std::vector<size_t> upper(i.begin(), i.begin() + 3);
-                // std::vector<size_t> lower(i.begin() + 3, i.end());
-                // std::sort(lower.begin(), lower.end());
-                // std::sort(upper.begin(), upper.end());
-                // std::vector<size_t> v;
-                // auto it = std::set_symmetric_difference(lower.begin(), lower.end(),
-                // upper.begin(),
-                //                                         upper.end(), std::back_inserter(v));
-                // for(auto x: v) {
-                //     outfile->Printf("\n %zu",x);
-                // }
-                // if (v.size() > 4) {
-                //     outfile->Printf("\n Set L3[%zu][%zu][%zu][%zu][%zu][%zu](%20.15f) to zero!",
-                //                     i[0], i[1], i[2], i[3], i[4], i[5], value);
-                //     value = 0.0;
-                // }
             });
             E3v = H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * L3("xyzuwv");
             E3c = H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * L3("xyzuwv");
             outfile->Printf("\n  E3v approx. = %20.15f", E3v);
             outfile->Printf("\n  E3c approx. = %20.15f", E3c);
             outfile->Printf("\n  E3  approx. = %20.15f", E3v - E3c);
-            L3("uvwxyz") -= L3_("uvwxyz");
-            outfile->Printf("\n  |L3| diff   = %20.15f", L3.norm());
-
-            L3 = L3_.clone();
-
-            auto _T2 = T2.block("aava").clone();
-            _T2.iterate([&](const std::vector<size_t>& i, double& value) {
-                if (i[1] != i[3])
-                    value = 0.0;
-            });
-            E3v = H2.block("vaaa")("ewxy") * _T2("uvez") * L3("xyzuwv");
-
-            _T2 = T2.block("aava").clone();
-            _T2.iterate([&](const std::vector<size_t>& i, double& value) {
-                if (i[1] == i[3] or i[0] != i[3])
-                    value = 0.0;
-            });
-            E3v += H2.block("vaaa")("ewxy") * _T2("uvez") * L3("xyzuwv");
-
-            _T2 = T2.block("aava").clone();
-            _T2.iterate([&](const std::vector<size_t>& i, double& value) {
-                if (i[1] == i[3] or i[0] == i[3])
-                    value = 0.0;
-            });
-            L3 = L3_.clone();
-            L3.iterate([&](const std::vector<size_t>& i, double& value) {
-                if (i[2] != i[3] and i[2] != i[5]) {
-                    std::unordered_set<size_t> s1{i[2], i[3], i[5]};
-                    std::unordered_set<size_t> s2{i[0], i[1], i[4]};
-                    if (s1 != s2) {
-                        value = 0.0;
-                    }
-                } else {
-                    value = 0.0;
-                }
-            });
-            E3v += H2.block("vaaa")("ewxy") * _T2("uvez") * L3("xyzuwv");
-
-            L3 = L3_.clone();
-            _T2 = T2.block("caaa").clone();
-            _T2.iterate([&](const std::vector<size_t>& i, double& value) {
-                if (i[1] != i[3])
-                    value = 0.0;
-            });
-            E3c = H2.block("aaca")("uvmz") * _T2("mwxy") * L3("xyzuwv");
-
-            _T2 = T2.block("caaa").clone();
-            _T2.iterate([&](const std::vector<size_t>& i, double& value) {
-                if (i[1] == i[3] or i[1] != i[2])
-                    value = 0.0;
-            });
-            E3c += H2.block("aaca")("uvmz") * _T2("mwxy") * L3("xyzuwv");
-
-            _T2 = T2.block("caaa").clone();
-            _T2.iterate([&](const std::vector<size_t>& i, double& value) {
-                if (i[1] == i[3] or i[1] == i[2])
-                    value = 0.0;
-            });
-            L3 = L3_.clone();
-            L3.iterate([&](const std::vector<size_t>& i, double& value) {
-                if (i[0] != i[4] and i[1] != i[4]) {
-                    std::unordered_set<size_t> s2{i[2], i[3], i[5]};
-                    std::unordered_set<size_t> s1{i[0], i[1], i[4]};
-                    if (s1 != s2) {
-                        value = 0.0;
-                    }
-                } else {
-                    value = 0.0;
-                }
-            });
-            E3c += H2.block("aaca")("uvmz") * _T2("mwxy") * L3("xyzuwv");
-
-            // L3 = L3_.clone();
-            // L3.iterate([&](const std::vector<size_t>& i, double& value) {
-            //     if (i[2] != i[5])
-            //         value = 0.0;
-            // });
-            // E3v = H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * L3("xyzuwv");
-            // E3c = H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * L3("xzyuvw");
-
-            // L3 = L3_.clone();
-            // L3.iterate([&](const std::vector<size_t>& i, double& value) {
-            //     if (i[2] != i[3])
-            //         value = 0.0;
-            // });
-            // E3v += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * L3("xyzuwv");
-
-            // L3 = L3_.clone();
-            // L3.iterate([&](const std::vector<size_t>& i, double& value) {
-            //     if (i[0] != i[4])
-            //         value = 0.0;
-            // });
-            // E3c += H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * L3("xyzuwv");
-
-            outfile->Printf("\n _E3v approx. = %20.15f", E3v);
-            outfile->Printf("\n _E3c approx. = %20.15f", E3c);
-            outfile->Printf("\n _E3  approx. = %20.15f", E3v - E3c);
 
             L3 = L3_.clone();
 
@@ -359,12 +246,6 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
             auto na5 = na * na4;
             auto nv = virt_mos_.size();
             auto nc = core_mos_.size();
-
-            auto I = ambit::Tensor::build(tensor_type_, "I", {na, na});
-            I.iterate([&](const std::vector<size_t>& i, double& value) {
-                if (i[0] == i[1])
-                    value = 1.0;
-            });
 
             auto& L3_data = L3_.data();
             auto L3_1 = ambit::Tensor::build(tensor_type_, "L3 xyzuwz -> xyzuw",
@@ -405,7 +286,7 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
                 if (i[1] != i[2])
                     value = H2v_data[i[0] * na3 + i[1] * na2 + i[1] * na + i[2]];
             });
-            _T2 = T2.block("aava").clone();
+            auto _T2 = T2.block("aava").clone();
             _T2.iterate([&](const std::vector<size_t>& i, double& value) {
                 if (i[0] == i[3] or i[1] == i[3])
                     value = 0.0;
@@ -647,301 +528,501 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
             outfile->Printf("\n  E3c_m2 = %.15f", E3c_m2);
             double E3c_m3 = xxx("xyzuwv") * L3_("xyzuwv");
             outfile->Printf("\n  E3c_m3 = %.15f", E3c_m3);
-
-            // H2T2v.zero();
-
-            // for (size_t w = 0; w < na; ++w) {
-            //     for (size_t u = 0; u < na; ++u) {
-            //         for (size_t v = 0; v < na; ++v) {
-            //             for (size_t x = 0; x < na; ++x) {
-            //                 for (size_t y = 0; y < na; ++y) {
-            //                     double value = 0.0;
-            //                     for (size_t e = 0; e < nv; ++e) {
-            //                         value += H2v_data[e * na3 + w * na2 + x * na + y] *
-            //                                  T2v_data[u * na2 * nv + v * na * nv + e * na + w];
-            //                     }
-            //                     H2T2v_data[x * na4 + y * na3 + w * na2 + u * na + v] += value;
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
-            // for (size_t p = 0, psize = na2 - na; p < psize; ++p) {
-            //     size_t w = p / (na - 1);
-            //     size_t z = p - w * (na - 1);
-            //     z += (z < w ? 0 : 1);
-            //     for (size_t v = 0; v < na; ++v) {
-            //         for (size_t u = 0; u < na; ++u) {
-            //             for (size_t x = 0; x < na; ++x) {
-            //                 double value = 0.0;
-            //                 for (size_t e = 0; e < nv; ++e) {
-            //                     value += H2v_data[e * na3 + w * na2 + x * na + v] *
-            //                              T2v_data[u * na2 * nv + v * na * nv + e * na + z];
-            //                 }
-            //                 H2T2v_data[x * na4 + z * na3 + v * na2 + u * na + w] += value;
-            //             }
-            //         }
-            //     }
-            //     for (size_t q = 0, qsize = na2 - na; q < qsize; ++q) {
-            //         size_t v = q / (na - 1);
-            //         size_t y = q - v * (na - 1);
-            //         y += (y < v ? 0 : 1);
-            //         for (size_t u = 0; u < na; ++u) {
-            //             double value = 0.0;
-            //             for (size_t e = 0; e < nv; ++e) {
-            //                 value += H2v_data[e * na3 + w * na2 + v * na + y] *
-            //                          T2v_data[u * na2 * nv + v * na * nv + e * na + z];
-            //             }
-            //             H2T2v_data[y * na4 + z * na3 + v * na2 + w * na + u] += value;
-            //         }
-            //         for (size_t x = 0; x < na; ++x) {
-            //             if (x == v)
-            //                 continue;
-            //             double value = 0.0;
-            //             for (size_t e = 0; e < nv; ++e) {
-            //                 value += H2v_data[e * na3 + w * na2 + x * na + y] *
-            //                          T2v_data[y * na2 * nv + v * na * nv + e * na + z];
-            //             }
-            //             H2T2v_data[z * na4 + x * na3 + y * na2 + v * na + w] += value;
-            //         }
-            //     }
-            // }
-            // double E3v_m2 = H2T2v("xyzuv") * L3_2("xyzuv");
-            // outfile->Printf("\n  E3v_m2 = %.15f", E3v_m2);
-
-            // H2T2v.zero();
-            // for (size_t p = 0, psize = na2 - na; p < psize; ++p) {
-            //     size_t w = p / (na - 1);
-            //     size_t z = p - w * (na - 1);
-            //     z += (z < w ? 0 : 1);
-            //     for (size_t q = 0, qsize = na2 - na; q < qsize; ++q) {
-            //         size_t v = q / (na - 1);
-            //         size_t y = q - v * (na - 1);
-            //         y += (y < v ? 0 : 1);
-            //         for (size_t x = 0; x < na; ++x) {
-            //             if (x == v)
-            //                 continue;
-            //             for (size_t u = 0; u < na; ++u) {
-            //                 if (u == y)
-            //                     continue;
-            //                 double value = 0.0;
-            //                 for (size_t e = 0; e < nv; ++e) {
-            //                     value += H2v_data[e * na3 + w * na2 + x * na + y] *
-            //                              T2v_data[x * na2 * nv + v * na * nv + e * na + z];
-            //                 }
-            //                 H2T2v_data[y * na4 + z * na3 + x * na2 + w * na + v] += value;
-            //             }
-            //         }
-            //     }
-            // }
-            // double E3v_m1 = H2T2v("xyzuw") * L3_1("xyzuw");
-            // outfile->Printf("\n  E3v_m1 = %.15f", E3v_m1);
-
-            // _T2 = T2.block("aava").clone();
-            // _T2.iterate([&](const std::vector<size_t>& i, double& value) {
-            //     // std::unordered_set<size_t> s{i[0], i[1], i[3]};
-            //     // if (s.size() == 3)
-            //     if (i[0] != i[3] and i[1] != i[3])
-            //         value = 0.0;
-            // });
-            // E3v = H2.block("vaaa")("ewxy") * _T2("uvez") * L3("xyzuwv");
-            // outfile->Printf("\n  E3v tmp = %.15f", E3v);
-
-            // _T2 = T2.block("aava").clone();
-            // _T2.iterate([&](const std::vector<size_t>& i, double& value) {
-            //     // std::unordered_set<size_t> s{i[0], i[1], i[3]};
-            //     // if (s.size() != 3)
-            //     if (i[0] == i[3] or i[1] == i[3])
-            //         value = 0.0;
-            // });
-            // _H2 = H2.block("vaaa").clone();
-            // _H2.iterate([&](const std::vector<size_t>& i, double& value) {
-            //     // std::unordered_set<size_t> s{i[1], i[2], i[3]};
-            //     // if (s.size() == 3)
-            //     if (i[1] != i[2] and i[1] != i[3])
-            //         value = 0.0;
-            // });
-            // E3v = _H2("ewxy") * _T2("uvez") * L3("xyzuwv");
-            // outfile->Printf("\n  E3v tmp = %.15f", E3v);
-
-            // _T2 = T2.block("aava").clone();
-            // _T2.iterate([&](const std::vector<size_t>& i, double& value) {
-            //     if (i[0] == i[3] or i[1] == i[3])
-            //         value = 0.0;
-            // });
-            // _H2 = H2.block("vaaa").clone();
-            // _H2.iterate([&](const std::vector<size_t>& i, double& value) {
-            //     if (i[1] == i[2] or i[1] == i[3])
-            //         value = 0.0;
-            // });
-            // L3 = L3_.clone();
-            // L3.iterate([&](const std::vector<size_t>& i, double& value) {
-            //     // if (i[2] != i[3] and i[2] != i[5]) {
-            //     //     std::unordered_set<size_t> s1{i[2], i[3], i[5]};
-            //     //     std::unordered_set<size_t> s2{i[0], i[1], i[4]};
-            //     //     if (s1 != s2) {
-            //     //         value = 0.0;
-            //     //     }
-            //     // } else {
-            //     //     value = 0.0;
-            //     // }
-            //     if (i[2] != i[4])
-            //         value = 0.0;
-            // });
-            // E3v += _H2("ewxy") * _T2("uvez") * L3("xyzuwv");
-
-            // L3 = L3_.clone();
-
-            // _T2 = T2.block("caaa").clone();
-            // _T2.iterate([&](const std::vector<size_t>& i, double& value) {
-            //     // std::unordered_set<size_t> s{i[1], i[2], i[3]};
-            //     // if (s.size() == 3)
-            //     if (i[1] != i[2] and i[1] != i[3])
-            //         value = 0.0;
-            // });
-            // E3c = H2.block("aaca")("uvmz") * _T2("mwxy") * L3("xyzuwv");
-
-            // _T2 = T2.block("caaa").clone();
-            // _T2.iterate([&](const std::vector<size_t>& i, double& value) {
-            //     // std::unordered_set<size_t> s{i[1], i[2], i[3]};
-            //     // if (s.size() != 3)
-            //     if (i[1] == i[2] or i[1] == i[3])
-            //         value = 0.0;
-            // });
-            // _H2 = H2.block("aaca").clone();
-            // _H2.iterate([&](const std::vector<size_t>& i, double& value) {
-            //     // std::unordered_set<size_t> s{i[0], i[1], i[3]};
-            //     // if (s.size() == 3)
-            //     if (i[0] != i[3] and i[1] != i[3])
-            //         value = 0.0;
-            // });
-            // E3c += _H2("uvmz") * _T2("mwxy") * L3("xyzuwv");
-
-            // _T2 = T2.block("caaa").clone();
-            // _T2.iterate([&](const std::vector<size_t>& i, double& value) {
-            //     if (i[1] == i[2] or i[1] == i[3])
-            //         value = 0.0;
-            // });
-            // _H2 = H2.block("aaca").clone();
-            // _H2.iterate([&](const std::vector<size_t>& i, double& value) {
-            //     if (i[0] == i[3] or i[1] == i[3])
-            //         value = 0.0;
-            // });
-            // L3 = L3_.clone();
-            // L3.iterate([&](const std::vector<size_t>& i, double& value) {
-            //     // if (i[0] != i[4] and i[1] != i[4]) {
-            //     //     std::unordered_set<size_t> s2{i[2], i[3], i[5]};
-            //     //     std::unordered_set<size_t> s1{i[0], i[1], i[4]};
-            //     //     if (s1 != s2) {
-            //     //         value = 0.0;
-            //     //     }
-            //     // } else {
-            //     //     value = 0.0;
-            //     // }
-            //     if (i[2] != i[4])
-            //         value = 0.0;
-            // });
-            // E3c += _H2("uvmz") * _T2("mwxy") * L3("xyzuwv");
-
-            // L3 = L3_.clone();
-            // L3.iterate([&](const std::vector<size_t>& i, double& value) {
-            //     if (i[2] == i[4]) {
-            //     }
-            // });
-
-            // outfile->Printf("\n _E3v approx. = %20.15f", E3v);
-            // outfile->Printf("\n _E3c approx. = %20.15f", E3c);
-            // outfile->Printf("\n _E3  approx. = %20.15f", E3v - E3c);
         } else {
-            // direct algorithm for 3RDM: Alex's trick JCTC 16, 6343–6357 (2020)
-            // t_{uvez} v_{ewxy} D_{xyzuwv} = - t_{uvez} v_{ezxy} D_{uvxy}
-            //                                + t_{uvez} v_{ewxy} < x^+ y^+ w z^+ v u >
+            if (L3_algorithm_ == "DIRECT") {
+                // direct algorithm for 3RDM: Alex's trick JCTC 16, 6343–6357 (2020)
+                // t_{uvez} v_{ewxy} D_{xyzuwv} = - t_{uvez} v_{ezxy} D_{uvxy}
+                //                                + t_{uvez} v_{ewxy} < x^+ y^+ w z^+ v u >
 
-            // - need to transform the integrals to the same orbital basis as active space solver
-            // - TODO: maybe we (York) should make the CI vectors consistent at the first place
-            ambit::Tensor Tbra, Tket;
-            ambit::Tensor Ua = Uactv_.block("aa");
+                // - need to transform the integrals to the same orbital basis as active space
+                // solver
+                // - TODO: maybe we (York) should make the CI vectors consistent at the first place
+                ambit::Tensor Tbra, Tket;
+                ambit::Tensor Ua = Uactv_.block("aa");
 
-            timer timer_v("DSRG [H2, T2] D3V direct");
-            Tbra = H2.block("vaaa").clone();
-            Tbra("ewuv") = H2.block("vaaa")("ezxy") * Ua("wz") * Ua("ux") * Ua("vy");
-            Tket = ambit::Tensor::build(tensor_type_, "Tket", Tbra.dims());
-            Tket("ewuv") = T2.block("aava")("xyez") * Ua("wz") * Ua("ux") * Ua("vy");
-            auto E3v_map = as_solver_->compute_complementary_H2caa_overlap(
-                Tket, Tbra, mo_space_info_->symmetry("RESTRICTED_UOCC"), "v", load_mps);
-            timer_v.stop();
+                timer timer_v("DSRG [H2, T2] D3V direct");
+                Tbra = H2.block("vaaa").clone();
+                Tbra("ewuv") = H2.block("vaaa")("ezxy") * Ua("wz") * Ua("ux") * Ua("vy");
+                Tket = ambit::Tensor::build(tensor_type_, "Tket", Tbra.dims());
+                Tket("ewuv") = T2.block("aava")("xyez") * Ua("wz") * Ua("ux") * Ua("vy");
+                auto E3v_map = as_solver_->compute_complementary_H2caa_overlap(
+                    Tket, Tbra, mo_space_info_->symmetry("RESTRICTED_UOCC"), "v", load_mps);
+                timer_v.stop();
 
-            timer timer_c("DSRG [H2, T2] D3C direct");
-            Tket = T2.block("caaa").clone();
-            Tket("mwuv") = T2.block("caaa")("mzxy") * Ua("wz") * Ua("ux") * Ua("vy");
-            Tbra = ambit::Tensor::build(tensor_type_, "Tbra", Tket.dims());
-            Tbra("mwuv") = H2.block("aaca")("xymz") * Ua("wz") * Ua("ux") * Ua("vy");
-            auto E3c_map = as_solver_->compute_complementary_H2caa_overlap(
-                Tket, Tbra, mo_space_info_->symmetry("RESTRICTED_DOCC"), "c", load_mps);
-            timer_c.stop();
+                timer timer_c("DSRG [H2, T2] D3C direct");
+                Tket = T2.block("caaa").clone();
+                Tket("mwuv") = T2.block("caaa")("mzxy") * Ua("wz") * Ua("ux") * Ua("vy");
+                Tbra = ambit::Tensor::build(tensor_type_, "Tbra", Tket.dims());
+                Tbra("mwuv") = H2.block("aaca")("xymz") * Ua("wz") * Ua("ux") * Ua("vy");
+                auto E3c_map = as_solver_->compute_complementary_H2caa_overlap(
+                    Tket, Tbra, mo_space_info_->symmetry("RESTRICTED_DOCC"), "c", load_mps);
+                timer_c.stop();
 
-            // - 2-RDM contributions
-            auto G2 = ambit::BlockedTensor::build(ambit::CoreTensor, "G2", {"aaaa"});
-            G2.block("aaaa")("pqrs") = rdms_->SF_G2()("pqrs");
+                // - 2-RDM contributions
+                auto G2 = ambit::BlockedTensor::build(ambit::CoreTensor, "G2", {"aaaa"});
+                G2.block("aaaa")("pqrs") = rdms_->SF_G2()("pqrs");
 
-            double E3v = -H2["ezxy"] * T2["uvez"] * G2["xyuv"];
-            double E3c = T2["mzxy"] * H2["uvmz"] * G2["xyuv"];
+                double E3v = -H2["ezxy"] * T2["uvez"] * G2["xyuv"];
+                double E3c = T2["mzxy"] * H2["uvmz"] * G2["xyuv"];
 
-            // - add together
-            for (const auto& state_weights : state_to_weights_) {
-                const auto& state = state_weights.first;
-                const auto& weights = state_weights.second;
-                for (size_t i = 0, nroots = weights.size(); i < nroots; ++i) {
-                    if (weights[i] < 1.0e-15)
-                        continue;
-                    E3v += weights[i] * E3v_map[state][i];
-                    E3c -= weights[i] * E3c_map[state][i];
+                // - add together
+                for (const auto& state_weights : state_to_weights_) {
+                    const auto& state = state_weights.first;
+                    const auto& weights = state_weights.second;
+                    for (size_t i = 0, nroots = weights.size(); i < nroots; ++i) {
+                        if (weights[i] < 1.0e-15)
+                            continue;
+                        E3v += weights[i] * E3v_map[state][i];
+                        E3c -= weights[i] * E3c_map[state][i];
+                    }
                 }
+
+                // => spin-free 1- and 2-cumulant contributions <=
+
+                // - virtual contraction
+                temp = ambit::BlockedTensor::build(tensor_type_, "temp_va", {"va"});
+                temp["ex"] = H2["ewxy"] * L1_["yw"];
+                temp["ex"] -= 0.5 * H2["ewyx"] * L1_["yw"];
+                E3v -= temp["ex"] * T2["uvez"] * G2["xzuv"];
+
+                temp["eu"] = 0.5 * S2["uvez"] * L1_["zv"];
+                E3v -= H2["ewxy"] * temp["eu"] * L2_["xyuw"];
+
+                temp = ambit::BlockedTensor::build(tensor_type_, "temp_vaaa", {"vaaa"});
+                temp["ewuy"] = H2["ewxy"] * L1_["xu"];
+                E3v -= 0.5 * temp["ewuy"] * S2["uvez"] * L2_["yzwv"];
+
+                temp["ewxu"] = H2["ewxy"] * L1_["yu"];
+                E3v += 0.5 * temp["ewxu"] * T2["uvez"] * L2_["xzwv"];
+                E3v += 0.5 * temp["ewxv"] * T2["uvez"] * L2_["xzuw"];
+
+                temp["ezxy"] = H2["ewxy"] * L1_["zw"];
+                E3v += 0.5 * temp["ezxy"] * T2["uvez"] * G2["xyuv"];
+
+                // - core contraction
+                temp = ambit::BlockedTensor::build(tensor_type_, "temp_ac", {"ac"});
+                temp["um"] = H2["uvmz"] * L1_["zv"];
+                temp["um"] -= 0.5 * H2["vumz"] * L1_["zv"];
+                E3c += temp["um"] * T2["mwxy"] * L2_["xyuw"];
+
+                temp["xm"] = S2["mwxy"] * L1_["yw"];
+                E3c += 0.5 * H2["uvmz"] * temp["xm"] * G2["xzuv"];
+
+                temp = ambit::BlockedTensor::build(tensor_type_, "temp_caaa", {"caaa"});
+                temp["mzxv"] = H2["uvmz"] * L1_["xu"];
+                E3c += 0.5 * temp["mzxv"] * S2["mwxy"] * L2_["yzwv"];
+
+                temp["mzuy"] = H2["uvmz"] * L1_["yv"];
+                E3c -= 0.5 * temp["mzuy"] * T2["mwxy"] * L2_["xzuw"];
+                E3c -= 0.5 * temp["mzux"] * T2["mwxy"] * L2_["yzwu"];
+
+                temp["mwuv"] = H2["uvmz"] * L1_["zw"];
+                E3c -= 0.5 * temp["mwuv"] * T2["mwxy"] * G2["xyuv"];
+
+                E3 += E3c + E3v;
+            } else {
+                // Francesco's 5-index cu3 approx. JCP 159, 114106 (2023)
+                auto L3d = rdms_->SF_L3d(as_solver_->compute_average_3rdms_diag1(
+                    state_to_weights_, RDMsType::spin_free));
+                const auto& L3_1 = L3d[0];
+                const auto& L3_2 = L3d[1];
+
+                auto na = actv_mos_.size();
+                auto na2 = na * na;
+                auto na3 = na * na2;
+                auto na4 = na * na3;
+                auto nv = virt_mos_.size();
+                auto nva = nv * na;
+                auto nva2 = nv * na2;
+                auto nc = core_mos_.size();
+                auto nca = nc * na;
+                auto nca2 = nc * na2;
+
+                // virtual contraction
+                auto& _T2v_data = T2.block("aava").data();
+                auto T2v_1 = ambit::Tensor::build(tensor_type_, "T2 uzez -> uze", {na, na, nv});
+#pragma omp parallel for
+                for (size_t i = 0; i < na2; ++i) {
+                    size_t u = i / na;
+                    size_t z = i % na;
+                    double* x_ptr = &(_T2v_data[u * nva2 + z * nva + z]);
+                    double* y_ptr = &(T2v_1.data()[u * nva + z * nv]);
+                    psi::C_DCOPY(nv, x_ptr, na, y_ptr, 1);
+                }
+
+                auto T2v_2 =
+                    ambit::Tensor::build(tensor_type_, "T2 zvez -> zve (z != v)", {na, na, nv});
+#pragma omp parallel for
+                for (size_t i = 0; i < na2 - na; ++i) {
+                    size_t z = i / (na - 1);
+                    size_t v = i - z * (na - 1);
+                    v += (v < z ? 0 : 1);
+                    double* x_ptr = &(_T2v_data[z * nva2 + v * nva + z]);
+                    double* y_ptr = &(T2v_2.data()[z * nva + v * nv]);
+                    psi::C_DCOPY(nv, x_ptr, na, y_ptr, 1);
+                }
+
+                double E3v_t = 0.0;
+                E3v_t += H2.block("vaaa")("ewxy") * T2v_1("uze") * L3_1("xyzuw");
+                E3v_t += H2.block("vaaa")("ewxy") * T2v_2("zve") * L3_2("yxzwv");
+                outfile->Printf("\n  E3v_t = %.15f", E3v_t);
+
+                auto T2v = T2.block("aava").clone();
+                auto& T2v_data = T2v.data();
+#pragma omp parallel for
+                for (size_t e = 0; e < nv; ++e) {
+                    for (size_t z = 0; z < na; ++z) {
+                        for (size_t v = 0; v < na; ++v) {
+                            T2v_data[v * nva2 + z * nva + e * na + z] = 0.0;
+                            T2v_data[z * nva2 + v * nva + e * na + z] = 0.0;
+                        }
+                    }
+                }
+
+                auto& _H2v_data = H2.block("vaaa").data();
+                auto H2v_1 = ambit::Tensor::build(tensor_type_, "H2 ewxw -> ewx", {nv, na, na});
+#pragma omp parallel for
+                for (size_t i = 0; i < nva; ++i) {
+                    size_t e = i / na;
+                    size_t w = i % na;
+                    double* x_ptr = &(_H2v_data[e * na3 + w * na2 + w]);
+                    double* y_ptr = &(H2v_1.data()[e * na2 + w * na]);
+                    psi::C_DCOPY(na, x_ptr, na, y_ptr, 1);
+                }
+
+                auto H2v_2 =
+                    ambit::Tensor::build(tensor_type_, "H2 ewwy -> ewy (w != y)", {nv, na, na});
+#pragma omp parallel for
+                for (size_t i = 0; i < nva; ++i) {
+                    size_t e = i / na;
+                    size_t w = i % na;
+                    double* x_ptr = &(_H2v_data[e * na3 + w * na2 + w * na]);
+                    double* y_ptr = &(H2v_2.data()[e * na2 + w * na]);
+                    psi::C_DCOPY(na, x_ptr, 1, y_ptr, 1);
+                    H2v_2.data()[e * na2 + w * na + w] = 0.0;
+                }
+
+                double E3v_h = 0.0;
+                E3v_h += H2v_1("ewx") * T2v("uvez") * L3_1("xzwuv");
+                E3v_h += H2v_2("ewy") * T2v("uvez") * L3_2("zywvu");
+                outfile->Printf("\n  E3v_h = %.15f", E3v_h);
+
+                auto H2v = H2.block("vaaa").clone();
+                auto& H2v_data = H2v.data();
+#pragma omp parallel for
+                for (size_t e = 0; e < nv; ++e) {
+                    for (size_t w = 0; w < na; ++w) {
+                        for (size_t x = 0; x < na; ++x) {
+                            H2v_data[e * na3 + w * na2 + x * na + w] = 0.0;
+                            H2v_data[e * na3 + w * na2 + w * na + x] = 0.0;
+                        }
+                    }
+                }
+
+                auto temp = ambit::Tensor::build(tensor_type_, "H2T2v xyzuwz -> xyzuw",
+                                                 std::vector<size_t>(5, na));
+                auto& H2T2v_data = temp.data();
+
+                // w != (x, y) and z != (u, v) and x = u
+                temp("yzxwv") = H2v("ewxy") * T2v("xvez");
+                double E3v_m1 = temp("xyzuw") * L3_1("xyzuw");
+                outfile->Printf("\n  E3v_m1 = %.15f", E3v_m1);
+
+                temp.zero();
+                temp.set_name("H2T2v xyzuzv -> xyzuv");
+
+// w != (x, y) and z != (u, v) and x != u and w = z
+#pragma omp parallel for
+                for (size_t xu = 0; xu < na2 - na; ++xu) {
+                    size_t x = xu / (na - 1);
+                    size_t u = xu - x * (na - 1);
+                    u += (u < x ? 0 : 1);
+
+                    for (size_t w = 0; w < na; ++w) {
+                        for (size_t y = 0; y < na; ++y) {
+                            for (size_t v = 0; v < na; ++v) {
+                                double value = 0.0;
+                                for (size_t e = 0; e < nv; ++e) {
+                                    value += H2v_data[e * na3 + w * na2 + x * na + y] *
+                                             T2v_data[u * na2 * nv + v * na * nv + e * na + w];
+                                }
+                                H2T2v_data[x * na4 + y * na3 + w * na2 + u * na + v] += value;
+                            }
+                        }
+                    }
+                }
+
+// w != (x, y) and z != (u, v) and x != u and w != z and x = v
+#pragma omp parallel for
+                for (size_t xu = 0; xu < na2 - na; ++xu) {
+                    size_t x = xu / (na - 1);
+                    size_t u = xu - x * (na - 1);
+                    u += (u < x ? 0 : 1);
+
+                    for (size_t zw = 0; zw < na2 - na; ++zw) {
+                        size_t z = zw / (na - 1);
+                        size_t w = zw - z * (na - 1);
+                        w += (w < z ? 0 : 1);
+
+                        for (size_t y = 0; y < na; ++y) {
+                            double value = 0.0;
+                            for (size_t e = 0; e < nv; ++e) {
+                                value += H2v_data[e * na3 + w * na2 + x * na + y] *
+                                         T2v_data[u * na2 * nv + x * na * nv + e * na + z];
+                            }
+                            H2T2v_data[y * na4 + z * na3 + x * na2 + w * na + u] += value;
+                        }
+                    }
+                }
+
+// w != (x, y) and z != (u, v) and x != u and w != z and x != v and y = v
+#pragma omp parallel for
+                for (size_t xu = 0; xu < na2 - na; ++xu) {
+                    size_t x = xu / (na - 1);
+                    size_t u = xu - x * (na - 1);
+                    u += (u < x ? 0 : 1);
+
+                    for (size_t zw = 0; zw < na2 - na; ++zw) {
+                        size_t z = zw / (na - 1);
+                        size_t w = zw - z * (na - 1);
+                        w += (w < z ? 0 : 1);
+
+                        for (size_t v = 0; v < na; ++v) {
+                            double factor = (v == x ? 0.0 : 1.0); // x != v
+                            double value = 0.0;
+                            for (size_t e = 0; e < nv; ++e) {
+                                value += H2v_data[e * na3 + w * na2 + x * na + v] *
+                                         T2v_data[u * na2 * nv + v * na * nv + e * na + z];
+                            }
+                            H2T2v_data[x * na4 + z * na3 + v * na2 + u * na + w] += value * factor;
+                        }
+                    }
+                }
+
+// w != (x, y) and z != (u, v) and x != u and w != z and x != v and y != v and y = u
+#pragma omp parallel for
+                for (size_t xu = 0; xu < na2 - na; ++xu) {
+                    size_t x = xu / (na - 1);
+                    size_t u = xu - x * (na - 1);
+                    u += (u < x ? 0 : 1);
+
+                    for (size_t zw = 0; zw < na2 - na; ++zw) {
+                        size_t z = zw / (na - 1);
+                        size_t w = zw - z * (na - 1);
+                        w += (w < z ? 0 : 1);
+
+                        for (size_t vy = 0; vy < na2 - na; ++vy) {
+                            size_t v = vy / (na - 1);
+                            size_t y = vy - v * (na - 1);
+                            y += (y < v ? 0 : 1);
+
+                            double factor = ((v != x && y == u) ? 1.0 : 0.0);
+                            double value = 0.0;
+                            for (size_t e = 0; e < nv; ++e) {
+                                value += H2v_data[e * na3 + w * na2 + x * na + y] *
+                                         T2v_data[y * na2 * nv + v * na * nv + e * na + z];
+                            }
+                            H2T2v_data[z * na4 + x * na3 + y * na2 + v * na + w] += value * factor;
+                        }
+                    }
+                }
+                double E3v_m2 = temp("xyzuv") * L3_2("xyzuv");
+                outfile->Printf("\n  E3v_m2 = %.15f", E3v_m2);
+
+                E3 += E3v_t + E3v_h + E3v_m1 + E3v_m2;
+
+                // core contraction
+                auto& _T2c_data = T2.block("caaa").data();
+                auto T2c_1 = ambit::Tensor::build(tensor_type_, "T2 mwxw -> mwx", {nc, na, na});
+#pragma omp parallel for
+                for (size_t i = 0; i < nca; ++i) {
+                    size_t m = i / na;
+                    size_t w = i % na;
+                    double* x_ptr = &(_T2c_data[m * na3 + w * na2 + w]);
+                    double* y_ptr = &(T2c_1.data()[m * na2 + w * na]);
+                    psi::C_DCOPY(na, x_ptr, na, y_ptr, 1);
+                }
+
+                auto T2c_2 =
+                    ambit::Tensor::build(tensor_type_, "T2 mwwy -> mwy (w != y)", {nc, na, na});
+#pragma omp parallel for
+                for (size_t i = 0; i < nca; ++i) {
+                    size_t m = i / na;
+                    size_t w = i % na;
+                    double* x_ptr = &(_T2c_data[m * na3 + w * na2 + w * na]);
+                    double* y_ptr = &(T2c_2.data()[m * na2 + w * na]);
+                    psi::C_DCOPY(na, x_ptr, 1, y_ptr, 1);
+                    T2c_2.data()[m * na2 + w * na + w] = 0.0;
+                }
+
+                double E3c_t = 0.0;
+                E3c_t += H2.block("aaca")("uvmz") * T2c_1("mwx") * L3_1("xzwuv");
+                E3c_t += H2.block("aaca")("uvmz") * T2c_2("mwy") * L3_2("zywvu");
+                outfile->Printf("\n  E3c_t = %.15f", E3c_t);
+
+                auto T2c = T2.block("caaa").clone();
+                auto& T2c_data = T2c.data();
+#pragma omp parallel for
+                for (size_t m = 0; m < nc; ++m) {
+                    for (size_t w = 0; w < na; ++w) {
+                        for (size_t x = 0; x < na; ++x) {
+                            T2c_data[m * na3 + w * na2 + x * na + w] = 0.0;
+                            T2c_data[m * na3 + w * na2 + w * na + x] = 0.0;
+                        }
+                    }
+                }
+
+                auto& _H2c_data = H2.block("aaca").data();
+                auto H2c_1 = ambit::Tensor::build(tensor_type_, "H2 uzmz -> uzm", {na, na, nc});
+#pragma omp parallel for
+                for (size_t i = 0; i < na2; ++i) {
+                    size_t u = i / na;
+                    size_t z = i % na;
+                    double* x_ptr = &(_H2c_data[u * nca2 + z * nca + z]);
+                    double* y_ptr = &(H2c_1.data()[u * nca + z * nc]);
+                    psi::C_DCOPY(nc, x_ptr, na, y_ptr, 1);
+                }
+
+                auto H2c_2 =
+                    ambit::Tensor::build(tensor_type_, "H2 zvmz -> zvm (z != v)", {na, na, nc});
+#pragma omp parallel for
+                for (size_t i = 0; i < na2 - na; ++i) {
+                    size_t z = i / (na - 1);
+                    size_t v = i - z * (na - 1);
+                    v += (v < z ? 0 : 1);
+                    double* x_ptr = &(_H2c_data[z * nca2 + v * nca + z]);
+                    double* y_ptr = &(H2c_2.data()[z * nca + v * nc]);
+                    psi::C_DCOPY(nc, x_ptr, na, y_ptr, 1);
+                }
+
+                double E3c_h = 0.0;
+                E3c_h += H2c_1("uzm") * T2c("mwxy") * L3_1("xyzuw");
+                E3c_h += H2c_2("zvm") * T2c("mwxy") * L3_2("yxzwv");
+                outfile->Printf("\n  E3c_h = %.15f", E3c_h);
+
+                auto H2c = H2.block("aaca").clone();
+                auto& H2c_data = H2c.data();
+#pragma omp parallel for
+                for (size_t m = 0; m < nc; ++m) {
+                    for (size_t z = 0; z < na; ++z) {
+                        for (size_t v = 0; v < na; ++v) {
+                            H2c_data[v * nca2 + z * nca + m * na + z] = 0.0;
+                            H2c_data[z * nca2 + v * nca + m * na + z] = 0.0;
+                        }
+                    }
+                }
+
+                // w != (x, y) and z != (u, v) and x = u
+                temp.set_name("H2T2c xyzuwz -> xyzuw");
+                temp("yzuwv") = H2c("uvmz") * T2c("mwuy");
+                double E3c_m1 = temp("xyzuw") * L3_1("xyzuw");
+                outfile->Printf("\n  E3c_m1 = %.15f", E3c_m1);
+
+                temp.zero();
+                temp.set_name("H2T2c xyzuzv -> xyzuv");
+                auto& H2T2c_data = temp.data();
+
+// w != (x, y) and z != (u, v) and x != u and z = w
+#pragma omp parallel for
+                for (size_t xu = 0; xu < na2 - na; ++xu) {
+                    size_t x = xu / (na - 1);
+                    size_t u = xu - x * (na - 1);
+                    u += (u < x ? 0 : 1);
+
+                    for (size_t z = 0; z < na; ++z) {
+                        for (size_t y = 0; y < na; ++y) {
+                            for (size_t v = 0; v < na; ++v) {
+                                double value = 0.0;
+                                for (size_t m = 0; m < nc; ++m) {
+                                    value += H2c_data[u * nc * na2 + v * nc * na + m * na + z] *
+                                             T2c_data[m * na3 + z * na2 + x * na + y];
+                                }
+                                H2T2c_data[x * na4 + y * na3 + z * na2 + u * na + v] += value;
+                            }
+                        }
+                    }
+                }
+
+// w != (x, y) and z != (u, v) and x != u and z != w and x = v
+#pragma omp parallel for
+                for (size_t xu = 0; xu < na2 - na; ++xu) {
+                    size_t x = xu / (na - 1);
+                    size_t u = xu - x * (na - 1);
+                    u += (u < x ? 0 : 1);
+
+                    for (size_t zw = 0; zw < na2 - na; ++zw) {
+                        size_t z = zw / (na - 1);
+                        size_t w = zw - z * (na - 1);
+                        w += (w < z ? 0 : 1);
+
+                        for (size_t y = 0; y < na; ++y) {
+                            double value = 0.0;
+                            for (size_t m = 0; m < nc; ++m) {
+                                value += H2c_data[u * nc * na2 + x * nc * na + m * na + z] *
+                                         T2c_data[m * na3 + w * na2 + x * na + y];
+                            }
+                            H2T2c_data[y * na4 + z * na3 + x * na2 + w * na + u] += value;
+                        }
+                    }
+                }
+
+// w != (x, y) and z != (u, v) and x != u and z != w and x != v and y = v
+#pragma omp parallel for
+                for (size_t xu = 0; xu < na2 - na; ++xu) {
+                    size_t x = xu / (na - 1);
+                    size_t u = xu - x * (na - 1);
+                    u += (u < x ? 0 : 1);
+
+                    for (size_t zw = 0; zw < na2 - na; ++zw) {
+                        size_t z = zw / (na - 1);
+                        size_t w = zw - z * (na - 1);
+                        w += (w < z ? 0 : 1);
+
+                        for (size_t v = 0; v < na; ++v) {
+                            double factor = (v == x ? 0.0 : 1.0);
+
+                            double value = 0.0;
+                            for (size_t m = 0; m < nc; ++m) {
+                                value += H2c_data[u * nc * na2 + v * nc * na + m * na + z] *
+                                         T2c_data[m * na3 + w * na2 + x * na + v];
+                            }
+                            H2T2c_data[x * na4 + z * na3 + v * na2 + u * na + w] += value * factor;
+                        }
+                    }
+                }
+
+// w != (x, y) and z != (u, v) and x != u and z != w and x != v and y != v and y = u
+#pragma omp parallel for
+                for (size_t xu = 0; xu < na2 - na; ++xu) {
+                    size_t x = xu / (na - 1);
+                    size_t u = xu - x * (na - 1);
+                    u += (u < x ? 0 : 1);
+
+                    for (size_t zw = 0; zw < na2 - na; ++zw) {
+                        size_t z = zw / (na - 1);
+                        size_t w = zw - z * (na - 1);
+                        w += (w < z ? 0 : 1);
+
+                        for (size_t vy = 0; vy < na2 - na; ++vy) {
+                            size_t v = vy / (na - 1);
+                            size_t y = vy - v * (na - 1);
+                            y += (y < v ? 0 : 1);
+
+                            double factor = ((v != x && y == u) ? 1.0 : 0.0);
+                            double value = 0.0;
+                            for (size_t m = 0; m < nc; ++m) {
+                                value += H2c_data[u * nc * na2 + v * nc * na + m * na + z] *
+                                         T2c_data[m * na3 + w * na2 + x * na + u];
+                            }
+                            H2T2c_data[z * na4 + x * na3 + u * na2 + v * na + w] += value * factor;
+                        }
+                    }
+                }
+                double E3c_m2 = temp("xyzuv") * L3_2("xyzuv");
+                outfile->Printf("\n  E3c_m2 = %.15f", E3c_m2);
+
+                E3 -= E3c_t + E3c_h + E3c_m1 + E3c_m2;
             }
-
-            // => spin-free 1- and 2-cumulant contributions <=
-
-            // - virtual contraction
-            temp = ambit::BlockedTensor::build(tensor_type_, "temp_va", {"va"});
-            temp["ex"] = H2["ewxy"] * L1_["yw"];
-            temp["ex"] -= 0.5 * H2["ewyx"] * L1_["yw"];
-            E3v -= temp["ex"] * T2["uvez"] * G2["xzuv"];
-
-            temp["eu"] = 0.5 * S2["uvez"] * L1_["zv"];
-            E3v -= H2["ewxy"] * temp["eu"] * L2_["xyuw"];
-
-            temp = ambit::BlockedTensor::build(tensor_type_, "temp_vaaa", {"vaaa"});
-            temp["ewuy"] = H2["ewxy"] * L1_["xu"];
-            E3v -= 0.5 * temp["ewuy"] * S2["uvez"] * L2_["yzwv"];
-
-            temp["ewxu"] = H2["ewxy"] * L1_["yu"];
-            E3v += 0.5 * temp["ewxu"] * T2["uvez"] * L2_["xzwv"];
-            E3v += 0.5 * temp["ewxv"] * T2["uvez"] * L2_["xzuw"];
-
-            temp["ezxy"] = H2["ewxy"] * L1_["zw"];
-            E3v += 0.5 * temp["ezxy"] * T2["uvez"] * G2["xyuv"];
-
-            // - core contraction
-            temp = ambit::BlockedTensor::build(tensor_type_, "temp_ac", {"ac"});
-            temp["um"] = H2["uvmz"] * L1_["zv"];
-            temp["um"] -= 0.5 * H2["vumz"] * L1_["zv"];
-            E3c += temp["um"] * T2["mwxy"] * L2_["xyuw"];
-
-            temp["xm"] = S2["mwxy"] * L1_["yw"];
-            E3c += 0.5 * H2["uvmz"] * temp["xm"] * G2["xzuv"];
-
-            temp = ambit::BlockedTensor::build(tensor_type_, "temp_caaa", {"caaa"});
-            temp["mzxv"] = H2["uvmz"] * L1_["xu"];
-            E3c += 0.5 * temp["mzxv"] * S2["mwxy"] * L2_["yzwv"];
-
-            temp["mzuy"] = H2["uvmz"] * L1_["yv"];
-            E3c -= 0.5 * temp["mzuy"] * T2["mwxy"] * L2_["xzuw"];
-            E3c -= 0.5 * temp["mzux"] * T2["mwxy"] * L2_["yzwu"];
-
-            temp["mwuv"] = H2["uvmz"] * L1_["zw"];
-            E3c -= 0.5 * temp["mwuv"] * T2["mwxy"] * G2["xyuv"];
-
-            E3 += E3c + E3v;
         }
     }
 

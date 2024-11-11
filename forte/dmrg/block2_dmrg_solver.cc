@@ -183,6 +183,26 @@ struct Block2DMRGSolverImpl {
                                         true, max_bond_dim);
         }
     }
+    std::vector<std::shared_ptr<block2::GTensor<double>>>
+    get_npdm2(const std::vector<std::string>& exprs, std::shared_ptr<void> ket,
+              std::shared_ptr<void> bra, int site_type = 0, int iprint = 0,
+              block2::ExpectationAlgorithmTypes algo_type =
+                  block2::ExpectationAlgorithmTypes::SymbolFree |
+                  block2::ExpectationAlgorithmTypes::Compressed,
+              int max_bond_dim = -1,
+              const std::vector<uint16_t>& mask = std::vector<uint16_t>()) const {
+        if (is_spin_adapted_) {
+            auto ket_ = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
+            auto bra_ = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(bra);
+            return driver_su2_->get_npdm(exprs, ket_, bra_, site_type, algo_type, iprint, 1.0e-16,
+                                         true, max_bond_dim, mask);
+        } else {
+            auto ket_ = std::static_pointer_cast<block2::MPS<block2::SZ, double>>(ket);
+            auto bra_ = std::static_pointer_cast<block2::MPS<block2::SZ, double>>(bra);
+            return driver_sz_->get_npdm(exprs, ket_, bra_, site_type, algo_type, iprint, 1.0e-16,
+                                        true, max_bond_dim, mask);
+        }
+    }
     std::shared_ptr<void> split_mps(std::shared_ptr<void> ket, int nroot, int iroot,
                                     const std::string& tag) const {
         if (is_spin_adapted_) {
@@ -947,10 +967,172 @@ Block2DMRGSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& 
 
         if (print_ >= PrintLevel::Default && bra_tag == ket_tag)
             print_natural_orbitals(mo_space_info_, rdms.back());
+
+        // // test diagonal 3rdms
+        // if (max_rdm_level == 3) {
+        //     psi::outfile->Printf("\n 3 expr = %s", exprs[2].c_str());
+        //     std::vector<std::string> _exprs{exprs[2]};
+
+        //     std::vector<std::shared_ptr<block2::GTensor<double>>> _3rdm_1 = impl_->get_npdm2(
+        //         _exprs, ket, bra, 0, dmrg_verbose, rdm_algo_type, bond_dim, {0, 1, 2, 2, 3, 4});
+        //     std::vector<std::shared_ptr<block2::GTensor<double>>> _3rdm_2 = impl_->get_npdm2(
+        //         _exprs, ket, bra, 0, dmrg_verbose, rdm_algo_type, bond_dim, {0, 1, 2, 3, 2, 4});
+
+        //     auto raw = ambit::Tensor::build(ambit::CoreTensor, "DMRG G3_1",
+        //                                     std::vector<size_t>(5, n_sites));
+
+        //     std::memcpy(raw.data().data(), _3rdm_1[0]->data->data(),
+        //                 sizeof(double) * _3rdm_1[0]->size());
+        //     auto sf_3rdm1 = raw.clone();
+        //     sf_3rdm1("ijkab") = raw("ijkba");
+        //     sf_3rdm1.print();
+
+        //     std::memcpy(raw.data().data(), _3rdm_2[0]->data->data(),
+        //                 sizeof(double) * _3rdm_2[0]->size());
+        //     auto sf_3rdm2 = raw.clone();
+        //     sf_3rdm2("ijkab") = raw("ijkba");
+
+        //     auto D3 = rdms.back()->SF_G3();
+        //     auto& D3_data = D3.data();
+        //     auto d3_1 = ambit::Tensor::build(ambit::CoreTensor, "DMRG D3_1",
+        //                                      std::vector<size_t>(5, n_sites));
+        //     auto d3_2 = ambit::Tensor::build(ambit::CoreTensor, "DMRG D3_2",
+        //                                      std::vector<size_t>(5, n_sites));
+        //     auto na = n_sites;
+        //     auto na2 = na * na;
+        //     auto na3 = na * na2;
+        //     auto na4 = na * na3;
+        //     auto na5 = na * na4;
+        //     d3_1.iterate([&](const std::vector<size_t>& i, double& value) {
+        //         value =
+        //             D3_data[i[0] * na5 + i[1] * na4 + i[2] * na3 + i[3] * na2 + i[4] * na +
+        //             i[2]];
+        //     });
+        //     d3_1.print();
+        //     d3_2.iterate([&](const std::vector<size_t>& i, double& value) {
+        //         value =
+        //             D3_data[i[0] * na5 + i[1] * na4 + i[2] * na3 + i[3] * na2 + i[2] * na +
+        //             i[4]];
+        //     });
+
+        //     d3_1("ijkab") -= sf_3rdm1("ijkab");
+        //     d3_2("ijkab") -= sf_3rdm2("ijkab");
+        //     psi::outfile->Printf("\n  d3_1 diff norm = %20.15f", d3_1.norm());
+        //     psi::outfile->Printf("\n  d3_2 diff norm = %20.15f", d3_2.norm());
+        // }
     }
 
     impl_->set_num_threads(false);
     return rdms;
+}
+
+std::vector<std::vector<ambit::Tensor>>
+Block2DMRGSolver::three_rdms_diag1(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                   RDMsType type) {
+    return three_trdms_diag1(root_list, make_shared<Block2DMRGSolver>(*this), type);
+}
+
+std::vector<std::vector<ambit::Tensor>>
+Block2DMRGSolver::three_trdms_diag1(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                    std::shared_ptr<ActiveSpaceMethod> method2, RDMsType type) {
+    timer t("BLOCK2 Solver Compute 5-index Diagonal 3RDMs");
+
+    impl_->set_num_threads(true);
+
+    // system initialization
+    bool singlet_embedding = dmrg_options_->get_bool("BLOCK2_SINGLET_EMBEDDING");
+    std::vector<int> actv_irreps = mo_space_info_->symmetry("ACTIVE");
+    int n_sites = static_cast<int>(mo_space_info_->size("ACTIVE"));
+    int n_elec = na_ + nb_;
+    int spin = state_.multiplicity() - 1;
+    int pg_irrep = state_.irrep();
+    impl_->initialize_system(n_sites, n_elec, spin, pg_irrep, actv_irreps, singlet_embedding);
+
+    int dmrg_verbose = dmrg_options_->get_int("BLOCK2_VERBOSE");
+
+    std::vector<std::vector<ambit::Tensor>> out(root_list.size());
+
+    if (!impl_->is_spin_adapted_ or type != RDMsType::spin_free) {
+        throw std::runtime_error(
+            "Block2DMRGSolver::three_rdms_diag1 not implemented for spin-dependent 3-RDMs yet!");
+    }
+
+    // main loop
+    for (size_t ir = 0; ir < root_list.size(); ir++) {
+        const size_t iroot = root_list[ir].first;
+        const size_t jroot = root_list[ir].second;
+
+        // construct operator strings
+        std::vector<std::string> exprs;
+        exprs.push_back("((C+((C+(C+D)0)1+D)0)1+D)0");
+
+        // loading MPSs from disk
+        // both are called "KET" in the original solver
+        std::string bra_tag_sa = "KET@" + state().str_short();
+        std::string ket_tag_sa = "KET@" + method2->state().str_short();
+        std::string bra_tag =
+            "KET@" + block2::Parsing::to_string(iroot) + "@" + state().str_short() + "@TMP";
+        std::string ket_tag = "KET@" + block2::Parsing::to_string(jroot) + "@" +
+                              method2->state().str_short() + "@TMP";
+
+        std::string local_timer_name;
+        if (bra_tag == ket_tag)
+            local_timer_name = "Computing 5-index Diagonal 3-RDMs for Root No. " +
+                               block2::Parsing::to_string(iroot);
+        else
+            local_timer_name = "Computing 5-index Diagonal Transition 3-RDMs for Root No. " +
+                               block2::Parsing::to_string(iroot) + " <-- No. " +
+                               block2::Parsing::to_string(jroot);
+        timer lt(local_timer_name);
+
+        std::shared_ptr<void> bra, ket;
+        bra = impl_->split_mps(impl_->load_mps(bra_tag_sa, this->nroot()), this->nroot(), iroot,
+                               bra_tag);
+        if (bra_tag == ket_tag)
+            ket = bra;
+        else
+            ket = impl_->split_mps(impl_->load_mps(ket_tag_sa, method2->nroot()), method2->nroot(),
+                                   jroot, ket_tag);
+
+        // compute all rdms
+        int bond_dim = 500;
+        auto sweep_bond_dims = dmrg_options_->get_int_list("BLOCK2_SWEEP_BOND_DIMS");
+        if (sweep_bond_dims.size() != 0)
+            bond_dim = sweep_bond_dims.back();
+        auto rdm_algo_type = ((block2::ExpectationAlgorithmTypes::SymbolFree) |
+                              (block2::ExpectationAlgorithmTypes::Compressed));
+        if (dmrg_options_->get_bool("BLOCK2_RDM_LOW_MEM_ALG")) {
+            rdm_algo_type = ((block2::ExpectationAlgorithmTypes::SymbolFree) |
+                             (block2::ExpectationAlgorithmTypes::Compressed) |
+                             (block2::ExpectationAlgorithmTypes::LowMem));
+            bond_dim *= 2;
+        } else {
+            bond_dim = -1; // block2 default: exact
+        }
+
+        std::vector<std::shared_ptr<block2::GTensor<double>>> _3rdm_1 = impl_->get_npdm2(
+            exprs, ket, bra, 0, dmrg_verbose, rdm_algo_type, bond_dim, {0, 1, 2, 2, 3, 4});
+        std::vector<std::shared_ptr<block2::GTensor<double>>> _3rdm_2 = impl_->get_npdm2(
+            exprs, ket, bra, 0, dmrg_verbose, rdm_algo_type, bond_dim, {0, 1, 2, 3, 2, 4});
+
+        auto raw =
+            ambit::Tensor::build(ambit::CoreTensor, "DMRG G3_1", std::vector<size_t>(5, n_sites));
+
+        std::memcpy(raw.data().data(), _3rdm_1[0]->data->data(),
+                    sizeof(double) * _3rdm_1[0]->size());
+        auto sf_3rdm1 = raw.clone();
+        sf_3rdm1("ijkab") = raw("ijkba");
+
+        std::memcpy(raw.data().data(), _3rdm_2[0]->data->data(),
+                    sizeof(double) * _3rdm_2[0]->size());
+        auto sf_3rdm2 = raw.clone();
+        sf_3rdm2("ijkab") = raw("ijkba");
+
+        out[ir] = {sf_3rdm1, sf_3rdm2};
+    }
+
+    impl_->set_num_threads(false);
+    return out;
 }
 
 std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(

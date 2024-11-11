@@ -72,6 +72,9 @@ class SADSRG : public DynamicCorrelationSolver {
     /// If the amplitudes are converged or not
     bool converged() { return converged_; }
 
+    /// Set the diagonal 3-cumulants
+    void set_L3d(ambit::Tensor& L3d1, ambit::Tensor& L3d2);
+
   protected:
     /// Startup function called in constructor
     void startup();
@@ -247,6 +250,10 @@ class SADSRG : public DynamicCorrelationSolver {
     ambit::BlockedTensor L2_;
     /// Three-body density cumulant
     ambit::Tensor L3_;
+    /// Diagonal 3-cumulant of 1st kind
+    ambit::Tensor L3d1_;
+    /// Diagonal 3-cumulant of 2nd kind
+    ambit::Tensor L3d2_;
 
     // ==> Fock matrix related <==
 

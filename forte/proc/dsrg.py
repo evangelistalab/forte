@@ -70,14 +70,15 @@ class ProcedureDSRG:
             self.relax_ref = "NONE"
 
         self.max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
-        if options.get_str("DSRG_3RDM_ALGORITHM") == "DIRECT":
+        if options.get_str("DSRG_CU3") != "EXPLICIT":
             as_type = options.get_str("ACTIVE_SPACE_SOLVER")
             if as_type == "BLOCK2" and self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
                 self.max_rdm_level = 2
             else:
-                psi4.core.print_out("\n  DSRG 3RDM direct algorithm only available for BLOCK2/SA-MRDSRG")
-                psi4.core.print_out("\n  Set DSRG_3RDM_ALGORITHM to 'EXPLICIT' (default)")
-                options.set_str("DSRG_3RDM_ALGORITHM", "EXPLICIT")
+                dsrg_cu3 = options.get_str("DSRG_CU3")
+                psi4.core.print_out(f"\n  DSRG_CU3 {dsrg_cu3} algorithm only available for BLOCK2/SA-MRDSRG")
+                psi4.core.print_out("\n  Set DSRG_CU3 to 'EXPLICIT' (default)")
+                options.set_str("DSRG_CU3", "EXPLICIT")
 
         self.relax_convergence = float("inf")
         self.e_convergence = options.get_double("E_CONVERGENCE")

@@ -1234,11 +1234,11 @@ DSRG:
     default: "PT2"
     choices: ["PT2", "ZERO"]
     help: "The initial guess of T1 amplitudes for nonperturbative DSRG methods"
-  DSRG_3RDM_ALGORITHM:
+  DSRG_CU3:
     type: str
     default: "EXPLICIT"
-    choices: ["EXPLICIT", "DIRECT"]
-    help: "Algorithm to compute 3-RDM contributions in fully contracted [H2, T2]"
+    choices: ["EXPLICIT", "DIRECT", "APPROX"]
+    help: "Algorithm to compute 3-cumulant contributions in fully contracted [H2, T2]"
   DSRG_3RDM_BLOCK2_CPS_BOND_DIMENSION:
     type: int
     default: 1000

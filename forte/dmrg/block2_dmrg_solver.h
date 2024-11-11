@@ -95,8 +95,6 @@ class Block2DMRGSolver : public ActiveSpaceMethod {
     void print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info,
                                 std::shared_ptr<RDMs> rdms);
 
-    /// Compute the overlap of two wave functions acted by complementary operators
-    /// Return a map from state to roots of values
     /// Computes the overlap of \sum_{p} \sum_{σ} <Ψ| h^+_{pσ} (v) h_{pσ} (t) |Ψ>, where
     /// h_{pσ} (t) = \sum_{uvw} t_{pw}^{uv} \sum_{τ} w^+_{τ} v_{τ} u_{σ}
     /// Useful to get the 3-RDM contribution of fully contracted term of two 2-body operators:
@@ -112,6 +110,23 @@ class Block2DMRGSolver : public ActiveSpaceMethod {
                                                             const std::vector<int>& p_syms,
                                                             const std::string& name,
                                                             bool load = false) override;
+
+    /// Compute the 5-index diagonal parts of the 3-RDMs
+    /// Return a vector of the 5-index diagonal 3RDMs in ambit::Tensor format
+    /// For the spin-free case, this function returns two elements:
+    /// The first is D3_1("xyzuv") = < x^+ y^+ z^+ z v u > and
+    /// the second is D3_2("xyzuv") = < x^+ y^+ z^+ v z u >.
+    /// For the spin-dependent case, this function is not yet implemented.
+    /// @param root_list  a list of pairs of roots to compute [(bra1, ket1), (bra2, ket2), ...]
+    /// @param type       the RDM type
+    /// @return a vector (number of roots pairs) of the vector of the 5-index diagonal 3RDMs
+    std::vector<std::vector<ambit::Tensor>>
+    three_rdms_diag1(const std::vector<std::pair<size_t, size_t>>& root_list,
+                     RDMsType type) override;
+
+    std::vector<std::vector<ambit::Tensor>>
+    three_trdms_diag1(const std::vector<std::pair<size_t, size_t>>& root_list,
+                      std::shared_ptr<ActiveSpaceMethod> method2, RDMsType type);
 
     /// Dump MPS to the current working directory
     void dump_wave_function(const std::string&) override;

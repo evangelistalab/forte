@@ -228,6 +228,97 @@ ambit::Tensor RDMs::SF_L3() const {
     return L3;
 }
 
+std::vector<ambit::Tensor> RDMs::SF_L3d(const std::vector<ambit::Tensor>& SF_G3d) const {
+    // L3_1(pqrst) = L^{pqr}_{str}
+    _test_rdm_level(2, "SF_L3d");
+    timer t("make_cumulant_L3d");
+
+    auto G1 = SF_G1();
+    auto G2 = SF_G2();
+
+    auto na = n_orbs_;
+    auto na2 = na * na;
+    auto na3 = na * na2;
+
+    auto G1d = ambit::Tensor::build(ambit::CoreTensor, "G1d", {na});
+    for (size_t i = 0; i < na; ++i) {
+        G1d.data()[i] = G1.data()[i * na + i];
+    }
+
+    auto G2d = ambit::Tensor::build(ambit::CoreTensor, "G2d pqrq->pqr", {na, na, na});
+#pragma omp parallel for
+    for (size_t i = 0; i < na2; ++i) {
+        size_t p = i / na;
+        size_t q = i % na;
+        double* x_ptr = &(G2.data()[p * na3 + q * na2 + q]);
+        double* y_ptr = &(G2d.data()[p * na2 + q * na]);
+        psi::C_DCOPY(na, x_ptr, na, y_ptr, 1);
+    }
+
+    auto L3d_1 = SF_G3d[0].clone();
+    L3d_1.set_name("SF_L3d_1");
+
+    L3d_1("pqrst") -= G1("ps") * G2d("qrt");
+    L3d_1("pqrst") -= G1("qt") * G2d("prs");
+    L3d_1("pqrst") -= G1d("r") * G2("pqst");
+
+    L3d_1("pqrst") += 0.5 * G1("pt") * G2d("qrs");
+    L3d_1("pqrst") += 0.5 * G1("pr") * G2("qrts");
+
+    L3d_1("pqrst") += 0.5 * G1("qs") * G2d("prt");
+    L3d_1("pqrst") += 0.5 * G1("qr") * G2("prst");
+
+    L3d_1("pqrst") += 0.5 * G1("rs") * G2("pqrt");
+    L3d_1("pqrst") += 0.5 * G1("rt") * G2("pqsr");
+
+    L3d_1("pqrst") += 2.0 * G1("ps") * G1("qt") * G1d("r");
+
+    L3d_1("pqrst") -= G1("ps") * G1("qr") * G1("rt");
+    L3d_1("pqrst") -= G1("pr") * G1("qt") * G1("rs");
+    L3d_1("pqrst") -= G1("pt") * G1("qs") * G1d("r");
+
+    L3d_1("pqrst") += 0.5 * G1("pt") * G1("qr") * G1("rs");
+    L3d_1("pqrst") += 0.5 * G1("pr") * G1("qs") * G1("rt");
+
+    auto L3d_2 = SF_G3d[1].clone();
+    L3d_2.set_name("SF_L3d_2");
+
+    L3d_2("pqrsu") += 0.5 * G1("qu") * G2d("prs");
+
+    G2d.set_name("G2d pqqr->pqr");
+#pragma omp parallel for
+    for (size_t i = 0; i < na2; ++i) {
+        size_t p = i / na;
+        size_t q = i % na;
+        double* x_ptr = &(G2.data()[p * na3 + q * na2 + q * na]);
+        double* y_ptr = &(G2d.data()[p * na2 + q * na]);
+        psi::C_DCOPY(na, x_ptr, 1, y_ptr, 1);
+    }
+
+    L3d_2("pqrsu") -= G1("ps") * G2d("qru");
+    L3d_2("pqrsu") -= G1("qr") * G2("prsu");
+    L3d_2("pqrsu") -= G1("ru") * G2("pqsr");
+
+    L3d_2("pqrsu") += 0.5 * G1("pr") * G2("qrsu");
+    L3d_2("pqrsu") += 0.5 * G1("pu") * G2d("qrs");
+
+    L3d_2("pqrsu") += 0.5 * G1("qs") * G2d("pru");
+
+    L3d_2("pqrsu") += 0.5 * G1("rs") * G2("pqur");
+    L3d_2("pqrsu") += 0.5 * G1d("r") * G2("pqsu");
+
+    L3d_2("pqrsu") += 2.0 * G1("ps") * G1("qr") * G1("ru");
+
+    L3d_2("pqrsu") -= G1("ps") * G1("qu") * G1d("r");
+    L3d_2("pqrsu") -= G1("pu") * G1("qr") * G1("rs");
+    L3d_2("pqrsu") -= G1("pr") * G1("qs") * G1("ru");
+
+    L3d_2("pqrsu") += 0.5 * G1("pr") * G1("qu") * G1("rs");
+    L3d_2("pqrsu") += 0.5 * G1("pu") * G1("qs") * G1d("r");
+
+    return {L3d_1, L3d_2};
+}
+
 ambit::Tensor RDMs::make_cumulant_L2aa(const ambit::Tensor& g1a, const ambit::Tensor& g2aa) {
     timer t("make_cumulant_L2aa");
     auto L2aa = g2aa.clone();

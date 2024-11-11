@@ -697,7 +697,8 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
 
     // make a StateInfo object using the information
     // TODO: need to optimize for spin-free RDMs
-    auto state = make_state_info_from_options(options, mo_space_info->point_group_label()); // assumes low-spin
+    auto state = make_state_info_from_options(
+        options, mo_space_info->point_group_label()); // assumes low-spin
 
     // check if the user provided a AVG_STATE list
     py::list avg_state = options->get_gen_list("AVG_STATE");
@@ -902,6 +903,34 @@ std::shared_ptr<RDMs> ActiveSpaceSolver::compute_average_rdms(
     }
 
     return rdms;
+}
+
+std::vector<ambit::Tensor> ActiveSpaceSolver::compute_average_3rdms_diag1(
+    const std::map<StateInfo, std::vector<double>>& state_weights_map, RDMsType rdm_type) {
+    std::vector<ambit::Tensor> out;
+    for (const auto& [state, nroot] : state_nroots_map_) {
+        const auto& weights = state_weights_map.at(state);
+        const auto& method = state_method_map_.at(state);
+        for (size_t r = 0; r < nroot; r++) {
+            if (weights[r] <= 1e-15)
+                continue;
+            std::vector<std::pair<size_t, size_t>> state_ids{{r, r}};
+            auto _3rdms_diag = method->three_rdms_diag1(state_ids, rdm_type)[0];
+            auto n = _3rdms_diag.size();
+            if (out.empty()) {
+                out.resize(n);
+                for (size_t i = 0; i < n; i++) {
+                    out[i] = _3rdms_diag[i].clone();
+                    out[i].scale(weights[r]);
+                }
+            } else {
+                for (size_t i = 0; i < n; i++) {
+                    out[i]("xyzuv") += weights[r] * _3rdms_diag[i]("xyzuv");
+                }
+            }
+        }
+    }
+    return out;
 }
 
 std::map<StateInfo, std::vector<double>>

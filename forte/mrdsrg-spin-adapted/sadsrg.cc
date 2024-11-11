@@ -191,7 +191,7 @@ void SADSRG::read_options() {
     ccvv_source_ = foptions_->get_str("CCVV_SOURCE");
 
     do_cu3_ = foptions_->get_str("THREEPDC") != "ZERO";
-    L3_algorithm_ = foptions_->get_str("DSRG_3RDM_ALGORITHM");
+    L3_algorithm_ = foptions_->get_str("DSRG_CU3");
     store_cu3_ = do_cu3_ and (L3_algorithm_ == "EXPLICIT");
 
     ntamp_ = foptions_->get_int("NTAMP");
@@ -721,6 +721,11 @@ ambit::BlockedTensor SADSRG::deGNO_Tamp(BlockedTensor& T1, BlockedTensor& T2, Bl
 void SADSRG::set_Uactv(ambit::Tensor& U) {
     Uactv_ = BTF_->build(tensor_type_, "Uactv", {"aa"});
     Uactv_.block("aa")("pq") = U("pq");
+}
+
+void SADSRG::set_L3d(ambit::Tensor& L3d1, ambit::Tensor& L3d2) {
+    L3d1_ = L3d1;
+    L3d2_ = L3d2;
 }
 
 void SADSRG::rotate_one_ints_to_original(BlockedTensor& H1) {

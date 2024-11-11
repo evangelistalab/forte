@@ -124,7 +124,7 @@ class RDMs {
                                                  const std::string& filename_prefix = "");
 
     /// Default desctructor
-    virtual ~RDMs(){};
+    virtual ~RDMs() {};
 
     /// @return the max RDM level
     size_t max_rdm_level() const { return max_rdm_; }
@@ -245,6 +245,8 @@ class RDMs {
     ambit::Tensor SF_L2() const;
     /// @return the spin-free 3-cumulant
     ambit::Tensor SF_L3() const;
+    /// @return the 5-index diagonal spin-free 3-cumulant
+    std::vector<ambit::Tensor> SF_L3d(const std::vector<ambit::Tensor>& SF_G3d) const;
 
   protected:
     // ==> Class Data <==

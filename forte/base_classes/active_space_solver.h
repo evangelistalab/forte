@@ -145,6 +145,16 @@ class ActiveSpaceSolver {
     compute_average_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
                          int max_rdm_level, RDMsType rdm_type);
 
+    /// Compute the diagonal parts of the state-averaged 3-RDMs
+    /// Return a vector of the 5-index diagonal 3RDMs in ambit::Tensor format
+    /// For the spin-free case, this function returns two elements:
+    /// The first is D3_1("xyzuv") = < x^+ y^+ z^+ z v u > and
+    /// the second is D3_2("xyzuv") = < x^+ y^+ z^+ v z u >.
+    /// For the spin-dependent case, this function is not yet implemented.
+    std::vector<ambit::Tensor>
+    compute_average_3rdms_diag1(const std::map<StateInfo, std::vector<double>>& state_weights_map,
+                                RDMsType rdm_type);
+
     /// Compute the overlap of two wave functions acted by complementary operators
     /// Return a map from state to roots of values
     /// Computes the overlap <Ψ(N-1)|Ψ'(N-1)>, where the (N-1)-electron wave function is given by
@@ -280,7 +290,7 @@ class ActiveSpaceSolver {
     /// Pairs of state info and the contracted CI eigen vectors
     std::map<StateInfo, std::shared_ptr<psi::Matrix>>
         state_contracted_evecs_map_; // TODO move outside?
-};                                   // namespace forte
+}; // namespace forte
 
 /**
  * @brief Make an active space solver object.
