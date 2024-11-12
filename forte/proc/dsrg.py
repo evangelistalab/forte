@@ -79,6 +79,7 @@ class ProcedureDSRG:
                 psi4.core.print_out(f"\n  DSRG_CU3 {dsrg_cu3} algorithm only available for BLOCK2/SA-MRDSRG")
                 psi4.core.print_out("\n  Set DSRG_CU3 to 'EXPLICIT' (default)")
                 options.set_str("DSRG_CU3", "EXPLICIT")
+        self.cu3_approx = (options.get_str("DSRG_CU3") == "APPROX")
 
         self.relax_convergence = float("inf")
         self.e_convergence = options.get_double("E_CONVERGENCE")
@@ -148,7 +149,8 @@ class ProcedureDSRG:
         self.energies_environment = {}  # energies pushed to Psi4 environment globals
 
         # Compute RDMs from initial ActiveSpaceSolver
-        self.rdms = active_space_solver.compute_average_rdms(state_weights_map, self.max_rdm_level, self.rdm_type)
+        self.rdms = active_space_solver.compute_average_rdms(state_weights_map, self.max_rdm_level, self.rdm_type,
+                                                             self.cu3_approx)
 
         # Save a copy CI vectors
         try:
@@ -329,7 +331,7 @@ class ProcedureDSRG:
             # Compute relaxed dipole
             if self.do_dipole:
                 self.rdms = self.active_space_solver.compute_average_rdms(
-                    self.state_weights_map, self.max_rdm_level, self.rdm_type
+                    self.state_weights_map, self.max_rdm_level, self.rdm_type, self.cu3_approx
                 )
                 dm_u = ProcedureDSRG.grab_dipole_unrelaxed()
                 dm_r = self.compute_dipole_relaxed()
@@ -350,7 +352,7 @@ class ProcedureDSRG:
             #   These RDMs are computed in the original basis
             if self.do_multi_state or (not self.do_dipole):
                 self.rdms = self.active_space_solver.compute_average_rdms(
-                    self.state_weights_map, self.max_rdm_level, self.rdm_type
+                    self.state_weights_map, self.max_rdm_level, self.rdm_type, self.cu3_approx
                 )
 
             # - Transform RDMs to the semi-canonical basis used in the last step (stored in self.Ua/self.Ub)

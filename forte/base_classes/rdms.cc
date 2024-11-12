@@ -158,6 +158,10 @@ std::shared_ptr<RDMs> RDMs::build_from_disk(size_t max_rdm_level, RDMsType type,
     return rdms;
 }
 
+bool RDMs::diag_rdm_available(size_t diag_rdm_level) const {
+    return diag_rdm_levels_.find(diag_rdm_level) != diag_rdm_levels_.end();
+}
+
 void RDMs::save_SF_G1(const std::string& filename) {
     auto d1 = SF_G1mat();
     d1->save(filename, false, false, true);
@@ -228,9 +232,11 @@ ambit::Tensor RDMs::SF_L3() const {
     return L3;
 }
 
-std::vector<ambit::Tensor> RDMs::SF_L3d(const std::vector<ambit::Tensor>& SF_G3d) const {
+std::vector<ambit::Tensor> RDMs::SF_L3d() const {
     // L3_1(pqrst) = L^{pqr}_{str}
+    // L3_2(pqrsu) = L^{pqr}_{sru}
     _test_rdm_level(2, "SF_L3d");
+    _test_diag_rdm_level(3, "SF_L3d");
     timer t("make_cumulant_L3d");
 
     auto G1 = SF_G1();
@@ -248,75 +254,73 @@ std::vector<ambit::Tensor> RDMs::SF_L3d(const std::vector<ambit::Tensor>& SF_G3d
     auto G2d = ambit::Tensor::build(ambit::CoreTensor, "G2d pqrq->pqr", {na, na, na});
 #pragma omp parallel for
     for (size_t i = 0; i < na2; ++i) {
-        size_t p = i / na;
-        size_t q = i % na;
+        size_t p = i / na, q = i % na;
         double* x_ptr = &(G2.data()[p * na3 + q * na2 + q]);
         double* y_ptr = &(G2d.data()[p * na2 + q * na]);
         psi::C_DCOPY(na, x_ptr, na, y_ptr, 1);
     }
 
-    auto L3d_1 = SF_G3d[0].clone();
-    L3d_1.set_name("SF_L3d_1");
+    auto L3d1 = SF_G3d1().clone();
+    L3d1.set_name("SF_L3d1");
 
-    L3d_1("pqrst") -= G1("ps") * G2d("qrt");
-    L3d_1("pqrst") -= G1("qt") * G2d("prs");
-    L3d_1("pqrst") -= G1d("r") * G2("pqst");
+    L3d1("pqrst") -= G1("ps") * G2d("qrt");
+    L3d1("pqrst") -= G1("qt") * G2d("prs");
+    L3d1("pqrst") -= G1d("r") * G2("pqst");
 
-    L3d_1("pqrst") += 0.5 * G1("pt") * G2d("qrs");
-    L3d_1("pqrst") += 0.5 * G1("pr") * G2("qrts");
+    L3d1("pqrst") += 0.5 * G1("pt") * G2d("qrs");
+    L3d1("pqrst") += 0.5 * G1("pr") * G2("qrts");
 
-    L3d_1("pqrst") += 0.5 * G1("qs") * G2d("prt");
-    L3d_1("pqrst") += 0.5 * G1("qr") * G2("prst");
+    L3d1("pqrst") += 0.5 * G1("qs") * G2d("prt");
+    L3d1("pqrst") += 0.5 * G1("qr") * G2("prst");
 
-    L3d_1("pqrst") += 0.5 * G1("rs") * G2("pqrt");
-    L3d_1("pqrst") += 0.5 * G1("rt") * G2("pqsr");
+    L3d1("pqrst") += 0.5 * G1("rs") * G2("pqrt");
+    L3d1("pqrst") += 0.5 * G1("rt") * G2("pqsr");
 
-    L3d_1("pqrst") += 2.0 * G1("ps") * G1("qt") * G1d("r");
+    L3d1("pqrst") += 2.0 * G1("ps") * G1("qt") * G1d("r");
 
-    L3d_1("pqrst") -= G1("ps") * G1("qr") * G1("rt");
-    L3d_1("pqrst") -= G1("pr") * G1("qt") * G1("rs");
-    L3d_1("pqrst") -= G1("pt") * G1("qs") * G1d("r");
+    L3d1("pqrst") -= G1("ps") * G1("qr") * G1("rt");
+    L3d1("pqrst") -= G1("pr") * G1("qt") * G1("rs");
+    L3d1("pqrst") -= G1("pt") * G1("qs") * G1d("r");
 
-    L3d_1("pqrst") += 0.5 * G1("pt") * G1("qr") * G1("rs");
-    L3d_1("pqrst") += 0.5 * G1("pr") * G1("qs") * G1("rt");
+    L3d1("pqrst") += 0.5 * G1("pt") * G1("qr") * G1("rs");
+    L3d1("pqrst") += 0.5 * G1("pr") * G1("qs") * G1("rt");
 
-    auto L3d_2 = SF_G3d[1].clone();
-    L3d_2.set_name("SF_L3d_2");
+    auto L3d2 = SF_G3d2().clone();
+    L3d2.set_name("SF_L3d2");
 
-    L3d_2("pqrsu") += 0.5 * G1("qu") * G2d("prs");
+    L3d2("pqrsu") += 0.5 * G1("qu") * G2d("prs");
 
     G2d.set_name("G2d pqqr->pqr");
 #pragma omp parallel for
     for (size_t i = 0; i < na2; ++i) {
-        size_t p = i / na;
-        size_t q = i % na;
+        size_t p = i / na, q = i % na;
         double* x_ptr = &(G2.data()[p * na3 + q * na2 + q * na]);
         double* y_ptr = &(G2d.data()[p * na2 + q * na]);
         psi::C_DCOPY(na, x_ptr, 1, y_ptr, 1);
     }
 
-    L3d_2("pqrsu") -= G1("ps") * G2d("qru");
-    L3d_2("pqrsu") -= G1("qr") * G2("prsu");
-    L3d_2("pqrsu") -= G1("ru") * G2("pqsr");
+    L3d2("pqrsu") -= G1("ps") * G2d("qru");
+    L3d2("pqrsu") -= G1("qr") * G2("prsu");
+    L3d2("pqrsu") -= G1("ru") * G2("pqsr");
 
-    L3d_2("pqrsu") += 0.5 * G1("pr") * G2("qrsu");
-    L3d_2("pqrsu") += 0.5 * G1("pu") * G2d("qrs");
+    L3d2("pqrsu") += 0.5 * G1("pr") * G2("qrsu");
+    L3d2("pqrsu") += 0.5 * G1("pu") * G2d("qrs");
 
-    L3d_2("pqrsu") += 0.5 * G1("qs") * G2d("pru");
+    L3d2("pqrsu") += 0.5 * G1("qs") * G2d("pru");
 
-    L3d_2("pqrsu") += 0.5 * G1("rs") * G2("pqur");
-    L3d_2("pqrsu") += 0.5 * G1d("r") * G2("pqsu");
+    L3d2("pqrsu") += 0.5 * G1("rs") * G2("pqur");
+    L3d2("pqrsu") += 0.5 * G1d("r") * G2("pqsu");
 
-    L3d_2("pqrsu") += 2.0 * G1("ps") * G1("qr") * G1("ru");
+    L3d2("pqrsu") += 2.0 * G1("ps") * G1("qr") * G1("ru");
 
-    L3d_2("pqrsu") -= G1("ps") * G1("qu") * G1d("r");
-    L3d_2("pqrsu") -= G1("pu") * G1("qr") * G1("rs");
-    L3d_2("pqrsu") -= G1("pr") * G1("qs") * G1("ru");
+    L3d2("pqrsu") -= G1("ps") * G1("qu") * G1d("r");
+    L3d2("pqrsu") -= G1("pu") * G1("qr") * G1("rs");
+    L3d2("pqrsu") -= G1("pr") * G1("qs") * G1("ru");
 
-    L3d_2("pqrsu") += 0.5 * G1("pr") * G1("qu") * G1("rs");
-    L3d_2("pqrsu") += 0.5 * G1("pu") * G1("qs") * G1d("r");
+    L3d2("pqrsu") += 0.5 * G1("pr") * G1("qu") * G1("rs");
+    L3d2("pqrsu") += 0.5 * G1("pu") * G1("qs") * G1d("r");
 
-    return {L3d_1, L3d_2};
+    return {L3d1, L3d2};
 }
 
 ambit::Tensor RDMs::make_cumulant_L2aa(const ambit::Tensor& g1a, const ambit::Tensor& g2aa) {
@@ -449,6 +453,14 @@ void RDMs::_test_rdm_level(const size_t& level, const std::string& name) const {
     if (level > max_rdm_) {
         std::string msg = "Impossible to build " + name;
         msg += ": max RDM level is " + std::to_string(max_rdm_);
+        throw std::runtime_error(msg);
+    }
+}
+
+void RDMs::_test_diag_rdm_level(const size_t& level, const std::string& name) const {
+    if (!diag_rdm_available(level)) {
+        std::string msg = "Impossible to build " + name;
+        msg += ": diagonal " + std::to_string(level) + "RDM is not available!";
         throw std::runtime_error(msg);
     }
 }
@@ -615,6 +627,16 @@ ambit::Tensor RDMsSpinDependent::SF_G3() const {
     G3.set_name("SF_G3");
     return G3;
 }
+ambit::Tensor RDMsSpinDependent::SF_G3d1() const {
+    _test_rdm_level(2, "SF_G3d1");
+    _test_diag_rdm_level(3, "SF_G3d1");
+    std::runtime_error("RDMsSpinDependent::SF_G3d1 not implemented!");
+}
+ambit::Tensor RDMsSpinDependent::SF_G3d2() const {
+    _test_rdm_level(2, "SF_G3d2");
+    _test_diag_rdm_level(3, "SF_G3d2");
+    std::runtime_error("RDMsSpinDependent::SF_G3d2 not implemented!");
+}
 ambit::Tensor RDMsSpinDependent::L1a() const {
     auto L1a = g1a();
     L1a.set_name("L1a");
@@ -688,15 +710,16 @@ std::shared_ptr<RDMs> RDMsSpinDependent::clone() {
 
     std::shared_ptr<RDMs> rdms;
 
-    if (max_rdm_ < 1)
+    if (max_rdm_ < 1) {
         rdms = std::make_shared<RDMsSpinDependent>();
-    else if (max_rdm_ == 1)
+    } else if (max_rdm_ == 1) {
         rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b);
-    else if (max_rdm_ == 2)
+    } else if (max_rdm_ == 2) {
         rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb);
-    else
+    } else {
         rdms = std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb,
                                                    g3bbb);
+    }
 
     return rdms;
 }
@@ -825,6 +848,10 @@ void RDMsSpinDependent::dump_to_disk(const std::string& filename_prefix) const {
     }
 }
 
+void RDMsSpinDependent::set_g3d(const std::vector<ambit::Tensor>&) {
+    std::runtime_error("RDMsSpinDependent::set_g3d not implemented!");
+}
+
 RDMsSpinFree::RDMsSpinFree() {
     max_rdm_ = 0;
     type_ = RDMsType::spin_free;
@@ -867,6 +894,16 @@ ambit::Tensor RDMsSpinFree::SF_G2() const {
 ambit::Tensor RDMsSpinFree::SF_G3() const {
     _test_rdm_level(3, "SF_G3");
     return SF_G3_;
+}
+ambit::Tensor RDMsSpinFree::SF_G3d1() const {
+    _test_rdm_level(2, "SF_G3d1");
+    _test_diag_rdm_level(3, "SF_G3d1");
+    return SF_G3d1_;
+}
+ambit::Tensor RDMsSpinFree::SF_G3d2() const {
+    _test_rdm_level(2, "SF_G3d2");
+    _test_diag_rdm_level(3, "SF_G3d2");
+    return SF_G3d2_;
 }
 ambit::Tensor RDMsSpinFree::g1a() const {
     _test_rdm_level(1, "g1a");
@@ -988,14 +1025,18 @@ std::shared_ptr<RDMs> RDMsSpinFree::clone() {
 
     std::shared_ptr<RDMs> rdms;
 
-    if (max_rdm_ < 1)
+    if (max_rdm_ < 1) {
         rdms = std::make_shared<RDMsSpinFree>();
-    else if (max_rdm_ == 1)
+    } else if (max_rdm_ == 1) {
         rdms = std::make_shared<RDMsSpinFree>(g1);
-    else if (max_rdm_ == 2)
+    } else if (max_rdm_ == 2) {
         rdms = std::make_shared<RDMsSpinFree>(g1, g2);
-    else
+        if (diag_rdm_available(3)) {
+            rdms->set_g3d({SF_G3d1_.clone(), SF_G3d2_.clone()});
+        }
+    } else {
         rdms = std::make_shared<RDMsSpinFree>(g1, g2, g3);
+    }
 
     return rdms;
 }
@@ -1003,8 +1044,13 @@ std::shared_ptr<RDMs> RDMsSpinFree::clone() {
 void RDMsSpinFree::scale(double factor) {
     if (max_rdm_ > 0)
         SF_G1_.scale(factor);
-    if (max_rdm_ > 1)
+    if (max_rdm_ > 1) {
         SF_G2_.scale(factor);
+        if (diag_rdm_available(3)) {
+            SF_G3d1_.scale(factor);
+            SF_G3d2_.scale(factor);
+        }
+    }
     if (max_rdm_ > 2)
         SF_G3_.scale(factor);
 }
@@ -1019,8 +1065,13 @@ void RDMsSpinFree::axpy(std::shared_ptr<RDMs> rhs, double a) {
 
     if (max_rdm_ > 0)
         SF_G1_("pq") += a * rhs->SF_G1()("pq");
-    if (max_rdm_ > 1)
+    if (max_rdm_ > 1) {
         SF_G2_("pqrs") += a * rhs->SF_G2()("pqrs");
+        if (diag_rdm_available(3) and rhs->diag_rdm_available(3)) {
+            SF_G3d1_("pqrst") += a * rhs->SF_G3d1()("pqrst");
+            SF_G3d2_("pqrst") += a * rhs->SF_G3d2()("pqrst");
+        }
+    }
     if (max_rdm_ > 2)
         SF_G3_("pqrstu") += a * rhs->SF_G3()("pqrstu");
 }
@@ -1052,6 +1103,16 @@ void RDMsSpinFree::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
     g2T("pqrs") = Ua("ap") * Ua("bq") * SF_G2_("abcd") * Ua("cr") * Ua("ds");
     SF_G2_("pqrs") = g2T("pqrs");
     psi::outfile->Printf("\n    Transformed 2 RDMs.");
+
+    if (diag_rdm_available(3)) {
+        auto g3dT = ambit::Tensor::build(ambit::CoreTensor, "g3dT", SF_G3d1_.dims());
+        g3dT("pqrst") = Ua("ap") * Ua("bq") * Ua("cr") * SF_G3d1_("abcij") * Ua("is") * Ua("jt");
+        SF_G3d1_("pqrst") = g3dT("pqrst");
+        g3dT("pqrsu") = Ua("ap") * Ua("bq") * Ua("cr") * SF_G3d2_("abcik") * Ua("is") * Ua("ku");
+        SF_G3d2_("pqrst") = g3dT("pqrst");
+        psi::outfile->Printf("\n    Transformed diagonal 3 RDMs.");
+    }
+
     if (max_rdm_ == 2)
         return;
 
@@ -1071,9 +1132,24 @@ void RDMsSpinFree::dump_to_disk(const std::string& filename_prefix) const {
     }
     if (max_rdm_ > 1) {
         ambit::save(SF_G2_, prefix + "g2.bin");
+        if (diag_rdm_available(3)) {
+            ambit::save(SF_G3d1_, prefix + "g3d1.bin");
+            ambit::save(SF_G3d2_, prefix + "g3d2.bin");
+        }
     }
     if (max_rdm_ > 2) {
         ambit::save(SF_G3_, prefix + "g3.bin");
     }
+}
+
+void RDMsSpinFree::set_g3d(const std::vector<ambit::Tensor>& g3d) {
+    if (g3d.size() != 2)
+        throw std::runtime_error("Invalid size of G3d: expect " + std::to_string(2) + ", observe " +
+                                 std::to_string(g3d.size()));
+    _test_rdm_dims(g3d[0], "g3d1", 5);
+    _test_rdm_dims(g3d[1], "g3d2", 5);
+    diag_rdm_levels_.insert(3);
+    SF_G3d1_ = g3d[0];
+    SF_G3d2_ = g3d[1];
 }
 } // namespace forte

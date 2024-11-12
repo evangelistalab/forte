@@ -967,59 +967,6 @@ Block2DMRGSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& 
 
         if (print_ >= PrintLevel::Default && bra_tag == ket_tag)
             print_natural_orbitals(mo_space_info_, rdms.back());
-
-        // // test diagonal 3rdms
-        // if (max_rdm_level == 3) {
-        //     psi::outfile->Printf("\n 3 expr = %s", exprs[2].c_str());
-        //     std::vector<std::string> _exprs{exprs[2]};
-
-        //     std::vector<std::shared_ptr<block2::GTensor<double>>> _3rdm_1 = impl_->get_npdm2(
-        //         _exprs, ket, bra, 0, dmrg_verbose, rdm_algo_type, bond_dim, {0, 1, 2, 2, 3, 4});
-        //     std::vector<std::shared_ptr<block2::GTensor<double>>> _3rdm_2 = impl_->get_npdm2(
-        //         _exprs, ket, bra, 0, dmrg_verbose, rdm_algo_type, bond_dim, {0, 1, 2, 3, 2, 4});
-
-        //     auto raw = ambit::Tensor::build(ambit::CoreTensor, "DMRG G3_1",
-        //                                     std::vector<size_t>(5, n_sites));
-
-        //     std::memcpy(raw.data().data(), _3rdm_1[0]->data->data(),
-        //                 sizeof(double) * _3rdm_1[0]->size());
-        //     auto sf_3rdm1 = raw.clone();
-        //     sf_3rdm1("ijkab") = raw("ijkba");
-        //     sf_3rdm1.print();
-
-        //     std::memcpy(raw.data().data(), _3rdm_2[0]->data->data(),
-        //                 sizeof(double) * _3rdm_2[0]->size());
-        //     auto sf_3rdm2 = raw.clone();
-        //     sf_3rdm2("ijkab") = raw("ijkba");
-
-        //     auto D3 = rdms.back()->SF_G3();
-        //     auto& D3_data = D3.data();
-        //     auto d3_1 = ambit::Tensor::build(ambit::CoreTensor, "DMRG D3_1",
-        //                                      std::vector<size_t>(5, n_sites));
-        //     auto d3_2 = ambit::Tensor::build(ambit::CoreTensor, "DMRG D3_2",
-        //                                      std::vector<size_t>(5, n_sites));
-        //     auto na = n_sites;
-        //     auto na2 = na * na;
-        //     auto na3 = na * na2;
-        //     auto na4 = na * na3;
-        //     auto na5 = na * na4;
-        //     d3_1.iterate([&](const std::vector<size_t>& i, double& value) {
-        //         value =
-        //             D3_data[i[0] * na5 + i[1] * na4 + i[2] * na3 + i[3] * na2 + i[4] * na +
-        //             i[2]];
-        //     });
-        //     d3_1.print();
-        //     d3_2.iterate([&](const std::vector<size_t>& i, double& value) {
-        //         value =
-        //             D3_data[i[0] * na5 + i[1] * na4 + i[2] * na3 + i[3] * na2 + i[2] * na +
-        //             i[4]];
-        //     });
-
-        //     d3_1("ijkab") -= sf_3rdm1("ijkab");
-        //     d3_2("ijkab") -= sf_3rdm2("ijkab");
-        //     psi::outfile->Printf("\n  d3_1 diff norm = %20.15f", d3_1.norm());
-        //     psi::outfile->Printf("\n  d3_2 diff norm = %20.15f", d3_2.norm());
-        // }
     }
 
     impl_->set_num_threads(false);
@@ -1035,7 +982,7 @@ Block2DMRGSolver::three_rdms_diag1(const std::vector<std::pair<size_t, size_t>>&
 std::vector<std::vector<ambit::Tensor>>
 Block2DMRGSolver::three_trdms_diag1(const std::vector<std::pair<size_t, size_t>>& root_list,
                                     std::shared_ptr<ActiveSpaceMethod> method2, RDMsType type) {
-    timer t("BLOCK2 Solver Compute 5-index Diagonal 3RDMs");
+    timer t("BLOCK2 Compute 5-index 3RDMs");
 
     impl_->set_num_threads(true);
 
@@ -1077,10 +1024,10 @@ Block2DMRGSolver::three_trdms_diag1(const std::vector<std::pair<size_t, size_t>>
 
         std::string local_timer_name;
         if (bra_tag == ket_tag)
-            local_timer_name = "Computing 5-index Diagonal 3-RDMs for Root No. " +
-                               block2::Parsing::to_string(iroot);
+            local_timer_name =
+                "Compute 5-index 3RDMs for Root No. " + block2::Parsing::to_string(iroot);
         else
-            local_timer_name = "Computing 5-index Diagonal Transition 3-RDMs for Root No. " +
+            local_timer_name = "Compute 5-index Transition 3RDMs for Root No. " +
                                block2::Parsing::to_string(iroot) + " <-- No. " +
                                block2::Parsing::to_string(jroot);
         timer lt(local_timer_name);

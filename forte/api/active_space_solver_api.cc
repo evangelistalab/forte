@@ -49,8 +49,6 @@ void export_ActiveSpaceSolver(py::module& m) {
              "Solve the contracted CI eigenvalue problem using given integrals")
         .def("compute_average_rdms", &ActiveSpaceSolver::compute_average_rdms,
              "Compute the weighted average reference")
-        .def("compute_average_3rdms_diag1", &ActiveSpaceSolver::compute_average_3rdms_diag1,
-             "Compute the diagonal parts of the state-averaged 3-RDMs")
         .def("state_energies_map", &ActiveSpaceSolver::state_energies_map,
              "Return a map of StateInfo to the computed nroots of energies")
         .def("set_active_space_integrals", &ActiveSpaceSolver::set_active_space_integrals,

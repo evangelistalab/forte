@@ -25,9 +25,6 @@
  *
  * @END LICENSE
  */
-#include <set>
-#include <algorithm>
-
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "forte-def.h"
@@ -132,10 +129,7 @@ double SADSRG::H2_T2_C0_cu3_direct(BlockedTensor& H2, BlockedTensor& T2, Blocked
 
 double SADSRG::H2_T2_C0_cu3_approx(BlockedTensor& H2, BlockedTensor& T2) {
     // Francesco's 5-index cu3 approx. JCP 159, 114106 (2023)
-    auto L3d = rdms_->SF_L3d(
-        as_solver_->compute_average_3rdms_diag1(state_to_weights_, RDMsType::spin_free));
-    const auto& L3d_1 = L3d[0];
-    const auto& L3d_2 = L3d[1];
+    timer ftimer("DSRG [H2,T2]0 approx");
 
     auto na = actv_mos_.size();
     auto na2 = na * na;
@@ -166,12 +160,14 @@ double SADSRG::H2_T2_C0_cu3_approx(BlockedTensor& H2, BlockedTensor& T2) {
     auto& temp2_data = temp2.data();
 
     // virtual contraction
+    timer timer1("Contraction virtual");
     auto T2v = T2.block("aava").clone();
     auto& T2v_data = T2v.data();
     auto H2v = H2.block("vaaa").clone();
     auto& H2v_data = H2v.data();
 
     // z = v
+    timer timer1t("T2 diagonal");
     auto T2v_1 = ambit::Tensor::build(tensor_type_, "T2 uzez -> uze", {na, na, nv});
 #pragma omp parallel for
     for (size_t i = 0; i < na2; ++i) {
@@ -202,8 +198,10 @@ double SADSRG::H2_T2_C0_cu3_approx(BlockedTensor& H2, BlockedTensor& T2) {
             T2v_data[z * nva2 + v * nva + e * na + z] = 0.0;
         }
     }
+    timer1t.stop();
 
     // z != (u, v) and w = y
+    timer timer1h("H2 diagonal");
     auto H2v_1 = ambit::Tensor::build(tensor_type_, "H2 ewxw -> ewx", {nv, na, na});
 #pragma omp parallel for
     for (size_t i = 0; i < nva; ++i) {
@@ -235,8 +233,10 @@ double SADSRG::H2_T2_C0_cu3_approx(BlockedTensor& H2, BlockedTensor& T2) {
             H2v_data[e * na3 + w * na2 + w * na + x] = 0.0;
         }
     }
+    timer1h.stop();
 
     // w != (x, y) and z != (u, v) and x = u
+    timer timer1m("H2T2 mixed diagonal");
     temp1("yzxwv") += H2v("ewxy") * T2v("xvez");
 
     // w != (x, y) and z != (u, v) and x != u and w = z
@@ -307,14 +307,18 @@ double SADSRG::H2_T2_C0_cu3_approx(BlockedTensor& H2, BlockedTensor& T2) {
             temp2_data[z * na4 + x * na3 + y * na2 + v * na + w] += value * factor;
         }
     }
+    timer1m.stop();
+    timer1.stop();
 
     // core contraction
+    timer timer2("Contraction core");
     auto T2c = T2.block("caaa").clone();
     auto& T2c_data = T2c.data();
     auto H2c = H2.block("aaca").clone();
     auto& H2c_data = H2c.data();
 
     // w = y
+    timer timer2t("T2 diagonal");
     auto T2c_1 = ambit::Tensor::build(tensor_type_, "T2 mwxw -> mwx", {nc, na, na});
 #pragma omp parallel for
     for (size_t i = 0; i < nca; ++i) {
@@ -346,8 +350,10 @@ double SADSRG::H2_T2_C0_cu3_approx(BlockedTensor& H2, BlockedTensor& T2) {
             T2c_data[m * na3 + w * na2 + w * na + x] = 0.0;
         }
     }
+    timer2t.stop();
 
     // w != (x, y) and z = v
+    timer timer2h("H2 diagonal");
     auto H2c_1 = ambit::Tensor::build(tensor_type_, "H2 uzmz -> uzm", {na, na, nc});
 #pragma omp parallel for
     for (size_t i = 0; i < na2; ++i) {
@@ -378,8 +384,10 @@ double SADSRG::H2_T2_C0_cu3_approx(BlockedTensor& H2, BlockedTensor& T2) {
             H2c_data[z * nca2 + v * nca + m * na + z] = 0.0;
         }
     }
+    timer2h.stop();
 
     // w != (x, y) and z != (u, v) and x = u
+    timer timer2m("H2T2 mixed diagonal");
     temp1("yzuwv") += H2c("uvmz") * T2c("mwuy");
 
     // w != (x, y) and z != (u, v) and x != u and z = w
@@ -450,10 +458,12 @@ double SADSRG::H2_T2_C0_cu3_approx(BlockedTensor& H2, BlockedTensor& T2) {
             temp2_data[z * na4 + x * na3 + u * na2 + v * na + w] += value * factor;
         }
     }
+    timer2m.stop();
+    timer2.stop();
 
     double E3 = 0.0;
-    E3 += temp1("xyzuv") * L3d_1("xyzuv");
-    E3 += temp2("xyzuv") * L3d_2("xyzuv");
+    E3 += temp1("xyzuv") * L3d1_("xyzuv");
+    E3 += temp2("xyzuv") * L3d2_("xyzuv");
     return E3;
 }
 } // namespace forte

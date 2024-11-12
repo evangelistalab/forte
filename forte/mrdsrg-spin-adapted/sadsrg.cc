@@ -338,7 +338,16 @@ void SADSRG::check_init_memory() {
     if (store_cu3_) {
         dsrg_mem_.add_entry("1-, 2-, and 3-density cumulants", {"aa", "aa", "aaaa", "aaaaaa"});
     } else {
-        dsrg_mem_.add_entry("1- and 2-density cumulants", {"aa", "aa", "aaaa"});
+        if (L3_algorithm_ == "DIRECT") {
+            dsrg_mem_.add_entry("1- and 2-density cumulants", {"aa", "aa", "aaaa"});
+            dsrg_mem_.add_entry("Local intermediates for cu3 energy terms", {"vaaa"}, 4, false);
+        }
+        if (L3_algorithm_ == "APPROX") {
+            dsrg_mem_.add_entry("1-, 2-, and 3-density cumulants",
+                                {"aa", "aa", "aaaa", "aaaaa", "aaaaa"});
+            dsrg_mem_.add_entry("Local intermediates for cu3 energy terms", {"aaaaa", "vaaa"}, 3,
+                                false);
+        }
     }
 }
 
@@ -367,8 +376,16 @@ void SADSRG::fill_density() {
     L2_.block("aaaa")("pqrs") = rdms_->SF_L2()("pqrs");
 
     // 3-body density cumulants
-    if (store_cu3_)
+    if (store_cu3_) {
         L3_ = rdms_->SF_L3();
+    } else {
+        if (L3_algorithm_ == "APPROX") {
+            timer timer1("Compute 5-index L3d");
+            auto L3d = rdms_->SF_L3d();
+            L3d1_ = L3d[0];
+            L3d2_ = L3d[1];
+        }
+    }
 }
 
 void SADSRG::init_fock() {

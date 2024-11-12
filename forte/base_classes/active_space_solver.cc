@@ -874,8 +874,15 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
 
 std::shared_ptr<RDMs> ActiveSpaceSolver::compute_average_rdms(
     const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level,
-    RDMsType rdm_type) {
-    auto rdms = RDMs::build(max_rdm_level, mo_space_info_->size("ACTIVE"), rdm_type);
+    RDMsType rdm_type, bool set_diagonal_3rdm) {
+    auto na = mo_space_info_->size("ACTIVE");
+    auto rdms = RDMs::build(max_rdm_level, na, rdm_type);
+    bool store_g3d = (set_diagonal_3rdm and rdm_type == RDMsType::spin_free);
+    if (store_g3d) {
+        auto G3d1 = ambit::Tensor::build(ambit::CoreTensor, "G3d1", {na, na, na, na, na});
+        auto G3d2 = ambit::Tensor::build(ambit::CoreTensor, "G3d2", {na, na, na, na, na});
+        rdms->set_g3d({G3d1, G3d2});
+    }
 
     // Loop through references, add to master ref
     for (const auto& state_nroot : state_nroots_map_) {
@@ -893,9 +900,12 @@ std::shared_ptr<RDMs> ActiveSpaceSolver::compute_average_rdms(
                 continue;
 
             // Get the RDMs
-            std::vector<std::pair<size_t, size_t>> state_ids;
-            state_ids.emplace_back(r, r);
+            std::vector<std::pair<size_t, size_t>> state_ids{{r, r}};
             auto method_rdms = method->rdms(state_ids, max_rdm_level, rdm_type)[0];
+            if (store_g3d) {
+                auto g3d = method->three_rdms_diag1(state_ids, rdm_type)[0];
+                method_rdms->set_g3d(g3d);
+            }
 
             // Add contributions
             rdms->axpy(method_rdms, weights[r]);
@@ -903,34 +913,6 @@ std::shared_ptr<RDMs> ActiveSpaceSolver::compute_average_rdms(
     }
 
     return rdms;
-}
-
-std::vector<ambit::Tensor> ActiveSpaceSolver::compute_average_3rdms_diag1(
-    const std::map<StateInfo, std::vector<double>>& state_weights_map, RDMsType rdm_type) {
-    std::vector<ambit::Tensor> out;
-    for (const auto& [state, nroot] : state_nroots_map_) {
-        const auto& weights = state_weights_map.at(state);
-        const auto& method = state_method_map_.at(state);
-        for (size_t r = 0; r < nroot; r++) {
-            if (weights[r] <= 1e-15)
-                continue;
-            std::vector<std::pair<size_t, size_t>> state_ids{{r, r}};
-            auto _3rdms_diag = method->three_rdms_diag1(state_ids, rdm_type)[0];
-            auto n = _3rdms_diag.size();
-            if (out.empty()) {
-                out.resize(n);
-                for (size_t i = 0; i < n; i++) {
-                    out[i] = _3rdms_diag[i].clone();
-                    out[i].scale(weights[r]);
-                }
-            } else {
-                for (size_t i = 0; i < n; i++) {
-                    out[i]("xyzuv") += weights[r] * _3rdms_diag[i]("xyzuv");
-                }
-            }
-        }
-    }
-    return out;
 }
 
 std::map<StateInfo, std::vector<double>>

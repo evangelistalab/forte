@@ -143,17 +143,7 @@ class ActiveSpaceSolver {
     /// Compute the state-averaged reference
     std::shared_ptr<RDMs>
     compute_average_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-                         int max_rdm_level, RDMsType rdm_type);
-
-    /// Compute the diagonal parts of the state-averaged 3-RDMs
-    /// Return a vector of the 5-index diagonal 3RDMs in ambit::Tensor format
-    /// For the spin-free case, this function returns two elements:
-    /// The first is D3_1("xyzuv") = < x^+ y^+ z^+ z v u > and
-    /// the second is D3_2("xyzuv") = < x^+ y^+ z^+ v z u >.
-    /// For the spin-dependent case, this function is not yet implemented.
-    std::vector<ambit::Tensor>
-    compute_average_3rdms_diag1(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-                                RDMsType rdm_type);
+                         int max_rdm_level, RDMsType rdm_type, bool set_diagonal_3rdm = false);
 
     /// Compute the overlap of two wave functions acted by complementary operators
     /// Return a map from state to roots of values
