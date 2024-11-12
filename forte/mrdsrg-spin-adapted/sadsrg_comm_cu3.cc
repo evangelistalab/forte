@@ -181,7 +181,7 @@ double SADSRG::H2_T2_C0_cu3_approx(BlockedTensor& H2, BlockedTensor& T2) {
     // z != v and z = u
     auto T2v_2 = ambit::Tensor::build(tensor_type_, "T2 zvez -> zve (z != v)", {na, na, nv});
 #pragma omp parallel for
-    for (size_t i = 0; i < na2 - na; ++i) {
+    for (size_t i = 0; i < psize; ++i) {
         auto [z, v] = na_pairs[i];
         double* x_ptr = &(T2v_data[z * nva2 + v * nva + z]);
         double* y_ptr = &(T2v_2.data()[z * nva + v * nv]);
@@ -240,8 +240,8 @@ double SADSRG::H2_T2_C0_cu3_approx(BlockedTensor& H2, BlockedTensor& T2) {
     temp1("yzxwv") += H2v("ewxy") * T2v("xvez");
 
     // w != (x, y) and z != (u, v) and x != u and w = z
-#pragma omp parallel for collapse(2)
-    for (size_t i = 0; i < na2 - na; ++i) {
+#pragma omp parallel for
+    for (size_t i = 0; i < psize; ++i) {
         auto [x, u] = na_pairs[i];
         for (size_t w = 0; w < na; ++w) {
             for (size_t y = 0; y < na; ++y) {
@@ -367,7 +367,7 @@ double SADSRG::H2_T2_C0_cu3_approx(BlockedTensor& H2, BlockedTensor& T2) {
     // w != (x, y) and z != v and z = u
     auto H2c_2 = ambit::Tensor::build(tensor_type_, "H2 zvmz -> zvm (z != v)", {na, na, nc});
 #pragma omp parallel for
-    for (size_t i = 0; i < na2 - na; ++i) {
+    for (size_t i = 0; i < psize; ++i) {
         auto [z, v] = na_pairs[i];
         double* x_ptr = &(H2c_data[z * nca2 + v * nca + z]);
         double* y_ptr = &(H2c_2.data()[z * nca + v * nc]);
@@ -391,8 +391,8 @@ double SADSRG::H2_T2_C0_cu3_approx(BlockedTensor& H2, BlockedTensor& T2) {
     temp1("yzuwv") += H2c("uvmz") * T2c("mwuy");
 
     // w != (x, y) and z != (u, v) and x != u and z = w
-#pragma omp parallel for collapse(2)
-    for (size_t i = 0; i < na2 - na; ++i) {
+#pragma omp parallel for
+    for (size_t i = 0; i < psize; ++i) {
         auto [x, u] = na_pairs[i];
         for (size_t z = 0; z < na; ++z) {
             for (size_t y = 0; y < na; ++y) {
