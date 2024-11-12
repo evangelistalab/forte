@@ -78,8 +78,12 @@ void export_SemiCanonical(py::module& m) {
              "Semicanonicalize the orbitals and transform the integrals and reference")
         .def("Ua", &SemiCanonical::Ua, "Return the alpha rotation matrix")
         .def("Ub", &SemiCanonical::Ub, "Return the alpha rotation matrix")
+        .def("Ua_c", &SemiCanonical::Ua_c, "Return the alpha rotation matrix in the core space")
+        .def("Ub_c", &SemiCanonical::Ub_c, "Return the beta rotation matrix in the core space")
         .def("Ua_t", &SemiCanonical::Ua_t, "Return the alpha rotation matrix in the active space")
         .def("Ub_t", &SemiCanonical::Ub_t, "Return the beta rotation matrix in the active space")
+        .def("Ua_v", &SemiCanonical::Ua_v, "Return the alpha rotation matrix in the virtual space")
+        .def("Ub_v", &SemiCanonical::Ub_v, "Return the beta rotation matrix in the virtual space")
         .def("fix_orbital_success", &SemiCanonical::fix_orbital_success,
              "Return if the orbital ordering and phases are fixed successfully");
 }
