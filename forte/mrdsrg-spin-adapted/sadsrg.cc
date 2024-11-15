@@ -232,7 +232,9 @@ void SADSRG::read_MOSpaceInfo() {
     core_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
     actv_mos_ = mo_space_info_->corr_absolute_mo("ACTIVE");
     virt_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
+    gen_mos_ = mo_space_info_->corr_absolute_mo("CORRELATED");
     actv_mos_sym_ = mo_space_info_->symmetry("ACTIVE");
+    gen_mos_sym_ = mo_space_info_->symmetry("CORRELATED");
 
     if (eri_df_) {
         aux_mos_ = std::vector<size_t>(ints_->nthree());
@@ -477,6 +479,17 @@ std::vector<ambit::BlockedTensor> SADSRG::compute_Heff_full() {
     return Heff;
 }
 
+std::vector<BlockedTensor> SADSRG::compute_Heff_full_degno() {
+    double Edsrg = Eref_ + Hbar0_;
+    if (foptions_->get_bool("FORM_HBAR3")) {
+        throw psi::PSIEXCEPTION("FORM_HBAR3 is not implemented for full Hamiltonian.");
+    } else {
+        deGNO_ints_full("Hamiltonian", Edsrg, Hbar1_, Hbar2_);
+    }
+    std::vector<ambit::BlockedTensor> Heff = {Hbar1_, Hbar2_};
+    return Heff;
+}
+
 std::shared_ptr<ActiveMultipoleIntegrals> SADSRG::compute_mp_eff_actv() {
     /**
      * DSRG transform multipole integrals: Mbar = e^{-A} M e^{A}
@@ -710,6 +723,44 @@ void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, 
     //    H2["XYUV"] -= H3["XYZUVW"] * Gamma1_["WZ"];
     //    H2["XYUV"] -= H3["zXYwUV"] * Gamma1_["wz"];
     print_done(t2.get());
+}
+
+void SADSRG::deGNO_ints_full(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2) {
+    print_h2("De-Normal-Order Full 2-Body DSRG Transformed " + name);
+
+    // compute scalar
+    local_timer t0;
+    print_contents("Computing the scalar term");
+
+    // build a temp["pqrs"] = 2 * H2["pqrs"] - H2["pqsr"]
+    auto temp = H2.clone();
+    temp.scale(2.0);
+    temp["pqrs"] -= H2["pqsr"];
+
+    auto L1h = BTF_->build(tensor_type_, "L1h", spin_cases({"hh"}));
+    L1h.block("aa")("uv") = L1_.block("aa")("uv");
+    L1h.block("cc").iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 2.0 : 0.0; });
+
+    // scalar from H1
+    double scalar1 = 0.0;
+    scalar1 -= H1["ji"] * L1h["ij"];
+
+    // scalar from H2
+    double scalar2 = 0.0;
+    scalar2 += 0.25 * L1h["ij"] * temp["jlik"] * L1h["kl"];
+
+    scalar2 -= 0.5 * H2["xyuv"] * L2_["uvxy"];
+
+    H0 += scalar1 + scalar2;
+    print_done(t0.get());
+
+    // compute 1-body term
+    local_timer t1;
+    print_contents("Computing the 1-body term");
+
+    H1["pq"] -= 0.5 * temp["piqj"] * L1h["ji"];
+    print_done(t1.get());
 }
 
 ambit::BlockedTensor SADSRG::deGNO_Tamp(BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& D1) {

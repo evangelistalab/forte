@@ -217,7 +217,6 @@ mrdsrg-spin-adapted/sadsrg.cc
 mrdsrg-spin-adapted/sadsrg_amps_analysis.cc
 mrdsrg-spin-adapted/sadsrg_block_labels.cc
 mrdsrg-spin-adapted/sadsrg_comm.cc
-mrdsrg-spin-adapted/eom_dsrg.cc
 mrdsrg-spin-integrated/dsrg_mrpt2.cc
 mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_multipliers.cc
 mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_setb.cc

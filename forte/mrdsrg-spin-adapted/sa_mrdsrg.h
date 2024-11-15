@@ -107,6 +107,8 @@ class SA_MRDSRG : public SADSRG {
     double rsc_conv_adapt_threshold_;
     double rsc_conv_adapt_delta_e_;
 
+    bool full_hbar_;
+
     /// DSRG transformation type
     std::string dsrg_trans_type_;
 

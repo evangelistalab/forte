@@ -50,6 +50,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute DSRG full transformed Hamiltonian
     std::vector<ambit::BlockedTensor> compute_Heff_full();
 
+    /// Compute DSRG full transformed Hamiltonian in the de-normal-ordered basis
+    std::vector<ambit::BlockedTensor> compute_Heff_full_degno();
+
     /// Compute DSRG transformed dipole integral
     std::vector<double> compute_Mbar0_full() { return Mbar0_full_; }
     std::vector<ambit::BlockedTensor> compute_Mbar1_full() { return Mbar1_full_; }
@@ -349,6 +352,12 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
      */
     void deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2,
                     BlockedTensor& H3);
+
+    /**
+     * De-normal-order the full DSRG transformed Hamiltonian
+     * This will change H0, H1 and H2!!!
+     */
+    void deGNO_ints_full(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2);
 
     /**
      * De-normal-order the T1 and T2 amplitudes and return the effective T1

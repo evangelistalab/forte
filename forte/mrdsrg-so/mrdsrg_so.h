@@ -120,6 +120,9 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     /// Order of the Taylor expansion of f(z) = (1-exp(-z^2))/z
     int taylor_order_;
 
+    /// DSRG transformation type
+    std::string dsrg_trans_type_;
+
     std::shared_ptr<BlockedTensorFactory> BTF_;
     TensorType tensor_type_;
 

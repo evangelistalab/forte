@@ -691,6 +691,53 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
     outfile->Printf("Done. Timing %8.3f s", t2.get());
 }
 
+void MASTER_DSRG::deGNO_ints_full(const std::string& name, double& H0, BlockedTensor& H1,
+                             BlockedTensor& H2) {
+    print_h2("De-Normal-Order Full DSRG Transformed " + name);
+
+    // compute scalar
+    local_timer t0;
+    outfile->Printf("\n    %-40s ... ", "Computing the scalar term");
+
+    auto L1h = BTF_->build(tensor_type_, "L1h", spin_cases({"hh"}));
+    L1h["uv"] = Gamma1_["uv"];
+    L1h["UV"] = Gamma1_["UV"];
+    L1h.block("cc").iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
+    L1h.block("CC").iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
+
+
+    // scalar from H1
+    double scalar1 = 0.0;
+    scalar1 -= H1["ji"] * L1h["ij"];
+    scalar1 -= H1["JI"] * L1h["IJ"];
+
+    // scalar from H2
+    double scalar2 = 0.0;
+    scalar2 += 0.5 * L1h["ij"] * H2["jlik"] * L1h["kl"];
+    scalar2 += 0.5 * L1h["IJ"] * H2["JLIK"] * L1h["KL"];
+    scalar2 += L1h["ij"] * H2["jLiK"] * L1h["KL"];
+
+    scalar2 -= 0.25 * H2["xyuv"] * Lambda2_["uvxy"];
+    scalar2 -= 0.25 * H2["XYUV"] * Lambda2_["UVXY"];
+    scalar2 -= H2["xYuV"] * Lambda2_["uVxY"];
+
+    H0 += scalar1 + scalar2;
+    outfile->Printf("Done. Timing %8.3f s", t0.get());
+
+    // compute 1-body term
+    local_timer t1;
+    outfile->Printf("\n    %-40s ... ", "Computing the 1-body term");
+
+    H1["pq"] -= H2["piqj"] * L1h["ji"];
+    H1["pq"] -= H2["pIqJ"] * L1h["JI"];
+    H1["PQ"] -= H2["iPjQ"] * L1h["ji"];
+    H1["PQ"] -= H2["PIQJ"] * L1h["JI"];
+    outfile->Printf("Done. Timing %8.3f s", t1.get());
+}
+
+
 void MASTER_DSRG::fill_three_index_ints(ambit::BlockedTensor T) {
     const auto& block_labels = T.block_labels();
     for (const std::string& string_block : block_labels) {
@@ -2301,4 +2348,16 @@ std::vector<ambit::BlockedTensor> MASTER_DSRG::compute_Heff_full() {
     std::vector<ambit::BlockedTensor> Heff = {Hbar1_, Hbar2_};
     return Heff;
 }
+
+std::vector<BlockedTensor> MASTER_DSRG::compute_Heff_full_degno() {
+    double Edsrg = Eref_ + Hbar0_;
+    if (foptions_->get_bool("FORM_HBAR3")) {
+        throw psi::PSIEXCEPTION("FORM_HBAR3 is not implemented for full Hamiltonian.");
+    } else {
+        deGNO_ints_full("Hamiltonian", Edsrg, Hbar1_, Hbar2_);
+    }
+    std::vector<ambit::BlockedTensor> Heff = {Hbar1_, Hbar2_};
+    return Heff;
+}
+
 } // namespace forte

@@ -1117,7 +1117,11 @@ DSRG:
   FULL_HBAR:
     type: bool
     default: False
-    help: "Form full Hbar."
+    help: "Form the full DSRG effective Hamiltonian."
+  FULL_HBAR_DEGNO:
+    type: bool
+    default: False
+    help: "Form the full DSRG effective Hamiltonian normal ordered w.r.t. the true vacuum."
   DO_WICKED:
     type: bool
     default: False
