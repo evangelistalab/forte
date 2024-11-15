@@ -35,9 +35,7 @@
 
 #include "psi4/psi4-dec.h"
 #include "psi4/physconst.h"
-#include "psi4/libmints/molecule.h"
 #include "psi4/libmints/vector.h"
-#include "psi4/libpsi4util/process.h"
 
 #include "base_classes/forte_options.h"
 #include "base_classes/rdms.h"
@@ -54,13 +52,13 @@
 
 namespace forte {
 
-ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
+ActiveSpaceSolver::ActiveSpaceSolver(const std::string& solver_type,
                                      const std::map<StateInfo, size_t>& state_nroots_map,
                                      std::shared_ptr<SCFInfo> scf_info,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info,
                                      std::shared_ptr<ForteOptions> options,
                                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : method_(method), state_nroots_map_(state_nroots_map), scf_info_(scf_info),
+    : solver_type_(solver_type), state_nroots_map_(state_nroots_map), scf_info_(scf_info),
       mo_space_info_(mo_space_info), options_(options), as_ints_(as_ints) {
 
     print_ = int_to_print_level(options->get_int("PRINT"));
@@ -82,6 +80,8 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
         Ub_data[i * nactv + i] = 1.0;
     }
 }
+
+const std::string& ActiveSpaceSolver::solver_type() const { return solver_type_; }
 
 void ActiveSpaceSolver::set_print(PrintLevel level) { print_ = level; }
 
@@ -127,16 +127,15 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         size_t nroot = state_nroot.second;
 
         // so far only FCI and DETCI supports restarting from a previous wavefunction
-        if ((method_ == "FCI") or (method_ == "DETCI")) {
+        if ((solver_type_ == "FCI") or (solver_type_ == "DETCI")) {
             auto [it, inserted] = state_method_map_.try_emplace(state);
             if (inserted) {
-                it->second = make_active_space_method(method_, state, nroot, scf_info_,
+                it->second = make_active_space_method(solver_type_, state, nroot, scf_info_,
                                                       mo_space_info_, as_ints_, options_);
             }
-            auto method = it->second;
         } else {
-            state_method_map_[state] = make_active_space_method(method_, state, nroot, scf_info_,
-                                                                mo_space_info_, as_ints_, options_);
+            state_method_map_[state] = make_active_space_method(
+                solver_type_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
         }
         auto method = state_method_map_[state];
         // set the convergence criteria
@@ -144,6 +143,7 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         method->set_e_convergence(e_convergence_);
         method->set_r_convergence(r_convergence_);
         method->set_maxiter(maxiter_);
+        method->set_die_if_not_converged(die_if_not_converged_);
 
         state_filename_map_[state] = method->wfn_filename();
         if (read_initial_guess_) {
@@ -247,7 +247,8 @@ void ActiveSpaceSolver::compute_multipole_moment(std::shared_ptr<ActiveMultipole
         return;
 
     // compute RDMs
-    psi::outfile->Printf("\n  Computing RDMs for %s moments ...", title.c_str());
+    if (print_ > PrintLevel::Brief)
+        psi::outfile->Printf("\n  Computing RDMs for %s moments ...", title.c_str());
     std::map<StateInfo, std::vector<std::shared_ptr<RDMs>>> state_rdms_map;
     for (const auto& state_nroots : state_nroots_map_) {
         const auto& [state, nroots] = state_nroots;
@@ -261,82 +262,112 @@ void ActiveSpaceSolver::compute_multipole_moment(std::shared_ptr<ActiveMultipole
         state_rdms_map[state] = method->rdms(root_list, max_rdm_level, RDMsType::spin_free);
         method->set_print(print_);
     }
-    psi::outfile->Printf(" Done");
+    if (print_ > PrintLevel::Brief)
+        psi::outfile->Printf(" Done");
 
     // compute dipole moments
     auto dipole_nuc = ampints->nuclear_dipole();
-    std::string prefix = ampints->dp_name().empty() ? "" : ampints->dp_name() + " ";
-    print_h2("Summary of " + prefix + "Dipole Moments [e a0] (Nuclear + Electronic)");
-
-    psi::outfile->Printf("\n    %8s %14s %14s %14s %14s", "State", "DM_X", "DM_Y", "DM_Z", "|DM|");
-    std::string dash(68, '-');
-    psi::outfile->Printf("\n    %s", dash.c_str());
-
+    std::map<StateInfo, std::vector<std::shared_ptr<psi::Vector>>> tmp_for_print;
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& [state, nroots] = state_nroot;
         auto irrep_label = state.irrep_label();
         auto multi_label = upper_string(state.multiplicity_label());
-
         for (size_t i = 0; i < nroots; ++i) {
             std::string name = std::to_string(i) + upper_string(irrep_label);
             auto dipole = ampints->compute_electronic_dipole(state_rdms_map[state][i]);
             dipole->add(*dipole_nuc);
-
+            tmp_for_print[state].push_back(dipole);
             auto dx = dipole->get(0);
             auto dy = dipole->get(1);
             auto dz = dipole->get(2);
             auto dm = dipole->norm();
-            psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", name.c_str(), dx, dy, dz, dm);
-
             push_to_psi4_env_globals(dx, multi_label + " <" + name + "|DM_X|" + name + ">");
             push_to_psi4_env_globals(dy, multi_label + " <" + name + "|DM_Y|" + name + ">");
             push_to_psi4_env_globals(dz, multi_label + " <" + name + "|DM_Z|" + name + ">");
             push_to_psi4_env_globals(dm, multi_label + " |<" + name + "|DM|" + name + ">|");
         }
-        psi::outfile->Printf("\n    %s", dash.c_str());
     }
-    psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", "Nuclear", dipole_nuc->get(0),
-                         dipole_nuc->get(1), dipole_nuc->get(2), dipole_nuc->norm());
-    psi::outfile->Printf("\n    %s", dash.c_str());
 
-    // compute quadrupole moments
-    if (level != 1) {
-        auto quadrupole_nuc = ampints->nuclear_quadrupole();
-        std::string prefix = ampints->qp_name().empty() ? "" : ampints->qp_name() + " ";
-        print_h2("Summary of " + prefix + "Quadrupole Moments [e a0^2] (Nuclear + Electronic)");
-
-        std::vector<std::string> qm_dirs{"QM_XX", "QM_XY", "QM_XZ", "QM_YY", "QM_YZ", "QM_ZZ"};
-        psi::outfile->Printf("\n    %8s", "State");
-        for (int z = 0; z < 6; ++z)
-            psi::outfile->Printf(" %14s", qm_dirs[z].c_str());
-        std::string dash(98, '-');
+    if (print_ > PrintLevel::Quiet) {
+        std::string prefix = ampints->dp_name().empty() ? "" : ampints->dp_name() + " ";
+        std::string dash(68, '-');
+        print_h2("Summary of " + prefix + "Dipole Moments [e a0] (Nuclear + Electronic)");
+        psi::outfile->Printf("\n    %8s %14s %14s %14s %14s", "State", "DM_X", "DM_Y", "DM_Z",
+                             "|DM|");
         psi::outfile->Printf("\n    %s", dash.c_str());
 
         for (const auto& state_nroot : state_nroots_map_) {
             const auto& [state, nroots] = state_nroot;
             auto irrep_label = state.irrep_label();
-            auto multi_label = upper_string(state.multiplicity_label());
+            for (size_t i = 0; i < nroots; ++i) {
+                std::string name = std::to_string(i) + upper_string(irrep_label);
+                auto dipole = tmp_for_print[state][i];
+                auto dx = dipole->get(0);
+                auto dy = dipole->get(1);
+                auto dz = dipole->get(2);
+                auto dm = dipole->norm();
+                psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", name.c_str(), dx, dy, dz,
+                                     dm);
+            }
+            psi::outfile->Printf("\n    %s", dash.c_str());
+        }
+        psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", "Nuclear", dipole_nuc->get(0),
+                             dipole_nuc->get(1), dipole_nuc->get(2), dipole_nuc->norm());
+        psi::outfile->Printf("\n    %s", dash.c_str());
+    }
 
+    // compute quadrupole moments
+    if (level != 1) {
+        tmp_for_print.clear();
+        auto quadrupole_nuc = ampints->nuclear_quadrupole();
+        std::vector<std::string> qm_dirs{"QM_XX", "QM_XY", "QM_XZ", "QM_YY", "QM_YZ", "QM_ZZ"};
+
+        for (const auto& state_nroot : state_nroots_map_) {
+            const auto& [state, nroots] = state_nroot;
+            auto irrep_label = state.irrep_label();
+            auto multi_label = upper_string(state.multiplicity_label());
             for (size_t i = 0; i < nroots; ++i) {
                 auto quadrupole = ampints->compute_electronic_quadrupole(state_rdms_map[state][i]);
                 quadrupole->add(*quadrupole_nuc);
-
+                tmp_for_print[state].push_back(quadrupole);
                 std::string name = std::to_string(i) + upper_string(irrep_label);
-                psi::outfile->Printf("\n    %8s", name.c_str());
-
                 for (int z = 0; z < 6; ++z) {
                     auto value = quadrupole->get(z);
-                    psi::outfile->Printf("%15.8f", value);
                     std::string dir = "|" + qm_dirs[z] + "|";
                     push_to_psi4_env_globals(value, multi_label + " <" + name + dir + name + ">");
                 }
             }
+        }
+
+        if (print_ > PrintLevel::Quiet) {
+            std::string prefix = ampints->qp_name().empty() ? "" : ampints->qp_name() + " ";
+            std::string dash(98, '-');
+            print_h2("Summary of " + prefix + "Quadrupole Moments [e a0^2] (Nuclear + Electronic)");
+            psi::outfile->Printf("\n    %8s", "State");
+            for (int z = 0; z < 6; ++z)
+                psi::outfile->Printf(" %14s", qm_dirs[z].c_str());
+            psi::outfile->Printf("\n    %s", dash.c_str());
+
+            for (const auto& state_nroot : state_nroots_map_) {
+                const auto& [state, nroots] = state_nroot;
+                auto irrep_label = state.irrep_label();
+                auto multi_label = upper_string(state.multiplicity_label());
+                for (size_t i = 0; i < nroots; ++i) {
+                    auto quadrupole = tmp_for_print[state][i];
+                    std::string name = std::to_string(i) + upper_string(irrep_label);
+                    psi::outfile->Printf("\n    %8s", name.c_str());
+                    for (int z = 0; z < 6; ++z) {
+                        auto value = quadrupole->get(z);
+                        psi::outfile->Printf("%15.8f", value);
+                    }
+                }
+                psi::outfile->Printf("\n    %s", dash.c_str());
+            }
+            psi::outfile->Printf("\n    %8s", "Nuclear");
+            for (int z = 0; z < 6; ++z)
+                psi::outfile->Printf("%15.8f", quadrupole_nuc->get(z));
             psi::outfile->Printf("\n    %s", dash.c_str());
         }
-        psi::outfile->Printf("\n    %8s", "Nuclear");
-        for (int z = 0; z < 6; ++z)
-            psi::outfile->Printf("%15.8f", quadrupole_nuc->get(z));
-        psi::outfile->Printf("\n    %s", dash.c_str());
     }
 }
 
@@ -384,7 +415,8 @@ void ActiveSpaceSolver::compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIn
             root_lists_map[{state1, state1}] = state_ids;
 
         for (const auto& [state2, nroot2] : state_nroots_map_) {
-            if (state1 == state2 or std::find(_states.begin(), _states.end(), state2) != _states.end())
+            if (state1 == state2 or
+                std::find(_states.begin(), _states.end(), state2) != _states.end())
                 continue;
             // skip for different multiplicity (no spin-orbit coupling)
             if (state1.multiplicity() != state2.multiplicity())
@@ -663,9 +695,9 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info) {
     std::map<StateInfo, std::vector<double>> state_weights_map;
 
-    // make a StateInfo object using the information from psi4
+    // make a StateInfo object using the information
     // TODO: need to optimize for spin-free RDMs
-    auto state = make_state_info_from_psi(options); // assumes low-spin
+    auto state = make_state_info_from_options(options, mo_space_info->point_group_label()); // assumes low-spin
 
     // check if the user provided a AVG_STATE list
     py::list avg_state = options->get_gen_list("AVG_STATE");

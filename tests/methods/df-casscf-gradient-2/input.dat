@@ -58,5 +58,9 @@ set forte{
 
 #set gradient_write true
 #set findif points 5
-grad = gradient('forte')
-compare_matrices(ref_grad, grad, 7, "CASSCF(4,4)/DZ gradient on butadiene with frozen orbitals")
+grad1 = gradient('forte')
+compare_matrices(ref_grad, grad1, 7, "CASSCF(4,4)/DZ gradient on butadiene with frozen orbitals")
+
+set forte int_type diskdf
+grad2 = gradient('forte')
+compare_matrices(grad1, grad2, 8, "DISKDF vs DF CASSCF(4,4)/DZ gradient")

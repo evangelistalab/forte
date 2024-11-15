@@ -64,7 +64,15 @@ files = {'D1c': D1c, 'D1v': D1v}
 for name in files:
     M_loaded = np.load(name + '.npz')
     nirrep = len(M_loaded.files)
-    M_list = [M_loaded[f'arr_{i}'] for i in range(nirrep)]
+    M_list = []
+    for h in range(nirrep):
+        _M = M_loaded[f"arr_{h}"]
+        for i in range(_M.shape[0]):
+            for j in range(i + 1, _M.shape[1]):
+                if _M[i,j] * files[name].get(h,i,j) < 0.0:
+                    _M[i,j] *= -1
+                    _M[j,i] *= -1
+        M_list.append(_M)
     M = psi4.core.Matrix.from_array(M_list)
     compare_matrices(M, files[name], 6, 'DF-DSRG-MRPT2 unrelaxed 1RDM: ' + name.upper())
 

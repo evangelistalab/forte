@@ -30,7 +30,8 @@
 #pragma once
 
 #include "psi4/lib3index/dfhelper.h"
-#include "integrals.h"
+
+#include "psi4_integrals.h"
 
 namespace forte {
 
@@ -42,7 +43,7 @@ namespace forte {
 class DISKDFIntegrals : public Psi4Integrals {
   public:
     /// Contructor of DISKDFIntegrals
-    DISKDFIntegrals(std::shared_ptr<ForteOptions> options,
+    DISKDFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<SCFInfo> scf_info,
                     std::shared_ptr<psi::Wavefunction> ref_wfn,
                     std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 
@@ -51,9 +52,9 @@ class DISKDFIntegrals : public Psi4Integrals {
 
     // ==> Class public virtual functions <==
 
-    double aptei_aa(size_t p, size_t q, size_t r, size_t s) override;
-    double aptei_ab(size_t p, size_t q, size_t r, size_t s) override;
-    double aptei_bb(size_t p, size_t q, size_t r, size_t s) override;
+    double aptei_aa(size_t p, size_t q, size_t r, size_t s) const override;
+    double aptei_ab(size_t p, size_t q, size_t r, size_t s) const override;
+    double aptei_bb(size_t p, size_t q, size_t r, size_t s) const override;
 
     /// Return the antisymmetrized alpha-alpha chunck as an ambit::Tensor
     ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
@@ -76,9 +77,6 @@ class DISKDFIntegrals : public Psi4Integrals {
     /// return ambit tensor of size A by q
     ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
                                                  const std::vector<size_t>& q) override;
-
-    void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
-                 bool alpha2) override;
 
     /// Make a Fock matrix computed with respect to a given determinant
     size_t nthree() const override;

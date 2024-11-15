@@ -4,12 +4,14 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
 
-#include "psi4/libmints/molecule.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 
 #include "base_classes/mo_space_info.h"
+#include "base_classes/forte_options.h"
+
 #include "integrals/active_space_integrals.h"
+#include "integrals/one_body_integrals.h"
 
 #include "helpers/printing.h"
 #include "helpers/timer.h"
@@ -93,7 +95,9 @@ void MASTER_DSRG::startup() {
 void MASTER_DSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints) {
     outfile->Printf("\n    Computing Fock matrix and cleaning JK ........... ");
     ints->make_fock_matrix(rdms_->g1a(), rdms_->g1b());
-    ints->jk_finalize();
+    if (ints_->integral_type() != IntegralType::Custom) {
+        ints_->jk_finalize();
+    }
     outfile->Printf("Done");
 }
 
@@ -458,10 +462,10 @@ double MASTER_DSRG::compute_reference_energy_df(BlockedTensor H, BlockedTensor F
 
 void MASTER_DSRG::init_dm_ints() {
     outfile->Printf("\n    Preparing ambit tensors for dipole moments ...... ");
-    Vector3 dm_nuc =
-        psi::Process::environment.molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
+    MultipoleIntegrals dm_ints(ints_, mo_space_info_);
+    auto dm_nuc = dm_ints.nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
     for (int i = 0; i < 3; ++i) {
-        dm_nuc_[i] = dm_nuc[i];
+        dm_nuc_[i] = (*dm_nuc)[i];
         dm_[i] = BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
     }
 
@@ -1976,7 +1980,7 @@ bool MASTER_DSRG::check_semi_orbs() {
     }
 
     auto nactv = actv_mos_.size();
-    for (const std::string& space : mo_space_info_->space_names()) {
+    for (const std::string& space : mo_space_info_->elementary_spaces()) {
         if (space.find("GAS") == std::string::npos or mo_space_info_->size(space) == 0)
             continue;
 
@@ -2051,7 +2055,7 @@ std::vector<std::vector<double>> MASTER_DSRG::diagonalize_Fock_diagblocks(Blocke
     // loop each correlated elementary space
     int nirrep = mo_space_info_->nirrep();
 
-    auto elementary_spaces = mo_space_info_->composite_space_names()["CORRELATED"];
+    auto elementary_spaces = mo_space_info_->composite_spaces_def().at("CORRELATED");
     for (const std::string& space : elementary_spaces) {
         if (mo_space_info_->size(space) == 0)
             continue;

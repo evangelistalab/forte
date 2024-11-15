@@ -44,7 +44,7 @@ def run_sci(ints, scf_info, wfn, selector):
     #     print(mo_space_map)
     #     print(mo_reordering)
 
-    mo_space_info = forte.make_mo_space_info_from_map(wfn, mo_space_map, reorder=mo_reordering)
+    mo_space_info = forte.make_mo_space_info_from_map(wfn, mo_space_map)
 
     #     print(mo_space_info.get_corr_abs_mo('ACTIVE'))
     #     print(mo_space_info.get_corr_abs_mo('RESTRICTED_DOCC'))

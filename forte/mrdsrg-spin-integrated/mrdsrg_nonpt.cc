@@ -38,6 +38,8 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libqt/qt.h"
 
+#include "base_classes/forte_options.h"
+
 #include "helpers/timer.h"
 #include "base_classes/mo_space_info.h"
 #include "integrals/one_body_integrals.h"

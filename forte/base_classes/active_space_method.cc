@@ -161,7 +161,7 @@ std::shared_ptr<ActiveSpaceMethod> make_active_space_method(
         method = std::make_unique<Block2DMRGSolver>(state, nroot, scf_info, options, mo_space_info,
                                                     as_ints);
 #else
-        throw std::runtime_error("BLOCK2 is not available! Please compile with ENABLE_BLOCK2=ON.");
+        throw std::runtime_error("BLOCK2 is not available! Please compile with ENABLE_block2=ON.");
 #endif
     } else {
         std::string msg = "make_active_space_method: type = " + type + " was not recognized";

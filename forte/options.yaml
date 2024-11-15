@@ -86,7 +86,7 @@ Driver:
   ORBITAL_TYPE:
     type: str
     default: "CANONICAL"
-    choices: ["CANONICAL", "LOCAL", "CHOLESKY_ACTIVE", "MP2NO", "MRPT2NO"]
+    choices: ["CANONICAL", "LOCAL", "MP2NO", "MRPT2NO"]
     help: "Type of orbitals to use"
   MINAO_BASIS:
     type: str
@@ -338,6 +338,14 @@ MO_Space_Info:
     help: "An array of MOs to swap in the format [irrep, mo_1, mo_2, irrep, mo_3, mo_4]. Irrep and MOs are all 1-based (NOT 0-based)!"
 
 Active_Space_Solver:
+  NACT_ORB:
+    type: int
+    default: None
+    help: "The number of orbitals in the active space."
+  NACT_EL:
+    type: int
+    default: None
+    help: "The number of electrons in the active space."
   NROOT:
     type: int
     default: 1
@@ -1355,7 +1363,7 @@ Localize:
   LOCALIZE:
     type: str
     default: "PIPEK_MEZEY"
-    choices: ["PIPEK_MEZEY", "BOYS"]
+    choices: ["PIPEK_MEZEY", "BOYS", "CHOLESKY"]
     help: "The method used to localize the orbitals"
   LOCALIZE_SPACE:
     type: int_list
@@ -1556,6 +1564,10 @@ Old:
     type: bool
     default: False
     help: "Treat all GAS orbitals together for semi-canonicalization"
+  SEMI_CANONICAL_THRESHOLD:
+    type: double
+    default: 1.0e-8
+    help: "Threshold for testing semi-canonical orbitals"
   TWOPDC:
     type: str
     default: "MK"
@@ -1704,6 +1716,10 @@ DMRG:
     type: bool
     default: False
     help: "Whether or not to print the correlation functions after the DMRG calculation"
+  DMRG_REORDER_INIT_ORBS:
+    type: bool
+    default: True
+    help: "Whether or not to automatically reorder active orbitals (localize + Fiedler, C1 symmetry only)"
 
 BLOCK2:
   BLOCK2_STACK_MEM:
@@ -1764,9 +1780,8 @@ BLOCK2:
     help: "Whether to use low memory algorithm to compute RDMs"
   BLOCK2_INTERGRAL_CUTOFF:
     type: double
-    default: 1.0e-14
+    default: 1.0e-12
     help: "Consider those integrals as zero if the absolute value is smaller than this value"
-
 
 DEPRECATED:
   CASSCF_MAXITER:
