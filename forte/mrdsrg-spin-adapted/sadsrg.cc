@@ -472,6 +472,11 @@ std::shared_ptr<ActiveSpaceIntegrals> SADSRG::compute_Heff_actv() {
     return fci_ints;
 }
 
+std::vector<ambit::BlockedTensor> SADSRG::compute_Heff_full() {
+    std::vector<ambit::BlockedTensor> Heff = {Hbar1_, Hbar2_};
+    return Heff;
+}
+
 std::shared_ptr<ActiveMultipoleIntegrals> SADSRG::compute_mp_eff_actv() {
     /**
      * DSRG transform multipole integrals: Mbar = e^{-A} M e^{A}

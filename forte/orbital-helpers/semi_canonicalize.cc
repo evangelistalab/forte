@@ -314,7 +314,7 @@ void SemiCanonical::build_transformation_matrices(const bool& semi) {
 }
 
 void SemiCanonical::fill_Ucore(const std::shared_ptr<psi::Matrix>& U, ambit::Tensor& Ut) {
-    auto core_names = mo_space_info_->composite_space_names()["CORE"];
+    auto core_names = mo_space_info_->composite_spaces_def().at("CORE");
     auto& Ut_data = Ut.data();
 
     for (const std::string& name : core_names) {
@@ -337,7 +337,7 @@ void SemiCanonical::fill_Ucore(const std::shared_ptr<psi::Matrix>& U, ambit::Ten
 }
 
 void SemiCanonical::fill_Uvirt(const std::shared_ptr<psi::Matrix>& U, ambit::Tensor& Ut) {
-    auto virtual_names = mo_space_info_->composite_space_names()["VIRTUAL"];
+    auto virtual_names = mo_space_info_->composite_spaces_def().at("VIRTUAL");
     auto& Ut_data = Ut.data();
 
     for (const std::string& name : virtual_names) {

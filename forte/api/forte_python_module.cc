@@ -352,6 +352,8 @@ PYBIND11_MODULE(_forte, m) {
         .def("compute_energy", &SADSRG::compute_energy, "Compute the DSRG energy")
         .def("compute_Heff_actv", &SADSRG::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals")
+        .def("compute_Heff_full", &SADSRG::compute_Heff_full,
+             "Return full transformed Hamiltonian")
         .def("compute_mp_eff_actv", &SADSRG::compute_mp_eff_actv,
              "Return the DSRG dressed ActiveMultipoleIntegrals")
         .def("set_Uactv", &SADSRG::set_Uactv, "Ua"_a,

@@ -249,13 +249,13 @@ class ProcedureDSRG:
         if not self.Heff_implemented:
             self.relax_maxiter = 0
 
-        if self.options.get_bool("FULL_HBAR") and self.relax_maxiter == 0:
+        if self.options.get_bool("FULL_HBAR") and self.relax_maxiter == 0 and self.solver_type in ["MRDSRG","SA-MRDSRG","SA_MRDSRG"]:
             psi4.core.print_out("\n  =>** Saving Full Hbar (unrelax) **<=\n")
             Heff = self.dsrg_solver.compute_Heff_full()
             Heff_dict = forte.Heff_dict(Heff)
             np.savez("save_Hbar", **Heff_dict)
 
-            if self.solver_type not in ["MRDSRG_SO", "MRDSRG-SO"]:
+            if self.solver_type in ["MRDSRG"]:
                 psi4.core.print_out("\n  =>** Getting dipole integral **<=\n")
                 Mbar0 = self.dsrg_solver.compute_Mbar0_full()
                 print(Mbar0)
@@ -428,7 +428,7 @@ class ProcedureDSRG:
                 psi4.core.print_out(f"\n\n    DSRG-MRPT2 FNO energy correction:  {self.fno_pt2_energy_shift:20.15f}")
                 psi4.core.print_out(f"\n    DSRG-MRPT2 FNO corrected energy:   {e_dsrg:20.15f}")
 
-        if self.options.get_bool("FULL_HBAR"):
+        if self.options.get_bool("FULL_HBAR") and self.solver_type in ["MRDSRG"]:
             if self.relax_maxiter != 0:
                 self.rdms = self.active_space_solver.compute_average_rdms(
                     self.state_weights_map, self.max_rdm_level, self.rdm_type
