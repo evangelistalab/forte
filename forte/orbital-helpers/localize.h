@@ -61,7 +61,7 @@ class Localize : public OrbitalTransform {
     // orbitals to localize
     std::vector<int> orbital_spaces_;
 
-    // Pipek-Mezey or Boys
+    // Pipek-Mezey or Boys or Cholesky
     std::string local_method_;
 };
 } // namespace forte

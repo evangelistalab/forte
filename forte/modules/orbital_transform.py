@@ -6,7 +6,6 @@ from forte._forte import RDMsType, make_orbital_transformation
 
 
 class OrbitalTransformation(Module):
-
     """
     A module to transform the orbitals and the integrals to a new basis.
     """
@@ -27,7 +26,7 @@ class OrbitalTransformation(Module):
         orb_t.compute_transformation()
         Ua = orb_t.get_Ua()
         Ub = orb_t.get_Ub()
-        data.ints.rotate_orbitals(Ua, Ub, self.transform_ints)
+        data.scf_info.rotate_orbitals(Ua, Ub, self.transform_ints)
         if data.as_ints is not None:
             data.as_ints.rotate_orbitals(Ua, Ub, self.transform_ints)
 

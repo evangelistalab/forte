@@ -68,7 +68,7 @@ class ActiveSpaceSolver {
     // ==> Class Constructor and Destructor <==
     /**
      * @brief ActiveSpaceMethod Constructor for a multi-state computation
-     * @param method A string that labels the method requested (e.g. "FCI", "ACI", ...)
+     * @param solver_type A string that labels the solver requested (e.g. "FCI", "ACI", ...)
      * @param nroots_map A map of electronic states to the number of roots computed {state_1 : n_1,
      * state_2 : n_2, ...} where state_i specifies the symmetry of a state and n_i is the number of
      * levels computed.
@@ -76,7 +76,7 @@ class ActiveSpaceSolver {
      * @param mo_space_info a MOSpaceInfo object
      * @param as_ints integrals for active space
      */
-    ActiveSpaceSolver(const std::string& method,
+    ActiveSpaceSolver(const std::string& solver_type,
                       const std::map<StateInfo, size_t>& state_nroots_map,
                       std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
                       std::shared_ptr<ForteOptions> options,
@@ -85,20 +85,16 @@ class ActiveSpaceSolver {
     // ==> Class Interface <==
 
     /// Set the print level
+    const std::string& solver_type() const;
+
     /// @param level the print level
     void set_print(PrintLevel level);
 
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::map<StateInfo, std::vector<double>>& compute_energy();
 
-    /// Compute permanent dipole moments
-    void compute_dipole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
-
-    /// Compute permanent quadrupole moments
-    void compute_quadrupole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
-
-    /// Compute transition dipole moments
-    void compute_transition_dipole(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
+    /// Compute permanent dipole and quadrupole moments
+    void compute_multipole_moment(std::shared_ptr<ActiveMultipoleIntegrals> ampints, int level = 1);
 
     /// Compute the oscillator strengths assuming same orbitals
     void compute_fosc_same_orbs(std::shared_ptr<ActiveMultipoleIntegrals> ampints);
@@ -157,7 +153,8 @@ class ActiveSpaceSolver {
     /// \sum_{puvwxyzστθ} v_{pwxy} t_{pzuv} <Ψ(N)| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ(N)>
     std::map<StateInfo, std::vector<double>>
     compute_complementary_H2caa_overlap(ambit::Tensor Tbra, ambit::Tensor Tket,
-                                        const std::vector<int>& p_syms);
+                                        const std::vector<int>& p_syms, const std::string& name,
+                                        bool load = false);
 
     /// Print a summary of the computation information
     void print_options();
@@ -193,6 +190,9 @@ class ActiveSpaceSolver {
     /// Set the maximum number of iterations
     void set_maxiter(int maxiter);
 
+    /// Set if throw an error when Davidson-Liu not converged
+    void set_die_if_not_converged(bool value) { die_if_not_converged_ = value; }
+
     /// Set if read wave function from file as initial guess
     void set_read_initial_guess(bool read_guess) { read_initial_guess_ = read_guess; }
 
@@ -206,7 +206,7 @@ class ActiveSpaceSolver {
 
   protected:
     /// a string that specifies the method used (e.g. "FCI", "ACI", ...)
-    std::string method_;
+    std::string solver_type_;
 
     /// A map of electronic states to the number of roots computed
     ///   {state_1 : n_1, state_2 : n_2, ...}
@@ -262,6 +262,9 @@ class ActiveSpaceSolver {
     /// The maximum number of iterations
     size_t maxiter_ = 100;
 
+    /// Stop if Davidson-Liu not converged
+    bool die_if_not_converged_ = true;
+
     /// Read wave function from disk as initial guess
     bool read_initial_guess_;
 
@@ -277,7 +280,7 @@ class ActiveSpaceSolver {
     /// Pairs of state info and the contracted CI eigen vectors
     std::map<StateInfo, std::shared_ptr<psi::Matrix>>
         state_contracted_evecs_map_; // TODO move outside?
-}; // namespace forte
+};                                   // namespace forte
 
 /**
  * @brief Make an active space solver object.

@@ -26,9 +26,6 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsi4util/process.h"
-#include "psi4/libmints/molecule.h"
-
 #include "helpers/helpers.h"
 
 #include "base_classes/forte_options.h"
@@ -94,25 +91,10 @@ bool StateInfo::operator==(const StateInfo& rhs) const {
                     rhs.gas_max_);
 }
 
-StateInfo make_state_info_from_psi(std::shared_ptr<ForteOptions> options) {
-    int charge = psi::Process::environment.molecule()->molecular_charge();
-    if (not options->is_none("CHARGE")) {
-        charge = options->get_int("CHARGE");
-    }
+StateInfo make_state_info_from_options(std::shared_ptr<ForteOptions> options, const Symmetry& symmetry) {
+    int nel = options->get_int("NEL");
 
-    int nel = 0;
-    int natom = psi::Process::environment.molecule()->natom();
-    for (int i = 0; i < natom; i++) {
-        nel += static_cast<int>(psi::Process::environment.molecule()->Z(i));
-    }
-    // If the charge has changed, recompute the number of electrons
-    // Or if you cannot find the number of electrons
-    nel -= charge;
-
-    size_t multiplicity = psi::Process::environment.molecule()->multiplicity();
-    if (not options->is_none("MULTIPLICITY")) {
-        multiplicity = options->get_int("MULTIPLICITY");
-    }
+    size_t multiplicity = options->get_int("MULTIPLICITY");
 
     // If the user did not specify ms determine the value from the input or
     // take the lowest value consistent with the value of "MULTIPLICITY"
@@ -126,7 +108,7 @@ StateInfo make_state_info_from_psi(std::shared_ptr<ForteOptions> options) {
     }
 
     if (((nel - twice_ms) % 2) != 0) {
-        throw std::runtime_error("\n\n  make_state_info_from_psi: Wrong value of M_s.\n\n");
+        throw std::runtime_error("\n\n  make_state_info_from_options: Wrong value of M_s.\n\n");
     }
 
     size_t na = (nel + twice_ms) / 2;
@@ -138,7 +120,7 @@ StateInfo make_state_info_from_psi(std::shared_ptr<ForteOptions> options) {
         irrep = options->get_int("ROOT_SYM");
     }
 
-    std::string irrep_label = psi::Process::environment.molecule()->irrep_labels()[irrep];
+    std::string irrep_label = symmetry.irrep_label(irrep);
     return StateInfo(na, nb, multiplicity, twice_ms, irrep, irrep_label);
 }
 
