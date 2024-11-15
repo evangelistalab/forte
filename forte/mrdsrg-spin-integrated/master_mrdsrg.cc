@@ -707,7 +707,6 @@ void MASTER_DSRG::deGNO_ints_full(const std::string& name, double& H0, BlockedTe
     L1h.block("CC").iterate(
         [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
 
-
     // scalar from H1
     double scalar1 = 0.0;
     scalar1 -= H1["ji"] * L1h["ij"];

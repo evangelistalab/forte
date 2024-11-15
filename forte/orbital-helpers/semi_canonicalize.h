@@ -109,21 +109,11 @@ class SemiCanonical {
     /// @return the beta rotation matrix
     std::shared_ptr<psi::Matrix> Ub() { return Ub_; }
 
-    /// @return the alpha rotation matrix in the core space
-    ambit::Tensor Ua_c() const { return Ua_c_.clone(); }
-    /// @return the beta rotation matrix in the core space
-    ambit::Tensor Ub_c() const { return Ub_c_.clone(); }
-
     /// @return the alpha rotation matrix in the active space
     ambit::Tensor Ua_t() const { return Ua_t_.clone(); }
 
     /// @return the beta rotation matrix in the active space
     ambit::Tensor Ub_t() const { return Ub_t_.clone(); }
-
-    /// @return the alpha rotation matrix in the virtual space
-    ambit::Tensor Ua_v() const { return Ua_v_.clone(); }
-    /// @return the beta rotation matrix in the virtual space
-    ambit::Tensor Ub_v() const { return Ub_v_.clone(); }
 
     /// @return if the orbital ordering and phases are fixed successfully
     bool fix_orbital_success() const { return fix_orbital_success_; }
@@ -158,14 +148,8 @@ class SemiCanonical {
     /// Offset of GAS orbitals within ACTIVE
     std::map<std::string, psi::Dimension> actv_offsets_;
 
-    /// Number of core MOs
-    size_t ncore_;
-
     /// Number of active MOs
     size_t nact_;
-
-    /// Number of virtual MOs
-    size_t nvirt_;
 
     /// Number of irreps
     size_t nirrep_;
@@ -175,20 +159,10 @@ class SemiCanonical {
     /// Unitary matrix for beta orbital rotation
     std::shared_ptr<psi::Matrix> Ub_;
 
-    /// Unitary matrix for alpha orbital rotation in the core space
-    ambit::Tensor Ua_c_;
-    /// Unitary matrix for beta orbital rotation in the core space
-    ambit::Tensor Ub_c_;
-
     /// Unitary matrix for alpha orbital rotation in the active space
     ambit::Tensor Ua_t_;
     /// Unitary matrix for beta orbital rotation in the active space
     ambit::Tensor Ub_t_;
-
-    /// Unitary matrix for alpha orbital rotation in the virtual space
-    ambit::Tensor Ua_v_;
-    /// Unitary matrix for beta orbital rotation in the virtual space
-    ambit::Tensor Ub_v_;
 
     /// Set Ua_, Ub_, Ua_t_, and Ub_t_ to identity
     void set_U_to_identity();
@@ -211,14 +185,8 @@ class SemiCanonical {
     /// Builds unitary matrices used to diagonalize diagonal blocks of Fock
     void build_transformation_matrices(const bool& semi);
 
-    /// Fill ambit::Tensor Ua_c_ (Ub_c_) using std::shared_ptr<psi::Matrix> Ua_ (Ub_)
-    void fill_Ucore(const std::shared_ptr<psi::Matrix>& U, ambit::Tensor& Ut);
-
     /// Fill ambit::Tensor Ua_t_ (Ub_t_) using std::shared_ptr<psi::Matrix> Ua_ (Ub_)
     void fill_Uactv(const std::shared_ptr<psi::Matrix>& U, ambit::Tensor& Ut);
-
-    /// Fill ambit::Tensor Ua_v_ (Ub_v_) using std::shared_ptr<psi::Matrix> Ua_ (Ub_)
-    void fill_Uvirt(const std::shared_ptr<psi::Matrix>& U, ambit::Tensor& Ut);
 
     /// Successfully fix the orbital ordering and phases
     bool fix_orbital_success_;

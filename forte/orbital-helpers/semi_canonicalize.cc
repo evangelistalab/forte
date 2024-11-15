@@ -64,25 +64,15 @@ SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
 void SemiCanonical::startup() {
     nirrep_ = mo_space_info_->nirrep();
     nmopi_ = mo_space_info_->dimension("ALL");
-    ncore_ = mo_space_info_->size("CORE");
     nact_ = mo_space_info_->size("ACTIVE");
-    nvirt_ = mo_space_info_->size("VIRTUAL");
 
     // Prepare orbital rotation matrix, which transforms all MOs
     Ua_ = std::make_shared<psi::Matrix>("Ua", nmopi_, nmopi_);
     Ub_ = std::make_shared<psi::Matrix>("Ub", nmopi_, nmopi_);
 
-    // Prepare orbital rotation matrix, which transforms only core MOs
-    Ua_c_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {ncore_, ncore_});
-    Ub_c_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {ncore_, ncore_});
-
     // Prepare orbital rotation matrix, which transforms only active MOs
     Ua_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
     Ub_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
-
-    // Prepare orbital rotation matrix, which transforms only virtual MOs
-    Ua_v_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nvirt_, nvirt_});
-    Ub_v_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nvirt_, nvirt_});
 
     // Initialize U to identity
     set_U_to_identity();
@@ -122,22 +112,10 @@ void SemiCanonical::set_U_to_identity() {
     Ua_->identity();
     Ub_->identity();
 
-    Ua_c_.iterate(
-        [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
-
-    Ub_c_.iterate(
-        [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
-
     Ua_t_.iterate(
         [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
 
     Ub_t_.iterate(
-        [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
-
-    Ua_v_.iterate(
-        [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
-
-    Ub_v_.iterate(
         [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
 }
 
@@ -299,64 +277,12 @@ void SemiCanonical::build_transformation_matrices(const bool& semi) {
     if (!inactive_mix_)
         fix_orbital_success_ = ints_->fix_orbital_phases(Ua_, true);
 
-    // fill in Ua_c_
-    fill_Ucore(Ua_, Ua_c_);
     // fill in Ua_t_
     fill_Uactv(Ua_, Ua_t_);
-    // fill in Ua_v_
-    fill_Uvirt(Ua_, Ua_v_);
 
     // pass to Ub
     Ub_->copy(Ua_);
-    Ub_c_.copy(Ua_c_);
     Ub_t_.copy(Ua_t_);
-    Ub_v_.copy(Ua_v_);
-}
-
-void SemiCanonical::fill_Ucore(const std::shared_ptr<psi::Matrix>& U, ambit::Tensor& Ut) {
-    auto core_names = mo_space_info_->composite_spaces_def().at("CORE");
-    auto& Ut_data = Ut.data();
-
-    for (const std::string& name : core_names) {
-        auto size = mo_space_info_->size(name);
-        if (size == 0)
-            continue;
-
-        auto pos = mo_space_info_->pos_in_space(name, "CORE");
-        auto relative_mos = mo_space_info_->relative_mo(name);
-        for (size_t p = 0; p < size; ++p) {
-            const auto& [hp, np] = relative_mos[p];
-            for (size_t q = 0; q < size; ++q) {
-                const auto& [hq, nq] = relative_mos[q];
-                if (hp != hq)
-                    continue;
-                Ut_data[pos[p] * ncore_ + pos[q]] = U->get(hp, np, nq);
-            }
-        }
-    }
-}
-
-void SemiCanonical::fill_Uvirt(const std::shared_ptr<psi::Matrix>& U, ambit::Tensor& Ut) {
-    auto virtual_names = mo_space_info_->composite_spaces_def().at("VIRTUAL");
-    auto& Ut_data = Ut.data();
-
-    for (const std::string& name : virtual_names) {
-        auto size = mo_space_info_->size(name);
-        if (size == 0)
-            continue;
-
-        auto pos = mo_space_info_->pos_in_space(name, "VIRTUAL");
-        auto relative_mos = mo_space_info_->relative_mo(name);
-        for (size_t p = 0; p < size; ++p) {
-            const auto& [hp, np] = relative_mos[p];
-            for (size_t q = 0; q < size; ++q) {
-                const auto& [hq, nq] = relative_mos[q];
-                if (hp != hq)
-                    continue;
-                Ut_data[pos[p] * nvirt_ + pos[q]] = U->get(hp, np, nq);
-            }
-        }
-    }
 }
 
 void SemiCanonical::fill_Uactv(const std::shared_ptr<psi::Matrix>& U, ambit::Tensor& Ut) {

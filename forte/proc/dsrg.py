@@ -249,7 +249,7 @@ class ProcedureDSRG:
         if not self.Heff_implemented:
             self.relax_maxiter = 0
 
-        if self.options.get_bool("FULL_HBAR") and self.solver_type in ["MRDSRG","SA-MRDSRG","SA_MRDSRG"]:
+        if self.options.get_bool("FULL_HBAR") and self.solver_type in ["MRDSRG","SA-MRDSRG","SA_MRDSRG"] and self.relax_maxiter == 0:
             psi4.core.print_out("\n  =>** Saving Full Hbar (unrelaxed) **<=\n")
             Hbar1, Hbar2 = self.dsrg_solver.compute_Heff_full()
             np.savez("save_Hbar", **Hbar1, **Hbar2)
@@ -267,7 +267,7 @@ class ProcedureDSRG:
 
                 del Mbar0, Mbar1, Mbar2
             
-        if self.options.get_bool("FULL_HBAR_DEGNO") and self.solver_type in ["SA-MRDSRG","SA_MRDSRG","MRDSRG"]:
+        if self.options.get_bool("FULL_HBAR_DEGNO") and self.solver_type in ["MRDSRG","SA-MRDSRG","SA_MRDSRG"] and self.relax_maxiter == 0:
             psi4.core.print_out("\n  =>** Saving Full Hbar in de-normal-ordered basis (unrelaxed) **<=\n")
             Hbar1, Hbar2 = self.dsrg_solver.compute_Heff_full_degno()
             np.savez("save_Hbar_degno", **Hbar1, **Hbar2)
@@ -283,16 +283,14 @@ class ProcedureDSRG:
             #       However, the ForteIntegrals object and the dipole integrals always refer to the current semi-canonical basis.
             #       so to compute the dipole moment correctly, we need to make the RDMs and orbital basis consistent
 
-            if self.options.get_bool("FULL_HBAR") and n == self.relax_maxiter - 1:
-                psi4.core.print_out("\n  =>** Saving Full Hbar (relax) **<=\n")
-                Heff = self.dsrg_solver.compute_Heff_full()
-                Heff_dict = forte.Heff_dict(Heff)
-                np.savez("save_Hbar", **Heff_dict)
+            if self.options.get_bool("FULL_HBAR") and self.solver_type in ["MRDSRG","SA-MRDSRG","SA_MRDSRG"] and n == self.relax_maxiter - 1:
+                psi4.core.print_out("\n  =>** Saving Full Hbar (relaxed) **<=\n")
+                Hbar1, Hbar2 = self.dsrg_solver.compute_Heff_full()
+                np.savez("save_Hbar", **Hbar1, **Hbar2)
 
                 if self.solver_type not in ["MRDSRG_SO", "MRDSRG-SO"]:
                     psi4.core.print_out("\n  =>** Getting dipole integral **<=\n")
                     Mbar0 = self.dsrg_solver.compute_Mbar0_full()
-                    print(Mbar0)
                     np.save("Mbar0", Mbar0)
                     Mbar1 = self.dsrg_solver.compute_Mbar1_full()
                     Mbar2 = self.dsrg_solver.compute_Mbar2_full()
@@ -302,6 +300,11 @@ class ProcedureDSRG:
                         np.savez(f"Mbar2_{i}", **Mbar2[i])
 
                     del Mbar0, Mbar1, Mbar2
+                
+            if self.options.get_bool("FULL_HBAR_DEGNO") and self.solver_type in ["MRDSRG","SA-MRDSRG","SA_MRDSRG"] and n == self.relax_maxiter - 1:
+                psi4.core.print_out("\n  =>** Saving Full Hbar in de-normal-ordered basis (relaxed) **<=\n")
+                Hbar1, Hbar2 = self.dsrg_solver.compute_Heff_full_degno()
+                np.savez("save_Hbar_degno", **Hbar1, **Hbar2)
 
             ints_dressed = self.dsrg_solver.compute_Heff_actv()
             if self.fno_pt2_Heff_shift is not None:
