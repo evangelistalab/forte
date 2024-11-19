@@ -12,7 +12,7 @@ def run_hf(geom, basis, state):
         [
             OptionsFactory(),
             MoleculeFactory(geom),
-            StateFactory(charge=0, multiplicity=1, sym="ag"),
+            StateFactory(charge=charge, multiplicity=multiplicity, sym=sym),
             HF(basis=basis),
         ],
         name="HF Workflow",

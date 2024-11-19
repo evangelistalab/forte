@@ -33,12 +33,7 @@ class MCSCF(Module):
             self.solver_type, state_map, data.scf_info, data.mo_space_info, data.options
         )
         mcscf = make_mcscf_two_step(
-            data.active_space_solver,
-            data.state_weights_map,
-            data.scf_info,
-            data.options,
-            data.mo_space_info,
-            data.ints
+            data.active_space_solver, data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints
         )
         energy = mcscf.compute_energy()
         data.results.add("mcscf energy", energy, "MCSCF energy", "hartree")
