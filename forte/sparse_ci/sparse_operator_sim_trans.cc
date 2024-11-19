@@ -91,15 +91,14 @@ void fact_unitary_trans_antiherm_grad(SparseOperator& O, const SparseOperatorLis
             throw std::runtime_error("sim_trans_antiherm_impl: the angle theta must be real.");
         }
 
-        // skip transformation if theta is zero
-        if (std::abs(theta) < screen_threshold) {
+        // skip transformation if theta is zero, except if we are taking the gradient
+        if ((std::abs(theta) < screen_threshold) and index != grad_index) {
             return;
         }
 
         // if T = T^dagger, then the transformation is trivial, so we can skip it
         if (sqop.is_self_adjoint()) {
-            // if the operator is the one for which the gradient is being computed, then set it to
-            // zero
+            // if we are taking the gradient of this operator then the result is zero
             if (index == grad_index) {
                 O = SparseOperator();
             }
