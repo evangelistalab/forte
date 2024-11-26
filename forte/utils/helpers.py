@@ -240,10 +240,16 @@ def prepare_forte_objects(
     else:
         mo_space_info = forte.make_mo_space_info_from_map(nmopi, point_group, mo_spaces)
 
+    # These variables are needed in make_state_weights_map
+    nel = wfn.nalpha() + wfn.nbeta()
+    multiplicity = 1
+
+    options.set_int("NEL", nel)
+    options.set_int("MULTIPLICITY", multiplicity)
     state_weights_map = forte.make_state_weights_map(options, mo_space_info)
 
     # make a ForteIntegral object
-    ints = forte.make_ints_from_psi4(wfn, options, mo_space_info)
+    ints = forte.make_ints_from_psi4(wfn, options, scf_info, mo_space_info)
 
     if localize:
         localizer = forte.Localize(forte.forte_options, ints, mo_space_info)
