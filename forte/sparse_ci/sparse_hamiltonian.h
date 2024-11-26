@@ -67,6 +67,9 @@ class SparseHamiltonian {
     /// @return timings for this class
     std::map<std::string, double> timings() const;
 
+    /// @return the SparseOperator object constructed from the Hamiltonian
+    SparseOperator to_sparse_operator() const;
+
   private:
     /// Compute couplings for new determinants
     void compute_new_couplings(const std::vector<Determinant>& new_dets, double screen_thresh);
