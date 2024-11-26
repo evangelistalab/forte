@@ -349,7 +349,7 @@ SparseOperator SparseHamiltonian::to_sparse_operator() const {
     
     H.add_term_from_str("[]", as_ints_->nuclear_repulsion_energy() + as_ints_->scalar_energy() + as_ints_->frozen_core_energy());
     for (size_t p = 0; p < nmo; p++) {
-        for (size_t p = 0; p < nmo; p++) {
+        for (size_t q = 0; q < nmo; q++) {
             H.add_term_from_str(fmt::format("{}a+ {}a-", p, q), as_ints_->oei_a(p, q));
             H.add_term_from_str(fmt::format("{}b+ {}b-", p, q), as_ints_->oei_b(p, q));
         }
