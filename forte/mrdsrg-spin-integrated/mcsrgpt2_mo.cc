@@ -29,13 +29,11 @@
 #include <algorithm>
 #include <ctype.h>
 #include <fstream>
+#include <format>
 #include <iostream>
 #include <numeric>
 #include <string>
 #include <utility>
-
-#define FMT_HEADER_ONLY
-#include "lib/fmt/core.h"
 
 #include "ambit/tensor.h"
 
@@ -1057,7 +1055,7 @@ void MCSRGPT2_MO::test_D1_RE() {
         std::string indent(4, ' ');
         std::string dash(47, '-');
         std::string title = indent +
-                            fmt::format("{:<9}    {:<15}    {:<15}\n", "Indices", "Denominator",
+                            std::format("{:<9}    {:<15}    {:<15}\n", "Indices", "Denominator",
                                         "Original Denom.") +
                             indent + dash;
         outfile->Printf("\n%s", title.c_str());
@@ -1194,7 +1192,7 @@ void MCSRGPT2_MO::test_D2_RE() {
         std::string indent(4, ' ');
         std::string dash(57, '-');
         std::string title = indent +
-                            fmt::format("{:<19}    {:<15}    {:<15}\n", "Indices", "Denominator",
+                            std::format("{:<19}    {:<15}    {:<15}\n", "Indices", "Denominator",
                                         "Original Denom.") +
                             indent + dash;
         outfile->Printf("\n%s", title.c_str());
@@ -1217,7 +1215,7 @@ void MCSRGPT2_MO::test_D2_RE() {
         std::string indent(4, ' ');
         std::string dash(57, '-');
         std::string title = indent +
-                            fmt::format("{:<19}    {:<15}    {:<15}\n", "Indices", "Denominator",
+                            std::format("{:<19}    {:<15}    {:<15}\n", "Indices", "Denominator",
                                         "Original Denom.") +
                             indent + dash;
         outfile->Printf("\n%s", title.c_str());
@@ -1468,7 +1466,7 @@ void MCSRGPT2_MO::test_D2_Dyall() {
         std::string indent(4, ' ');
         std::string dash(57, '-');
         std::string title = indent +
-                            fmt::format("{:<19}    {:<15}    {:<15}\n", "Indices", "Denominator",
+                            std::format("{:<19}    {:<15}    {:<15}\n", "Indices", "Denominator",
                                         "Original Denom.") +
                             indent + dash;
         outfile->Printf("\n%s", title.c_str());
@@ -1491,7 +1489,7 @@ void MCSRGPT2_MO::test_D2_Dyall() {
         std::string indent(4, ' ');
         std::string dash(57, '-');
         std::string title = indent +
-                            fmt::format("{:<19}    {:<15}    {:<15}\n", "Indices", "Denominator",
+                            std::format("{:<19}    {:<15}    {:<15}\n", "Indices", "Denominator",
                                         "Original Denom.") +
                             indent + dash;
         outfile->Printf("\n%s", title.c_str());
@@ -1531,7 +1529,7 @@ void MCSRGPT2_MO::PrintDelta() {
                         continue;
                     } else {
                         double Daa = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
-                        out_delta << fmt::format("{:>3} {:>3} {:>3} {:>3} {:>20.15f}\n", ni, nj, na,
+                        out_delta << std::format("{:>3} {:>3} {:>3} {:>3} {:>20.15f}\n", ni, nj, na,
                                                  nb, Daa);
                     }
                 }
@@ -1554,7 +1552,7 @@ void MCSRGPT2_MO::PrintDelta() {
                 continue;
             } else {
                 double delta_a = Fa_[ni][ni] - Fa_[na][na];
-                out_delta << fmt::format("{:>3} {:>3} {:>20.15f}\n", ni, na, delta_a);
+                out_delta << std::format("{:>3} {:>3} {:>20.15f}\n", ni, na, delta_a);
             }
         }
     }

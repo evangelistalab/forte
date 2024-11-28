@@ -29,10 +29,8 @@
 #include <algorithm>
 #include <cmath>
 #include <complex>
+#include <format>
 #include <numeric>
-
-#define FMT_HEADER_ONLY
-#include "lib/fmt/core.h"
 
 #include "helpers/combinatorial.h"
 #include "helpers/timer.h"
@@ -67,9 +65,9 @@ std::string format_term_in_sum(sparse_scalar_t coefficient, const std::string& t
     // if constexpr (std::is_same_v<sparse_scalar_t, std::complex<double>>) {
     // }
     // if constexpr (std::is_same_v<sparse_scalar_t, double>) {
-    //     return fmt::format("{} * {}", coefficient, term);
+    //     return std::format("{} * {}", coefficient, term);
     // }
-    return fmt::format("({} + {}i) * {}", std::real(coefficient), std::imag(coefficient), term);
+    return std::format("({} + {}i) * {}", std::real(coefficient), std::imag(coefficient), term);
 }
 
 std::vector<std::string> SparseOperator::str() const {
@@ -150,7 +148,6 @@ SparseOperator commutator(const SparseOperator& lhs, const SparseOperator& rhs) 
     }
     return C;
 }
-
 
 void SparseOperatorList::add_term_from_str(std::string str, sparse_scalar_t coefficient,
                                            bool allow_reordering) {

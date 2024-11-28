@@ -27,10 +27,8 @@
  */
 
 #include <algorithm>
+#include <format>
 #include <vector>
-
-#define FMT_HEADER_ONLY
-#include "lib/fmt/core.h"
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -142,11 +140,11 @@ std::string matrix_to_string(const psi::Matrix& mat) {
     auto nsopi = mat.rowspi();
     auto nmopi = mat.colspi();
     for (int h = 0; h < nirrep; ++h) {
-        str += fmt::format("  irrep {}:\n", h);
+        str += std::format("  irrep {}:\n", h);
         for (int mu = 0; mu < nsopi.get(h); ++mu) {
-            str += fmt::format("    {:>3}  ", mu);
+            str += std::format("    {:>3}  ", mu);
             for (int nu = 0; nu < nmopi.get(h); ++nu) {
-                str += fmt::format("{:10.6f} ", mat.get(h, mu, nu));
+                str += std::format("{:10.6f} ", mat.get(h, mu, nu));
             }
             str += "\n";
         }

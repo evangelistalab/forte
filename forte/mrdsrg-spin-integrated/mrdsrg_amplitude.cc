@@ -27,15 +27,13 @@
  */
 
 #include <algorithm>
+#include <format>
 #include <map>
 #include <vector>
 #include <sys/stat.h>
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
-
-#define FMT_HEADER_ONLY
-#include "lib/fmt/core.h"
 
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
@@ -1408,39 +1406,39 @@ void MRDSRG::print_amp_summary(const std::string& name,
     };
 
     if (rank == 1) {
-        spin_title += fmt::format(" {:>3} {:>3} {:>3} {:>3} {:>9} ", spin_case[name[0]], "",
+        spin_title += std::format(" {:>3} {:>3} {:>3} {:>3} {:>9} ", spin_case[name[0]], "",
                                   spin_case[name[0]], "", "");
         if (spin_title.find_first_not_of(' ') != std::string::npos) {
             spin_title = "\n" + indent + extendstr(spin_title, 3);
         } else {
             spin_title = "";
         }
-        mo_title += fmt::format(" {:>3} {:>3} {:>3} {:>3} {:>9} ", 'i', "", 'a', "", "");
+        mo_title += std::format(" {:>3} {:>3} {:>3} {:>3} {:>9} ", 'i', "", 'a', "", "");
         mo_title = "\n" + indent + extendstr(mo_title, 3);
         for (size_t n = 0; n != list.size(); ++n) {
             if (n % 3 == 0)
                 output += "\n" + indent;
             const auto& datapair = list[n];
             std::vector<size_t> idx = datapair.first;
-            output += fmt::format("[{:>3} {:>3} {:>3} {:>3}]{:>9.6f} ", idx[0], "", idx[1], "",
+            output += std::format("[{:>3} {:>3} {:>3} {:>3}]{:>9.6f} ", idx[0], "", idx[1], "",
                                   datapair.second);
         }
     } else if (rank == 2) {
-        spin_title += fmt::format(" {:>3} {:>3} {:>3} {:>3} {:>9} ", spin_case[name[0]],
+        spin_title += std::format(" {:>3} {:>3} {:>3} {:>3} {:>9} ", spin_case[name[0]],
                                   spin_case[name[1]], spin_case[name[0]], spin_case[name[1]], "");
         if (spin_title.find_first_not_of(' ') != std::string::npos) {
             spin_title = "\n" + indent + extendstr(spin_title, 3);
         } else {
             spin_title = "";
         }
-        mo_title += fmt::format(" {:>3} {:>3} {:>3} {:>3} {:>9} ", "i", "j", "a", "b", " ");
+        mo_title += std::format(" {:>3} {:>3} {:>3} {:>3} {:>9} ", "i", "j", "a", "b", " ");
         mo_title = "\n" + indent + extendstr(mo_title, 3);
         for (size_t n = 0; n != list.size(); ++n) {
             if (n % 3 == 0)
                 output += "\n" + indent;
             const auto& datapair = list[n];
             std::vector<size_t> idx = datapair.first;
-            output += fmt::format("[{:>3} {:>3} {:>3} {:>3}]{:>9.6f} ", idx[0], idx[1], idx[2],
+            output += std::format("[{:>3} {:>3} {:>3} {:>3}]{:>9.6f} ", idx[0], idx[1], idx[2],
                                   idx[3], datapair.second);
         }
     } else {
@@ -1453,7 +1451,7 @@ void MRDSRG::print_amp_summary(const std::string& name,
         line = "\n" + indent + std::string(linesize - indent.size(), '-');
         summary = "\n" + indent + "Norm of T" + std::to_string(rank) + name +
                   " vector: (nonzero elements: " + std::to_string(number_nonzero) + ")";
-        std::string strnorm = fmt::format("{:.15f}.", norm);
+        std::string strnorm = std::format("{:.15f}.", norm);
         std::string blank(linesize - summary.size() - strnorm.size() + 1, ' ');
         summary += blank + strnorm;
 
@@ -1473,7 +1471,7 @@ void MRDSRG::print_intruder(const std::string& name,
 
     std::string indent(4, ' ');
     std::string title = indent + "T" + std::to_string(rank) + " amplitudes larger than " +
-                        fmt::format("{:.4f}", intruder_tamp_) + " for spin case " + name + ":";
+                        std::format("{:.4f}", intruder_tamp_) + " for spin case " + name + ":";
     std::string col_title;
     std::string line;
     std::string output;
@@ -1494,7 +1492,7 @@ void MRDSRG::print_intruder(const std::string& name,
             double v = datapair.second;
 
             output += "\n" + indent +
-                      fmt::format(
+                      std::format(
                           "[{:>3} {:>3} {:>3} {:>3}] {:>13.8f} ({:>10.6f} - {:>10.6f} = {:>10.6f})",
                           i, " ", a, " ", v, fi, fa, down);
         }
@@ -1514,7 +1512,7 @@ void MRDSRG::print_intruder(const std::string& name,
             double v = datapair.second;
 
             output += "\n" + indent +
-                      fmt::format("[{:>3} {:>3} {:>3} {:>3}] {:>13.8f} ({:>10.6f} + {:>10.6f} - "
+                      std::format("[{:>3} {:>3} {:>3} {:>3}] {:>13.8f} ({:>10.6f} + {:>10.6f} - "
                                   "{:>10.6f} - {:>10.6f} = {:>10.6f})",
                                   i, j, a, b, v, fi, fj, fa, fb, down);
         }
