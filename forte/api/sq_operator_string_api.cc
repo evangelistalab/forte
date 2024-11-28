@@ -48,6 +48,7 @@ void export_SQOperatorString(py::module& m) {
         .def("str", &SQOperatorString::str, "Get the string representation of the operator string")
         .def("count", &SQOperatorString::count, "Get the number of operators")
         .def("adjoint", &SQOperatorString::adjoint, "Get the adjoint operator string")
+        .def("spin_flip", &SQOperatorString::spin_flip, "Get the spin-flipped operator string")
         .def("number_component", &SQOperatorString::number_component,
              "Get the number component of the operator string")
         .def("non_number_component", &SQOperatorString::non_number_component,

@@ -26,9 +26,28 @@
  * @END LICENSE
  */
 
+#include <future>
+#include <vector>
+#include <thread>
+#include <random>
+#include <algorithm> // For std::shuffle
+
 #include "sparse_operator.h"
 
 namespace forte {
+
+void split_operator(const SparseOperator& O, size_t num_chunks,
+                    std::vector<SparseOperator>& chunks);
+
+SparseOperator process_chunk(SparseOperator& chunk, const SQOperatorString& T_op,
+                             std::pair<sparse_scalar_t, sparse_scalar_t> c1_pair,
+                             std::pair<sparse_scalar_t, sparse_scalar_t> c2_pair,
+                             sparse_scalar_t sigma, bool add, double screen_threshold);
+
+void parallel_sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
+                             std::pair<sparse_scalar_t, sparse_scalar_t> c1_pair,
+                             std::pair<sparse_scalar_t, sparse_scalar_t> c2_pair,
+                             sparse_scalar_t sigma, bool add, double screen_threshold);
 
 void sim_trans_op_impl(SparseOperator& O, const SQOperatorString& T_op, sparse_scalar_t theta,
                        double screen_threshold);
@@ -38,6 +57,12 @@ void sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
                     std::pair<sparse_scalar_t, sparse_scalar_t> c1_pair,
                     std::pair<sparse_scalar_t, sparse_scalar_t> c2_pair, sparse_scalar_t sigma,
                     bool add, double screen_threshold);
+
+/// General implementation of the similarity transformation
+void serial_sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
+                           std::pair<sparse_scalar_t, sparse_scalar_t> c1_pair,
+                           std::pair<sparse_scalar_t, sparse_scalar_t> c2_pair,
+                           sparse_scalar_t sigma, bool add, double screen_threshold);
 
 void fact_unitary_trans_antiherm(SparseOperator& O, const SparseOperatorList& T, bool reverse,
                                  double screen_threshold) {
@@ -202,10 +227,112 @@ void fact_unitary_trans_imagherm(SparseOperator& O, const SparseOperatorList& T,
     }
 }
 
+void split_operator(const SparseOperator& O, size_t num_chunks,
+                    std::vector<SparseOperator>& chunks) {
+    size_t total_elements = O.size();
+    size_t chunk_size = (total_elements + num_chunks - 1) / num_chunks;
+
+    auto it = O.elements().begin();
+    for (size_t i = 0; i < num_chunks && it != O.elements().end(); ++i) {
+        SparseOperator chunk;
+        for (size_t j = 0; j < chunk_size && it != O.elements().end(); ++j, ++it) {
+            chunk.insert(it->first, it->second);
+        }
+        chunks.push_back(std::move(chunk));
+    }
+}
+
+// void split_operator(const SparseOperator& O, size_t num_chunks,
+//                     std::vector<SparseOperator>& chunks) {
+//     using container = typename SparseOperator::container;
+//     using key_type = typename container::key_type;
+//     using mapped_type = typename container::mapped_type;
+//     using element_type = std::pair<key_type, mapped_type>;
+
+//     // Collect elements into a vector without const on the key
+//     std::vector<element_type> element_vector;
+//     element_vector.reserve(O.elements().size());
+
+//     for (const auto& [key, value] : O.elements()) {
+//         element_vector.emplace_back(key, value);
+//     }
+
+//     // Shuffle the elements if desired
+//     std::random_device rd;
+//     std::mt19937 gen(rd());
+//     std::shuffle(element_vector.begin(), element_vector.end(), gen);
+
+//     // Calculate chunk sizes
+//     size_t total_elements = element_vector.size();
+//     size_t base_chunk_size = total_elements / num_chunks;
+//     size_t remainder = total_elements % num_chunks;
+
+//     std::vector<size_t> chunk_sizes(num_chunks, base_chunk_size);
+//     for (size_t i = 0; i < remainder; ++i) {
+//         ++chunk_sizes[i];
+//     }
+
+//     // Distribute elements based on chunk sizes
+//     auto it = element_vector.begin();
+//     for (size_t i = 0; i < num_chunks && it != element_vector.end(); ++i) {
+//         SparseOperator chunk;
+//         size_t current_chunk_size = chunk_sizes[i];
+//         for (size_t j = 0; j < current_chunk_size && it != element_vector.end(); ++j, ++it) {
+//             chunk.insert(it->first, it->second);
+//         }
+//         chunks.push_back(std::move(chunk));
+//     }
+// }
+
+SparseOperator process_chunk(SparseOperator& chunk, const SQOperatorString& T_op,
+                             std::pair<sparse_scalar_t, sparse_scalar_t> c1_pair,
+                             std::pair<sparse_scalar_t, sparse_scalar_t> c2_pair,
+                             sparse_scalar_t sigma, bool add, double screen_threshold) {
+    // Process the chunk using sim_trans_impl
+    serial_sim_trans_impl(chunk, T_op, c1_pair, c2_pair, sigma, add, screen_threshold);
+    return chunk;
+}
+
+void parallel_sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
+                             std::pair<sparse_scalar_t, sparse_scalar_t> c1_pair,
+                             std::pair<sparse_scalar_t, sparse_scalar_t> c2_pair,
+                             sparse_scalar_t sigma, bool add, double screen_threshold) {
+    // Determine the number of threads to use
+    size_t num_threads = std::thread::hardware_concurrency();
+
+    // Split O into chunks
+    std::vector<SparseOperator> chunks;
+    split_operator(O, num_threads, chunks);
+
+    // Vector to store futures
+    std::vector<std::future<SparseOperator>> futures;
+
+    // Launch async tasks for each chunk
+    for (auto& chunk : chunks) {
+        futures.push_back(std::async(std::launch::async, [=, &T_op]() mutable {
+            return process_chunk(chunk, T_op, c1_pair, c2_pair, sigma, add, screen_threshold);
+        }));
+    }
+
+    SparseOperator result;
+    for (auto& fut : futures) {
+        result += fut.get(); // Retrieve and accumulate the processed chunks
+    }
+
+    O = std::move(result);
+}
+
 void sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
                     std::pair<sparse_scalar_t, sparse_scalar_t> c1_pair,
                     std::pair<sparse_scalar_t, sparse_scalar_t> c2_pair, sparse_scalar_t sigma,
                     bool add, double screen_threshold) {
+    parallel_sim_trans_impl(O, T_op, c1_pair, c2_pair, sigma, add, screen_threshold);
+}
+
+void serial_sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
+                           std::pair<sparse_scalar_t, sparse_scalar_t> c1_pair,
+                           std::pair<sparse_scalar_t, sparse_scalar_t> c2_pair,
+                           sparse_scalar_t sigma, bool add, double screen_threshold) {
     // Td = T^dagger
     auto Td_op = T_op.adjoint();
     // TTd = T T^dagger (gives a number operator if there are no repeated indices)
@@ -331,7 +458,7 @@ void sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
     if (add) {
         O += T;
     } else {
-        O = T;
+        O = std::move(T);
     }
 }
 
