@@ -27,11 +27,9 @@
  */
 
 #include <algorithm>
+#include <format>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
-
-#define FMT_HEADER_ONLY
-#include "lib/fmt/core.h"
 
 #include "base_classes/mo_space_info.h"
 #include "helpers/printing.h"
@@ -162,14 +160,14 @@ void DSRG_TIME::print_comm_time() {
         std::string indent(4, ' ');
         std::string dash(53, '-');
         std::string output;
-        output += indent + fmt::format("{:5c}  {:10s}  {:10s}  {:10s}  {:10s}\n", ' ', "[H1, T1]",
+        output += indent + std::format("{:5c}  {:10s}  {:10s}  {:10s}  {:10s}\n", ' ', "[H1, T1]",
                                        "[H1, T2]", "[H2, T1]", "[H2, T2]");
         output += indent + dash + "\n";
-        output += indent + fmt::format("{:5s}  {:10.3f}  {:10.3f}  {:10.3f}  {:10.3f}\n", "-> C0",
+        output += indent + std::format("{:5s}  {:10.3f}  {:10.3f}  {:10.3f}  {:10.3f}\n", "-> C0",
                                        timing_[0], timing_[1], timing_[2], timing_[3]);
-        output += indent + fmt::format("{:5s}  {:10.3f}  {:10.3f}  {:10.3f}  {:10.3f}\n", "-> C1",
+        output += indent + std::format("{:5s}  {:10.3f}  {:10.3f}  {:10.3f}  {:10.3f}\n", "-> C1",
                                        timing_[4], timing_[5], timing_[6], timing_[7]);
-        output += indent + fmt::format("{:5s}  {:10s}  {:10.3f}  {:10.3f}  {:10.3f}\n", "-> C2", "",
+        output += indent + std::format("{:5s}  {:10s}  {:10.3f}  {:10.3f}  {:10.3f}\n", "-> C2", "",
                                        timing_[8], timing_[9], timing_[10]);
         output += indent + dash + "\n";
         outfile->Printf("\n%s", output.c_str());
