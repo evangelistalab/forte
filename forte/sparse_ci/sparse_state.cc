@@ -34,7 +34,7 @@
 #include "helpers/timer.h"
 #include "helpers/string_algorithms.h"
 #include "integrals/active_space_integrals.h"
-
+#include "sparse_ci/determinant.hpp"
 #include "sparse_ci/sparse_state.h"
 
 namespace forte {
@@ -184,6 +184,17 @@ SparseState apply_number_projector(int na, int nb, const SparseState& state) {
 sparse_scalar_t overlap(const SparseState& left_state, const SparseState& right_state) {
     return left_state.dot(right_state);
 }
+
+sparse_scalar_t spin2_sparse(const SparseState& left_state, const SparseState& right_state) {
+    sparse_scalar_t s2 = 0.0;
+    for (const auto& [deti, ci] : left_state) {
+        for (const auto& [detj, cj] : right_state) {
+            s2 += ci * cj * spin2(deti, detj);
+        }
+    }
+    return s2;
+}
+
 
 } // namespace forte
 

@@ -73,6 +73,7 @@ void export_SparseState(py::module& m) {
 
     m.def("apply_number_projector", &apply_number_projector);
     m.def("get_projection", &get_projection);
+    m.def("spin2_sparse", &spin2_sparse);
     m.def("overlap", &overlap);
 }
 } // namespace forte
