@@ -44,8 +44,6 @@ class SparseState
     /// @return a string representation of the object
     /// @param n the number of spatial orbitals to print
     std::string str(int n = 0) const;
-    /// @brief  compute the 2-norm of the vector
-    double norm() const;
 };
 
 // Functions to apply operators to a state

@@ -49,7 +49,8 @@ void export_SparseState(py::module& m) {
             py::keep_alive<0, 1>()) // Essential: keep object alive while iterator exists
         .def("str", &SparseState::str)
         .def("size", &SparseState::size)
-        .def("norm", &SparseState::norm, "Compute the 2-norm of the vector")
+        .def("norm", &SparseState::norm, "p"_a = 2,
+            "Calculate the p-norm of the SparseState (default p = 2, p = -1 for infinity norm)")
         .def("add", &SparseState::add)
         .def("__iadd__", &SparseState::operator+=, "Add a SparseState to this SparseState")
         .def("__isub__", &SparseState::operator-=, "Subtract a SparseState from this SparseState")

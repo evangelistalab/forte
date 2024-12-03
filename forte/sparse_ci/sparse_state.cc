@@ -39,14 +39,6 @@
 
 namespace forte {
 
-double SparseState::norm() const {
-    double n = 0.0;
-    for (const auto& [det, c] : elements()) {
-        n += std::norm(c);
-    }
-    return std::sqrt(n);
-}
-
 SparseState apply_operator_impl(bool is_antihermitian, const SparseOperator& sop,
                                 const SparseState& state, double screen_thresh);
 
