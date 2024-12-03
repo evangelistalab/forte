@@ -362,10 +362,22 @@ PYBIND11_MODULE(_forte, m) {
             const auto Heff = self.compute_Heff_full();
             return py::make_tuple(blockedtensor_to_np(Heff.at(0)), blockedtensor_to_np(Heff.at(1)));
             })
-        .def("get_gamma1", &MRDSRG_SO::get_gamma1, "Return the gamma1 tensor")
-        .def("get_eta1", &MRDSRG_SO::get_eta1, "Return the eta1 tensor")
-        .def("get_lambda2", &MRDSRG_SO::get_lambda2, "Return the lambda2 tensor")
-        .def("get_lambda3", &MRDSRG_SO::get_lambda3, "Return the lambda3 tensor");
+        .def("get_gamma1", [](MRDSRG_SO& self) {
+            const auto gamma1 = self.get_gamma1();
+            return blockedtensor_to_np(gamma1);
+            })
+        .def("get_eta1", [](MRDSRG_SO& self) {
+            const auto eta1 = self.get_eta1();
+            return blockedtensor_to_np(eta1);
+            })
+        .def("get_lambda2", [](MRDSRG_SO& self) {
+               const auto lambda2 = self.get_lambda2();
+               return blockedtensor_to_np(lambda2);
+               })
+        .def("get_lambda3", [](MRDSRG_SO& self) {
+                const auto lambda3 = self.get_lambda3();
+               return blockedtensor_to_np(lambda3);
+               });
 
     // export DSRG_MRPT spin-adapted code
     py::class_<DSRG_MRPT>(m, "DSRG_MRPT")

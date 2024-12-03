@@ -437,7 +437,7 @@ class ProcedureDSRG:
                 psi4.core.print_out(f"\n\n    DSRG-MRPT2 FNO energy correction:  {self.fno_pt2_energy_shift:20.15f}")
                 psi4.core.print_out(f"\n    DSRG-MRPT2 FNO corrected energy:   {e_dsrg:20.15f}")
 
-        if self.options.get_bool("FULL_HBAR") and self.solver_type in ["MRDSRG"]:
+        if self.options.get_bool("FULL_HBAR") and self.solver_type in ["MRDSRG","MRDSRG_SO","MRDSRG-SO"]:
             if self.relax_maxiter != 0:
                 self.rdms = self.active_space_solver.compute_average_rdms(
                     self.state_weights_map, self.max_rdm_level, self.rdm_type
@@ -464,7 +464,7 @@ class ProcedureDSRG:
 
             del gamma1, eta1, lambda2, lambda3
                         
-            if self.options.get_str("FOURPDC") != "ZERO":
+            if self.options.get_str("FOURPDC") != "ZERO" and self.solver_type in ["MRDSRG"]:
                 psi4.core.print_out("\n  =>** Getting lambda4 **<=\n")
                 lambda4 = self.dsrg_solver.get_lambda4()
                 np.savez("save_lambda4", **lambda4)
