@@ -63,7 +63,7 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Compute DSRG transformed Hamiltonian
     std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv() override;
     std::vector<ambit::BlockedTensor> compute_Heff_full();
-    std::vector<ambit::BlockedTensor> compute_Heff_full_degno();
+    std::pair<double, std::vector<BlockedTensor>> compute_Heff_full_degno();
 
     /// Compute DSRG transformed multipole integrals
     std::shared_ptr<ActiveMultipoleIntegrals> compute_mp_eff_actv() override;

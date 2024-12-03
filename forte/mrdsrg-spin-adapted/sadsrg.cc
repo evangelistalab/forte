@@ -479,7 +479,7 @@ std::vector<ambit::BlockedTensor> SADSRG::compute_Heff_full() {
     return Heff;
 }
 
-std::vector<BlockedTensor> SADSRG::compute_Heff_full_degno() {
+std::pair<double, std::vector<BlockedTensor>> SADSRG::compute_Heff_full_degno() {
     double Edsrg = Eref_ + Hbar0_;
     if (foptions_->get_bool("FORM_HBAR3")) {
         throw psi::PSIEXCEPTION("FORM_HBAR3 is not implemented for full Hamiltonian.");
@@ -487,7 +487,7 @@ std::vector<BlockedTensor> SADSRG::compute_Heff_full_degno() {
         deGNO_ints_full("Hamiltonian", Edsrg, Hbar1_, Hbar2_);
     }
     std::vector<ambit::BlockedTensor> Heff = {Hbar1_, Hbar2_};
-    return Heff;
+    return std::make_pair(Edsrg, Heff);
 }
 
 std::shared_ptr<ActiveMultipoleIntegrals> SADSRG::compute_mp_eff_actv() {

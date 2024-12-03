@@ -270,8 +270,8 @@ class ProcedureDSRG:
             
         if self.options.get_bool("FULL_HBAR_DEGNO") and self.solver_type in ["MRDSRG","SA-MRDSRG","SA_MRDSRG"] and self.relax_maxiter == 0:
             psi4.core.print_out("\n  =>** Saving Full Hbar in de-normal-ordered basis (unrelaxed) **<=\n")
-            Hbar1, Hbar2 = self.dsrg_solver.compute_Heff_full_degno()
-            np.savez("save_Hbar_degno", **Hbar1, **Hbar2)
+            scalar, Hbar1, Hbar2 = self.dsrg_solver.compute_Heff_full_degno()
+            np.savez("save_Hbar_degno", scalar=scalar, **Hbar1, **Hbar2)
 
 
         # Reference relaxation procedure
@@ -305,8 +305,8 @@ class ProcedureDSRG:
                 
             if self.options.get_bool("FULL_HBAR_DEGNO") and self.solver_type in ["MRDSRG","SA-MRDSRG","SA_MRDSRG"] and n == self.relax_maxiter - 1:
                 psi4.core.print_out("\n  =>** Saving Full Hbar in de-normal-ordered basis (relaxed) **<=\n")
-                Hbar1, Hbar2 = self.dsrg_solver.compute_Heff_full_degno()
-                np.savez("save_Hbar_degno", **Hbar1, **Hbar2)
+                scalar, Hbar1, Hbar2 = self.dsrg_solver.compute_Heff_full_degno()
+                np.savez("save_Hbar_degno", scalar=scalar, **Hbar1, **Hbar2)
 
             ints_dressed = self.dsrg_solver.compute_Heff_actv()
             if self.fno_pt2_Heff_shift is not None:

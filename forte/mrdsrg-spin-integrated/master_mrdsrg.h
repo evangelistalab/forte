@@ -51,7 +51,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::vector<ambit::BlockedTensor> compute_Heff_full();
 
     /// Compute DSRG full transformed Hamiltonian in the de-normal-ordered basis
-    std::vector<ambit::BlockedTensor> compute_Heff_full_degno();
+    std::pair<double, std::vector<BlockedTensor>> compute_Heff_full_degno();
 
     /// Compute DSRG transformed dipole integral
     std::vector<double> compute_Mbar0_full() { return Mbar0_full_; }

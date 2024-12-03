@@ -255,7 +255,7 @@ PYBIND11_MODULE(_forte, m) {
             })
         .def("compute_Heff_full_degno", [](MASTER_DSRG& self) {
             const auto Heff = self.compute_Heff_full_degno();
-            return py::make_tuple(blockedtensor_to_np(Heff.at(0)), blockedtensor_to_np(Heff.at(1)));
+            return py::make_tuple(Heff.first, blockedtensor_to_np(Heff.second.at(0)), blockedtensor_to_np(Heff.second.at(1)));
             })
         .def("compute_Mbar0_full", &MASTER_DSRG::compute_Mbar0_full,
              "Return full transformed zero-body dipole integrals")
@@ -331,7 +331,7 @@ PYBIND11_MODULE(_forte, m) {
             })
         .def("compute_Heff_full_degno", [](SADSRG& self) {
             const auto Heff = self.compute_Heff_full_degno();
-            return py::make_tuple(blockedtensor_to_np(Heff.at(0)), blockedtensor_to_np(Heff.at(1)));
+            return py::make_tuple(Heff.first, blockedtensor_to_np(Heff.second.at(0)), blockedtensor_to_np(Heff.second.at(1)));
             })
         .def("compute_mp_eff_actv", &SADSRG::compute_mp_eff_actv,
              "Return the DSRG dressed ActiveMultipoleIntegrals")
