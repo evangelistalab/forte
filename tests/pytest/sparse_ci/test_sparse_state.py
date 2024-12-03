@@ -8,6 +8,7 @@ def test_sparse_vector():
     import pytest
     import forte
     from forte import det
+    import math
 
     ### Overlap tests ###
     ref = forte.SparseState({det(""): 1.0, det("+"): 1.0, det("-"): 1.0, det("2"): 1.0, det("02"): 1.0})
@@ -36,6 +37,14 @@ def test_sparse_vector():
     proj4 = forte.SparseState({det("-"): 1.0})
     test_proj4 = forte.apply_number_projector(0, 1, ref)
     assert proj4 == test_proj4
+
+    ref4 = forte.SparseState({det("+"): 1, det("-"): 1})
+    ref4 = forte.normalize(ref4)
+    assert forte.spin2_sparse(ref4,ref4) == pytest.approx(0.75, abs=1e-9)
+
+    ref5 = forte.SparseState({det("2"): 1})
+    assert forte.spin2_sparse(ref5,ref5) == pytest.approx(0, abs=1e-9)
+    
 
 
 if __name__ == "__main__":

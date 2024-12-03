@@ -39,6 +39,14 @@
 
 namespace forte {
 
+double SparseState::norm() const {
+    double n = 0.0;
+    for (const auto& [det, c] : elements()) {
+        n += std::norm(c);
+    }
+    return std::sqrt(n);
+}
+
 SparseState apply_operator_impl(bool is_antihermitian, const SparseOperator& sop,
                                 const SparseState& state, double screen_thresh);
 
@@ -193,6 +201,15 @@ sparse_scalar_t spin2_sparse(const SparseState& left_state, const SparseState& r
         }
     }
     return s2;
+}
+
+SparseState normalize(const SparseState& state) {
+    SparseState new_state;
+    const auto n = state.norm();
+    for (const auto& [det, c] : state) {
+        new_state[det] = c / n;
+    }
+    return new_state;
 }
 
 

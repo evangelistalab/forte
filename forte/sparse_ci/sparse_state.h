@@ -44,6 +44,8 @@ class SparseState
     /// @return a string representation of the object
     /// @param n the number of spatial orbitals to print
     std::string str(int n = 0) const;
+    /// @brief  compute the 2-norm of the vector
+    double norm() const;
 };
 
 // Functions to apply operators to a state
@@ -75,5 +77,7 @@ sparse_scalar_t overlap(const SparseState& left_state, const SparseState& right_
 
 /// compute the S^2 expectation value
 sparse_scalar_t spin2_sparse(const SparseState& left_state, const SparseState& right_state);
+
+SparseState normalize(const SparseState& state);
 
 } // namespace forte

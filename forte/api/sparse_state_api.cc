@@ -49,8 +49,7 @@ void export_SparseState(py::module& m) {
             py::keep_alive<0, 1>()) // Essential: keep object alive while iterator exists
         .def("str", &SparseState::str)
         .def("size", &SparseState::size)
-        .def("norm", &SparseState::norm, "p"_a = 2,
-             "Compute the p-norm of the vector (default p = 2, p = -1 for infinity norm)")
+        .def("norm", &SparseState::norm, "Compute the 2-norm of the vector")
         .def("add", &SparseState::add)
         .def("__iadd__", &SparseState::operator+=, "Add a SparseState to this SparseState")
         .def("__isub__", &SparseState::operator-=, "Subtract a SparseState from this SparseState")
@@ -75,5 +74,6 @@ void export_SparseState(py::module& m) {
     m.def("get_projection", &get_projection);
     m.def("spin2_sparse", &spin2_sparse);
     m.def("overlap", &overlap);
+    m.def("normalize", &normalize);
 }
 } // namespace forte
