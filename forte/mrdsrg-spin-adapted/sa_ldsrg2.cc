@@ -192,9 +192,14 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
     // dump amplitudes to disk
     dump_amps_to_disk();
 
+    if (full_hbar_) {
+        int ncomm = compute_hbar(rsc_conv_);
+    }
+
     final.stop();
 
     Hbar0_ = Ecorr;
+
     return Ecorr;
 }
 

@@ -47,6 +47,25 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute DSRG transformed Hamiltonian
     virtual std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
 
+    /// Compute DSRG full transformed Hamiltonian
+    std::vector<ambit::BlockedTensor> compute_Heff_full();
+
+    /// Compute DSRG full transformed Hamiltonian in the de-normal-ordered basis
+    std::pair<double, std::vector<BlockedTensor>> compute_Heff_full_degno();
+
+    /// Compute DSRG transformed dipole integral
+    std::vector<double> compute_Mbar0_full() { return Mbar0_full_; }
+    std::vector<ambit::BlockedTensor> compute_Mbar1_full() { return Mbar1_full_; }
+    std::vector<ambit::BlockedTensor> compute_Mbar2_full() { return Mbar2_full_; }
+
+    ambit::BlockedTensor get_gamma1() { return Gamma1_; }
+    ambit::BlockedTensor get_eta1() { return Eta1_; }
+    ambit::BlockedTensor get_lambda2() { return Lambda2_; }
+    std::vector<ambit::Tensor> get_lambda3() { return {L3aaa_, L3aab_, L3abb_, L3bbb_}; }
+    std::vector<ambit::Tensor> get_lambda4() {
+        return {L4aaaa_, L4aaab_, L4aabb_, L4abbb_, L4bbbb_};
+    }
+
     /// De-normal-order DSRG transformed dipole moment
     std::vector<DressedQuantity> deGNO_DMbar_actv();
 
@@ -278,8 +297,15 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     ambit::Tensor L3aab_;
     ambit::Tensor L3abb_;
     ambit::Tensor L3bbb_;
+    /// Four-body density cumulants
+    ambit::Tensor L4aaaa_;
+    ambit::Tensor L4aaab_;
+    ambit::Tensor L4aabb_;
+    ambit::Tensor L4abbb_;
+    ambit::Tensor L4bbbb_;
     /// Whether to compute 3-cumulant contributions
     bool do_cu3_;
+    bool do_cu4_;
 
     // ==> Fock matrix related <==
 
@@ -326,6 +352,12 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
      */
     void deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2,
                     BlockedTensor& H3);
+
+    /**
+     * De-normal-order the full DSRG transformed Hamiltonian
+     * This will change H0, H1 and H2!!!
+     */
+    void deGNO_ints_full(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2);
 
     /**
      * De-normal-order the T1 and T2 amplitudes and return the effective T1
@@ -375,6 +407,10 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::array<ambit::BlockedTensor, 3> Mbar2_;
     /// DSRG transformed 3-body dipole integrals (active only)
     std::array<ambit::BlockedTensor, 3> Mbar3_;
+
+    std::vector<double> Mbar0_full_; /// This is redundant.
+    std::vector<ambit::BlockedTensor> Mbar1_full_;
+    std::vector<ambit::BlockedTensor> Mbar2_full_;
 
     // ==> commutators <==
     /**

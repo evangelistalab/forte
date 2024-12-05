@@ -108,13 +108,15 @@ def forte_driver(data: ForteData):
         write_external_rdm_file(data.rdms, data.active_space_solver)
 
     if options.get_bool("SPIN_ANALYSIS"):
-        data = ActiveSpaceRDMs(max_rdm_level=2, rdms_type=forte.RDMsType.spin_dependent).run(data)
+        data = ActiveSpaceRDMs(
+            max_rdm_level=2, rdms_type=forte.RDMsType.spin_dependent).run(data)
         forte.perform_spin_analysis(data.rdms, options, mo_space_info, as_ints)
 
     # solver for dynamical correlation from DSRG
     correlation_solver_type = options.get_str("CORRELATION_SOLVER")
     if correlation_solver_type != "NONE":
-        dsrg_proc = ProcedureDSRG(data.active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
+        dsrg_proc = ProcedureDSRG(
+            data.active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
         return_en = dsrg_proc.compute_energy()
         dsrg_proc.print_summary()
         dsrg_proc.push_to_psi4_environment()
@@ -125,13 +127,15 @@ def forte_driver(data: ForteData):
             #          DSRG reads consistent CI coefficients before and after SemiCanonical class.
             #       2. This is OK only when running ground-state calculations
             state = list(state_map.keys())[0]
-            psi4.core.print_out(f"\n  ==> Coupling Coefficients for {state} <==")
+            psi4.core.print_out(
+                f"\n  ==> Coupling Coefficients for {state} <==")
             ci_vectors = data.active_space_solver.eigenvectors(state)
             dsrg_proc.compute_gradient(ci_vectors)
         else:
             psi4.core.print_out("\n  Semicanonical orbitals must be used!\n")
     else:
-        average_energy = forte.compute_average_state_energy(state_energies_list, state_weights_map)
+        average_energy = forte.compute_average_state_energy(
+            state_energies_list, state_weights_map)
         return_en = average_energy
 
     return return_en
@@ -187,7 +191,8 @@ def energy_forte(name, **kwargs):
     # if data.options.get_str("INT_TYPE") == "FCIDUMP":
     #     psi4.core.print_out("\n\n  Skipping MCSCF computation. Using integrals from FCIDUMP input\n")
     if data.options.get_bool("MCSCF_REFERENCE") is False:
-        psi4.core.print_out("\n\n  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn\n")
+        psi4.core.print_out(
+            "\n\n  Skipping MCSCF computation. Using HF or orbitals passed via ref_wfn\n")
     else:
         active_space_solver_type = data.options.get_str("ACTIVE_SPACE_SOLVER")
         mcscf_ignore_frozen = data.options.get_bool("MCSCF_IGNORE_FROZEN_ORBS")
@@ -236,9 +241,12 @@ def energy_forte(name, **kwargs):
 
     psi4.core.set_scalar_variable("CURRENT ENERGY", energy)
 
-    psi4.core.print_out(f"\n\n  Time to prepare integrals: {start - start_pre_ints:12.3f} seconds")
-    psi4.core.print_out(f"\n  Time to run job          : {end - start:12.3f} seconds")
-    psi4.core.print_out(f"\n  Total                    : {end - start_pre_ints:12.3f} seconds\n")
+    psi4.core.print_out(
+        f"\n\n  Time to prepare integrals: {start - start_pre_ints:12.3f} seconds")
+    psi4.core.print_out(
+        f"\n  Time to run job          : {end - start:12.3f} seconds")
+    psi4.core.print_out(
+        f"\n  Total                    : {end - start_pre_ints:12.3f} seconds\n")
 
     if "FCIDUMP" not in data.options.get_str("INT_TYPE"):
         if data.options.get_bool("DUMP_ORBITALS"):
@@ -332,8 +340,10 @@ def gradient_forte(name, **kwargs):
     ]
     max_key_size = max(len(k) for k, v in times)
     for key, value in times:
-        psi4.core.print_out(f"\n  Time to {key:{max_key_size}} : {value:12.3f} seconds")
-    psi4.core.print_out(f'\n  {"Total":{max_key_size + 8}} : {end - time_pre_ints:12.3f} seconds\n')
+        psi4.core.print_out(
+            f"\n  Time to {key:{max_key_size}} : {value:12.3f} seconds")
+    psi4.core.print_out(
+        f'\n  {"Total":{max_key_size + 8}} : {end - time_pre_ints:12.3f} seconds\n')
 
     # Dump orbitals if needed
     if data.options.get_bool("DUMP_ORBITALS"):
