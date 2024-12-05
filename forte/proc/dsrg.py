@@ -255,18 +255,18 @@ class ProcedureDSRG:
             Hbar1, Hbar2 = self.dsrg_solver.compute_Heff_full()
             np.savez("save_Hbar", **Hbar1, **Hbar2)
 
-            if self.solver_type in ["MRDSRG"]:
-                psi4.core.print_out("\n  =>** Getting dipole integral **<=\n")
-                Mbar0 = self.dsrg_solver.compute_Mbar0_full()
-                np.save("Mbar0", Mbar0)
-                Mbar1 = self.dsrg_solver.compute_Mbar1_full()
-                Mbar2 = self.dsrg_solver.compute_Mbar2_full()
+        if self.options.get_bool("FULL_MBAR") and self.solver_type in ["MRDSRG"]:
+            psi4.core.print_out("\n  =>** Getting dipole integral (unrelaxed) **<=\n")
+            Mbar0 = self.dsrg_solver.compute_Mbar0_full()
+            np.save("Mbar0", Mbar0)
+            Mbar1 = self.dsrg_solver.compute_Mbar1_full()
+            Mbar2 = self.dsrg_solver.compute_Mbar2_full()
 
-                for i in range(3):
-                    np.savez(f"Mbar1_{i}", **Mbar1[i])
-                    np.savez(f"Mbar2_{i}", **Mbar2[i])
+            for i in range(3):
+                np.savez(f"Mbar1_{i}", **Mbar1[i])
+                np.savez(f"Mbar2_{i}", **Mbar2[i])
 
-                del Mbar0, Mbar1, Mbar2
+            del Mbar0, Mbar1, Mbar2
             
         if self.options.get_bool("FULL_HBAR_DEGNO") and self.solver_type in ["MRDSRG","SA-MRDSRG","SA_MRDSRG"] and self.relax_maxiter == 0:
             psi4.core.print_out("\n  =>** Saving Full Hbar in de-normal-ordered basis (unrelaxed) **<=\n")
@@ -290,18 +290,18 @@ class ProcedureDSRG:
                 Hbar1, Hbar2 = self.dsrg_solver.compute_Heff_full()
                 np.savez("save_Hbar", **Hbar1, **Hbar2)
 
-                if self.solver_type in ["MRDSRG"]:
-                    psi4.core.print_out("\n  =>** Getting dipole integral **<=\n")
-                    Mbar0 = self.dsrg_solver.compute_Mbar0_full()
-                    np.save("Mbar0", Mbar0)
-                    Mbar1 = self.dsrg_solver.compute_Mbar1_full()
-                    Mbar2 = self.dsrg_solver.compute_Mbar2_full()
+            if self.options.get_bool("FULL_MBAR") and self.solver_type in ["MRDSRG"]:
+                psi4.core.print_out("\n  =>** Getting dipole integral (relaxed) **<=\n")
+                Mbar0 = self.dsrg_solver.compute_Mbar0_full()
+                np.save("Mbar0", Mbar0)
+                Mbar1 = self.dsrg_solver.compute_Mbar1_full()
+                Mbar2 = self.dsrg_solver.compute_Mbar2_full()
 
-                    for i in range(3):
-                        np.savez(f"Mbar1_{i}", **Mbar1[i])
-                        np.savez(f"Mbar2_{i}", **Mbar2[i])
+                for i in range(3):
+                    np.savez(f"Mbar1_{i}", **Mbar1[i])
+                    np.savez(f"Mbar2_{i}", **Mbar2[i])
 
-                    del Mbar0, Mbar1, Mbar2
+                del Mbar0, Mbar1, Mbar2
                 
             if self.options.get_bool("FULL_HBAR_DEGNO") and self.solver_type in ["MRDSRG","SA-MRDSRG","SA_MRDSRG"] and n == self.relax_maxiter - 1:
                 psi4.core.print_out("\n  =>** Saving Full Hbar in de-normal-ordered basis (relaxed) **<=\n")

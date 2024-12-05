@@ -1117,11 +1117,15 @@ DSRG:
   FULL_HBAR:
     type: bool
     default: False
-    help: "Form the full DSRG effective Hamiltonian."
+    help: "Save the full DSRG effective Hamiltonian to disk."
+  FULL_MBAR:
+    type: bool
+    default: False
+    help: "Save the full DSRG effective dipole integrals to disk."
   FULL_HBAR_DEGNO:
     type: bool
     default: False
-    help: "Form the full DSRG effective Hamiltonian normal ordered w.r.t. the true vacuum."
+    help: "Save the full DSRG effective Hamiltonian normal ordered w.r.t. the true vacuum to disk."
   DO_WICKED:
     type: bool
     default: False
