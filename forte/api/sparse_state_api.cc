@@ -75,6 +75,6 @@ void export_SparseState(py::module& m) {
     m.def("get_projection", &get_projection);
     m.def("spin2_sparse", &spin2_sparse);
     m.def("overlap", &overlap);
-    m.def("normalize", &normalize);
+    m.def("normalize", &normalize, "Returns a normalized version of the input SparseState"); 
 }
 } // namespace forte
