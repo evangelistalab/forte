@@ -185,22 +185,20 @@ sparse_scalar_t overlap(const SparseState& left_state, const SparseState& right_
     return left_state.dot(right_state);
 }
 
-sparse_scalar_t spin2_sparse(const SparseState& left_state, const SparseState& right_state) {
+sparse_scalar_t spin2(const SparseState& left_state, const SparseState& right_state) {
     sparse_scalar_t s2 = 0.0;
     for (const auto& [deti, ci] : left_state) {
         for (const auto& [detj, cj] : right_state) {
-            s2 += ci * cj * spin2(deti, detj);
+            s2 += conjugate(ci) * cj * spin2(deti, detj);
         }
     }
     return s2;
 }
 
 SparseState normalize(const SparseState& state) {
-    SparseState new_state;
+    SparseState new_state(state);
     const auto n = state.norm();
-    for (const auto& [det, c] : state) {
-        new_state[det] = c / n;
-    }
+    new_state /= n;
     return new_state;
 }
 

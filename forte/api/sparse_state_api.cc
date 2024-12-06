@@ -73,7 +73,10 @@ void export_SparseState(py::module& m) {
 
     m.def("apply_number_projector", &apply_number_projector);
     m.def("get_projection", &get_projection);
-    m.def("spin2_sparse", &spin2_sparse);
+    // there's already a function called spin2, overload the spin2 function
+    m.def("spin2", [](const SparseState& left_state, const SparseState& right_state) {
+        return spin2(left_state, right_state);
+    }, "Calculate the <left_state|S^2|right_state> expectation value");
     m.def("overlap", &overlap);
     m.def("normalize", &normalize, "Returns a normalized version of the input SparseState"); 
 }

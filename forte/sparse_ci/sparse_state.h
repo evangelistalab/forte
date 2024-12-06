@@ -74,8 +74,9 @@ SparseState apply_number_projector(int na, int nb, const SparseState& state);
 sparse_scalar_t overlap(const SparseState& left_state, const SparseState& right_state);
 
 /// compute the S^2 expectation value
-sparse_scalar_t spin2_sparse(const SparseState& left_state, const SparseState& right_state);
+sparse_scalar_t spin2(const SparseState& left_state, const SparseState& right_state);
 
+/// Return the normalized state
 SparseState normalize(const SparseState& state);
 
 } // namespace forte
