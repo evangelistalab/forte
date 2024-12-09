@@ -33,6 +33,9 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
+
 #include "integrals/active_space_integrals.h"
 #include "base_classes/mo_space_info.h"
 #include "base_classes/state_info.h"
@@ -50,6 +53,7 @@ MRDSRG_SO::MRDSRG_SO(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_in
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
       BTF_(std::make_shared<BlockedTensorFactory>()), tensor_type_(ambit::CoreTensor) {
+    BlockedTensor::reset_mo_spaces();
     print_method_banner(
         {"SO-Based Multireference Driven Similarity Renormalization Group", "Chenyang Li"});
     startup();
@@ -722,7 +726,7 @@ void MRDSRG_SO::compute_hbar() {
             O2["pqrs"] = C2["pqrs"];
             C2["pqrs"] += O2["rspq"];
         }
-
+        
         // Hbar += C
         Hbar0 += C0;
         Hbar1["pq"] += C1["pq"];
@@ -1367,5 +1371,10 @@ void MRDSRG_SO::H3_T2_C2(BlockedTensor& H3, BlockedTensor& T2, const double& alp
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ca"});
     temp["mx"] += 0.5 * T2["myuv"] * Lambda2["uvxy"];
     C2["toqr"] -= alpha * temp["mx"] * H3["xtomqr"];
+}
+std::vector<ambit::BlockedTensor> MRDSRG_SO::compute_Heff_full() {
+    compute_hbar();
+    std::vector<ambit::BlockedTensor> Heff = {Hbar1, Hbar2};
+    return Heff;
 }
 } // namespace forte

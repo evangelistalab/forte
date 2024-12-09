@@ -95,6 +95,8 @@ void SA_MRDSRG::read_options() {
         outfile->Printf("\n  Changed DSRG_TRANS_TYPE option to UNITARY");
         dsrg_trans_type_ = "UNITARY";
     }
+
+    full_hbar_ = foptions_->get_bool("FULL_HBAR") || foptions_->get_bool("FULL_HBAR_DEGNO");
 }
 
 void SA_MRDSRG::startup() {
