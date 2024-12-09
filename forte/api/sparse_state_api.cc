@@ -50,7 +50,7 @@ void export_SparseState(py::module& m) {
         .def("str", &SparseState::str)
         .def("size", &SparseState::size)
         .def("norm", &SparseState::norm, "p"_a = 2,
-             "Compute the p-norm of the vector (default p = 2, p = -1 for infinity norm)")
+            "Calculate the p-norm of the SparseState (default p = 2, p = -1 for infinity norm)")
         .def("add", &SparseState::add)
         .def("__iadd__", &SparseState::operator+=, "Add a SparseState to this SparseState")
         .def("__isub__", &SparseState::operator-=, "Subtract a SparseState from this SparseState")
@@ -73,6 +73,11 @@ void export_SparseState(py::module& m) {
 
     m.def("apply_number_projector", &apply_number_projector);
     m.def("get_projection", &get_projection);
+    // there's already a function called spin2, overload the spin2 function
+    m.def("spin2", [](const SparseState& left_state, const SparseState& right_state) {
+        return spin2(left_state, right_state);
+    }, "Calculate the <left_state|S^2|right_state> expectation value");
     m.def("overlap", &overlap);
+    m.def("normalize", &normalize, "Returns a normalized version of the input SparseState"); 
 }
 } // namespace forte
