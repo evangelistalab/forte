@@ -831,11 +831,6 @@ double MRDSRG::compute_energy_ldsrg2() {
 
     // dump amplitudes to file
     dump_amps_to_disk();
-
-    if (foptions_->get_bool("FULL_HBAR") || foptions_->get_bool("FULL_HBAR_DEGNO")) {
-        double rsc_conv = rsc_thres;
-        compute_hbar(rsc_conv);
-    }
     
     if (foptions_->get_bool("FULL_MBAR")){
         auto mpints = std::make_shared<MultipoleIntegrals>(ints_, mo_space_info_);
@@ -856,6 +851,13 @@ double MRDSRG::compute_energy_ldsrg2() {
 
     Hbar0_ = Ecorr;
     return Ecorr;
+}
+
+std::vector<ambit::BlockedTensor> MRDSRG::compute_Heff_full() {
+    double rsc_thres = foptions_->get_double("DSRG_RSC_THRESHOLD");
+    compute_hbar(rsc_thres);
+    std::vector<ambit::BlockedTensor> Heff = {Hbar1_, Hbar2_};
+    return Heff;
 }
 
 void MRDSRG::transform_one_body(const std::vector<ambit::BlockedTensor>& oetens) {

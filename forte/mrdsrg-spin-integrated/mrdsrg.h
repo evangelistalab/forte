@@ -353,8 +353,7 @@ class MRDSRG : public MASTER_DSRG {
     /// Compute MR-LDSRG(2)
     double compute_energy_ldsrg2();
 
-    /// Compute EOM-LDSRG(2)
-    // void compute_eom();
+    std::vector<ambit::BlockedTensor> compute_Heff_full() override;
 
     /// Zeroth-order Hamiltonian
     ambit::BlockedTensor H0th_;

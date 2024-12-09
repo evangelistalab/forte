@@ -48,7 +48,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     virtual std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
 
     /// Compute DSRG full transformed Hamiltonian
-    std::vector<ambit::BlockedTensor> compute_Heff_full();
+    virtual std::vector<ambit::BlockedTensor> compute_Heff_full() {
+        throw std::runtime_error("Child class should override this function");
+    };
 
     /// Compute DSRG full transformed Hamiltonian in the de-normal-ordered basis
     std::pair<double, std::vector<BlockedTensor>> compute_Heff_full_degno();

@@ -2343,11 +2343,6 @@ std::vector<std::string> MASTER_DSRG::re_two_labels() {
     return labels;
 }
 
-std::vector<ambit::BlockedTensor> MASTER_DSRG::compute_Heff_full() {
-    std::vector<ambit::BlockedTensor> Heff = {Hbar1_, Hbar2_};
-    return Heff;
-}
-
 std::pair<double, std::vector<BlockedTensor>> MASTER_DSRG::compute_Heff_full_degno() {
     double Edsrg = Eref_ + Hbar0_;
     if (foptions_->get_bool("FORM_HBAR3")) {
