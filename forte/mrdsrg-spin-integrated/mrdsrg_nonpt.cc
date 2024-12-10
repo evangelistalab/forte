@@ -832,6 +832,11 @@ double MRDSRG::compute_energy_ldsrg2() {
     // dump amplitudes to file
     dump_amps_to_disk();
     
+    if (foptions_->get_bool("FULL_HBAR") || foptions_->get_bool("FULL_HBAR_DEGNO")) {
+        double rsc_conv = rsc_thres;
+        compute_hbar(rsc_conv);
+    }
+    
     if (foptions_->get_bool("FULL_MBAR")){
         auto mpints = std::make_shared<MultipoleIntegrals>(ints_, mo_space_info_);
         // bare dipoles
@@ -853,12 +858,15 @@ double MRDSRG::compute_energy_ldsrg2() {
     return Ecorr;
 }
 
-std::vector<ambit::BlockedTensor> MRDSRG::compute_Heff_full() {
-    double rsc_thres = foptions_->get_double("DSRG_RSC_THRESHOLD");
-    compute_hbar(rsc_thres);
-    std::vector<ambit::BlockedTensor> Heff = {Hbar1_, Hbar2_};
-    return Heff;
-}
+// std::vector<ambit::BlockedTensor> MRDSRG::compute_Heff_full() {
+//     double rsc_thres = foptions_->get_double("DSRG_RSC_THRESHOLD");
+//     double Eref = compute_reference_energy_from_ints(ints_);
+//     compute_hbar(rsc_thres);
+//     outfile->Printf("\n\n   %-30s = %22.15f", "Hbar0 (MR-LDSRG(2) energy)  ", Eref + Hbar0_);
+//     outfile->Printf("\n\n  ==> Computing MR-LDSRG(2) Effective Hamiltonian <==\n");
+//     std::vector<ambit::BlockedTensor> Heff = {Hbar1_, Hbar2_};
+//     return Heff;
+// }
 
 void MRDSRG::transform_one_body(const std::vector<ambit::BlockedTensor>& oetens) {
     int n_tensors = oetens.size();
@@ -1448,6 +1456,14 @@ double MRDSRG::get_adaptive_rsc_conv(const int& iter, const double& deltaE, cons
         std::log10(rsc_conv_adapt) + x * (std::log10(rsc_conv) - std::log10(rsc_conv_adapt));
     double threshold = std::pow(10.0, exponent);
     return threshold;
+}
+
+void MRDSRG::set_rdms(std::shared_ptr<RDMs> rdms) {
+    // set up RDMS
+    rdms_ = rdms;
+    build_density();
+    // build_ints();
+    // build_fock(H_, V_);
 }
 
 } // namespace forte

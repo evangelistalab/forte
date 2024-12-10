@@ -736,6 +736,57 @@ void MASTER_DSRG::deGNO_ints_full(const std::string& name, double& H0, BlockedTe
     outfile->Printf("Done. Timing %8.3f s", t1.get());
 }
 
+void MASTER_DSRG::GNO_ints_full(const std::string& name, double& H0, BlockedTensor& H1,
+                             BlockedTensor& H2, const std::shared_ptr<RDMs> rdms) {
+    print_h2("Normal-Order Full DSRG Transformed " + name);
+
+    // compute scalar
+    local_timer t0;
+    outfile->Printf("\n    %-40s ... ", "Computing the scalar term");
+
+    auto L1h = BTF_->build(tensor_type_, "L1h", spin_cases({"hh"}));
+    L1h.block("aa")("pq") = rdms->g1a()("pq");
+    L1h.block("AA")("pq") = rdms->g1b()("pq");
+    L1h.block("cc").iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
+    L1h.block("CC").iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
+
+    // compute 1-body term
+    local_timer t1;
+    outfile->Printf("\n    %-40s ... ", "Computing the 1-body term");
+
+    H1["pq"] += H2["piqj"] * L1h["ji"];
+    H1["pq"] += H2["pIqJ"] * L1h["JI"];
+    H1["PQ"] += H2["iPjQ"] * L1h["ji"];
+    H1["PQ"] += H2["PIQJ"] * L1h["JI"];
+    outfile->Printf("Done. Timing %8.3f s", t1.get());
+
+    // scalar from H1
+    double scalar1 = 0.0;
+    scalar1 += H1["ji"] * L1h["ij"];
+    scalar1 += H1["JI"] * L1h["IJ"];
+
+    // scalar from H2
+    double scalar2 = 0.0;
+    scalar2 -= 0.5 * L1h["ij"] * H2["jlik"] * L1h["kl"];
+    scalar2 -= 0.5 * L1h["IJ"] * H2["JLIK"] * L1h["KL"];
+    scalar2 -= L1h["ij"] * H2["jLiK"] * L1h["KL"];
+
+    auto Lambda2 = BTF_->build(tensor_type_, "Lambda2", spin_cases({"aaaa"}));
+
+    Lambda2.block("aaaa")("pqrs") = rdms->L2aa()("pqrs");
+    Lambda2.block("aAaA")("pqrs") = rdms->L2ab()("pqrs");
+    Lambda2.block("AAAA")("pqrs") = rdms->L2bb()("pqrs");
+
+    scalar2 += 0.25 * H2["xyuv"] * Lambda2["uvxy"];
+    scalar2 += 0.25 * H2["XYUV"] * Lambda2["UVXY"];
+    scalar2 += H2["xYuV"] * Lambda2["uVxY"];
+
+    H0 += scalar1 + scalar2;
+    outfile->Printf("Done. Timing %8.3f s", t0.get());
+}
+
 
 void MASTER_DSRG::fill_three_index_ints(ambit::BlockedTensor T) {
     const auto& block_labels = T.block_labels();
@@ -2352,6 +2403,20 @@ std::pair<double, std::vector<BlockedTensor>> MASTER_DSRG::compute_Heff_full_deg
     }
     std::vector<ambit::BlockedTensor> Heff = {Hbar1_, Hbar2_};
     return std::make_pair(Edsrg, Heff);
+}
+
+std::pair<double, std::vector<BlockedTensor>> MASTER_DSRG::save_Heff_full() {
+    double Edsrg = Eref_ + Hbar0_;
+    std::vector<ambit::BlockedTensor> Heff = {Hbar1_, Hbar2_};
+    return std::make_pair(Edsrg, Heff);
+}
+
+std::pair<double, std::vector<BlockedTensor>> MASTER_DSRG::update_Heff_full(double& H0, BlockedTensor& H1,
+                             BlockedTensor& H2, std::shared_ptr<RDMs> rdms) {
+    deGNO_ints_full("Hamiltonian", H0, H1, H2); // De-normal ordering based on original RDMs.
+    GNO_ints_full("Hamiltonian", H0, H1, H2, rdms); // Re-normal ordering based on new RDMs.
+    std::vector<ambit::BlockedTensor> Heff = {H1, H2};
+    return std::make_pair(H0, Heff);
 }
 
 } // namespace forte

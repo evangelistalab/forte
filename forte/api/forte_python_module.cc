@@ -249,9 +249,13 @@ PYBIND11_MODULE(_forte, m) {
         .def("compute_gradient", &MASTER_DSRG::compute_gradient, "Compute the DSRG gradient")
         .def("compute_Heff_actv", &MASTER_DSRG::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals")
-        .def("compute_Heff_full", [](MASTER_DSRG& self) {
-            const auto Heff = self.compute_Heff_full();
-            return py::make_tuple(blockedtensor_to_np(Heff.at(0)), blockedtensor_to_np(Heff.at(1)));
+        .def("save_Heff_full", [](MASTER_DSRG& self) {
+            const auto Heff = self.save_Heff_full();
+            return py::make_tuple(Heff.first, Heff.second.at(0), Heff.second.at(1));
+            })
+        .def("update_Heff_full", [](MASTER_DSRG& self, double H0, BlockedTensor H1, BlockedTensor H2, std::shared_ptr<RDMs> rdms) {
+            const auto Heff = self.update_Heff_full(H0, H1, H2, rdms);
+            return py::make_tuple(Heff.first, blockedtensor_to_np(Heff.second.at(0)), blockedtensor_to_np(Heff.second.at(1)));
             })
         .def("compute_Heff_full_degno", [](MASTER_DSRG& self) {
             const auto Heff = self.compute_Heff_full_degno();
@@ -318,7 +322,8 @@ PYBIND11_MODULE(_forte, m) {
         .def("set_ci_vectors", &MASTER_DSRG::set_ci_vectors,
              "Set the CI eigenvector for DSRG-MRPT2 analytic gradients")
         .def("set_active_space_solver", &MASTER_DSRG::set_active_space_solver,
-             "Set the shared pointer for ActiveSpaceSolver");
+             "Set the shared pointer for ActiveSpaceSolver")
+        .def("set_rdms", &MASTER_DSRG::set_rdms, "Set external RDMs (dangerous, use with caution)");
 
     // export SADSRG
     py::class_<SADSRG>(m, "SADSRG")
