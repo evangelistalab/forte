@@ -260,6 +260,7 @@ class MRDSRG : public MASTER_DSRG {
     double get_adaptive_rsc_conv(const int& iter, const double& deltaE, const double& rsc_conv, 
                                  const double& rsc_conv_adapt, const double& rsc_conv_adapt_delta_e, const double& e_conv);
 
+    void compute_mbar() override;
     void transform_one_body(const std::vector<ambit::BlockedTensor>& oetens);
     void compute_mbar_ldsrg2(const ambit::BlockedTensor& M, int ind);
 

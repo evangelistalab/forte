@@ -56,13 +56,16 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::pair<double, std::vector<BlockedTensor>> save_Heff_full();
 
     /// Update DSRG full transformed Hamiltonian
-    std::pair<double, std::vector<BlockedTensor>> update_Heff_full(double& H0, BlockedTensor& H1,
-                             BlockedTensor& H2, std::shared_ptr<RDMs> rdms);
+    std::pair<double, std::vector<BlockedTensor>> update_Heff_full(double& H0, BlockedTensor& H1, \
+                                                                   BlockedTensor& H2, std::shared_ptr<RDMs> rdms);
 
     /// Compute DSRG full transformed Hamiltonian in the de-normal-ordered basis
     std::pair<double, std::vector<BlockedTensor>> compute_Heff_full_degno();
 
     /// Compute DSRG transformed dipole integral
+    virtual void compute_mbar() {
+        throw std::runtime_error("Child class should override this function");
+    }
     std::vector<double> compute_Mbar0_full() { return Mbar0_full_; }
     std::vector<ambit::BlockedTensor> compute_Mbar1_full() { return Mbar1_full_; }
     std::vector<ambit::BlockedTensor> compute_Mbar2_full() { return Mbar2_full_; }

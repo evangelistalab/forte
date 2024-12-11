@@ -858,15 +858,20 @@ double MRDSRG::compute_energy_ldsrg2() {
     return Ecorr;
 }
 
-// std::vector<ambit::BlockedTensor> MRDSRG::compute_Heff_full() {
-//     double rsc_thres = foptions_->get_double("DSRG_RSC_THRESHOLD");
-//     double Eref = compute_reference_energy_from_ints(ints_);
-//     compute_hbar(rsc_thres);
-//     outfile->Printf("\n\n   %-30s = %22.15f", "Hbar0 (MR-LDSRG(2) energy)  ", Eref + Hbar0_);
-//     outfile->Printf("\n\n  ==> Computing MR-LDSRG(2) Effective Hamiltonian <==\n");
-//     std::vector<ambit::BlockedTensor> Heff = {Hbar1_, Hbar2_};
-//     return Heff;
-// }
+void MRDSRG::compute_mbar() {
+    auto mpints = std::make_shared<MultipoleIntegrals>(ints_, mo_space_info_);
+    // bare dipoles
+    std::vector<ambit::BlockedTensor> M1;
+    std::vector<std::string> dp_dirs{"X", "Y", "Z"};
+    for (int z = 0; z < 3; ++z) {
+        std::string name = "DIPOLE " + dp_dirs[z];
+        ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, spin_cases({"gg"}));
+        m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
+                    double& value) { value = mpints->dp_ints_corr(z, i[0], i[1]); });
+        M1.push_back(m1);
+    }
+    transform_one_body(M1);
+}
 
 void MRDSRG::transform_one_body(const std::vector<ambit::BlockedTensor>& oetens) {
     int n_tensors = oetens.size();
