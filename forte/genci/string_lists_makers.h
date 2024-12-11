@@ -79,5 +79,8 @@ H2List make_2h_list(const StringList& strings, std::shared_ptr<StringAddress> ad
 /// Make 3-hole lists (I -> a_p a_q a_r I = sgn J)
 H3List make_3h_list(const StringList& strings, std::shared_ptr<StringAddress> address,
                     std::shared_ptr<StringAddress> address_3h);
+/// Make 4-hole lists (I -> a_p a_q a_r a_s I = sgn J)
+H4List make_4h_list(const StringList& strings, std::shared_ptr<StringAddress> address,
+                    std::shared_ptr<StringAddress> address_4h);
 
 } // namespace forte
