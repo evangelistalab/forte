@@ -256,7 +256,7 @@ class ProcedureDSRG:
             psi4.core.print_out(f"\n  The Hbar0 term is: {Hbar0}\n")
             np.savez("save_Hbar", **Hbar1, **Hbar2)
             
-        if self.options.get_bool("FULL_MBAR") and self.solver_type in ["MRDSRG"]:
+        if self.options.get_bool("FULL_MBAR") and self.solver_type in ["MRDSRG"] and self.relax_maxiter == 0:
             psi4.core.print_out("\n  =>** Getting dipole integral (unrelaxed) **<=\n")
             self.dsrg_solver.compute_mbar()
             Mbar0 = self.dsrg_solver.compute_Mbar0_full()
