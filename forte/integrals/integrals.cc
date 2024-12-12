@@ -27,6 +27,7 @@
  */
 
 #include <algorithm>
+#include <format>
 #include <cmath>
 #include <numeric>
 
@@ -44,9 +45,6 @@
 
 #include "integrals.h"
 #include "memory.h"
-
-#define FMT_HEADER_ONLY
-#include "lib/fmt/core.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
@@ -410,12 +408,12 @@ void ForteIntegrals::print_info() {
 
 std::string ForteIntegrals::repr() const {
     std::string str = "ForteIntegrals object\n";
-    str += fmt::format("  Number of molecular orbitals:            {:>15d}\n", nmo_);
-    str += fmt::format("  Nuclear repulsion energy:                {:>15.8f}\n", nucrep_);
-    str += fmt::format("  Scalar energy:                          {:>15.8f}\n", scalar_energy_);
+    str += std::format("  Number of molecular orbitals:            {:>15d}\n", nmo_);
+    str += std::format("  Nuclear repulsion energy:                {:>15.8f}\n", nucrep_);
+    str += std::format("  Scalar energy:                          {:>15.8f}\n", scalar_energy_);
     str +=
-        fmt::format("  Frozen-core energy:                     {:>15.8f}\n", frozen_core_energy_);
-    str += fmt::format("  Two-electron integral type:              {:>15s}\n",
+        std::format("  Frozen-core energy:                     {:>15.8f}\n", frozen_core_energy_);
+    str += std::format("  Two-electron integral type:              {:>15s}\n",
                        int_type_label.at(integral_type_));
 
     if ((integral_type_ != IntegralType::Conventional) and
@@ -423,55 +421,55 @@ std::string ForteIntegrals::repr() const {
         return str;
     }
 
-    str += fmt::format("  Alpha one-electron integrals (T + V_en)\n");
+    str += std::format("  Alpha one-electron integrals (T + V_en)\n");
     for (size_t p = 0; p < nmo_; ++p) {
         for (size_t q = 0; q < nmo_; ++q) {
             if (std::abs(oei_a(p, q)) >= 1e-14)
-                str += fmt::format("  h[{:>6d}][{:>6d}] = {:>20.12f}\n", p, q, oei_a(p, q));
+                str += std::format("  h[{:>6d}][{:>6d}] = {:>20.12f}\n", p, q, oei_a(p, q));
         }
     }
 
-    str += fmt::format("  Beta one-electron integrals (T + V_en)\n");
+    str += std::format("  Beta one-electron integrals (T + V_en)\n");
     for (size_t p = 0; p < nmo_; ++p) {
         for (size_t q = 0; q < nmo_; ++q) {
             if (std::abs(oei_b(p, q)) >= 1e-14)
-                str += fmt::format("  h[{:>6d}][{:>6d}] = {:>20.12f}\n", p, q, oei_b(p, q));
+                str += std::format("  h[{:>6d}][{:>6d}] = {:>20.12f}\n", p, q, oei_b(p, q));
         }
     }
 
-    str += fmt::format("  Alpha-alpha two-electron integrals <pq||rs>\n");
+    str += std::format("  Alpha-alpha two-electron integrals <pq||rs>\n");
     for (size_t p = 0; p < nmo_; ++p) {
         for (size_t q = 0; q < nmo_; ++q) {
             for (size_t r = 0; r < nmo_; ++r) {
                 for (size_t s = 0; s < nmo_; ++s) {
                     if (std::abs(aptei_aa(p, q, r, s)) >= 1e-14)
-                        str += fmt::format("  v[{:>6d}][{:>6d}][{:>6d}][{:>6d}] = {:>20.12f}\n", p,
+                        str += std::format("  v[{:>6d}][{:>6d}][{:>6d}][{:>6d}] = {:>20.12f}\n", p,
                                            q, r, s, aptei_aa(p, q, r, s));
                 }
             }
         }
     }
 
-    str += fmt::format("  Alpha-beta two-electron integrals <pq||rs>\n");
+    str += std::format("  Alpha-beta two-electron integrals <pq||rs>\n");
     for (size_t p = 0; p < nmo_; ++p) {
         for (size_t q = 0; q < nmo_; ++q) {
             for (size_t r = 0; r < nmo_; ++r) {
                 for (size_t s = 0; s < nmo_; ++s) {
                     if (std::abs(aptei_ab(p, q, r, s)) >= 1e-14)
-                        str += fmt::format("  v[{:>6d}][{:>6d}][{:>6d}][{:>6d}] = {:>20.12f}\n", p,
+                        str += std::format("  v[{:>6d}][{:>6d}][{:>6d}][{:>6d}] = {:>20.12f}\n", p,
                                            q, r, s, aptei_ab(p, q, r, s));
                 }
             }
         }
     }
 
-    str += fmt::format("  Beta-beta two-electron integrals <pq||rs>\n");
+    str += std::format("  Beta-beta two-electron integrals <pq||rs>\n");
     for (size_t p = 0; p < nmo_; ++p) {
         for (size_t q = 0; q < nmo_; ++q) {
             for (size_t r = 0; r < nmo_; ++r) {
                 for (size_t s = 0; s < nmo_; ++s) {
                     if (std::abs(aptei_bb(p, q, r, s)) >= 1e-14)
-                        str += fmt::format("  v[{:>6d}][{:>6d}][{:>6d}][{:>6d}] = {:>20.12f}\n", p,
+                        str += std::format("  v[{:>6d}][{:>6d}][{:>6d}][{:>6d}] = {:>20.12f}\n", p,
                                            q, r, s, aptei_bb(p, q, r, s));
                 }
             }

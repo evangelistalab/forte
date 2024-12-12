@@ -28,14 +28,12 @@
 
 #include <algorithm>
 #include <cmath>
+#include <format>
 #include <map>
 #include <vector>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsio/psio.hpp"
-
-#define FMT_HEADER_ONLY
-#include "lib/fmt/core.h"
 
 #include "base_classes/forte_options.h"
 #include "base_classes/active_space_solver.h"
@@ -443,17 +441,17 @@ void MRDSRG::check_density(BlockedTensor& D, const std::string& name) {
     int n = labels.size();
     std::string sep(10 + 13 * n, '-');
     std::string indent = "\n    ";
-    std::string output = indent + fmt::format("{:<10}", name);
+    std::string output = indent + std::format("{:<10}", name);
     for (int i = 0; i < n; ++i)
-        output += fmt::format(" {:<12}", labels[i]);
+        output += std::format(" {:<12}", labels[i]);
     output += indent + sep;
 
-    output += indent + fmt::format("{:<10}", "max");
+    output += indent + std::format("{:<10}", "max");
     for (int i = 0; i < n; ++i)
-        output += fmt::format(" {:<12.6f}", maxes[i]);
-    output += indent + fmt::format("{:<10}", "norm");
+        output += std::format(" {:<12.6f}", maxes[i]);
+    output += indent + std::format("{:<10}", "norm");
     for (int i = 0; i < n; ++i)
-        output += fmt::format("{:<12.6f}", norms[i]);
+        output += std::format("{:<12.6f}", norms[i]);
     output += indent + sep;
     outfile->Printf("%s", output.c_str());
 }

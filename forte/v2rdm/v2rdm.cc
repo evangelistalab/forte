@@ -27,10 +27,8 @@
  */
 
 #include <fstream>
+#include <format>
 #include <iostream>
-
-#define FMT_HEADER_ONLY
-#include "lib/fmt/core.h"
 
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/dimension.h"
@@ -513,13 +511,13 @@ void V2RDM::write_density_to_file() {
     std::ofstream outfstr;
     outfstr.open(filenames[0]);
     D1a_.iterate([&](const std::vector<size_t>& i, double& value) {
-        outfstr << fmt::format("{:>4} {:>4}  {:>20.15f}\n", i[0], i[1], value);
+        outfstr << std::format("{:>4} {:>4}  {:>20.15f}\n", i[0], i[1], value);
     });
     outfstr.close();
     outfstr.clear();
     outfstr.open(filenames[1]);
     D1b_.iterate([&](const std::vector<size_t>& i, double& value) {
-        outfstr << fmt::format("{:>4} {:>4}  {:>20.15f}\n", i[0], i[1], value);
+        outfstr << std::format("{:>4} {:>4}  {:>20.15f}\n", i[0], i[1], value);
     });
     outfstr.close();
     outfstr.clear();
@@ -529,7 +527,7 @@ void V2RDM::write_density_to_file() {
 
         ambit::Tensor& D2 = D2_[m];
         D2.iterate([&](const std::vector<size_t>& i, double& value) {
-            outfstr << fmt::format("{:>4} {:>4} {:>4} {:>4}  {:>20.15f}\n", i[0], i[1], i[2], i[3],
+            outfstr << std::format("{:>4} {:>4} {:>4} {:>4}  {:>20.15f}\n", i[0], i[1], i[2], i[3],
                                    value);
         });
 
@@ -543,7 +541,7 @@ void V2RDM::write_density_to_file() {
 
             ambit::Tensor& D3 = D3_[m];
             D3.iterate([&](const std::vector<size_t>& i, double& value) {
-                outfstr << fmt::format("{:>4} {:>4} {:>4} {:>4} {:>4} {:>4}  {:>20.15f}\n", i[0],
+                outfstr << std::format("{:>4} {:>4} {:>4} {:>4} {:>4} {:>4}  {:>20.15f}\n", i[0],
                                        i[1], i[2], i[3], i[4], i[5], value);
             });
 

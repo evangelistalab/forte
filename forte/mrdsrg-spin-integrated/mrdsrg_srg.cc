@@ -28,11 +28,9 @@
  */
 
 #include <chrono>
+#include <format>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
-
-#define FMT_HEADER_ONLY
-#include "lib/fmt/core.h"
 
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
@@ -192,11 +190,11 @@ double MRDSRG::compute_energy_lsrg2() {
     std::string title;
     std::string indent(4, ' ');
     std::string dash(79, '-');
-    title += indent + fmt::format("{:<5}  {:<10}  {:<27}  {:<21}  {:<8}\n", ' ', ' ',
+    title += indent + std::format("{:<5}  {:<10}  {:<27}  {:<21}  {:<8}\n", ' ', ' ',
                                   "Energy (a.u.)", "Non-Diagonal Norm", " ");
     title += indent + std::string(19, ' ') + std::string(27, '-') + "  " + std::string(21, '-') +
              "  " + std::string(8, ' ') + "\n";
-    title += indent + fmt::format("{:>5}  {:<10}  {:<16} {:<10}  {:<10} {:<10}  {:<8}\n", "Iter.",
+    title += indent + std::format("{:>5}  {:<10}  {:<16} {:<10}  {:<10} {:<10}  {:<8}\n", "Iter.",
                                   "s", "Corr.", "Delta", "Hbar1", "Hbar2", "Time (s)");
 
     title += indent + dash;
@@ -395,11 +393,11 @@ double MRDSRG::compute_energy_srgpt2() {
     std::string title;
     std::string indent(4, ' ');
     std::string dash(79, '-');
-    title += indent + fmt::format("{:>5}  {:>10}  {:<27}  {:<21}  {:<8}\n", ' ', ' ',
+    title += indent + std::format("{:>5}  {:>10}  {:<27}  {:<21}  {:<8}\n", ' ', ' ',
                                   "Energy (a.u.)", "Non-Diagonal Norm", " ");
     title += indent + std::string(19, ' ') + std::string(27, '-') + "  " + std::string(21, '-') +
              "  " + std::string(8, ' ') + "\n";
-    title += indent + fmt::format("{:>5}  {:<10}  {:<16} {:<10}  {:<10} {:<10}  {:<8}\n", "Iter.",
+    title += indent + std::format("{:>5}  {:<10}  {:<16} {:<10}  {:<10} {:<10}  {:<8}\n", "Iter.",
                                   "s", "Corr.", "Delta", "Hbar1", "Hbar2", "Time (s)");
     title += indent + dash;
     outfile->Printf("\n%s", title.c_str());
