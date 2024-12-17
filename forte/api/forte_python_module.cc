@@ -367,9 +367,9 @@ PYBIND11_MODULE(_forte, m) {
         .def("compute_energy", &MRDSRG_SO::compute_energy, "Compute DSRG energy")
         .def("compute_Heff_actv", &MRDSRG_SO::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals")
-        .def("compute_Heff_full", [](MRDSRG_SO& self) {
-            const auto Heff = self.compute_Heff_full();
-            return py::make_tuple(blockedtensor_to_np(Heff.at(0)), blockedtensor_to_np(Heff.at(1)));
+        .def("save_Heff_full", [](MRDSRG_SO& self) {
+            const auto Heff = self.save_Heff_full();
+            return py::make_tuple(Heff.first, blockedtensor_to_np(Heff.second.at(0)), blockedtensor_to_np(Heff.second.at(1)));
             })
         .def("get_gamma1", [](MRDSRG_SO& self) {
             const auto gamma1 = self.get_gamma1();

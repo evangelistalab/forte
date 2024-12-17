@@ -285,8 +285,10 @@ class ProcedureDSRG:
             #       so that the CI vectors are comparable before and after DSRG dressing.
             #       However, the ForteIntegrals object and the dipole integrals always refer to the current semi-canonical basis.
             #       so to compute the dipole moment correctly, we need to make the RDMs and orbital basis consistent
-            if self.options.get_bool("FULL_HBAR") and self.solver_type in ["MRDSRG","SA-MRDSRG","SA_MRDSRG","MRDSRG_SO","MRDSRG-SO"] \
-                and n == self.relax_maxiter - 1:
+            if self.options.get_bool("FULL_HBAR") and self.solver_type in ["SA-MRDSRG","SA_MRDSRG","MRDSRG_SO","MRDSRG-SO"]:
+                raise NotImplementedError("Relaxed full Hbar not implemented for SO/SA-DSRG")
+            
+            if self.options.get_bool("FULL_HBAR") and self.solver_type in ["MRDSRG"] and n == self.relax_maxiter - 1:
                 psi4.core.print_out("\n  =>** Temporarily saving Full Hbar in de-normal-ordered basis (relaxed) **<=\n")
                 Hbar0, Hbar1, Hbar2 = self.dsrg_solver.save_Heff_full_ambit()
                 psi4.core.print_out(f"\n  The Hbar0 term is: {Hbar0}\n")

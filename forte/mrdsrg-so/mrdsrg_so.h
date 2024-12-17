@@ -283,7 +283,7 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
 
     // double compute_eom();
 
-    std::vector<ambit::BlockedTensor> compute_Heff_full();
+    std::pair<double, std::vector<BlockedTensor>> save_Heff_full();
     ambit::BlockedTensor get_gamma1() { return Gamma1; }
     ambit::BlockedTensor get_eta1() { return Eta1; }
     ambit::BlockedTensor get_lambda2() { return Lambda2; }

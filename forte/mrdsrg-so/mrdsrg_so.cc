@@ -646,6 +646,10 @@ double MRDSRG_SO::compute_energy() {
         ++cycle;
     } while (!converged);
 
+    if (foptions_->get_bool("FULL_HBAR")) {
+        compute_hbar();
+    }
+
     outfile->Printf("\n    "
                     "----------------------------------------------------------"
                     "----------------------------------------");
@@ -1372,9 +1376,13 @@ void MRDSRG_SO::H3_T2_C2(BlockedTensor& H3, BlockedTensor& T2, const double& alp
     temp["mx"] += 0.5 * T2["myuv"] * Lambda2["uvxy"];
     C2["toqr"] -= alpha * temp["mx"] * H3["xtomqr"];
 }
-std::vector<ambit::BlockedTensor> MRDSRG_SO::compute_Heff_full() {
-    compute_hbar();
-    std::vector<ambit::BlockedTensor> Heff = {Hbar1, Hbar2};
-    return Heff;
+std::pair<double, std::vector<BlockedTensor>> MRDSRG_SO::save_Heff_full() {
+    double Edsrg = Eref + Hbar0;
+    ambit::BlockedTensor Hbar1_copy = BTF_->build(tensor_type_, "Hbar1_copy", {"gg"});
+    ambit::BlockedTensor Hbar2_copy = BTF_->build(tensor_type_, "Hbar2_copy", {"gggg"});
+    Hbar1_copy["pq"] = Hbar1["pq"];
+    Hbar2_copy["pqrs"] = Hbar2["pqrs"];
+    std::vector<ambit::BlockedTensor> Heff = {Hbar1_copy, Hbar2_copy};
+    return std::make_pair(Edsrg, Heff);
 }
 } // namespace forte
