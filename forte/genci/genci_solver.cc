@@ -377,7 +377,7 @@ void GenCISolver::test_rdms(std::shared_ptr<psi::Vector> b, std::shared_ptr<psi:
         std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
         print_h2(title_rdm);
     }
-    int max_rdm_level = 3;
+    int max_rdm_level = 4;
     auto rdms = C_->compute_rdms(*C_, *C_, max_rdm_level, RDMsType::spin_dependent);
     C_->test_rdms(*C_, *C_, max_rdm_level, RDMsType::spin_dependent, rdms);
 }

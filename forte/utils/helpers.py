@@ -184,7 +184,7 @@ def psi4_cubeprop(wfn, path=".", orbs=[], nocc=0, nvir=0, density=False, frontie
 
 
 def prepare_forte_objects(
-    wfn, mo_spaces=None, active_space="ACTIVE", core_spaces=["RESTRICTED_DOCC"], localize=False, localize_spaces=[]
+    wfn, mo_spaces, active_space="ACTIVE", core_spaces=["RESTRICTED_DOCC"], localize=False, localize_spaces=[]
 ):
     """Take a psi4 wavefunction object and prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects
 
@@ -235,15 +235,18 @@ def prepare_forte_objects(
     point_group = wfn.molecule().point_group().symbol()
 
     # create a MOSpaceInfo object
-    if mo_spaces is None:
-        mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
-    else:
-        mo_space_info = forte.make_mo_space_info_from_map(nmopi, point_group, mo_spaces)
+    mo_space_info = forte.make_mo_space_info_from_map(nmopi, point_group, mo_spaces)
 
+    # These variables are needed in make_state_weights_map
+    nel = wfn.nalpha() + wfn.nbeta()
+    multiplicity = 1
+
+    options.set_int("NEL", nel)
+    options.set_int("MULTIPLICITY", multiplicity)
     state_weights_map = forte.make_state_weights_map(options, mo_space_info)
 
     # make a ForteIntegral object
-    ints = forte.make_ints_from_psi4(wfn, options, mo_space_info)
+    ints = forte.make_ints_from_psi4(wfn, options, scf_info, mo_space_info)
 
     if localize:
         localizer = forte.Localize(forte.forte_options, ints, mo_space_info)

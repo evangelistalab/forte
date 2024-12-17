@@ -69,7 +69,13 @@ class ProcedureDSRG:
             psi4.core.print_out("\n  DSRG relaxation only supports UNITARY transformation. Setting RELAX_REF to NONE.")
             self.relax_ref = "NONE"
 
-        self.max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
+        if options.get_str("FOURPDC") != "ZERO":
+            self.max_rdm_level = 4
+        elif options.get_str("THREEPDC") != "ZERO":
+            self.max_rdm_level = 3
+        else:
+            self.max_rdm_level = 2
+
         if options.get_str("DSRG_3RDM_ALGORITHM") == "DIRECT":
             as_type = options.get_str("ACTIVE_SPACE_SOLVER")
             if as_type == "BLOCK2" and self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
@@ -242,6 +248,33 @@ class ProcedureDSRG:
         # Spit out energy if reference relaxation not implemented
         if not self.Heff_implemented:
             self.relax_maxiter = 0
+        
+        if self.options.get_bool("FULL_HBAR") and self.solver_type in ["MRDSRG","SA-MRDSRG","SA_MRDSRG","MRDSRG_SO", "MRDSRG-SO"] \
+            and self.relax_maxiter == 0:
+            psi4.core.print_out("\n  =>** Saving Full Hbar (unrelaxed) **<=\n")
+            Hbar0, Hbar1, Hbar2 = self.dsrg_solver.save_Heff_full()
+            psi4.core.print_out(f"\n  The Hbar0 term is: {Hbar0}\n")
+            np.savez("save_Hbar", **Hbar1, **Hbar2)
+            
+        if self.options.get_bool("FULL_MBAR") and self.solver_type in ["MRDSRG"] and self.relax_maxiter == 0:
+            psi4.core.print_out("\n  =>** Getting dipole integral (unrelaxed) **<=\n")
+            self.dsrg_solver.compute_mbar()
+            Mbar0 = self.dsrg_solver.compute_Mbar0_full()
+            np.save("Mbar0", Mbar0)
+            Mbar1 = self.dsrg_solver.compute_Mbar1_full()
+            Mbar2 = self.dsrg_solver.compute_Mbar2_full()
+
+            for i in range(3):
+                np.savez(f"Mbar1_{i}", **Mbar1[i])
+                np.savez(f"Mbar2_{i}", **Mbar2[i])
+
+            del Mbar0, Mbar1, Mbar2
+            
+        if self.options.get_bool("FULL_HBAR_DEGNO") and self.solver_type in ["MRDSRG","SA-MRDSRG","SA_MRDSRG"] and self.relax_maxiter == 0:
+            psi4.core.print_out("\n  =>** Saving Full Hbar in de-normal-ordered basis (unrelaxed) **<=\n")
+            scalar, Hbar1, Hbar2 = self.dsrg_solver.compute_Heff_full_degno()
+            np.savez("save_Hbar_degno", scalar=scalar, **Hbar1, **Hbar2)
+
 
         # Reference relaxation procedure
         for n in range(self.relax_maxiter):
@@ -252,6 +285,19 @@ class ProcedureDSRG:
             #       so that the CI vectors are comparable before and after DSRG dressing.
             #       However, the ForteIntegrals object and the dipole integrals always refer to the current semi-canonical basis.
             #       so to compute the dipole moment correctly, we need to make the RDMs and orbital basis consistent
+            if self.options.get_bool("FULL_HBAR") and self.solver_type in ["SA-MRDSRG","SA_MRDSRG","MRDSRG_SO","MRDSRG-SO"]:
+                raise NotImplementedError("Relaxed full Hbar not implemented for SO/SA-DSRG")
+            
+            if self.options.get_bool("FULL_HBAR") and self.solver_type in ["MRDSRG"] and n == self.relax_maxiter - 1:
+                psi4.core.print_out("\n  =>** Temporarily saving Full Hbar in de-normal-ordered basis (relaxed) **<=\n")
+                Hbar0, Hbar1, Hbar2 = self.dsrg_solver.save_Heff_full_ambit()
+                psi4.core.print_out(f"\n  The Hbar0 term is: {Hbar0}\n")
+            
+            if self.options.get_bool("FULL_HBAR_DEGNO") and self.solver_type in ["MRDSRG","SA-MRDSRG","SA_MRDSRG"] and n == self.relax_maxiter - 1:
+                psi4.core.print_out("\n  =>** Saving Full Hbar in de-normal-ordered basis (relaxed) **<=\n")
+                scalar, Hbar1, Hbar2 = self.dsrg_solver.compute_Heff_full_degno()
+                np.savez("save_Hbar_degno", scalar=scalar, **Hbar1, **Hbar2)
+
             ints_dressed = self.dsrg_solver.compute_Heff_actv()
             if self.fno_pt2_Heff_shift is not None:
                 ints_dressed.add(self.fno_pt2_Heff_shift, 1.0)
@@ -374,11 +420,62 @@ class ProcedureDSRG:
             # - Compute the DSRG energy
             self.make_dsrg_solver()
             self.dsrg_setup()
-            self.dsrg_solver.set_read_cwd_amps(not self.restart_amps)  # don't read from cwd if checkpoint available
+            # don't read from cwd if checkpoint available
+            self.dsrg_solver.set_read_cwd_amps(not self.restart_amps)
             e_dsrg = self.dsrg_solver.compute_energy() + self.fno_pt2_energy_shift
             if self.fno_pt2_energy_shift != 0.0:
                 psi4.core.print_out(f"\n\n    DSRG-MRPT2 FNO energy correction:  {self.fno_pt2_energy_shift:20.15f}")
                 psi4.core.print_out(f"\n    DSRG-MRPT2 FNO corrected energy:   {e_dsrg:20.15f}")
+
+        if self.options.get_bool("FULL_HBAR") and self.solver_type in ["MRDSRG","MRDSRG_SO","MRDSRG-SO"]:         
+            if self.relax_maxiter != 0:   
+                self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level, self.rdm_type)
+                self.rdms.rotate(self.Ua, self.Ub)  # To previous semi-canonical basis       
+                   
+                psi4.core.print_out("\n  =>** Saving Full Hbar **<=\n")
+                Hbar0, Hbar1, Hbar2 = self.dsrg_solver.update_Heff_full(Hbar0, Hbar1, Hbar2, self.rdms)
+                psi4.core.print_out(f"\n  The Hbar0 term is: {Hbar0}\n")
+                np.savez("save_Hbar", **Hbar1, **Hbar2)
+                
+                self.dsrg_solver.set_rdms(self.rdms) # Important to update the rdms in the solver
+                
+                if self.options.get_bool("FULL_MBAR") and self.solver_type in ["MRDSRG"]:
+                    psi4.core.print_out("\n  =>** Getting dipole integral **<=\n")
+                    self.dsrg_solver.compute_mbar()
+                    Mbar0 = self.dsrg_solver.compute_Mbar0_full()
+                    np.save("Mbar0", Mbar0)
+                    Mbar1 = self.dsrg_solver.compute_Mbar1_full()
+                    Mbar2 = self.dsrg_solver.compute_Mbar2_full()
+
+                    for i in range(3):
+                        np.savez(f"Mbar1_{i}", **Mbar1[i])
+                        np.savez(f"Mbar2_{i}", **Mbar2[i])
+
+                    del Mbar0, Mbar1, Mbar2
+            
+            psi4.core.print_out("\n  =>** Getting gamma1 **<=\n")
+            gamma1 = self.dsrg_solver.get_gamma1()
+            np.savez("save_gamma1", **gamma1)
+
+            psi4.core.print_out("\n  =>** Getting eta1 **<=\n")
+            eta1 = self.dsrg_solver.get_eta1()
+            np.savez("save_eta1", **eta1)
+
+            psi4.core.print_out("\n  =>** Getting lambda2 **<=\n")
+            lambda2 = self.dsrg_solver.get_lambda2()
+            np.savez("save_lambda2", **lambda2)
+
+            psi4.core.print_out("\n  =>** Getting lambda3 **<=\n")
+            lambda3 = self.dsrg_solver.get_lambda3()
+            np.savez("save_lambda3", **lambda3)
+
+            del gamma1, eta1, lambda2, lambda3
+                        
+            if self.options.get_str("FOURPDC") != "ZERO" and self.solver_type in ["MRDSRG"]:
+                psi4.core.print_out("\n  =>** Getting lambda4 **<=\n")
+                lambda4 = self.dsrg_solver.get_lambda4()
+                np.savez("save_lambda4", **lambda4)
+                del lambda4
 
         self.dsrg_cleanup()
 
