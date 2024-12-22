@@ -137,6 +137,8 @@ class SQOperatorString {
     std::string latex_compact() const;
     /// @return a sq_operator that is the adjoint of this operator
     SQOperatorString adjoint() const;
+    /// @return the spin-flipped version of this operator
+    SQOperatorString spin_flip() const;
 
     struct Hash {
         std::size_t operator()(const SQOperatorString& sqop_str) const {

@@ -552,6 +552,15 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         for (size_t n = nwords_half; n < nwords_; n++)
             words_[n] = u_int64_t(0);
     }
+
+    /// Compares a subset of the words of this determinant with the words of another determinant
+    DeterminantImpl<N> spin_flip() const {
+        DeterminantImpl<N> d(*this);
+        for (size_t n = 0; n < nwords_half; n++) {
+            std::swap(d.words_[n], d.words_[n + nwords_half]);
+        }
+        return d;
+    }
 };
 
 // Functions

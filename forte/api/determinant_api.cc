@@ -94,6 +94,7 @@ void export_Determinant(py::module& m) {
                const std::vector<int>& bann,
                const std::vector<int>& bcre) { return gen_excitation(d, aann, acre, bann, bcre); },
             "Apply a generic excitation") // uses gen_excitation() defined in determinant.hpp
+        .def("spin_flip", &Determinant::spin_flip, "Get the spin-flip determinant")
         .def(
             "str", [](const Determinant& a, int n) { return str(a, n); },
             "n"_a = Determinant::norb(),

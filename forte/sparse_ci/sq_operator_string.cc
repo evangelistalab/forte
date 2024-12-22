@@ -102,6 +102,10 @@ bool SQOperatorString::operator<(const SQOperatorString& other) const {
 
 SQOperatorString SQOperatorString::adjoint() const { return SQOperatorString(ann(), cre()); }
 
+SQOperatorString SQOperatorString::spin_flip() const {
+    return SQOperatorString(cre().spin_flip(), ann().spin_flip());
+}
+
 std::string SQOperatorString::str() const {
     auto acre = cre().get_alfa_occ(cre().norb());
     auto bcre = cre().get_beta_occ(cre().norb());
