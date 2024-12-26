@@ -98,43 +98,9 @@ def psi4_casscf(geom, basis, reference, restricted_docc, active, options={}) -> 
     # pipe output to the file output.dat
     psi4.core.set_output_file("output.dat", True)
 
-    # psi4.core.clean()
-
     # run scf and return the energy and a wavefunction object (will work only if pass return_wfn=True)
     E_scf, wfn = psi4.energy("casscf", molecule=mol, return_wfn=True)
     return (E_scf, wfn)
-
-
-def psi4_casscf(geom, basis, mo_spaces):
-    """
-    Run a Psi4 SCF.
-    :param geom: a string for molecular geometry
-    :param basis: a string for basis set
-    :param reference: a string for the type of reference
-    :return: a tuple of (scf energy, psi4 Wavefunction)
-    """
-    psi4.core.clean()
-    mol = psi4.geometry(geom)
-
-    psi4.set_options(
-        {
-            "basis": basis,
-            "scf_type": "pk",
-            "e_convergence": 1e-13,
-            "d_convergence": 1e-6,
-            "restricted_docc": mo_spaces["RESTRICTED_DOCC"],
-            "active": mo_spaces["ACTIVE"],
-            "mcscf_maxiter": 100,
-            "mcscf_e_convergence": 1.0e-11,
-            "mcscf_r_convergence": 1.0e-6,
-            "mcscf_diis_start": 20,
-        }
-    )
-    psi4.core.set_output_file("output.dat", False)
-
-    Escf, wfn = psi4.energy("casscf", return_wfn=True)
-    psi4.core.clean()
-    return Escf, wfn
 
 
 def psi4_cubeprop(wfn, path=".", orbs=[], nocc=0, nvir=0, density=False, frontier_orbitals=False, load=False):
