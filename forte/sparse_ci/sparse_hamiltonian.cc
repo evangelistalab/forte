@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#define FMT_HEADER_ONLY
+#include "lib/fmt/core.h"
 #include <cmath>
 
 #include "sparse_ci/sparse_hamiltonian.h"
@@ -340,5 +342,41 @@ SparseState SparseHamiltonian::compute_on_the_fly(const SparseState& state, doub
 }
 
 std::map<std::string, double> SparseHamiltonian::timings() const { return timings_; }
+
+SparseOperator SparseHamiltonian::to_sparse_operator() const {
+    SparseOperator H;
+    size_t nmo = as_ints_->nmo();
+    
+    H.add_term_from_str("[]", as_ints_->nuclear_repulsion_energy() + as_ints_->scalar_energy() + as_ints_->frozen_core_energy());
+    for (size_t p = 0; p < nmo; p++) {
+        for (size_t q = 0; q < nmo; q++) {
+            H.add_term_from_str(fmt::format("{}a+ {}a-", p, q), as_ints_->oei_a(p, q));
+            H.add_term_from_str(fmt::format("{}b+ {}b-", p, q), as_ints_->oei_b(p, q));
+        }
+    }
+
+    for (size_t p = 0; p < nmo; p++){
+        for (size_t q = p + 1; q < nmo; q++){
+            for (size_t r = 0; r < nmo; r++){
+                for (size_t s = r + 1; s < nmo; s++){
+                    H.add_term_from_str(fmt::format("{}a+ {}a+ {}a- {}a-", p, q, s, r), as_ints_->tei_aa(p, q, r, s));
+                    H.add_term_from_str(fmt::format("{}b+ {}b+ {}b- {}b-", p, q, s, r), as_ints_->tei_bb(p, q, r, s));
+                }
+            }
+        }
+    }
+
+    for (size_t p = 0; p < nmo; p++){
+        for (size_t q = 0; q < nmo; q++){
+            for (size_t r = 0; r < nmo; r++){
+                for (size_t s = 0; s < nmo; s++){
+                    H.add_term_from_str(fmt::format("{}a+ {}b+ {}b- {}a-", p, q, s, r), as_ints_->tei_ab(p, q, r, s));
+                }
+            }
+        }
+    }
+
+    return H;
+}
 
 } // namespace forte
