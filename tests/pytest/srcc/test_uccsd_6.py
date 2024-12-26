@@ -21,12 +21,11 @@ def test_uccsd_6():
     """
     )
 
-
     data = forte.modules.ObjectsUtilPsi4(molecule=molecule, basis="sto-3g").run()
     scf_energy = data.psi_wfn.energy()
 
-    cc = forte.modules.GeneralCC(cc_type="ucc", max_exc=2, e_convergence=1.0e-10, linked = False, maxk=1)
-    data = cc.run()
+    cc = forte.modules.GeneralCC(cc_type="ucc", max_exc=2, e_convergence=1.0e-10, options={"linked": False, "maxk": 1})
+    data = cc.run(data)
 
     psi4.core.clean()
 

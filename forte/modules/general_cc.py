@@ -297,7 +297,7 @@ def residual_equations(cc_type, t, op, sop, ref, ham, exp, compute_threshold, li
         # compute R = <exc|H U|ref> - E_proj <exc|U|ref>
         for d, c in wfn.items():
             Hwfn[d] -= c * energy_proj
-        residual = forte.get_projection(op, ref, Hwfn)
+        residual = get_projection(op, ref, Hwfn)
 
     return (residual, energy, energy_proj)
 
@@ -521,15 +521,3 @@ class GeneralCC(Module):
         data.results.add("energy", e, "Energy", "Eh")
 
         return data
-
-    # def run_cc(
-    #     as_ints,
-    #     scf_info,
-    #     mo_space_info,
-    #     cc_type,
-    #     select_type=None,
-    #     max_exc=None,
-    #     omega=None,
-    #     e_convergence=1.0e-10,
-    #     r_convergence=1.0e-5,
-    #     compute_threshold=1.0e-14):

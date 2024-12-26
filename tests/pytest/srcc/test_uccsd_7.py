@@ -21,23 +21,31 @@ def test_uccsd_7():
     """
     )
 
-    data = forte.modules.ObjectsUtilPsi4(molecule=molecule, basis="sto-3g").run()
-    scf_energy = data.psi_wfn.energy()
+    data = forte.modules.ObjectsUtilPsi4(
+        molecule=molecule, basis="sto-3g", mo_spaces={"FROZEN_DOCC": [1, 0, 0, 0, 0, 0, 0, 0]}
+    ).run()
 
-    calc_data = scc.run_cc(
-        data.as_ints,
-        data.scf_info,
-        data.mo_space_info,
-        cc_type="ucc",
-        max_exc=3,
-        e_convergence=1.0e-10,
-        linked=False,
-        maxk=1,
-    )
+    scf_energy = data.psi_wfn.energy()
+    cc = forte.modules.GeneralCC(cc_type="ucc", max_exc=3, e_convergence=1.0e-10, options={"linked": False, "maxk": 1})
+    data = cc.run(data)
+
+    # data = forte.modules.ObjectsUtilPsi4(molecule=molecule, basis="sto-3g").run()
+    # scf_energy = data.psi_wfn.energy()
+
+    # calc_data = scc.run_cc(
+    #     data.as_ints,
+    #     data.scf_info,
+    #     data.mo_space_info,
+    #     cc_type="ucc",
+    #     max_exc=3,
+    #     e_convergence=1.0e-10,
+    #     linked=False,
+    #     maxk=1,
+    # )
 
     psi4.core.clean()
 
-    energy = calc_data[-1][1]
+    energy = data.results.value("energy")
 
     print(f"  HF energy:    {scf_energy}")
     print(f"  CCSD energy:  {energy}")
