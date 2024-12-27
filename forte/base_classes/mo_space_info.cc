@@ -28,12 +28,10 @@
  */
 
 #include <algorithm>
+#include <format>
 #include <numeric>
 #include <unordered_map>
 #include <unordered_set>
-
-#define FMT_HEADER_ONLY
-#include "lib/fmt/core.h"
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -387,13 +385,11 @@ void MOSpaceInfo::compute_space_info() {
         if (unassigned[h] < 0) {
             // Throw and exception if there are more orbitals assigned to an irrep than there
             // are available
-            auto msg = fmt::format("There is an error in the definition of the orbital spaces. "
+            auto msg = std::format("There is an error in the definition of the orbital spaces. "
                                    " Total assigned MOs "
                                    "for irrep {} is {} leaving {} orbitals unassigned.",
                                    h, nmopi_[h], unassigned[h]);
             outfile->Printf("\n%s", msg.c_str());
-
-            // generate a runtime error and use the fmt library to print the error message
             throw std::runtime_error(msg);
         }
     }

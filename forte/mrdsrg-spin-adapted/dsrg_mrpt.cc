@@ -27,14 +27,12 @@
  */
 
 #include <algorithm>
+#include <format>
 #include <map>
 #include <numeric>
 #include <vector>
 
 #include "psi4/libpsi4util/process.h"
-
-#define FMT_HEADER_ONLY
-#include "lib/fmt/core.h"
 
 #include "base_classes/forte_options.h"
 #include "base_classes/state_info.h"
@@ -433,7 +431,7 @@ void DSRG_MRPT::test_memory(const size_t& c, const size_t& a, const size_t& v) {
         for (auto& XB : to_XB) {
             double xb = bytes / XB.second;
             if (xb >= 0.1 && xb < 100.0) {
-                out = fmt::format("{:<5.1f}", xb);
+                out = std::format("{:<5.1f}", xb);
                 out += (XB.first == "B" ? "  " : " ") + XB.first;
                 break;
             }
