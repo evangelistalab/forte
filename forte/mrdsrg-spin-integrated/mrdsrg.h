@@ -260,6 +260,10 @@ class MRDSRG : public MASTER_DSRG {
     double get_adaptive_rsc_conv(const int& iter, const double& deltaE, const double& rsc_conv, 
                                  const double& rsc_conv_adapt, const double& rsc_conv_adapt_delta_e, const double& e_conv);
 
+    void compute_mbar() override;
+    void transform_one_body(const std::vector<ambit::BlockedTensor>& oetens);
+    void compute_mbar_ldsrg2(const ambit::BlockedTensor& M, int ind);
+
     /// Temporary one-body Hamiltonian
     ambit::BlockedTensor O1_;
     ambit::BlockedTensor C1_;
@@ -349,6 +353,9 @@ class MRDSRG : public MASTER_DSRG {
     double compute_energy_ldsrg2_qc();
     /// Compute MR-LDSRG(2)
     double compute_energy_ldsrg2();
+
+    /// Modify the rdms_ member of the parent (base) class. Only used in EOM-DSRG. 
+    void set_rdms(std::shared_ptr<RDMs> rdms) override;
 
     /// Zeroth-order Hamiltonian
     ambit::BlockedTensor H0th_;

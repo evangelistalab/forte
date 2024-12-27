@@ -98,6 +98,7 @@ void export_ForteIntegrals(py::module& m) {
         .def(
             "print_ints",
             [](const ForteIntegrals& ints) { psi::outfile->Printf("\n%s", ints.repr().c_str()); },
-            "Print the integrals");
+            "Print the integrals")
+        .def("mo_dipole_ints", &ForteIntegrals::mo_dipole_ints, "mo_dipole_ints");
 }
 } // namespace forte

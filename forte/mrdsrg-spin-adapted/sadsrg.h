@@ -62,6 +62,8 @@ class SADSRG : public DynamicCorrelationSolver {
 
     /// Compute DSRG transformed Hamiltonian
     std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv() override;
+    std::vector<ambit::BlockedTensor> compute_Heff_full();
+    std::pair<double, std::vector<BlockedTensor>> compute_Heff_full_degno();
 
     /// Compute DSRG transformed multipole integrals
     std::shared_ptr<ActiveMultipoleIntegrals> compute_mp_eff_actv() override;
@@ -181,9 +183,13 @@ class SADSRG : public DynamicCorrelationSolver {
     std::vector<size_t> actv_mos_;
     /// List of virtual MOs
     std::vector<size_t> virt_mos_;
+    /// List of genereal MOs
+    std::vector<size_t> gen_mos_;
     /// List of the symmetry of the active MOs
     std::vector<int> actv_mos_sym_;
-
+    /// List of the symmetry of the general MOs
+    std::vector<int> gen_mos_sym_;
+    
     /// List of active active occupied MOs (relative to active)
     std::vector<size_t> actv_occ_mos_;
     /// List of active active unoccupied MOs (relative to active)
@@ -326,6 +332,9 @@ class SADSRG : public DynamicCorrelationSolver {
     /// DSRG transformed 3-body Hamiltonian (active only in DSRG-PT, but full in MRDSRG)
     ambit::BlockedTensor Hbar3_;
 
+    // /// EOM-LDSRG2 Hamiltonian:
+    // std::shared_ptr<psi::Matrix> EOM_Hbar_mat_;
+
     /// Scalar of the DSRG transformed multipoles
     std::vector<double> Mbar0_;
     /// DSRG transformed 1-body multipoles
@@ -351,6 +360,12 @@ class SADSRG : public DynamicCorrelationSolver {
      */
     void deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2,
                     BlockedTensor& H3);
+
+    /**
+     * De-normal-order a 2-body DSRG transformed integrals (full Hbar!)
+     * This will change H0 and H1 !!!
+     */
+    void deGNO_ints_full(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2);
 
     /**
      * De-normal-order the T1 and T2 amplitudes and return the effective T1
