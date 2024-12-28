@@ -8,7 +8,6 @@ import pytest
 def test_uccsd_2():
     """Test projective UCCSD on Ne using RHF/cc-pVDZ orbitals"""
 
-    import forte.proc.scc as scc
     import forte
     import psi4
 
@@ -19,7 +18,6 @@ def test_uccsd_2():
     Ne 0.0 0.0 0.0"""
     )
 
-
     data = forte.modules.ObjectsUtilPsi4(
         molecule=molecule, basis="cc-pVDZ", mo_spaces={"FROZEN_DOCC": [1, 0, 0, 0, 0, 0, 0, 0]}
     ).run()
@@ -27,7 +25,6 @@ def test_uccsd_2():
     scf_energy = data.psi_wfn.energy()
     cc = forte.modules.GeneralCC(cc_type="ucc", max_exc=2, e_convergence=1.0e-10)
     data = cc.run(data)
-    
 
     psi4.core.clean()
 

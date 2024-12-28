@@ -6,7 +6,7 @@ def test_uccsd_4():
     """Test projective UCCSD on Ne using RHF/cc-pVDZ orbitals"""
 
     import pytest
-    import forte.proc.scc as scc
+
     import forte
     import psi4
 

@@ -427,7 +427,7 @@ class GeneralCC(Module):
         # the number of beta electrons per irrep
         nbelpi = (scf_info.doccpi() - data.mo_space_info.dimension("FROZEN_DOCC")).to_tuple()
 
-        print(f"Number of frozen orbitals per irrep:     {nfrzdocc}")
+        print(f"\n\nNumber of frozen orbitals per irrep:     {nfrzdocc}")
         print(f"Number of correlated orbitals per irrep: {nmopi}")
         print(f"Number of alpha electrons per irrep:     {naelpi}")
         print(f"Number of beta electrons per irrep:      {nbelpi}")

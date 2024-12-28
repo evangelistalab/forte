@@ -6,7 +6,7 @@ def test_ccsdtq():
     """Test CCSDTQ on H4 using RHF/DZ orbitals"""
 
     import pytest
-    import forte.proc.scc as scc
+
     import forte
     import psi4
 
@@ -22,7 +22,6 @@ def test_ccsdtq():
     )
 
     data = forte.modules.ObjectsUtilPsi4(molecule=molecule, basis="DZ").run()
-
 
     cc = forte.modules.GeneralCC(cc_type="cc", max_exc=4)
     data = cc.run(data)

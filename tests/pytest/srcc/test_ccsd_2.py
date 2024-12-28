@@ -7,7 +7,6 @@ import pytest
 def test_ccsd2():
     """Test CCSD on H2 using RHF/DZ orbitals"""
 
-    import forte.proc.scc as scc
     import forte
     import psi4
 

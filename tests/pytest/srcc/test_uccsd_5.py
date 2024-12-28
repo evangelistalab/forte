@@ -7,7 +7,6 @@ import pytest
 def test_uccsd_5():
     """Test projective UCCSD on Ne using RHF/cc-pVDZ orbitals"""
 
-    import forte.proc.scc as scc
     import forte
     import psi4
     import os.path
@@ -18,7 +17,7 @@ def test_uccsd_5():
     data = forte.modules.OptionsFactory().run()
     data = forte.modules.ObjectsFromFCIDUMP(file=os.path.dirname(__file__) + "/INTDUMP").run(data)
     data = forte.modules.ActiveSpaceInts("CORRELATED", []).run(data)
-    cc = forte.modules.GeneralCC(cc_type = "ucc", max_exc=2, e_convergence=1.0e-10)
+    cc = forte.modules.GeneralCC(cc_type="ucc", max_exc=2, e_convergence=1.0e-10)
     data = cc.run(data)
 
     psi4.core.clean()

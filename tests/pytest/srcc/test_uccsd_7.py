@@ -6,7 +6,7 @@ def test_uccsd_7():
     """Test projective linearized unliked UCCSDT = CISDT on H4 using RHF/STO-3G orbitals"""
 
     import pytest
-    import forte.proc.scc as scc
+
     import forte
     import psi4
 
@@ -24,7 +24,6 @@ def test_uccsd_7():
     data = forte.modules.ObjectsUtilPsi4(
         molecule=molecule, basis="sto-3g", mo_spaces={"FROZEN_DOCC": [1, 0, 0, 0, 0, 0, 0, 0]}
     ).run()
-
     scf_energy = data.psi_wfn.energy()
     cc = forte.modules.GeneralCC(cc_type="ucc", max_exc=3, e_convergence=1.0e-10, options={"linked": False, "maxk": 1})
     data = cc.run(data)

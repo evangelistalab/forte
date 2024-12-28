@@ -8,7 +8,6 @@ import pytest
 def test_ccsdtq_3():
     """Test CCSDTQ on Ne using RHF/cc-pVDZ orbitals"""
 
-    import forte.proc.scc as scc
     import forte
     import psi4
 

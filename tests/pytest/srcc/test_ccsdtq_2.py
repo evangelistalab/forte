@@ -6,7 +6,7 @@ def test_ccsdtq_2():
     """Test CCSDTQ on H4 using RHF/cc-pVDZ orbitals"""
 
     import pytest
-    import forte.proc.scc as scc
+
     import forte
     import psi4
 

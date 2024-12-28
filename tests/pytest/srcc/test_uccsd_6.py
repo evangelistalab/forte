@@ -6,7 +6,7 @@ def test_uccsd_6():
     """Test projective linearized unliked UCCSD = CISD on H4 using RHF/STO-3G orbitals"""
 
     import pytest
-    import forte.proc.scc as scc
+
     import forte
     import psi4
 

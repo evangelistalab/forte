@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import forte.proc.scc as scc
+
 import forte
 import psi4
 
