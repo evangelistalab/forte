@@ -519,5 +519,6 @@ class GeneralCC(Module):
         # print(f"omega: {omega}")
 
         data.results.add("energy", e, "Energy", "Eh")
+        data.results.add("proj. energy", e_proj, "Projective Energy", "Eh")
 
         return data

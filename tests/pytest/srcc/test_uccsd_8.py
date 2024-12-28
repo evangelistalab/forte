@@ -28,7 +28,7 @@ def test_uccsd_8():
 
     psi4.core.clean()
 
-    energy = data.results.value("energy")
+    energy = data.results.value("proj. energy")
 
     print(f"  HF energy:    {scf_energy}")
     print(f"  CCSD energy:  {energy}")
