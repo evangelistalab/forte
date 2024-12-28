@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import pytest
 
 
-@pytest.mark.skip(reason="This is a long test")
+@pytest.mark.skip(reason="Long test")
 def test_ccsd2():
-    """Test CCSD on H2 using RHF/DZ orbitals"""
+    """Test CCSD on H2O using RHF/DZ orbitals"""
 
     import forte
     import psi4
@@ -21,21 +19,16 @@ def test_ccsd2():
     )
 
     data = forte.modules.ObjectsUtilPsi4(molecule=molecule, basis="DZ").run()
-    scf_energy = data.psi_wfn.energy()
-    calc_data = scc.run_cc(
-        data.as_ints,
-        data.scf_info,
-        data.mo_space_info,
-        cc_type="cc",
-        max_exc=2,
-        e_convergence=1.0e-6,
-        r_convergence=1.0e-4,
-        compute_threshold=1.0e-6,
+    cc = forte.modules.GeneralCC(
+        cc_type="cc", max_exc=2, e_convergence=1.0e-6, r_convergence=1.0e-4, compute_threshold=1.0e-6
     )
+    data = cc.run(data)
+
+    scf_energy = data.psi_wfn.energy()
+
+    energy = data.results.value("energy")
 
     psi4.core.clean()
-
-    energy = calc_data[-1][1]
 
     print(f"  HF energy:   {scf_energy}")
     print(f"  CCSD energy: {energy}")

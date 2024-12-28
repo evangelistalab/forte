@@ -1,11 +1,8 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+import pytest
 
 
 def test_ccsd_3():
     """Test CCSD on H4 using RHF/DZ orbitals"""
-
-    import pytest
 
     import forte
     import psi4

@@ -1,5 +1,14 @@
+import itertools
+import functools
+import time
+import math
+import copy
+
+import numpy as np
+
 from .module import Module
 from forte.data import ForteData
+from .validators import Feature, module_validation
 
 from forte._forte import (
     SparseOperator,
@@ -11,16 +20,6 @@ from forte._forte import (
     SparseExp,
     get_projection,
 )
-
-from .validators import Feature, module_validation
-
-import itertools
-import functools
-import time
-import math
-import copy
-
-import numpy as np
 
 
 def make_hfref(naelpi, nbelpi, nmopi):
@@ -43,7 +42,8 @@ def make_hfref(naelpi, nbelpi, nmopi):
     hfref = Determinant()
     nirrep = len(nmopi)
     nmo = sum(nmopi)
-    # we loop over each irrep and fill the occupied orbitals
+
+    # loop over each irrep and fill the occupied orbitals
     irrep_start = [sum(nmopi[:h]) for h in range(nirrep)]
     for h in range(nirrep):
         for i in range(naelpi[h]):
@@ -365,28 +365,26 @@ class GeneralCC(Module):
 
     Parameters
     ----------
-    as_ints : ActiveSpaceIntegrals
-        the molecular integrals
-    mo_space_info : MOSpaceInfo
-        the information about the molecular spaces
-    scf_info : SCFInfo
-        Information about the number of alpha/beta electrons
     cc_type : str
         The type of CC computation (cc/ucc/dcc/ducc)
     select_type : str
         The selection algorithm (default: None = no selection)
     max_exc : int
         The maximum excitation level (default: None)
-    omega : float
-        The selection threshold (default: None)
     e_convergence : float
         The energy convergence criterion (default = 1.0e-10)
     r_convergence : float
         The residual convergence criterion (default = 1.0e-5)
     compute_threshold : float
         The compute cutoff (default = 1.0e-14)
-    selection_threshold : float
-        The selection cutoff (default = 1.0e-14)
+    options : dict
+        linked : bool
+            Use a linked formulation of the CC equations (a commutator series)?
+        maxk : int
+            The maximum number of exponentials in the CC equations
+        diis_start : int
+            Start the iterations when the DIIS dimension is greather than this parameter (default = 3)
+
     Returns
     -------
     list(tuple(int,float))
@@ -516,7 +514,6 @@ class GeneralCC(Module):
         print(f"{self.cc_type.upper()} corr. energy:     {e - eref:20.12f}")
         print(f"\n{self.cc_type.upper()} proj. energy:     {e_proj:20.12f}")
         print(f"{self.cc_type.upper()} proj. corr energy:{e_proj - eref:20.12f}")
-        # print(f"omega: {omega}")
 
         data.results.add("energy", e, "Energy", "Eh")
         data.results.add("proj. energy", e_proj, "Projective Energy", "Eh")
