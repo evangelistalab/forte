@@ -1,14 +1,10 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+import pytest
+import forte
+import psi4
 
 
 def test_dccsd():
     """Test CCSD on H2 using RHF/DZ orbitals"""
-
-    import pytest
-
-    import forte
-    import psi4
 
     ref_energy = -1.126712715716011  # CCSD = FCI energy from psi4
 

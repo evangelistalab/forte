@@ -1,14 +1,10 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+import pytest
+import forte
+import psi4
 
 
 def test_uccsd_8():
     """Test projective unlinked UCCSD on H4 using RHF/STO-3G orbitals"""
-
-    import pytest
-
-    import forte
-    import psi4
 
     ref_energy = -1.9976233094  # from Jonathon
 

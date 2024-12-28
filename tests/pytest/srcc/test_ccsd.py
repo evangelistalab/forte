@@ -6,8 +6,6 @@ import psi4
 def test_ccsd():
     """Test CCSD on H2 using RHF/DZ orbitals"""
 
-    psi4.core.clean()
-
     ref_energy = -1.126712715716011  # CCSD = FCI energy from psi4
 
     molecule = psi4.geometry(
@@ -22,6 +20,7 @@ def test_ccsd():
     data = cc.run(data)
 
     scf_energy = data.psi_wfn.energy()
+    psi4.core.clean()
 
     energy = data.results.value("energy")
 

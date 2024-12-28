@@ -1,20 +1,13 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+import pytest
+import forte
+import psi4
 
 
 def test_duccsd():
     """Test projective factorized UCCSDT on Ne using RHF/cc-pVDZ orbitals"""
 
-    import pytest
-
-    import forte
-    import psi4
-
     ref_energy = -128.677997285129
-    molecule = psi4.geometry(
-        """
-    Ne 0.0 0.0 0.0"""
-    )
+    molecule = psi4.geometry("Ne 0.0 0.0 0.0")
 
     data = forte.modules.ObjectsUtilPsi4(
         molecule=molecule, basis="cc-pVDZ", mo_spaces={"FROZEN_DOCC": [1, 0, 0, 0, 0, 0, 0, 0]}

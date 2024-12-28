@@ -1,14 +1,10 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+import pytest
+import forte
+import psi4
 
 
 def test_ccsdtq():
     """Test CCSDTQ on H4 using RHF/DZ orbitals"""
-
-    import pytest
-
-    import forte
-    import psi4
 
     ref_energy = -2.225370535177  # from psi4
 

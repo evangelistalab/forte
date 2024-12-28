@@ -1,11 +1,10 @@
 import pytest
+import forte
+import psi4
 
 
 def test_ccsd_3():
     """Test CCSD on H4 using RHF/DZ orbitals"""
-
-    import forte
-    import psi4
 
     psi4.core.clean()
 

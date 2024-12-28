@@ -1,15 +1,11 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
+import os.path
 import pytest
+import forte
+import psi4
 
 
 def test_uccsd_5():
     """Test projective UCCSD on Ne using RHF/cc-pVDZ orbitals"""
-
-    import forte
-    import psi4
-    import os.path
 
     ref_energy = -107.655681875111
 
