@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import pytest
-
 import forte
 import psi4
 
@@ -13,10 +9,7 @@ def test_duccsdt():
 
     ref_energy = -128.679016191303  # this number was obtained with the on_the_fly implementation
 
-    molecule = psi4.geometry(
-        """
-     Ne 0.0 0.0 0.0"""
-    )
+    molecule = psi4.geometry("Ne 0.0 0.0 0.0")
 
     data = forte.modules.ObjectsUtilPsi4(
         molecule=molecule, basis="cc-pVDZ", mo_spaces={"FROZEN_DOCC": [1, 0, 0, 0, 0, 0, 0, 0]}

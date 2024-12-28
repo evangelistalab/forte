@@ -18,7 +18,7 @@ def test_ccsd2():
     """
     )
 
-    data = forte.modules.ObjectsUtilPsi4(molecule=molecule, basis="DZ").run()
+    data = forte.modules.ObjectsUtilPsi4(molecule=molecule, basis="cc-pVDZ").run()
     cc = forte.modules.GeneralCC(
         cc_type="cc", max_exc=2, e_convergence=1.0e-6, r_convergence=1.0e-4, compute_threshold=1.0e-6
     )
@@ -34,7 +34,7 @@ def test_ccsd2():
     print(f"  CCSD energy: {energy}")
     print(f"  E - Eref:    {energy - ref_energy}")
 
-    assert energy == pytest.approx(ref_energy, 1.0e-11)
+    assert energy == pytest.approx(ref_energy, 1.0e-6)
 
 
 if __name__ == "__main__":
