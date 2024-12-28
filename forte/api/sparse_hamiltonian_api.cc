@@ -43,6 +43,7 @@ void export_SparseHamiltonian(py::module& m) {
         .def("compute", &SparseHamiltonian::compute)
         .def("apply", &SparseHamiltonian::compute)
         .def("compute_on_the_fly", &SparseHamiltonian::compute_on_the_fly)
-        .def("timings", &SparseHamiltonian::timings);
+        .def("timings", &SparseHamiltonian::timings)
+        .def("to_sparse_operator", &SparseHamiltonian::to_sparse_operator);
 }
 } // namespace forte

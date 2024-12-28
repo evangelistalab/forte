@@ -210,11 +210,19 @@ def test_sparse_operator_complex_transform5():
     run_sparse_operator_test(O, theta, op)
 
 
-def test_sparse_operator_complex_transform5():
+def test_sparse_operator_complex_transform6():
     """test exponentiation of a sparse operator numerically"""
     O = make_O()
     op = "[0a+ 1a+ 2a+ 2a- 1a- 0a-]"
     theta = 0.35711
+    run_sparse_operator_test(O, theta, op)
+
+
+def test_sparse_operator_complex_transform7():
+    """Test exponentiation of a sparse operator numerically with theta = 0 (edge case)"""
+    O = make_O()
+    op = "[1a+ 0a-]"
+    theta = 0.0
     run_sparse_operator_test(O, theta, op)
 
 
@@ -275,3 +283,5 @@ if __name__ == "__main__":
     test_sparse_operator_complex_transform3()
     test_sparse_operator_complex_transform4()
     test_sparse_operator_complex_transform5()
+    test_sparse_operator_complex_transform6()
+    test_sparse_operator_complex_transform7()

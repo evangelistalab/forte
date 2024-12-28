@@ -26,6 +26,7 @@
  */
 
 #include <algorithm>
+#include <format>
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -35,9 +36,6 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/integral.h"
 #include "psi4/libcubeprop/cubeprop.h"
-
-#define FMT_HEADER_ONLY
-#include "lib/fmt/core.h"
 
 #include "base_classes/forte_options.h"
 
@@ -362,7 +360,7 @@ std::vector<std::string> IAOBuilder::print_IAO(std::shared_ptr<psi::Matrix> A_, 
                 for (auto& nbf_primary : ifn_primary) {
                     int num = iao;
                     std::string outstr_primary =
-                        fmt::format("{}{}{}{}_{}", std::get<0>(k) + 1, mol->symbol(std::get<0>(k)),
+                        std::format("{}{}{}{}_{}", std::get<0>(k) + 1, mol->symbol(std::get<0>(k)),
                                     l_to_symbol[std::get<1>(k)],
                                     m_to_symbol[std::get<1>(k)][std::get<4>(k)], num);
 
@@ -378,7 +376,7 @@ std::vector<std::string> IAOBuilder::print_IAO(std::shared_ptr<psi::Matrix> A_, 
                     all_iao_contributions.push_back(iao_cont);
                 }
 
-                std::string outstr = fmt::format(
+                std::string outstr = std::format(
                     "{}{}{}{}_{}", std::get<0>(i) + 1, mol->symbol(std::get<0>(i)),
                     l_to_symbol[std::get<1>(i)], m_to_symbol[std::get<1>(i)][std::get<4>(i)], iao);
 

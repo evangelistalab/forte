@@ -26,10 +26,9 @@
  * @END LICENSE
  */
 
+#include <algorithm>
+#include <format>
 #include <string>
-
-#define FMT_HEADER_ONLY
-#include "lib/fmt/core.h"
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -414,22 +413,22 @@ std::string occupation_table(size_t num_spaces,
     std::string s;
     s += "\n    Config.";
     for (size_t i = 0; i < num_spaces; i++) {
-        s += fmt::format("   Space {:1}", i + 1);
+        s += std::format("   Space {:1}", i + 1);
     }
     s += "\n            ";
     for (size_t i = 0; i < num_spaces; i++) {
-        s += fmt::format("   α    β ");
+        s += std::format("   α    β ");
     }
     int ndash = 7 + 10 * num_spaces;
     std::string dash(ndash, '-');
-    s += fmt::format("\n    {}", dash);
+    s += std::format("\n    {}", dash);
     for (size_t num_conf{0}; const auto& [aocc_idx, bocc_idx] : occupation_pairs) {
         num_conf += 1;
         const auto& aocc = alfa_occupation[aocc_idx];
         const auto& bocc = beta_occupation[bocc_idx];
-        s += fmt::format("\n    {:6d} ", num_conf);
+        s += std::format("\n    {:6d} ", num_conf);
         for (size_t i = 0; i < num_spaces; i++) {
-            s += fmt::format(" {:4d} {:4d}", aocc[i], bocc[i]);
+            s += std::format(" {:4d} {:4d}", aocc[i], bocc[i]);
         }
     }
     return s;
