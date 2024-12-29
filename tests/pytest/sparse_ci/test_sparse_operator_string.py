@@ -66,9 +66,21 @@ def test_sparse_operator_string_components():
     assert sop_nn == forte.sqop("[1a+ 2a-]")[0]
 
 
+def test_sparse_operator_string_spin_flip():
+    # test the spin flip function
+    sop, _ = forte.sqop("[1a+ 3a+ 3a- 2a-]")
+    sop_flip = sop.spin_flip()
+    assert sop_flip == forte.sqop("[1b+ 3b+ 3b- 2b-]")[0]
+
+    sop, _ = forte.sqop("[1a+ 1b+ 2b- 1a-]")
+    sop_flip = sop.spin_flip()
+    assert sop_flip == forte.sqop("[1a+ 1b+ 1b- 2a-]")[0]
+
+
 if __name__ == "__main__":
     test_sparse_operator_string_count()
     test_sparse_operator_string_is_number()
     test_sparse_operator_string_is_nilpotent()
     test_sparse_operator_string_commutator_type()
     test_sparse_operator_string_components()
+    test_sparse_operator_string_spin_flip()

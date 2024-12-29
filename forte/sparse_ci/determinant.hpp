@@ -537,7 +537,7 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         }
     }
 
-    BitArray<nbits_half> get_bits(DetSpinType spin_type) {
+    BitArray<nbits_half> get_bits(DetSpinType spin_type) const {
         return (spin_type == DetSpinType::Alpha ? get_alfa_bits() : get_beta_bits());
     }
 
@@ -553,7 +553,7 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
             words_[n] = u_int64_t(0);
     }
 
-    /// Compares a subset of the words of this determinant with the words of another determinant
+    /// Swap the alpha and beta bits of a determinant
     DeterminantImpl<N> spin_flip() const {
         DeterminantImpl<N> d(*this);
         for (size_t n = 0; n < nwords_half; n++) {
