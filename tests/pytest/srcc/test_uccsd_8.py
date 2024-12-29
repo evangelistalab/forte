@@ -1,14 +1,10 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+import pytest
+import forte
+import psi4
 
 
 def test_uccsd_8():
     """Test projective unlinked UCCSD on H4 using RHF/STO-3G orbitals"""
-
-    import pytest
-    import forte.proc.scc as scc
-    import forte
-    import psi4
 
     ref_energy = -1.9976233094  # from Jonathon
 
@@ -23,13 +19,12 @@ def test_uccsd_8():
 
     data = forte.modules.ObjectsUtilPsi4(molecule=molecule, basis="sto-3g").run()
     scf_energy = data.psi_wfn.energy()
-    calc_data = scc.run_cc(
-        data.as_ints, data.scf_info, data.mo_space_info, cc_type="ucc", max_exc=2, e_convergence=1.0e-10, linked=False
-    )
+    cc = forte.modules.GeneralCC(cc_type="ucc", max_exc=2, e_convergence=1.0e-10, options={"linked": False})
+    data = cc.run(data)
 
     psi4.core.clean()
 
-    energy = calc_data[-1][2]
+    energy = data.results.value("proj. energy")
 
     print(f"  HF energy:    {scf_energy}")
     print(f"  CCSD energy:  {energy}")

@@ -16,6 +16,7 @@ class Feature(Enum):
     MO_SPACE_INFO = "mo_space_info"
     INTS = "ints"
     RESULTS = "results"
+    AS_INTS = "as_ints"
     # options = auto()
     # state_weights_map = auto()
     # symmetry = auto()
