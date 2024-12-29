@@ -9,6 +9,7 @@ from .graph_visualizer import WorkflowVisualizer
 from .options_factory import OptionsFactory
 from .objects_factory_fcidump import ObjectsFromFCIDUMP
 from .objects_factory_psi4 import ObjectsFromPsi4
+from .general_cc import GeneralCC
 
 try:
     from .objects_factory_pyscf import ObjectsFromPySCF

@@ -1,14 +1,10 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+import pytest
+import forte
+import psi4
 
 
 def test_ccsd_3():
     """Test CCSD on H4 using RHF/DZ orbitals"""
-
-    import pytest
-    import forte.proc.scc as scc
-    import forte
-    import psi4
 
     psi4.core.clean()
 
@@ -24,10 +20,11 @@ def test_ccsd_3():
     )
 
     data = forte.modules.ObjectsUtilPsi4(molecule=molecule, basis="DZ", options={"E_CONVERGENCE": 11}).run()
+    cc = forte.modules.GeneralCC(cc_type="cc", max_exc=2)
+    data = cc.run(data)
     scf_energy = data.psi_wfn.energy()
-    calc_data = scc.run_cc(data.as_ints, data.scf_info, data.mo_space_info, cc_type="cc", max_exc=2)
 
-    energy = calc_data[-1][1]
+    energy = data.results.value("energy")
 
     print(f"  HF energy:   {scf_energy}")
     print(f"  CCSD energy: {energy}")

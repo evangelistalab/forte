@@ -1,15 +1,11 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import pytest
+import forte
+import psi4
 
 
-@pytest.mark.skip(reason="This is a long test")
+@pytest.mark.skip(reason="Long test")
 def test_ccsd2():
-    """Test CCSD on H2 using RHF/DZ orbitals"""
-
-    import forte.proc.scc as scc
-    import forte
-    import psi4
+    """Test CCSD on H2O using RHF/DZ orbitals"""
 
     ref_energy = -76.237730204702288  # CCSD energy from psi4
 
@@ -21,28 +17,22 @@ def test_ccsd2():
     """
     )
 
-    data = forte.modules.ObjectsUtilPsi4(molecule=molecule, basis="DZ").run()
-    scf_energy = data.psi_wfn.energy()
-    calc_data = scc.run_cc(
-        data.as_ints,
-        data.scf_info,
-        data.mo_space_info,
-        cc_type="cc",
-        max_exc=2,
-        e_convergence=1.0e-6,
-        r_convergence=1.0e-4,
-        compute_threshold=1.0e-6,
+    data = forte.modules.ObjectsUtilPsi4(molecule=molecule, basis="cc-pVDZ").run()
+    cc = forte.modules.GeneralCC(
+        cc_type="cc", max_exc=2, e_convergence=1.0e-6, r_convergence=1.0e-4, compute_threshold=1.0e-6
     )
+    data = cc.run(data)
+
+    scf_energy = data.psi_wfn.energy()
+    energy = data.results.value("energy")
 
     psi4.core.clean()
-
-    energy = calc_data[-1][1]
 
     print(f"  HF energy:   {scf_energy}")
     print(f"  CCSD energy: {energy}")
     print(f"  E - Eref:    {energy - ref_energy}")
 
-    # assert energy == pytest.approx(ref_energy, 1.0e-11)
+    assert energy == pytest.approx(ref_energy, 1.0e-6)
 
 
 if __name__ == "__main__":
