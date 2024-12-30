@@ -405,6 +405,28 @@ def test_sparse_operator_product():
     assert sop3.str() == sop3_test.str()
 
 
+def test_sparse_operator_list_reverse():
+    sopl = forte.SparseOperatorList()
+    sopl.add("[1a+ 1a-]", 1.0)
+    sopl.add("[0a+ 0a-]", 2.0)
+    reversed_sopl = sopl.reverse()
+    assert sopl.size() == 2
+    assert reversed_sopl[0] == 2.0
+    assert reversed_sopl[1] == 1.0
+    assert reversed_sopl(0)[0].str() == "[0a+ 0a-]"
+    assert reversed_sopl(1)[0].str() == "[1a+ 1a-]"
+
+
+def test_sparse_operator_list_remove():
+    sopl = forte.SparseOperatorList()
+    sopl.add("[1a+ 1a-]", 1.0)
+    sopl.add("[0a+ 0a-]", 1.0)
+    sopl.remove("[1a+ 1a-]")
+    assert sopl.size() == 1
+
+
 if __name__ == "__main__":
     test_sparse_operator()
     test_sparse_operator_product()
+    test_sparse_operator_list_reverse()
+    test_sparse_operator_list_remove()

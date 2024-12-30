@@ -202,7 +202,6 @@ SparseState normalize(const SparseState& state) {
     return new_state;
 }
 
-
 } // namespace forte
 
 // SparseState apply_operator_impl_original(bool is_antihermitian, const SparseOperator& sop,
