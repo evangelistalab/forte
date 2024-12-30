@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "sparse_ci/sparse_operator.h"
 
 namespace forte {

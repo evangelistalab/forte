@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include <format>
+
 #include "sparse_ci/sparse_operator_hamiltonian.h"
 
 #include "integrals/active_space_integrals.h"
