@@ -28,17 +28,16 @@
 
 #pragma once
 
-#include <complex>
+#include <memory>
+
+#include "sparse_ci/sparse_operator.h"
 
 namespace forte {
 
-// Define the scalar type used in the SparseOperator and SparseState objects
-using sparse_scalar_t = std::complex<double>;
+class ActiveSpaceIntegrals;
 
-// For double
-inline double to_double(const double& input) { return input; }
-
-// For std::complex<double>
-inline double to_double(const std::complex<double>& input) { return std::real(input); }
+/// @brief Generate the a SparseOperator representation of the Hamiltonian using integrals from an
+/// ActiveSpaceIntegrals object
+SparseOperator sparse_operator_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
 } // namespace forte

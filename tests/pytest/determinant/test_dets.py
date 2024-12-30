@@ -276,6 +276,12 @@ def test_det_slater_sign():
             assert d.slater_sign_reverse(i) == (-1) ** (i + 1)
 
 
+def test_spin_flip():
+    """Test spin flip functions"""
+    d = det("2-+0+-0++--")
+    assert d.spin_flip() == det("2+-0-+0--++")
+
+
 if __name__ == "__main__":
     test_det_constructors()
     test_det_fill()

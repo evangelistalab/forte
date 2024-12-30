@@ -345,6 +345,11 @@ template <typename Derived, typename T, typename F> class VectorSpaceList {
     /// @return the number of elements in the vector
     size_t size() const { return elements_.size(); }
 
+    /// @brief Remove a specific element from the vector space
+    void remove(const T& e) {
+        std::erase_if(elements_, [&e](const auto& p) { return p.first == e; });
+    }
+
     /// @return an element of the vector
     const F& operator[](size_t n) const { return elements_[n].second; }
 
@@ -405,6 +410,14 @@ template <typename Derived, typename T, typename F> class VectorSpaceList {
         for (const auto& [e, c] : elements_) {
             result.add(e.adjoint(), conjugate(c));
         }
+        return result;
+    }
+
+    /// @brief Return a reversed copy of the vector
+    Derived reverse() {
+        // avoid issues with const
+        Derived result = static_cast<Derived&>(*this);
+        std::reverse(result.elements_.begin(), result.elements_.end());
         return result;
     }
 

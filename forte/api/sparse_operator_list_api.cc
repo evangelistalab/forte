@@ -49,6 +49,13 @@ void export_SparseOperatorList(py::module& m) {
         .def("add", &SparseOperatorList::add_term_from_str, "str"_a,
              "coefficient"_a = sparse_scalar_t(1), "allow_reordering"_a = false)
         .def("to_operator", &SparseOperatorList::to_operator)
+        .def(
+            "remove",
+            [](SparseOperatorList& op, const std::string& s) {
+                const auto [sqop, _] = make_sq_operator_string(s, false);
+                op.remove(sqop);
+            },
+            "Remove a specific element from the vector space")
         .def("__len__", &SparseOperatorList::size)
         .def(
             "__iter__",
@@ -85,6 +92,7 @@ void export_SparseOperatorList(py::module& m) {
                      op[i] = values[i];
                  }
              })
+        .def("reverse", &SparseOperatorList::reverse, "Reverse the order of the operators")
         .def(
             "__call__",
             [](const SparseOperatorList& op, const size_t n) {
@@ -93,7 +101,7 @@ void export_SparseOperatorList(py::module& m) {
                 }
                 return op(n);
             },
-            "Get the nth element");
+            "Get the nth operator");
 
     m.def(
         "operator_list",

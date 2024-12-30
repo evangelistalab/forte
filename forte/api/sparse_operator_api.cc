@@ -33,8 +33,11 @@
 
 #include "helpers/string_algorithms.h"
 
+#include "integrals/active_space_integrals.h"
+
 #include "sparse_ci/sparse_operator.h"
 #include "sparse_ci/sq_operator_string_ops.h"
+#include "sparse_ci/sparse_operator_hamiltonian.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -251,6 +254,9 @@ void export_SparseOperator(py::module& m) {
             return sop;
         },
         "list"_a, "Create a SparseOperator object from a list of Tuple[SQOperatorString, complex]");
+
+    m.def("sparse_operator_hamiltonian", &sparse_operator_hamiltonian,
+          "Create a SparseOperator object from an ActiveSpaceIntegrals object");
 
     m.def("new_product", [](const SparseOperator A, const SparseOperator B) {
         SparseOperator C;
