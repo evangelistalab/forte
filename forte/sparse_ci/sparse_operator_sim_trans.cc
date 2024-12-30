@@ -49,8 +49,9 @@ void parallel_sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
                              std::pair<sparse_scalar_t, sparse_scalar_t> c2_pair,
                              sparse_scalar_t sigma, bool add, double screen_threshold);
 
-void sim_trans_op_impl(SparseOperator& O, const SQOperatorString& T_op, sparse_scalar_t theta,
-                       double screen_threshold);
+/// @brief Implementation of the linearized similarity transformation [(1 - T) O (1 + T)]
+void sim_trans_lin_impl(SparseOperator& O, const SQOperatorString& T_op, sparse_scalar_t theta,
+                        double screen_threshold);
 
 /// General implementation of the similarity transformation
 void sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
@@ -155,7 +156,7 @@ void serial_sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
     auto Td_n = Td_op.number_component();
     auto Td_nn = Td_op.non_number_component();
 
-    SparseOperator T;
+    SparseOperator R;
     sparse_scalar_t c1, c2;
     Determinant nn_Op_cre;
     Determinant nn_Op_ann;
@@ -225,18 +226,18 @@ void serial_sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
             for (const auto& [cOT_op, cOT_c] : cOT) {
                 // + c1 [O, T]
                 if (do_c1) {
-                    T.add(cOT_op, cOT_c * c1);
+                    R.add(cOT_op, cOT_c * c1);
                 }
                 if (do_c2) {
                     auto ccOTT = commutator_fast(cOT_op, T_op);
                     for (const auto& [ccOTT_op, ccOTT_c] : ccOTT) {
                         // + c2 [[O, T], T]
-                        T.add(ccOTT_op, ccOTT_c * cOT_c * c2);
+                        R.add(ccOTT_op, ccOTT_c * cOT_c * c2);
                     }
                     auto ccOTTd = commutator_fast(cOT_op, Td_op);
                     for (const auto& [ccOTTd_op, ccOTTd_c] : ccOTTd) {
                         // sigma * c2 [[O, T], T^dagger]
-                        T.add(ccOTTd_op, sigma * ccOTTd_c * cOT_c * c2);
+                        R.add(ccOTTd_op, sigma * ccOTTd_c * cOT_c * c2);
                     }
                 }
             }
@@ -247,27 +248,27 @@ void serial_sim_trans_impl(SparseOperator& O, const SQOperatorString& T_op,
             for (const auto& [cOTd_op, cOTd_c] : cOTd) {
                 // sigma * c1 [O, T^dagger]
                 if (do_c1) {
-                    T.add(cOTd_op, sigma * cOTd_c * c1);
+                    R.add(cOTd_op, sigma * cOTd_c * c1);
                 }
                 if (do_c2) {
                     auto ccOTdT = commutator_fast(cOTd_op, T_op);
                     for (const auto& [ccOTdT_op, ccOTdT_c] : ccOTdT) {
                         // sigma * c2 [[O, T^dagger], T]
-                        T.add(ccOTdT_op, sigma * ccOTdT_c * cOTd_c * c2);
+                        R.add(ccOTdT_op, sigma * ccOTdT_c * cOTd_c * c2);
                     }
                     auto ccOTdTd = commutator_fast(cOTd_op, Td_op);
                     for (const auto& [ccOTdTd_op, ccOTdTd_c] : ccOTdTd) {
                         // +c2 [[O, T^dagger], T^dagger]
-                        T.add(ccOTdTd_op, ccOTdTd_c * cOTd_c * c2);
+                        R.add(ccOTdTd_op, ccOTdTd_c * cOTd_c * c2);
                     }
                 }
             }
         }
     }
     if (add) {
-        O += T;
+        O += R;
     } else {
-        O = std::move(T);
+        O = std::move(R);
     }
 }
 
@@ -390,7 +391,7 @@ void fact_unitary_trans_imagherm(SparseOperator& O, const SparseOperatorList& T,
 
         // consider the case where the operator is a number operator
         if (sqop.cre().fast_a_xor_b_count(sqop.ann()) == 0) {
-            SparseOperator T;
+            SparseOperator R;
             double two_theta = 2.0 * std::real(theta);
             sparse_scalar_t four_sin_theta_2 = 4.0 * std::pow(std::sin(theta), 2.0);
             std::complex<double> exp_phase_min_one = std::polar(1.0, two_theta) - 1.0;
@@ -398,18 +399,18 @@ void fact_unitary_trans_imagherm(SparseOperator& O, const SparseOperatorList& T,
             for (const auto& [O_op, O_c] : O.elements()) {
                 auto NO = sqop * O_op;
                 for (const auto& [NO_op, NO_c] : NO) {
-                    T.add(NO_op, exp_phase_min_one * NO_c * O_c);
+                    R.add(NO_op, exp_phase_min_one * NO_c * O_c);
                     auto NON = NO_op * sqop;
                     for (const auto& [NON_op, NON_c] : NON) {
-                        T.add(NON_op, four_sin_theta_2 * NON_c * NO_c * O_c);
+                        R.add(NON_op, four_sin_theta_2 * NON_c * NO_c * O_c);
                     }
                 }
                 auto ON = O_op * sqop;
                 for (const auto& [ON_op, ON_c] : ON) {
-                    T.add(ON_op, exp_min_phase_min_one * ON_c * O_c);
+                    R.add(ON_op, exp_min_phase_min_one * ON_c * O_c);
                 }
             }
-            O += T;
+            O += R;
             return;
         }
 
@@ -439,7 +440,7 @@ void fact_trans_lin(SparseOperator& O, const SparseOperatorList& T, bool reverse
     const auto& elements = T.elements();
     auto operation = [&](const auto& iter) {
         const auto& [sqop, c] = *iter;
-        sim_trans_op_impl(O, sqop, c, screen_threshold);
+        sim_trans_lin_impl(O, sqop, c, screen_threshold);
     };
     if (reverse) {
         for (auto it = elements.rbegin(), end = elements.rend(); it != end; ++it) {
@@ -452,16 +453,16 @@ void fact_trans_lin(SparseOperator& O, const SparseOperatorList& T, bool reverse
     }
 }
 
-void sim_trans_op_impl(SparseOperator& O, const SQOperatorString& T_op, sparse_scalar_t theta,
-                       double screen_threshold) {
+void sim_trans_lin_impl(SparseOperator& O, const SQOperatorString& T_op, sparse_scalar_t theta,
+                        double screen_threshold) {
     // sanity check to make sure all indices are distinct
     if (T_op.cre().fast_a_xor_b_count(T_op.ann()) == 0) {
-        throw std::runtime_error("sim_trans_op_impl: the operator " + T_op.str() +
+        throw std::runtime_error("sim_trans_lin_impl: the operator " + T_op.str() +
                                  " contains repeated indices.\nThis is not allowed for the "
                                  "similarity transformation.");
     }
     // (1 - T) O(1 + T) = O + [ O, T ] - T O T
-    SparseOperator T;
+    SparseOperator R;
     for (const auto& [O_op, O_c] : O.elements()) {
         if (std::abs(O_c * theta) < screen_threshold) {
             continue;
@@ -475,18 +476,18 @@ void sim_trans_op_impl(SparseOperator& O, const SQOperatorString& T_op, sparse_s
         for (const auto& [cOT_op, cOT_c] : cOT) {
             // + [O, T]
             if (std::abs(theta * cOT_c * O_c) > screen_threshold) {
-                T.add(cOT_op, theta * cOT_c * O_c);
+                R.add(cOT_op, theta * cOT_c * O_c);
             }
             // - T [O,T]
             auto T_cOT = T_op * cOT_op;
             for (const auto& [T_cOT_op, T_cOT_c] : T_cOT) {
                 if (std::abs(theta * theta * T_cOT_c * cOT_c * O_c) > screen_threshold) {
-                    T.add(T_cOT_op, -theta * theta * T_cOT_c * cOT_c * O_c);
+                    R.add(T_cOT_op, -theta * theta * T_cOT_c * cOT_c * O_c);
                 }
             }
         }
     }
-    O += T;
+    O += R;
 }
 
 } // namespace forte
