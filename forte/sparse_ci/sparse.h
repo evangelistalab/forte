@@ -31,12 +31,14 @@
 #include <complex>
 
 namespace forte {
+
+// Define the scalar type used in the SparseOperator and SparseState objects
 using sparse_scalar_t = std::complex<double>;
 
-// // For double
-// double to_double(const double& input) { return input; }
+// For double
+inline double to_double(const double& input) { return input; }
 
 // For std::complex<double>
-template <typename T> double to_double(const T& input) { return std::real(input); }
+inline double to_double(const std::complex<double>& input) { return std::real(input); }
 
 } // namespace forte
