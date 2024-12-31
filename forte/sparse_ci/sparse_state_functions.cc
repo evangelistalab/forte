@@ -50,12 +50,12 @@ SparseState apply_operator_impl(bool is_antihermitian, const SparseOperator& sop
 
 SparseState apply_operator_lin(const SparseOperator& sop, const SparseState& state,
                                double screen_thresh) {
-    return apply_operator_impl_grouped(false, sop, state, screen_thresh);
+    return apply_operator_impl(false, sop, state, screen_thresh);
 }
 
 SparseState apply_operator_antiherm(const SparseOperator& sop, const SparseState& state,
                                     double screen_thresh) {
-    return apply_operator_impl_grouped(true, sop, state, screen_thresh);
+    return apply_operator_impl(true, sop, state, screen_thresh);
 }
 
 SparseState apply_operator_impl_naive(bool is_antihermitian, const SparseOperator& sop,
