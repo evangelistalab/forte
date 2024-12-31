@@ -256,7 +256,8 @@ void export_SparseOperator(py::module& m) {
         "list"_a, "Create a SparseOperator object from a list of Tuple[SQOperatorString, complex]");
 
     m.def("sparse_operator_hamiltonian", &sparse_operator_hamiltonian,
-          "Create a SparseOperator object from an ActiveSpaceIntegrals object");
+          "Create a SparseOperator object from an ActiveSpaceIntegrals object", "as_ints"_a,
+          "screen_thresh"_a = 1.0e-12);
 
     m.def("new_product", [](const SparseOperator A, const SparseOperator B) {
         SparseOperator C;

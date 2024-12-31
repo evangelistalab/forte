@@ -75,6 +75,9 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     using BitArray<N>::fast_a_and_b_eq_zero;
     using BitArray<N>::find_first_one;
     using BitArray<N>::find_last_one;
+    using BitArray<N>::zero;
+    using BitArray<N>::set;
+    using BitArray<N>::reset;
 
     /// the number of bits divided by two
     static constexpr size_t nbits_half = N / 2;
@@ -107,6 +110,18 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         int b_size = occupation_b.size();
         for (int p = 0; p < b_size; ++p)
             set_beta_bit(p, occupation_b[p]);
+    }
+
+    /// Construct the determinant from two initializer lists that specify which orbitals are
+    /// occupied in the alpha and beta strings.  alfa_list = [Ia] and beta_list = [Ib]
+    explicit DeterminantImpl(std::initializer_list<size_t> alfa_list,
+                             std::initializer_list<size_t> beta_list) {
+        for (auto i : alfa_list) {
+            set_alfa_bit(i, true);
+        }
+        for (auto i : beta_list) {
+            set_beta_bit(i, true);
+        }
     }
 
     /// Construct the determinant from an occupation vector that
@@ -152,6 +167,16 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         for (size_t n = 0; n < nwords_half; n++) {
             words_[n] = sa.get_word(n);
             words_[n + nwords_half] = sb.get_word(n);
+        }
+    }
+
+    void set(std::initializer_list<size_t> alfa_list, std::initializer_list<size_t> beta_list) {
+        zero();
+        for (auto i : alfa_list) {
+            set_alfa_bit(i, true);
+        }
+        for (auto i : beta_list) {
+            set_beta_bit(i, true);
         }
     }
 
@@ -854,15 +879,38 @@ inline double faster_apply_operator_to_det(const DeterminantImpl<N>& d, Determin
                                            const DeterminantImpl<N>& cre,
                                            const DeterminantImpl<N>& ann,
                                            const DeterminantImpl<N>& sign) {
-    // loop over the words
     size_t n = 0;
-    for (size_t i = 0; i < DeterminantImpl<N>::nwords_; ++i) {
-        // apply the annihilation operator
-        new_d.words_[i] = d.words_[i] & (~ann.words_[i]);
-        // compute the sign
-        n += ui64_bit_count(new_d.words_[i] & sign.words_[i]);
-        // apply the creation operator
-        new_d.words_[i] |= cre.words_[i];
+    if constexpr (N == 128) {
+        // specialization for 64 + 64 bits
+        new_d.words_[0] = d.words_[0] & (~ann.words_[0]);
+        new_d.words_[1] = d.words_[1] & (~ann.words_[1]);
+        n += ui64_bit_count(new_d.words_[0] & sign.words_[0]);
+        n += ui64_bit_count(new_d.words_[1] & sign.words_[1]);
+        new_d.words_[0] |= cre.words_[0];
+        new_d.words_[1] |= cre.words_[1];
+    } else if constexpr (N == 256) {
+        new_d.words_[0] = d.words_[0] & (~ann.words_[0]);
+        new_d.words_[1] = d.words_[1] & (~ann.words_[1]);
+        new_d.words_[2] = d.words_[2] & (~ann.words_[2]);
+        new_d.words_[3] = d.words_[3] & (~ann.words_[3]);
+        n += ui64_bit_count(new_d.words_[0] & sign.words_[0]);
+        n += ui64_bit_count(new_d.words_[1] & sign.words_[1]);
+        n += ui64_bit_count(new_d.words_[2] & sign.words_[2]);
+        n += ui64_bit_count(new_d.words_[3] & sign.words_[3]);
+        new_d.words_[0] |= cre.words_[0];
+        new_d.words_[1] |= cre.words_[1];
+        new_d.words_[2] |= cre.words_[2];
+        new_d.words_[3] |= cre.words_[3];
+    } else {
+        // loop over the words
+        for (size_t i = 0; i < DeterminantImpl<N>::nwords_; ++i) {
+            // apply the annihilation operator
+            new_d.words_[i] = d.words_[i] & (~ann.words_[i]);
+            // compute the sign
+            n += ui64_bit_count(new_d.words_[i] & sign.words_[i]);
+            // apply the creation operator
+            new_d.words_[i] |= cre.words_[i];
+        }
     }
     return 1.0 - 2.0 * (n & 1);
 }

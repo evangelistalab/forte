@@ -161,5 +161,10 @@ void export_Determinant(py::module& m) {
         .def("determinants", &DeterminantHashVec::determinants, "Return a vector of Determinants")
         .def("get_det", &DeterminantHashVec::get_det, "Return a specific determinant by reference")
         .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
+
+    m.def("hilbert_space", &make_hilbert_space, "nmo"_a, "na"_a, "nb"_a, "nirrep"_a,
+          "mo_symmetry"_a, "symmetry"_a,
+          "Generate the Hilbert space for a given number of "
+          "electrons and orbitals");
 }
 } // namespace forte

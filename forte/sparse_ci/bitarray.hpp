@@ -202,6 +202,9 @@ template <size_t N> class BitArray {
         getword(pos) ^= (-val ^ getword(pos)) & maskbit(pos); // if-free implementation
     }
 
+    void set(size_t pos) { set_bit(pos, true); }
+    void reset(size_t pos) { set_bit(pos, false); }
+
     /// get a word in position pos
     word_t get_word(size_t pos) const { return words_[pos]; }
 
@@ -495,6 +498,35 @@ template <size_t N> class BitArray {
             result += ((words_[n] & b.words_[n]) != b.words_[n]);
         }
         return not result;
+    }
+
+    /// Implements the operation: (a & b) == c
+    inline bool fast_a_and_b_equal_c(const BitArray<N>& b, const BitArray<N>& c) const {
+        auto check_one_word = [](uint64_t a, uint64_t b, uint64_t c) -> bool {
+            return ((a & b & (~c)) | (c & (~a))) == 0;
+        };
+        if constexpr (N == 64) {
+            return check_one_word(words_[0], b.words_[0], c.words_[0]);
+        } else if constexpr (N == 128) {
+            return check_one_word(words_[0], b.words_[0], c.words_[0]) &&
+                   check_one_word(words_[1], b.words_[1], c.words_[1]);
+        } else if constexpr (N == 192) {
+            return check_one_word(words_[0], b.words_[0], c.words_[0]) &&
+                   check_one_word(words_[1], b.words_[1], c.words_[1]) &&
+                   check_one_word(words_[2], b.words_[2], c.words_[2]);
+        } else if constexpr (N == 256) {
+            return check_one_word(words_[0], b.words_[0], c.words_[0]) &&
+                   check_one_word(words_[1], b.words_[1], c.words_[1]) &&
+                   check_one_word(words_[2], b.words_[2], c.words_[2]) &&
+                   check_one_word(words_[3], b.words_[3], c.words_[3]);
+        } else {
+            for (size_t n = 0; n < nwords_; ++n) {
+                if (check_one_word(words_[n], b.words_[n], c.words_[n])) {
+                    return false;
+                }
+                return true;
+            }
+        }
     }
 
     /// Implements the operation: a - b == 0
@@ -811,7 +843,8 @@ template <size_t N> class BitArray {
     // ==> Private Functions <==
 
     // These functions are used to address bits in the BitArray.
-    // They should not be used outside the class because they contain details of the implementation.
+    // They should not be used outside the class because they contain details of the
+    // implementation.
 
     /// the index of the word where the bit in position pos is found
     static constexpr size_t whichword(size_t pos) noexcept { return pos / bits_per_word; }

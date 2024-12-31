@@ -90,6 +90,11 @@ class SQOperatorString {
     SQOperatorString();
     /// constructor from a pair of Determinant objects
     SQOperatorString(const Determinant& cre, const Determinant& ann);
+    /// constructor from a pair of Determinant objects
+    SQOperatorString(const std::initializer_list<size_t> acre,
+                     const std::initializer_list<size_t> bcre,
+                     const std::initializer_list<size_t> aann,
+                     const std::initializer_list<size_t> bann);
     /// @return a Determinant object that represents the creation operators
     const Determinant& cre() const;
     /// @return a Determinant object that represents the annihilation operators

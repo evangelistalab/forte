@@ -280,6 +280,7 @@ sparse_ci/sparse_operator.cc
 sparse_ci/sparse_operator_sim_trans.cc
 sparse_ci/sparse_operator_hamiltonian.cc
 sparse_ci/sparse_state.cc
+sparse_ci/sparse_state_functions.cc
 sparse_ci/sq_operator_string.cc
 sparse_ci/sq_operator_string_ops.cc
 v2rdm/v2rdm.cc

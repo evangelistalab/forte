@@ -52,4 +52,24 @@ std::shared_ptr<psi::Matrix> make_s2_matrix(const std::vector<Determinant>& dets
 std::shared_ptr<psi::Matrix> make_hamiltonian_matrix(const std::vector<Determinant>& dets,
                                                      std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
+/// @brief Generate all strings of n orbitals and k electrons in each irrep
+/// @param n The number of orbitals
+/// @param k The number of electrons
+/// @param nirrep The number of irreps
+/// @param mo_symmetry The symmetry of the MOs
+/// @return A vector of vectors of strings, one vector for each irrep
+std::vector<std::vector<String>> make_strings(int n, int k, size_t nirrep,
+                                              const std::vector<int>& mo_symmetry);
+
+/// @brief Generate the Hilbert space for a given number of electrons and orbitals
+/// @param nmo The number of orbitals
+/// @param na The number of alpha electrons
+/// @param nb The number of beta electrons
+/// @param nirrep The number of irreps
+/// @param mo_symmetry The symmetry of the MOs
+/// @param symmetry The symmetry of the determinants
+/// @return A vector of determinants
+std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, size_t nirrep,
+                                            const std::vector<int>& mo_symmetry, int symmetry);
+
 } // namespace forte
