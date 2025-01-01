@@ -915,52 +915,6 @@ inline double faster_apply_operator_to_det(const DeterminantImpl<N>& d, Determin
     return 1.0 - 2.0 * (n & 1);
 }
 
-//    temp = cre;
-//    n = temp.count();
-//    // make sure we can annihilate the orbitals
-//    DeterminantImpl<N> temp = ann;
-//    // check if the orbitals annihilated are occupied
-//    // d       = 1100
-//    // ann     = 1000
-//    // d & ann = 1000
-//    temp &= d;
-//    if (temp != ann) {
-//        std::cout << "apply_op: early exit!" << std::endl;
-//        return 0.0;
-//    }
-
-//    // consider only the creation operators that are not included in the annihilation part
-//    temp = cre & ~ann;
-
-//    if (temp != ann) {
-
-//    }
-
-//    // ann     = 1000
-//    // cre     = 0010
-
-//    // ann     = 1000
-//    // cre     = 1000
-//    // check if the orbitals annihilated are occupied
-//    // d       = 1100
-//    // ann     = 1000
-//    // d & ann = 1000
-//    if ((d & ann) != ann)
-//        return 0.0;
-//    // check if the orbitals created are empty
-//    // d       = 1100
-//    // cre     = 0010
-//    // d & cre = 0000
-//    temp = d;
-//    temp &= cre;
-//    if (temp.count() != 0)
-//        return 0.0;
-//        std::cout << str(d,4) << std::endl;
-//        std::cout << orb << std::endl;
-//        std::cout << d.slater_sign(orb) << std::endl;
-//        std::cout << d.get_bit(orb) << std::endl;
-//        std::cout << "\n" << std::endl;
-
 template <size_t N> double spin2(const DeterminantImpl<N>& lhs, const DeterminantImpl<N>& rhs) {
     int nmo = DeterminantImpl<N>::nbits_half;
     const DeterminantImpl<N>& I = lhs;

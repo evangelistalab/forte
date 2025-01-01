@@ -219,5 +219,7 @@ std::vector<std::pair<SQOperatorString, double>> commutator_fast(const SQOperato
 
 // Compute the sign mask associated with a set of creation and annihilation operators
 Determinant compute_sign_mask(const Determinant& cre, const Determinant& ann);
+void compute_sign_mask(const Determinant& cre, const Determinant& ann, Determinant& sign_mask,
+                       Determinant& idx);
 
 } // namespace forte

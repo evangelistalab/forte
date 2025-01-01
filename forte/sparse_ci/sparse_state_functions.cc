@@ -45,244 +45,129 @@ SparseState apply_operator_impl_naive(bool is_antihermitian, const SparseOperato
 SparseState apply_operator_impl_grouped(bool is_antihermitian, const SparseOperator& sop,
                                         const SparseState& state, double screen_thresh);
 
-SparseState apply_operator_impl(bool is_antihermitian, const SparseOperator& sop,
-                                const SparseState& state, double screen_thresh);
-
 SparseState apply_operator_lin(const SparseOperator& sop, const SparseState& state,
                                double screen_thresh) {
-    return apply_operator_impl(false, sop, state, screen_thresh);
+    return apply_operator_impl_grouped(false, sop, state, screen_thresh);
 }
 
 SparseState apply_operator_antiherm(const SparseOperator& sop, const SparseState& state,
                                     double screen_thresh) {
-    return apply_operator_impl(true, sop, state, screen_thresh);
+    return apply_operator_impl_grouped(true, sop, state, screen_thresh);
 }
 
+// This is a naive implementation of the operator application that is used for testing
+// It has a cost complexity of O(M * N) where M is the number of terms in the operator
+// and N is the number of terms in the state.
 SparseState apply_operator_impl_naive(bool is_antihermitian, const SparseOperator& sop,
                                       const SparseState& state, double screen_thresh) {
     if (screen_thresh < 0) {
         throw std::invalid_argument("apply_operator_impl:screen_thresh must be non-negative");
     }
-    SparseState new_terms;
-    Determinant new_det;
-    // make a vector of the operator strings
-    std::vector<std::tuple<Determinant, Determinant, sparse_scalar_t>> op_sorted;
-    for (const auto& [sqop, t] : sop.elements()) {
-        if (std::abs(t) > screen_thresh) {
-            op_sorted.push_back(std::make_tuple(sqop.cre(), sqop.ann(), t));
-        }
-    }
+    SparseState new_terms; // the new state
+    Determinant new_det;   // a temporary determinant to store the result of the operator
 
-    // make a copy of the state
-    std::vector<std::pair<Determinant, sparse_scalar_t>> state_sorted;
-    for (const auto& [det, c] : state) {
-        state_sorted.push_back(std::make_pair(det, c));
-    }
-    std::sort(state_sorted.begin(), state_sorted.end(),
-              [](const auto& a, const auto& b) { return a.first < b.first; });
-
-    for (const auto& [sqop_cre, sqop_ann, t] : op_sorted) {
-        const Determinant sign_mask = compute_sign_mask(sqop_cre, sqop_ann);
-        for (const auto& [det, c] : state_sorted) {
-            if (det.fast_a_and_b_equal_c(sqop_cre, sqop_ann)) {
-                auto value =
-                    faster_apply_operator_to_det(det, new_det, sqop_cre, sqop_ann, sign_mask);
-                new_terms[new_det] += value * t * c;
-            }
-        }
-    }
-
-    if (not is_antihermitian) {
-        return new_terms;
-    }
     for (const auto& [sqop, t] : sop) {
-        const Determinant sign_mask = compute_sign_mask(sqop.ann(), sqop.cre());
-        for (const auto& [det, c] : state) {
-            if (det.fast_a_and_b_equal_c(sqop.ann(), sqop.cre())) {
-                auto value =
-                    faster_apply_operator_to_det(det, new_det, sqop.ann(), sqop.cre(), sign_mask);
-                new_terms[new_det] -= value * t * c;
-            }
-        }
-    }
-    return new_terms;
-}
-
-SparseState apply_operator_impl_grouped(bool is_antihermitian, const SparseOperator& sop,
-                                        const SparseState& state, double screen_thresh) {
-    if (screen_thresh < 0) {
-        throw std::invalid_argument("apply_operator_impl:screen_thresh must be non-negative");
-    }
-    SparseState new_terms;
-    Determinant new_det;
-
-    // Make a sorted copy of the state based on the decreasing absolute value of the sparse_scalar_t
-    std::vector<std::pair<Determinant, sparse_scalar_t>> state_sorted;
-    for (const auto& [det, c] : state) {
-        state_sorted.push_back(std::make_pair(det, c));
-    }
-    std::sort(state_sorted.begin(), state_sorted.end(),
-              [](const auto& a, const auto& b) { return std::abs(a.second) > std::abs(b.second); });
-
-    // Find the largest coefficient in absolute value
-    auto max_c = state_sorted.size() > 0 ? std::abs(state_sorted[0].second) : 0.0;
-
-    // Group the operators by common annihilation strings and screen them
-    std::unordered_map<Determinant,
-                       std::pair<std::vector<std::pair<Determinant, sparse_scalar_t>>, double>,
-                       Determinant::Hash>
-        sop_groups;
-    sop_groups.reserve(sop.size());
-
-    for (const auto& [sqop, t] : sop.elements()) {
-        if (std::abs(t * max_c) > screen_thresh) {
-            auto& [group, max_abs_t] = sop_groups[sqop.ann()];
-            group.emplace_back(sqop.cre(), t);
-            max_abs_t = std::max(max_abs_t, std::abs(t));
-        }
-    }
-
-    for (const auto& [sqop_ann, sqop_group_max_abs_t] : sop_groups) {
-        const auto& [sqop_group, max_abs_t] = sqop_group_max_abs_t;
-        for (const auto& [det, c] : state_sorted) {
-            // check if the annihilation operator can be applied to this determinant
-            if (std::abs(c) * max_abs_t < screen_thresh) {
-                break;
-            }
-            if (det.fast_a_and_b_equal_b(sqop_ann)) {
-                // loop over the creation operators in this group
-                for (const auto& [sqop_cre, t] : sqop_group) {
-                    const Determinant ucre = sqop_cre - sqop_ann;
-                    const Determinant sign_mask = compute_sign_mask(sqop_cre, sqop_ann);
-                    if (det.fast_a_and_b_eq_zero(ucre)) {
-                        const auto value = faster_apply_operator_to_det(det, new_det, sqop_cre,
-                                                                        sqop_ann, sign_mask);
-                        if (std::abs(c * t) > screen_thresh) {
-                            new_terms[new_det] += value * t * c;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if (not is_antihermitian) {
-        return new_terms;
-    }
-
-    // Group the operators by common annihilation strings and screen them
-    sop_groups.clear();
-
-    for (const auto& [sqop, t] : sop.elements()) {
-        if (std::abs(t * max_c) > screen_thresh) {
-            auto& [group, max_abs_t] = sop_groups[sqop.cre()];
-            group.emplace_back(sqop.ann(), t);
-            max_abs_t = std::max(max_abs_t, std::abs(t));
-        }
-    }
-
-    for (const auto& [sqop_cre, sqop_group_max_abs_t] : sop_groups) {
-        const auto& [sqop_group, max_abs_t] = sqop_group_max_abs_t;
-        for (const auto& [det, c] : state_sorted) {
-            // check if the annihilation operator can be applied to this determinant
-            if (std::abs(c) * max_abs_t < screen_thresh) {
-                break;
-            }
-            if (det.fast_a_and_b_equal_b(sqop_cre)) {
-                // loop over the creation operators in this group
-                for (const auto& [sqop_ann, t] : sqop_group) {
-                    const Determinant uann = sqop_ann - sqop_cre;
-                    const Determinant sign_mask = compute_sign_mask(sqop_ann, sqop_cre);
-                    if (det.fast_a_and_b_eq_zero(uann)) {
-                        const auto value = faster_apply_operator_to_det(det, new_det, sqop_ann,
-                                                                        sqop_cre, sign_mask);
-                        if (std::abs(c * t) > screen_thresh) {
-                            new_terms[new_det] -= value * t * c;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return new_terms;
-}
-
-SparseState apply_operator_impl(bool is_antihermitian, const SparseOperator& sop,
-                                const SparseState& state, double screen_thresh) {
-    if (screen_thresh < 0) {
-        throw std::invalid_argument("apply_operator_impl:screen_thresh must be non-negative");
-    }
-    // make a copy of the state
-    std::vector<std::pair<sparse_scalar_t, Determinant>> state_sorted;
-    state_sorted.reserve(state.size());
-    std::transform(state.begin(), state.end(), std::back_inserter(state_sorted),
-                   [](const auto& pair) { return std::make_pair(pair.second, pair.first); });
-
-    // Sorting the vector based on the decreasing absolute value of the sparse_scalar_t
-    std::sort(state_sorted.begin(), state_sorted.end(),
-              [](const std::pair<sparse_scalar_t, Determinant>& a,
-                 const std::pair<sparse_scalar_t, Determinant>& b) {
-                  return std::abs(a.first) > std::abs(b.first);
-              });
-
-    // Find the largest coefficient in absolute value
-    auto max_c = state_sorted.size() > 0 ? std::abs(state_sorted[0].first) : 0.0;
-
-    // make a copy of the operator and sort it according to decreasing values of |t|
-    std::vector<std::pair<sparse_scalar_t, SQOperatorString>> op_sorted;
-    for (const auto& [sqop, t] : sop.elements()) {
-        if (std::abs(t * max_c) > screen_thresh)
-            op_sorted.push_back(std::make_pair(t, sqop));
-    }
-    // Sorting the vector based on the decreasing absolute value of the sparse_scalar_t
-    std::sort(op_sorted.begin(), op_sorted.end(),
-              [](const std::pair<sparse_scalar_t, SQOperatorString>& a,
-                 const std::pair<sparse_scalar_t, SQOperatorString>& b) {
-                  return std::abs(a.first) > std::abs(b.first);
-              });
-
-    SparseState new_terms;
-    Determinant new_det;
-
-    for (const auto& [t, sqop] : op_sorted) {
-        // mask for screening determinants according to the uncontracted creation operators
-        const Determinant ucre = sqop.cre() - sqop.ann();
         const Determinant sign_mask = compute_sign_mask(sqop.cre(), sqop.ann());
-        const auto screen_thresh_div_t = screen_thresh / std::abs(t);
-        // Find the first determinant below the threshold using bisection
-        auto last = std::lower_bound(
-            state_sorted.begin(), state_sorted.end(), screen_thresh_div_t,
-            [](const auto& pair, double threshold) { return std::abs(pair.first) > threshold; });
-        for (auto it = state_sorted.begin(); it != last; ++it) {
-            const auto& [c, det] = *it;
-            if (det.fast_can_apply_operator(sqop.ann(), ucre)) {
+        for (const auto& [det, c] : state) {
+            if (det.faster_can_apply_operator(sqop.cre(), sqop.ann())) {
                 auto value =
                     faster_apply_operator_to_det(det, new_det, sqop.cre(), sqop.ann(), sign_mask);
                 new_terms[new_det] += value * t * c;
             }
         }
     }
+
     if (not is_antihermitian) {
         return new_terms;
     }
-    for (const auto& [t, sqop] : op_sorted) {
-        // mask for screening determinants according to the uncontracted annihilation operators
-        const Determinant uann = sqop.ann() - sqop.cre();
+
+    for (const auto& [sqop, t] : sop) {
         const Determinant sign_mask = compute_sign_mask(sqop.ann(), sqop.cre());
-        const auto screen_thresh_div_t = screen_thresh / std::abs(t);
-        // Find the first determinant below the threshold using bisection
-        auto last = std::lower_bound(
-            state_sorted.begin(), state_sorted.end(), screen_thresh_div_t,
-            [](const auto& pair, double threshold) { return std::abs(pair.first) > threshold; });
-        for (auto it = state_sorted.begin(); it != last; ++it) {
-            const auto& [c, det] = *it;
-            if (det.fast_can_apply_operator(sqop.cre(), uann)) {
+        for (const auto& [det, c] : state) {
+            if (det.faster_can_apply_operator(sqop.ann(), sqop.cre())) {
                 auto value =
                     faster_apply_operator_to_det(det, new_det, sqop.ann(), sqop.cre(), sign_mask);
                 new_terms[new_det] -= value * t * c;
             }
         }
     }
+    return new_terms;
+}
+
+// This is a kernel that applies the operator to the state using a grouped approach
+// It has a lower cost complexity
+// It assumes that the operator is grouped by the annihilation operators and that these are prepared
+// in another function calling this kernel
+template <bool positive>
+void apply_operator_kernel(const auto& sop_groups, const auto& state_sorted,
+                           const auto& screen_thresh, auto& new_terms) {
+    Determinant new_det;
+    Determinant sign_mask;
+    Determinant idx;
+    for (const auto& [sqop_ann, sqop_group] : sop_groups) {
+        for (const auto& [det, c] : state_sorted) {
+            if (det.fast_a_and_b_equal_b(sqop_ann)) {
+                // loop over the creation operators in this group
+                for (const auto& [sqop_cre, t] : sqop_group) {
+                    if (det.fast_a_and_b_minus_c_eq_zero(sqop_cre, sqop_ann)) {
+                        if (std::abs(c * t) > screen_thresh) {
+                            compute_sign_mask(sqop_cre, sqop_ann, sign_mask, idx);
+                            const auto value = faster_apply_operator_to_det(det, new_det, sqop_cre,
+                                                                            sqop_ann, sign_mask);
+                            if constexpr (positive) {
+                                new_terms[new_det] += value * t * c;
+                            } else {
+                                new_terms[new_det] -= value * t * c;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// This is the grouped implementation of the operator application. It mostly prepares the operator
+// and state and then calls the kernel to apply the operator
+SparseState apply_operator_impl_grouped(bool is_antihermitian, const SparseOperator& sop,
+                                        const SparseState& state, double screen_thresh) {
+    if (screen_thresh < 0) {
+        throw std::invalid_argument(
+            "apply_operator_impl_grouped:screen_thresh must be non-negative");
+    }
+    SparseState new_terms;
+
+    // make a copy of the state with the determinants sorted
+    // somehow this makes the code faster
+    std::vector<std::pair<Determinant, sparse_scalar_t>> state_sorted(state.begin(), state.end());
+    std::sort(state_sorted.begin(), state_sorted.end(),
+              [](const auto& a, const auto& b) { return a.first < b.first; });
+
+    // Group the operators by common annihilation strings
+    std::unordered_map<Determinant, std::vector<std::pair<Determinant, sparse_scalar_t>>,
+                       Determinant::Hash>
+        sop_groups;
+    for (const auto& [sqop, t] : sop.elements()) {
+        sop_groups[sqop.ann()].emplace_back(sqop.cre(), t);
+    }
+
+    // Call the kernel to apply the operator (adding the result)
+    apply_operator_kernel<true>(sop_groups, state_sorted, screen_thresh, new_terms);
+
+    if (not is_antihermitian) {
+        return new_terms;
+    }
+
+    // Group the operators by common creation strings
+    // Here we swap the annihilation and creation operators for the antihermitian case
+    sop_groups.clear();
+    for (const auto& [sqop, t] : sop.elements()) {
+        sop_groups[sqop.cre()].emplace_back(sqop.ann(), t);
+    }
+
+    // Call the kernel to apply the operator (subtracting the result)
+    apply_operator_kernel<false>(sop_groups, state_sorted, screen_thresh, new_terms);
+
     return new_terms;
 }
 

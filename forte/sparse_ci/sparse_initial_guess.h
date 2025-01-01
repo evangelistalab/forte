@@ -29,7 +29,6 @@
 #pragma once
 
 #include <vector>
-// #include "sparse_ci/determinant.h"
 
 namespace forte {
 

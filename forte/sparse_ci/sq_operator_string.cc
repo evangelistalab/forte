@@ -730,4 +730,19 @@ Determinant compute_sign_mask(const Determinant& cre, const Determinant& ann) {
     return sign_mask;
 }
 
+void compute_sign_mask(const Determinant& cre, const Determinant& ann, Determinant& sign_mask,
+                       Determinant& idx) {
+    sign_mask.zero();
+    idx = ann; // temp is for looping over the operators
+    for (size_t i = idx.fast_find_and_clear_first_one(0); i != ~0ULL;
+         i = idx.fast_find_and_clear_first_one(i)) {
+        sign_mask.xor_up_to(i);
+    }
+    idx = cre;
+    for (size_t i = idx.fast_find_and_clear_first_one(0); i != ~0ULL;
+         i = idx.fast_find_and_clear_first_one(i)) {
+        sign_mask.xor_up_to(i);
+    }
+}
+
 } // namespace forte
