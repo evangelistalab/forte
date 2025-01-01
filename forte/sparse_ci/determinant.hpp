@@ -801,8 +801,30 @@ double apply_operator_to_det(DeterminantImpl<N>& d, const DeterminantImpl<N>& cr
     return sign;
 }
 
-/// this function assumes we can apply this operator to the determinant.
+///
 /// So there are no checks in place
+/// @brief Apply a general operator to this determinant. This function assumes we can apply this
+/// operator to the determinant and should be used only after faster_can_apply_operator has been
+/// used to check if the operator can be applied to the determinant.
+/// @param d the determinant
+/// @param new_d the new determinant
+/// @param cre the creation operator
+/// @param ann the annihilation operator
+/// @param sign the sign mask (precomputed by the user) of the operator
+/// @return the sign of the final determinant (+1, -1)
+///
+/// @note This function is faster than apply_operator_to_det
+/// Example:
+///
+///   Determinant det, new_det, cre, ann, sign_mask, idx;
+///   // test if the operator can be applied
+///   if (det.faster_can_apply_operator(cre,ann)) {
+///       // compute the sign mask
+///       compute_sign_mask(cre, ann, sign_mask, idx);
+///       auto value = faster_apply_operator_to_det(det, new_det, cre, ann, sign_mask);
+///       // do something with value and new_det
+///   }
+///
 template <size_t N>
 inline double faster_apply_operator_to_det(const DeterminantImpl<N>& d, DeterminantImpl<N>& new_d,
                                            const DeterminantImpl<N>& cre,

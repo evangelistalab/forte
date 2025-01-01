@@ -69,7 +69,8 @@ std::vector<std::vector<String>> make_strings(int n, int k, size_t nirrep,
 /// @param mo_symmetry The symmetry of the MOs
 /// @param symmetry The symmetry of the determinants
 /// @return A vector of determinants
-std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, size_t nirrep,
-                                            const std::vector<int>& mo_symmetry, int symmetry);
+std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, size_t nirrep = 1,
+                                            std::vector<int> mo_symmetry = std::vector<int>(),
+                                            int symmetry = 0);
 
 } // namespace forte
