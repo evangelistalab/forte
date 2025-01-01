@@ -65,9 +65,10 @@ SparseState apply_operator_impl_naive(bool is_antihermitian, const SparseOperato
     }
     SparseState new_terms; // the new state
     Determinant new_det;   // a temporary determinant to store the result of the operator
-
+    Determinant sign_mask; // a temporary determinant to store the sign mask
+    Determinant idx;       // a temporary determinant to store the index of the determinant
     for (const auto& [sqop, t] : sop) {
-        const Determinant sign_mask = compute_sign_mask(sqop.cre(), sqop.ann());
+        compute_sign_mask(sqop.cre(), sqop.ann(), sign_mask, idx);
         for (const auto& [det, c] : state) {
             if (det.faster_can_apply_operator(sqop.cre(), sqop.ann())) {
                 auto value =
@@ -82,7 +83,7 @@ SparseState apply_operator_impl_naive(bool is_antihermitian, const SparseOperato
     }
 
     for (const auto& [sqop, t] : sop) {
-        const Determinant sign_mask = compute_sign_mask(sqop.ann(), sqop.cre());
+        compute_sign_mask(sqop.ann(), sqop.cre(), sign_mask, idx);
         for (const auto& [det, c] : state) {
             if (det.faster_can_apply_operator(sqop.ann(), sqop.cre())) {
                 auto value =

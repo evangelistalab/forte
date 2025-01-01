@@ -758,27 +758,6 @@ double gen_excitation(DeterminantImpl<N>& d, const std::vector<int>& aann,
 }
 
 template <size_t N>
-double can_apply_op(DeterminantImpl<N>& d, const DeterminantImpl<N>& ann,
-                    const DeterminantImpl<N>& cre) {
-    DeterminantImpl<N> temp(d);
-    // check if the orbitals annihilated are occupied
-    // d       = 1100
-    // ann     = 1000
-    // d & ann = 1000
-    temp &= ann;
-    if (temp != ann)
-        return 0.0;
-    // check if the orbitals created are empty
-    // d       = 1100
-    // cre     = 0010
-    // d & cre = 0000
-    temp = d;
-    temp &= cre;
-    if (temp.count() != 0)
-        return 0.0;
-}
-
-template <size_t N>
 double apply_operator_to_det(DeterminantImpl<N>& d, const DeterminantImpl<N>& cre,
                              const DeterminantImpl<N>& ann) {
     // loop over the annihilation operators (in ascending order)
@@ -819,56 +798,6 @@ double apply_operator_to_det(DeterminantImpl<N>& d, const DeterminantImpl<N>& cr
     // this factor keeps into account the permutation sign for
     // reversing the order of the creation operators.
     sign *= 1.0 - 2.0 * ((n / 2) % 2);
-    return sign;
-}
-
-/// this function assumes we can apply this operator to the determinant.
-/// So there are no checks in place
-template <size_t N>
-inline double fast_apply_operator_to_det(DeterminantImpl<N>& d, const DeterminantImpl<N>& cre,
-                                         const DeterminantImpl<N>& ann) {
-    // loop over the annihilation operators (in ascending order)
-    DeterminantImpl<N> temp(ann); // temp is for bookkeeping
-    double sign = 1.0;
-    // set all the bits turned on in ann to zero in d
-    d.fast_a_and_eq_not_b(ann);
-    for (size_t i = temp.fast_find_and_clear_first_one(0); i != ~0ULL;
-         i = temp.fast_find_and_clear_first_one(i)) {
-        sign *= d.slater_sign(i);
-    }
-    // size_t n = temp.count();
-    // uint64_t orb = 0;
-    // for (size_t i = 0; i < n; ++i) {
-    //     // find the next annihilation operator
-    //     orb = temp.fast_find_and_clear_first_one(orb);
-    //     // compute the sign and set the bit to zero (we assume this bit is set)
-    //     sign *= d.slater_sign(orb);
-    //     d.set_bit(orb, false);
-    // }
-    // loop over the creation operators (in ascending order)
-    d.fast_a_or_eq_b(cre);
-    temp = cre;
-    size_t n = 0;
-    for (size_t i = temp.fast_find_and_clear_first_one(0); i != ~0ULL;
-         i = temp.fast_find_and_clear_first_one(i)) {
-        sign *= d.slater_sign(i);
-        n++;
-    }
-
-    // n = temp.count();
-    // orb = 0;
-    // for (size_t i = 0; i < n; ++i) {
-    //     // find the next creation operator
-    //     orb = temp.fast_find_and_clear_first_one(orb);
-    //     // compute the sign and set the bit to one (we assume this bit is unset)
-    //     sign *= d.slater_sign(orb);
-    //     d.set_bit(orb, true);
-    // }
-    // the creation operators are applied in the opposite order of the way
-    // they are supposed to be applied (we should apply them in descending order).
-    // this factor keeps into account the permutation sign for
-    // reversing the order of the creation operators.
-    sign *= 1.0 - 2.0 * ((n / 2) & 1);
     return sign;
 }
 

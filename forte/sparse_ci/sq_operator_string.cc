@@ -712,24 +712,6 @@ void SQOperatorProductComputer::commutator(
     product(rhs, lhs, -factor, func);
 }
 
-Determinant compute_sign_mask(const Determinant& cre, const Determinant& ann) {
-    Determinant sign_mask;
-    Determinant idx(ann); // temp is for looping over the operators
-    Determinant temp;
-    for (size_t i = idx.fast_find_and_clear_first_one(0); i != ~0ULL;
-         i = idx.fast_find_and_clear_first_one(i)) {
-        temp.fill_up_to(i);
-        sign_mask ^= temp;
-    }
-    idx = cre;
-    for (size_t i = idx.fast_find_and_clear_first_one(0); i != ~0ULL;
-         i = idx.fast_find_and_clear_first_one(i)) {
-        temp.fill_up_to(i);
-        sign_mask ^= temp;
-    }
-    return sign_mask;
-}
-
 void compute_sign_mask(const Determinant& cre, const Determinant& ann, Determinant& sign_mask,
                        Determinant& idx) {
     sign_mask.zero();
