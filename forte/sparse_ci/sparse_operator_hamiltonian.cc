@@ -40,7 +40,6 @@ SparseOperator sparse_operator_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals>
     size_t nmo = as_ints->nmo();
     H.add_term_from_str("[]", as_ints->nuclear_repulsion_energy() + as_ints->scalar_energy() +
                                   as_ints->frozen_core_energy());
-    Determinant cre, ann;
     for (size_t p = 0; p < nmo; p++) {
         for (size_t q = 0; q < nmo; q++) {
             if (std::fabs(as_ints->oei_a(p, q)) > screen_thresh) {

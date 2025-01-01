@@ -38,7 +38,9 @@ class ActiveSpaceIntegrals;
 
 /// @brief Generate the a SparseOperator representation of the Hamiltonian using integrals from an
 /// ActiveSpaceIntegrals object
+/// @param as_ints the ActiveSpaceIntegrals object containing the integrals
+/// @param screen_thresh the threshold to screen the integrals
 SparseOperator sparse_operator_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                                           double screen_thresh = 1e-12);
+                                           double screen_thresh = 1e-14);
 
 } // namespace forte

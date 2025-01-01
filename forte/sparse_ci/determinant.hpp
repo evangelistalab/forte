@@ -76,8 +76,6 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     using BitArray<N>::find_first_one;
     using BitArray<N>::find_last_one;
     using BitArray<N>::zero;
-    using BitArray<N>::set;
-    using BitArray<N>::reset;
 
     /// the number of bits divided by two
     static constexpr size_t nbits_half = N / 2;
