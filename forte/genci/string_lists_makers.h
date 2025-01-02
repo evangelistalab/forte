@@ -28,14 +28,6 @@
 
 #pragma once
 
-// #include "psi4/libmints/dimension.h"
-
-// #include <map>
-// #include <vector>
-// #include <utility>
-
-// #include "helpers/timer.h"
-// #include "sparse_ci/determinant.h"
 #include "fci/string_list_defs.h"
 #include "genci_string_address.h"
 

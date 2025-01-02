@@ -40,10 +40,16 @@ void export_SparseHamiltonian(py::module& m) {
     py::class_<SparseHamiltonian>(m, "SparseHamiltonian",
                                   "A class to represent a sparse Hamiltonian")
         .def(py::init<std::shared_ptr<ActiveSpaceIntegrals>>())
-        .def("compute", &SparseHamiltonian::compute)
-        .def("apply", &SparseHamiltonian::compute)
-        .def("compute_on_the_fly", &SparseHamiltonian::compute_on_the_fly)
+        .def("compute", &SparseHamiltonian::compute, "state"_a, "screen_thresh"_a = 1.0e-12,
+             "Compute the state H|state> using an algorithm that caches the elements of H")
+        .def("apply", &SparseHamiltonian::compute, "state"_a, "screen_thresh"_a = 1.0e-12,
+             "Compute the state H|state> using an algorithm that caches the elements of H")
+        .def(
+            "compute_on_the_fly", &SparseHamiltonian::compute_on_the_fly, "state"_a,
+            "screen_thresh"_a = 1.0e-12,
+            "Compute the state H|state> using an on-the-fly algorithm that has no memory footprint")
         .def("timings", &SparseHamiltonian::timings)
-        .def("to_sparse_operator", &SparseHamiltonian::to_sparse_operator);
+        .def("to_sparse_operator", &SparseHamiltonian::to_sparse_operator,
+             "Convert the Hamiltonian to a SparseOperator object");
 }
 } // namespace forte
