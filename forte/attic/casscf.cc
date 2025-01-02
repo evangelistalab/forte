@@ -5,7 +5,7 @@
 //  * that implements a variety of quantum chemistry methods for strongly
 //  * correlated electrons.
 //  *
-//  * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+//  * Copyright (c) 2012-2025 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
 //  *
 //  * The copyrights for code used from other parties are included in
 //  * the corresponding files.
@@ -79,8 +79,8 @@
 //     if (not options_->is_none("SCF_TYPE")) {
 //         auto scf_type = options_->get_str("SCF_TYPE");
 //         if (scf_type == "PK" or scf_type == "OUT_OF_CORE") {
-//             outfile->Printf("\n\n  Please change SCF_TYPE to DIRECT for conventional integrals.");
-//             throw psi::PSIEXCEPTION("Please change SCF_TYPE to DIRECT.");
+//             outfile->Printf("\n\n  Please change SCF_TYPE to DIRECT for conventional
+//             integrals."); throw psi::PSIEXCEPTION("Please change SCF_TYPE to DIRECT.");
 //         }
 //     }
 
@@ -249,11 +249,12 @@
 //         Ediff = E_mcscf_ - E_mcscf_old;
 //         if (iter > 1 && std::fabs(Ediff) < econv && g_norm < gconv) {
 
-//             outfile->Printf("\n  %4d   %10.12f   %10.12f   %10.12f  %10.6f s", iter, g_norm, Ediff,
+//             outfile->Printf("\n  %4d   %10.12f   %10.12f   %10.12f  %10.6f s", iter, g_norm,
+//             Ediff,
 //                             E_mcscf_, mcscf_total_iter.get());
 
-//             outfile->Printf("\n\n  A miracle has come to pass: CASSCF iterations have converged.");
-//             break;
+//             outfile->Printf("\n\n  A miracle has come to pass: CASSCF iterations have
+//             converged."); break;
 //         }
 
 //         Sstep = orbital_optimizer.approx_solve();
@@ -494,7 +495,8 @@
 
 // std::shared_ptr<ActiveSpaceIntegrals> CASSCF::get_ci_integrals() {
 //     std::vector<int> actv_sym = mo_space_info_->symmetry("ACTIVE");
-//     auto fci_ints = std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, actv_sym, rdocc_mos_);
+//     auto fci_ints = std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, actv_sym,
+//     rdocc_mos_);
 
 //     if (!(options_->get_bool("RESTRICTED_DOCC_JK"))) {
 //         fci_ints->set_active_integrals_and_restricted_docc();
@@ -509,7 +511,8 @@
 //         size_t nactv3 = nactv2 * nactv_;
 
 //         active_ab.iterate([&](const std::vector<size_t>& i, double& value) {
-//             value = tei_paaa_data[actv_mos_[i[0]] * nactv3 + i[1] * nactv2 + i[2] * nactv_ + i[3]];
+//             value = tei_paaa_data[actv_mos_[i[0]] * nactv3 + i[1] * nactv2 + i[2] * nactv_ +
+//             i[3]];
 //         });
 
 //         active_aa.copy(active_ab);
@@ -517,7 +520,8 @@
 
 //         fci_ints->set_active_integrals(active_aa, active_ab, active_aa);
 //         if (mcscf_debug_print_) {
-//             outfile->Printf("\n\n  tei_active_aa: %8.8f, tei_active_ab: %8.8f", active_aa.norm(2),
+//             outfile->Printf("\n\n  tei_active_aa: %8.8f, tei_active_ab: %8.8f",
+//             active_aa.norm(2),
 //                             active_ab.norm(2));
 //         }
 
@@ -683,8 +687,8 @@
 //     // D_{uv}^{restricted} = \sum_{i}^{restricted} C_{ui} * C_{vi}
 
 //     // grab part of Ca for inactive docc
-//     auto Cdocc = std::make_shared<psi::Matrix>("C_INACTIVE", nirrep_, nsopi_, inactive_docc_dim_);
-//     for (size_t h = 0; h < nirrep_; h++) {
+//     auto Cdocc = std::make_shared<psi::Matrix>("C_INACTIVE", nirrep_, nsopi_,
+//     inactive_docc_dim_); for (size_t h = 0; h < nirrep_; h++) {
 //         for (int i = 0; i < inactive_docc_dim_[h]; i++) {
 //             Cdocc->set_column(h, i, Ca->get_column(h, i));
 //         }
