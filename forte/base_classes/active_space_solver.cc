@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2025 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -697,7 +697,8 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
 
     // make a StateInfo object using the information
     // TODO: need to optimize for spin-free RDMs
-    auto state = make_state_info_from_options(options, mo_space_info->point_group_label()); // assumes low-spin
+    auto state = make_state_info_from_options(
+        options, mo_space_info->point_group_label()); // assumes low-spin
 
     // check if the user provided a AVG_STATE list
     py::list avg_state = options->get_gen_list("AVG_STATE");

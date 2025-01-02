@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2025 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -126,8 +126,8 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
 
         // printing
         outfile->Printf("\n    %4d   %16.12f %10.3e  %10.3e %10.3e  %10.3e %10.3e  %8.3f %8.3f %5d",
-                        cycle, Ecorr, Edelta, Hbar1od, Hbar2od, T1rms_, T2rms_, time_hbar,
-                        time_amp, ncomm);
+                        cycle, Ecorr, Edelta, Hbar1od, Hbar2od, T1rms_, T2rms_, time_hbar, time_amp,
+                        ncomm);
 
         timer diis("DIIS");
         // DIIS amplitudes
@@ -752,12 +752,16 @@ void SA_MRDSRG::compute_mbar_ldsrg2(const ambit::BlockedTensor& M, int max_level
     }
 }
 
-double SA_MRDSRG::get_adaptive_rsc_conv(const int& iter, const double& deltaE){
+double SA_MRDSRG::get_adaptive_rsc_conv(const int& iter, const double& deltaE) {
     // A (log)-ReLU-like kick in for adaptive RSC conv to kick in
-    if (iter == 1 || std::fabs(deltaE) >= rsc_conv_adapt_delta_e_) {return rsc_conv_adapt_threshold_;}
+    if (iter == 1 || std::fabs(deltaE) >= rsc_conv_adapt_delta_e_) {
+        return rsc_conv_adapt_threshold_;
+    }
     // Linear interpolation between the upper and lower threshold exponents
-    double x = (std::log10(std::fabs(deltaE)) - std::log10(rsc_conv_adapt_delta_e_)) / (std::log10(e_conv_) - std::log10(rsc_conv_adapt_delta_e_));
-    double exponent = std::log10(rsc_conv_adapt_threshold_) + x * (std::log10(rsc_conv_) - std::log10(rsc_conv_adapt_threshold_));
+    double x = (std::log10(std::fabs(deltaE)) - std::log10(rsc_conv_adapt_delta_e_)) /
+               (std::log10(e_conv_) - std::log10(rsc_conv_adapt_delta_e_));
+    double exponent = std::log10(rsc_conv_adapt_threshold_) +
+                      x * (std::log10(rsc_conv_) - std::log10(rsc_conv_adapt_threshold_));
     double threshold = std::pow(10.0, exponent);
     return threshold;
 }

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2025 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -42,7 +42,7 @@ namespace forte {
 struct ActiveOrbitalType {
     enum Value { canonical, natural, unspecified };
     Value value_;
-    ActiveOrbitalType(Value value) : value_(value) {};
+    ActiveOrbitalType(Value value) : value_(value){};
     ActiveOrbitalType(std::string name) {
         for (auto& c : name)
             c = toupper(c);
@@ -90,8 +90,8 @@ class SemiCanonical {
     /// @param active_mix Mix all GAS orbitals together?
     /// @param quiet_banner Method banner is not printed if set to true
     SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
-                  std::shared_ptr<SCFInfo> scf_info, bool inactive_mix,
-                  bool active_mix, double threshold = 1.0e-8, bool quiet_banner = false);
+                  std::shared_ptr<SCFInfo> scf_info, bool inactive_mix, bool active_mix,
+                  double threshold = 1.0e-8, bool quiet_banner = false);
 
     /// Transforms integrals and RDMs
     /// @brief Semicanonicalize the orbitals and transform the integrals and RDMs

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2025 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -105,8 +105,9 @@ void MRDSRG_SO::startup() {
     source_ = foptions_->get_str("SOURCE");
 
     dsrg_trans_type_ = foptions_->get_str("DSRG_TRANS_TYPE");
-    if (dsrg_trans_type_ == "CC" && foptions_->get_str("CORR_LEVEL") == "QDSRG2"){
-        outfile->Printf("\n  Warning: DSRG_TRANS_TYPE option CC is not supported with CORR_LEVEL QDSRG2.");
+    if (dsrg_trans_type_ == "CC" && foptions_->get_str("CORR_LEVEL") == "QDSRG2") {
+        outfile->Printf(
+            "\n  Warning: DSRG_TRANS_TYPE option CC is not supported with CORR_LEVEL QDSRG2.");
         outfile->Printf("\n  Changed DSRG_TRANS_TYPE option to UNITARY");
         dsrg_trans_type_ = "UNITARY";
     }
@@ -714,7 +715,7 @@ void MRDSRG_SO::compute_hbar() {
         //        outfile->Printf("\n  |H2| = %20.12f", C2.norm(1));
         //        outfile->Printf("\n  --------------------------------");
 
-        if (dsrg_trans_type_ == "UNITARY"){
+        if (dsrg_trans_type_ == "UNITARY") {
             // [H, A] = [H, T] + [H, T]^dagger
             C0 *= 2.0;
             O1["pq"] = C1["pq"];

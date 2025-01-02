@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2025 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -257,8 +257,9 @@ class MRDSRG : public MASTER_DSRG {
     /// commutator
     void compute_hbar_qc();
     /// Determine the adaptive RSC convergence threshold
-    double get_adaptive_rsc_conv(const int& iter, const double& deltaE, const double& rsc_conv, 
-                                 const double& rsc_conv_adapt, const double& rsc_conv_adapt_delta_e, const double& e_conv);
+    double get_adaptive_rsc_conv(const int& iter, const double& deltaE, const double& rsc_conv,
+                                 const double& rsc_conv_adapt, const double& rsc_conv_adapt_delta_e,
+                                 const double& e_conv);
 
     /// Temporary one-body Hamiltonian
     ambit::BlockedTensor O1_;

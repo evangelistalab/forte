@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2025 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -934,7 +934,7 @@ void SOMRDSRG::H_eq_commutator_C_T(double factor, BlockedTensor& F, BlockedTenso
     H1.scale(factor);
     H2.scale(factor);
 
-    if (dsrg_trans_type_ == "UNITARY"){
+    if (dsrg_trans_type_ == "UNITARY") {
         // => Add the term  + [F + V,T1 + T2]^+ <= //
         H0 *= 2.0;
         F["pq"] = H1["pq"];

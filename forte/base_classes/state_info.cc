@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2025 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -91,7 +91,8 @@ bool StateInfo::operator==(const StateInfo& rhs) const {
                     rhs.gas_max_);
 }
 
-StateInfo make_state_info_from_options(std::shared_ptr<ForteOptions> options, const Symmetry& symmetry) {
+StateInfo make_state_info_from_options(std::shared_ptr<ForteOptions> options,
+                                       const Symmetry& symmetry) {
     int nel = options->get_int("NEL");
 
     size_t multiplicity = options->get_int("MULTIPLICITY");
