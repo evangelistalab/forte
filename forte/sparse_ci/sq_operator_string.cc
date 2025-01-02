@@ -61,6 +61,14 @@ SQOperatorString::SQOperatorString() {}
 SQOperatorString::SQOperatorString(const Determinant& cre, const Determinant& ann)
     : cre_(cre), ann_(ann) {}
 
+SQOperatorString::SQOperatorString(const std::initializer_list<size_t> acre,
+                                   const std::initializer_list<size_t> bcre,
+                                   const std::initializer_list<size_t> aann,
+                                   const std::initializer_list<size_t> bann) {
+    cre_ = Determinant(acre, bcre);
+    ann_ = Determinant(aann, bann);
+}
+
 const Determinant& SQOperatorString::cre() const { return cre_; }
 
 const Determinant& SQOperatorString::ann() const { return ann_; }
@@ -704,22 +712,19 @@ void SQOperatorProductComputer::commutator(
     product(rhs, lhs, -factor, func);
 }
 
-Determinant compute_sign_mask(const Determinant& cre, const Determinant& ann) {
-    Determinant sign_mask;
-    Determinant idx(ann); // temp is for looping over the operators
-    Determinant temp;
+void compute_sign_mask(const Determinant& cre, const Determinant& ann, Determinant& sign_mask,
+                       Determinant& idx) {
+    sign_mask.zero();
+    idx = ann; // temp is for looping over the operators
     for (size_t i = idx.fast_find_and_clear_first_one(0); i != ~0ULL;
          i = idx.fast_find_and_clear_first_one(i)) {
-        temp.fill_up_to(i);
-        sign_mask ^= temp;
+        sign_mask.xor_up_to(i);
     }
     idx = cre;
     for (size_t i = idx.fast_find_and_clear_first_one(0); i != ~0ULL;
          i = idx.fast_find_and_clear_first_one(i)) {
-        temp.fill_up_to(i);
-        sign_mask ^= temp;
+        sign_mask.xor_up_to(i);
     }
-    return sign_mask;
 }
 
 } // namespace forte

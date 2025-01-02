@@ -52,6 +52,10 @@ void export_SparseState(py::module& m) {
         .def("norm", &SparseState::norm, "p"_a = 2,
              "Calculate the p-norm of the SparseState (default p = 2, p = -1 for infinity norm)")
         .def("add", &SparseState::add)
+        .def("__add__", &SparseState::operator+, "Add two SparseStates")
+        .def(
+            "__sub__", [](const SparseState& a, const SparseState& b) { return a - b; },
+            "Subtract two SparseStates")
         .def("__iadd__", &SparseState::operator+=, "Add a SparseState to this SparseState")
         .def("__isub__", &SparseState::operator-=, "Subtract a SparseState from this SparseState")
         .def("__imul__", &SparseState::operator*=, "Multiply this SparseState by a scalar")
@@ -74,8 +78,8 @@ void export_SparseState(py::module& m) {
     m.def("apply_number_projector", &apply_number_projector);
 
     m.def("get_projection", &get_projection);
-    // there's already a function called spin2, overload the spin2 function
 
+    // there's already a function called spin2, overload the spin2 function
     m.def(
         "spin2",
         [](const SparseState& left_state, const SparseState& right_state) {

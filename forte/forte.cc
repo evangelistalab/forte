@@ -38,7 +38,6 @@
 #include "base_classes/mo_space_info.h"
 #include "helpers/timer.h"
 
-#include "sparse_ci/determinant.h"
 #include "version.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/psi4-dec.h"

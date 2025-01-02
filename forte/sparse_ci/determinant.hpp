@@ -75,6 +75,7 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     using BitArray<N>::fast_a_and_b_eq_zero;
     using BitArray<N>::find_first_one;
     using BitArray<N>::find_last_one;
+    using BitArray<N>::zero;
 
     /// the number of bits divided by two
     static constexpr size_t nbits_half = N / 2;
@@ -107,6 +108,18 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         int b_size = occupation_b.size();
         for (int p = 0; p < b_size; ++p)
             set_beta_bit(p, occupation_b[p]);
+    }
+
+    /// Construct the determinant from two initializer lists that specify which orbitals are
+    /// occupied in the alpha and beta strings.  alfa_list = [Ia] and beta_list = [Ib]
+    explicit DeterminantImpl(std::initializer_list<size_t> alfa_list,
+                             std::initializer_list<size_t> beta_list) {
+        for (auto i : alfa_list) {
+            set_alfa_bit(i, true);
+        }
+        for (auto i : beta_list) {
+            set_beta_bit(i, true);
+        }
     }
 
     /// Construct the determinant from an occupation vector that
@@ -152,6 +165,16 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         for (size_t n = 0; n < nwords_half; n++) {
             words_[n] = sa.get_word(n);
             words_[n + nwords_half] = sb.get_word(n);
+        }
+    }
+
+    void set(std::initializer_list<size_t> alfa_list, std::initializer_list<size_t> beta_list) {
+        zero();
+        for (auto i : alfa_list) {
+            set_alfa_bit(i, true);
+        }
+        for (auto i : beta_list) {
+            set_beta_bit(i, true);
         }
     }
 
@@ -733,27 +756,6 @@ double gen_excitation(DeterminantImpl<N>& d, const std::vector<int>& aann,
 }
 
 template <size_t N>
-double can_apply_op(DeterminantImpl<N>& d, const DeterminantImpl<N>& ann,
-                    const DeterminantImpl<N>& cre) {
-    DeterminantImpl<N> temp(d);
-    // check if the orbitals annihilated are occupied
-    // d       = 1100
-    // ann     = 1000
-    // d & ann = 1000
-    temp &= ann;
-    if (temp != ann)
-        return 0.0;
-    // check if the orbitals created are empty
-    // d       = 1100
-    // cre     = 0010
-    // d & cre = 0000
-    temp = d;
-    temp &= cre;
-    if (temp.count() != 0)
-        return 0.0;
-}
-
-template <size_t N>
 double apply_operator_to_det(DeterminantImpl<N>& d, const DeterminantImpl<N>& cre,
                              const DeterminantImpl<N>& ann) {
     // loop over the annihilation operators (in ascending order)
@@ -797,121 +799,70 @@ double apply_operator_to_det(DeterminantImpl<N>& d, const DeterminantImpl<N>& cr
     return sign;
 }
 
-/// this function assumes we can apply this operator to the determinant.
+///
 /// So there are no checks in place
-template <size_t N>
-inline double fast_apply_operator_to_det(DeterminantImpl<N>& d, const DeterminantImpl<N>& cre,
-                                         const DeterminantImpl<N>& ann) {
-    // loop over the annihilation operators (in ascending order)
-    DeterminantImpl<N> temp(ann); // temp is for bookkeeping
-    double sign = 1.0;
-    // set all the bits turned on in ann to zero in d
-    d.fast_a_and_eq_not_b(ann);
-    for (size_t i = temp.fast_find_and_clear_first_one(0); i != ~0ULL;
-         i = temp.fast_find_and_clear_first_one(i)) {
-        sign *= d.slater_sign(i);
-    }
-    // size_t n = temp.count();
-    // uint64_t orb = 0;
-    // for (size_t i = 0; i < n; ++i) {
-    //     // find the next annihilation operator
-    //     orb = temp.fast_find_and_clear_first_one(orb);
-    //     // compute the sign and set the bit to zero (we assume this bit is set)
-    //     sign *= d.slater_sign(orb);
-    //     d.set_bit(orb, false);
-    // }
-    // loop over the creation operators (in ascending order)
-    d.fast_a_or_eq_b(cre);
-    temp = cre;
-    size_t n = 0;
-    for (size_t i = temp.fast_find_and_clear_first_one(0); i != ~0ULL;
-         i = temp.fast_find_and_clear_first_one(i)) {
-        sign *= d.slater_sign(i);
-        n++;
-    }
-
-    // n = temp.count();
-    // orb = 0;
-    // for (size_t i = 0; i < n; ++i) {
-    //     // find the next creation operator
-    //     orb = temp.fast_find_and_clear_first_one(orb);
-    //     // compute the sign and set the bit to one (we assume this bit is unset)
-    //     sign *= d.slater_sign(orb);
-    //     d.set_bit(orb, true);
-    // }
-    // the creation operators are applied in the opposite order of the way
-    // they are supposed to be applied (we should apply them in descending order).
-    // this factor keeps into account the permutation sign for
-    // reversing the order of the creation operators.
-    sign *= 1.0 - 2.0 * ((n / 2) & 1);
-    return sign;
-}
-
-/// this function assumes we can apply this operator to the determinant.
-/// So there are no checks in place
+/// @brief Apply a general operator to this determinant. This function assumes we can apply this
+/// operator to the determinant and should be used only after faster_can_apply_operator has been
+/// used to check if the operator can be applied to the determinant.
+/// @param d the determinant
+/// @param new_d the new determinant
+/// @param cre the creation operator
+/// @param ann the annihilation operator
+/// @param sign the sign mask (precomputed by the user) of the operator
+/// @return the sign of the final determinant (+1, -1)
+///
+/// @note This function is faster than apply_operator_to_det
+/// Example:
+///
+///   Determinant det, new_det, cre, ann, sign_mask, idx;
+///   // test if the operator can be applied
+///   if (det.faster_can_apply_operator(cre,ann)) {
+///       // compute the sign mask
+///       compute_sign_mask(cre, ann, sign_mask, idx);
+///       auto value = faster_apply_operator_to_det(det, new_det, cre, ann, sign_mask);
+///       // do something with value and new_det
+///   }
+///
 template <size_t N>
 inline double faster_apply_operator_to_det(const DeterminantImpl<N>& d, DeterminantImpl<N>& new_d,
                                            const DeterminantImpl<N>& cre,
                                            const DeterminantImpl<N>& ann,
                                            const DeterminantImpl<N>& sign) {
-    // loop over the words
     size_t n = 0;
-    for (size_t i = 0; i < DeterminantImpl<N>::nwords_; ++i) {
-        // apply the annihilation operator
-        new_d.words_[i] = d.words_[i] & (~ann.words_[i]);
-        // compute the sign
-        n += ui64_bit_count(new_d.words_[i] & sign.words_[i]);
-        // apply the creation operator
-        new_d.words_[i] |= cre.words_[i];
+    if constexpr (N == 128) {
+        // specialization for 64 + 64 bits
+        new_d.words_[0] = d.words_[0] & (~ann.words_[0]);
+        new_d.words_[1] = d.words_[1] & (~ann.words_[1]);
+        n += ui64_bit_count(new_d.words_[0] & sign.words_[0]);
+        n += ui64_bit_count(new_d.words_[1] & sign.words_[1]);
+        new_d.words_[0] |= cre.words_[0];
+        new_d.words_[1] |= cre.words_[1];
+    } else if constexpr (N == 256) {
+        new_d.words_[0] = d.words_[0] & (~ann.words_[0]);
+        new_d.words_[1] = d.words_[1] & (~ann.words_[1]);
+        new_d.words_[2] = d.words_[2] & (~ann.words_[2]);
+        new_d.words_[3] = d.words_[3] & (~ann.words_[3]);
+        n += ui64_bit_count(new_d.words_[0] & sign.words_[0]);
+        n += ui64_bit_count(new_d.words_[1] & sign.words_[1]);
+        n += ui64_bit_count(new_d.words_[2] & sign.words_[2]);
+        n += ui64_bit_count(new_d.words_[3] & sign.words_[3]);
+        new_d.words_[0] |= cre.words_[0];
+        new_d.words_[1] |= cre.words_[1];
+        new_d.words_[2] |= cre.words_[2];
+        new_d.words_[3] |= cre.words_[3];
+    } else {
+        // loop over the words
+        for (size_t i = 0; i < DeterminantImpl<N>::nwords_; ++i) {
+            // apply the annihilation operator
+            new_d.words_[i] = d.words_[i] & (~ann.words_[i]);
+            // compute the sign
+            n += ui64_bit_count(new_d.words_[i] & sign.words_[i]);
+            // apply the creation operator
+            new_d.words_[i] |= cre.words_[i];
+        }
     }
     return 1.0 - 2.0 * (n & 1);
 }
-
-//    temp = cre;
-//    n = temp.count();
-//    // make sure we can annihilate the orbitals
-//    DeterminantImpl<N> temp = ann;
-//    // check if the orbitals annihilated are occupied
-//    // d       = 1100
-//    // ann     = 1000
-//    // d & ann = 1000
-//    temp &= d;
-//    if (temp != ann) {
-//        std::cout << "apply_op: early exit!" << std::endl;
-//        return 0.0;
-//    }
-
-//    // consider only the creation operators that are not included in the annihilation part
-//    temp = cre & ~ann;
-
-//    if (temp != ann) {
-
-//    }
-
-//    // ann     = 1000
-//    // cre     = 0010
-
-//    // ann     = 1000
-//    // cre     = 1000
-//    // check if the orbitals annihilated are occupied
-//    // d       = 1100
-//    // ann     = 1000
-//    // d & ann = 1000
-//    if ((d & ann) != ann)
-//        return 0.0;
-//    // check if the orbitals created are empty
-//    // d       = 1100
-//    // cre     = 0010
-//    // d & cre = 0000
-//    temp = d;
-//    temp &= cre;
-//    if (temp.count() != 0)
-//        return 0.0;
-//        std::cout << str(d,4) << std::endl;
-//        std::cout << orb << std::endl;
-//        std::cout << d.slater_sign(orb) << std::endl;
-//        std::cout << d.get_bit(orb) << std::endl;
-//        std::cout << "\n" << std::endl;
 
 template <size_t N> double spin2(const DeterminantImpl<N>& lhs, const DeterminantImpl<N>& rhs) {
     int nmo = DeterminantImpl<N>::nbits_half;

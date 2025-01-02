@@ -90,6 +90,11 @@ class SQOperatorString {
     SQOperatorString();
     /// constructor from a pair of Determinant objects
     SQOperatorString(const Determinant& cre, const Determinant& ann);
+    /// constructor from initializer lists of creation and annihilation operators
+    SQOperatorString(const std::initializer_list<size_t> acre,
+                     const std::initializer_list<size_t> bcre,
+                     const std::initializer_list<size_t> aann,
+                     const std::initializer_list<size_t> bann);
     /// @return a Determinant object that represents the creation operators
     const Determinant& cre() const;
     /// @return a Determinant object that represents the annihilation operators
@@ -200,11 +205,6 @@ double apply_operator_to_det(DeterminantImpl<N>& d, const SQOperatorString& sqop
     return apply_operator_to_det(d, sqop.cre(), sqop.ann());
 }
 
-template <size_t N>
-double fast_apply_operator_to_det(DeterminantImpl<N>& d, const SQOperatorString& sqop) {
-    return fast_apply_operator_to_det(d, sqop.cre(), sqop.ann());
-}
-
 bool do_ops_commute(const SQOperatorString& lhs, const SQOperatorString& rhs);
 
 CommutatorType commutator_type(const SQOperatorString& lhs, const SQOperatorString& rhs);
@@ -213,6 +213,7 @@ std::vector<std::pair<SQOperatorString, double>> commutator_fast(const SQOperato
                                                                  const SQOperatorString& rhs);
 
 // Compute the sign mask associated with a set of creation and annihilation operators
-Determinant compute_sign_mask(const Determinant& cre, const Determinant& ann);
+void compute_sign_mask(const Determinant& cre, const Determinant& ann, Determinant& sign_mask,
+                       Determinant& idx);
 
 } // namespace forte

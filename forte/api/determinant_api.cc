@@ -161,5 +161,11 @@ void export_Determinant(py::module& m) {
         .def("determinants", &DeterminantHashVec::determinants, "Return a vector of Determinants")
         .def("get_det", &DeterminantHashVec::get_det, "Return a specific determinant by reference")
         .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
+
+    m.def(
+        "hilbert_space", &make_hilbert_space, "nmo"_a, "na"_a, "nb"_a, "nirrep"_a = 1,
+        "mo_symmetry"_a = std::vector<int>(), "symmetry"_a = 0,
+        "Generate the Hilbert space for a given number of electrons and orbitals. If information "
+        "about the symmetry of the MOs is not provided, it assumes that all MOs have symmetry 0.");
 }
 } // namespace forte
