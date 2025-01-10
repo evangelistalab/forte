@@ -39,11 +39,25 @@
 #include "sparse_ci/sparse_state.h"
 #include "sparse_ci/sq_operator_string_ops.h"
 #include "sparse_ci/sparse_operator_hamiltonian.h"
+#include "sparse_ci/sparse_exp.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace forte {
+
+// implement the struct ExpOperator
+
+enum class ExpType { Excitation, Antihermitian };
+
+struct ExpOperator {
+    const SparseOperator& op;
+    ExpType exp_type;
+    int maxk;
+    double screen_thresh;
+    ExpOperator(const SparseOperator& op, ExpType exp_type, int maxk, double screen_thresh)
+        : op(op), exp_type(exp_type), maxk(maxk), screen_thresh(screen_thresh) {}
+};
 
 void export_SparseOperator(py::module& m) {
     py::class_<SparseOperator>(m, "SparseOperator", "A class to represent a sparse operator")
@@ -212,6 +226,12 @@ void export_SparseOperator(py::module& m) {
             "T"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12,
             "Evaluate ... exp(i (T1^dagger + T1)) O exp(-i(T1 + T1^dagger)) ...")
         .def(
+            "__mul__",
+            [](const SparseOperator& op, const SparseState& st) {
+                return apply_operator_lin(op, st);
+            },
+            "Multiply a SparseOperator and a SparseState")
+        .def(
             "matrix",
             [](const SparseOperator& sop, const std::vector<Determinant>& dets,
                double screen_thresh) {
@@ -228,6 +248,37 @@ void export_SparseOperator(py::module& m) {
             },
             "dets"_a, "screen_thresh"_a = 1.0e-12,
             "Compute the matrix elements of the operator between a list of determinants");
+
+    // Define a small wrapper class that holds a SparseOperator
+    // and overloads operator* to apply forte::SparseExp.
+    py::class_<struct ExpOperator>(m, "ExpOperator")
+        .def(py::init<const SparseOperator&, ExpType, int, double>())
+        .def("__mul__", [](const ExpOperator& self, const SparseState& state) {
+            if (self.exp_type == ExpType::Excitation) {
+                auto exp_op = SparseExp(self.maxk, self.screen_thresh);
+                return exp_op.apply_op(self.op, state);
+            }
+            if (self.exp_type == ExpType::Antihermitian) {
+                auto exp_op = SparseExp(self.maxk, self.screen_thresh);
+                return exp_op.apply_antiherm(self.op, state);
+            }
+        });
+
+    // Provide a function "exp" that returns an ExpOperator object
+    m.def(
+        "exp",
+        [](const SparseOperator& T, int maxk, double screen_thresh) {
+            return ExpOperator{T, ExpType::Excitation, maxk, screen_thresh};
+        },
+        "Allow usage of exp(T) * state", "T"_a, "maxk"_a = 20, "screen_thresh"_a = 1.0e-12);
+
+    m.def(
+        "exp_antiherm",
+        [](const SparseOperator& T, int maxk, double screen_thresh) {
+            return ExpOperator{T, ExpType::Antihermitian, maxk, screen_thresh};
+        },
+        "Allow usage of exp_antiherm(T) * state", "T"_a, "maxk"_a = 20,
+        "screen_thresh"_a = 1.0e-12);
 
     m.def(
         "sparse_operator",

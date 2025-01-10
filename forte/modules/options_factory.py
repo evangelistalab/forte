@@ -12,7 +12,7 @@ class OptionsFactory(Module):
     A module to generate the ForteOptions object
     """
 
-    def __init__(self, options: dict = None):
+    def __init__(self, options=None):
         """
         Parameters
         ----------
@@ -24,16 +24,8 @@ class OptionsFactory(Module):
     def _run(self, data: ForteData = None) -> ForteData:
         if data is None:
             data = ForteData()
-        if self.options is None or isinstance(self._options, dict):
-            psi4.core.print_out(
-                "\n  Forte will use options passed as a dictionary. Option read from psi4 will be ignored\n"
-            )
-            data.options = forte.ForteOptions()
-            register_forte_options(data.options)
-            # if options is a dictionary then set the options from the dictionary
-            if isinstance(self._options, dict):
-                data.options.set_from_dict(self._options)
-        else:
+        # if no options dict is provided then read from psi4
+        if isinstance(self.options, dict) and not self.options:
             # Copy globals into a new object
             data.options = forte.ForteOptions(forte.forte_options)
             psi4_options = psi4.core.get_options()
@@ -41,5 +33,12 @@ class OptionsFactory(Module):
 
             # Get the forte option object
             data.options.get_options_from_psi4(psi4_options)
+        else:
+            psi4.core.print_out(
+                f"\n  Forte will use options passed as a dictionary. Option read from psi4 will be ignored\n"
+            )
+            data.options = forte.ForteOptions()
+            register_forte_options(data.options)
+            data.options.set_from_dict(self._options)
 
         return data

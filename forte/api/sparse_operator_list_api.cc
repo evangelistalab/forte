@@ -34,11 +34,37 @@
 #include "helpers/string_algorithms.h"
 
 #include "sparse_ci/sparse_operator.h"
+#include "sparse_ci/sparse_state.h"
+#include "sparse_ci/sparse_exp.h"
+#include "sparse_ci/sparse_fact_exp.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace forte {
+
+// implement the struct ExpOperator
+
+enum class ExpType { Excitation, Antihermitian };
+
+struct ExpOperatorList {
+    const SparseOperatorList& op;
+    ExpType exp_type;
+    int maxk;
+    double screen_thresh;
+    ExpOperatorList(const SparseOperatorList& op, ExpType exp_type, int maxk, double screen_thresh)
+        : op(op), exp_type(exp_type), maxk(maxk), screen_thresh(screen_thresh) {}
+};
+
+struct ExpOperatorListFact {
+    const SparseOperatorList& op;
+    ExpType exp_type;
+    double screen_thresh;
+    bool inverse;
+    ExpOperatorListFact(const SparseOperatorList& op, ExpType exp_type, bool inverse,
+                        double screen_thresh)
+        : op(op), exp_type(exp_type), inverse(inverse), screen_thresh(screen_thresh) {}
+};
 
 void export_SparseOperatorList(py::module& m) {
     py::class_<SparseOperatorList>(m, "SparseOperatorList",
@@ -102,6 +128,67 @@ void export_SparseOperatorList(py::module& m) {
                 return op(n);
             },
             "Get the nth operator");
+
+    // Define a small wrapper class that holds a SparseOperator
+    // and overloads operator* to apply forte::SparseExp.
+    py::class_<struct ExpOperatorList>(m, "ExpOperatorList")
+        .def(py::init<const SparseOperatorList&, ExpType, bool, double>())
+        .def("__mul__", [](const ExpOperatorList& self, const SparseState& state) {
+            if (self.exp_type == ExpType::Excitation) {
+                auto exp_op = SparseExp(self.maxk, self.screen_thresh);
+                return exp_op.apply_op(self.op, state);
+            }
+            if (self.exp_type == ExpType::Antihermitian) {
+                auto exp_op = SparseExp(self.maxk, self.screen_thresh);
+                return exp_op.apply_antiherm(self.op, state);
+            }
+        });
+
+    // Define a small wrapper class that holds a SparseOperator
+    // and overloads operator* to apply forte::SparseExp.
+    py::class_<struct ExpOperatorListFact>(m, "ExpOperatorListFact")
+        .def(py::init<const SparseOperatorList&, ExpType, bool, double>())
+        .def("__mul__", [](const ExpOperatorListFact& self, const SparseState& state) {
+            if (self.exp_type == ExpType::Excitation) {
+                auto exp_op = SparseFactExp(self.screen_thresh);
+                return exp_op.apply_op(self.op, state, self.inverse);
+            }
+            if (self.exp_type == ExpType::Antihermitian) {
+                auto exp_op = SparseFactExp(self.screen_thresh);
+                return exp_op.apply_antiherm(self.op, state, self.inverse);
+            }
+        });
+
+    // Provide a function "exp" that returns an ExpOperator object
+    m.def(
+        "exp",
+        [](const SparseOperatorList& T, int maxk, double screen_thresh) {
+            return ExpOperatorList{T, ExpType::Excitation, maxk, screen_thresh};
+        },
+        "Allow usage of exp(T) * state", "T"_a, "makx"_a = 20, "screen_thresh"_a = 1.0e-12);
+
+    m.def(
+        "exp_antiherm",
+        [](const SparseOperatorList& T, int maxk, double screen_thresh) {
+            return ExpOperatorList{T, ExpType::Antihermitian, maxk, screen_thresh};
+        },
+        "Allow usage of exp_antiherm(T) * state", "T"_a, "makx"_a = 20,
+        "screen_thresh"_a = 1.0e-12);
+
+    m.def(
+        "fact_exp",
+        [](const SparseOperatorList& T, bool inverse, double screen_thresh) {
+            return ExpOperatorListFact{T, ExpType::Excitation, inverse, screen_thresh};
+        },
+        "Allow usage of exp(T) * state", "T"_a, "inverse"_a = false, "screen_thresh"_a = 1.0e-12);
+
+    m.def(
+        "fact_exp_antiherm",
+        [](const SparseOperatorList& T, bool inverse, double screen_thresh) {
+            return ExpOperatorListFact{T, ExpType::Antihermitian, inverse, screen_thresh};
+        },
+        "Allow usage of exp_antiherm(T) * state", "T"_a, "inverse"_a = false,
+        "screen_thresh"_a = 1.0e-12);
 
     m.def(
         "operator_list",

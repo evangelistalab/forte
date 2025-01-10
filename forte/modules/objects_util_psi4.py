@@ -18,7 +18,7 @@ class ObjectsUtilPsi4(Module):
         Parameters
         ----------
         options: dict
-            A dictionary of options. Defaults to None, in which case the options are read from psi4.
+            A dictionary of options. Defaults to an empty dict, in which case the options are read from psi4.
         """
         super().__init__(options=options)
 
