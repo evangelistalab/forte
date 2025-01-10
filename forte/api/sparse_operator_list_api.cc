@@ -59,8 +59,8 @@ struct ExpOperatorList {
 struct ExpOperatorListFact {
     const SparseOperatorList& op;
     ExpType exp_type;
-    double screen_thresh;
     bool inverse;
+    double screen_thresh;
     ExpOperatorListFact(const SparseOperatorList& op, ExpType exp_type, bool inverse,
                         double screen_thresh)
         : op(op), exp_type(exp_type), inverse(inverse), screen_thresh(screen_thresh) {}
@@ -133,30 +133,26 @@ void export_SparseOperatorList(py::module& m) {
     // and overloads operator* to apply forte::SparseExp.
     py::class_<struct ExpOperatorList>(m, "ExpOperatorList")
         .def(py::init<const SparseOperatorList&, ExpType, bool, double>())
-        .def("__mul__", [](const ExpOperatorList& self, const SparseState& state) {
+        .def("__matmul__", [](const ExpOperatorList& self, const SparseState& state) {
             if (self.exp_type == ExpType::Excitation) {
                 auto exp_op = SparseExp(self.maxk, self.screen_thresh);
                 return exp_op.apply_op(self.op, state);
             }
-            if (self.exp_type == ExpType::Antihermitian) {
-                auto exp_op = SparseExp(self.maxk, self.screen_thresh);
-                return exp_op.apply_antiherm(self.op, state);
-            }
+            auto exp_op = SparseExp(self.maxk, self.screen_thresh);
+            return exp_op.apply_antiherm(self.op, state);
         });
 
     // Define a small wrapper class that holds a SparseOperator
     // and overloads operator* to apply forte::SparseExp.
     py::class_<struct ExpOperatorListFact>(m, "ExpOperatorListFact")
         .def(py::init<const SparseOperatorList&, ExpType, bool, double>())
-        .def("__mul__", [](const ExpOperatorListFact& self, const SparseState& state) {
+        .def("__matmul__", [](const ExpOperatorListFact& self, const SparseState& state) {
             if (self.exp_type == ExpType::Excitation) {
                 auto exp_op = SparseFactExp(self.screen_thresh);
                 return exp_op.apply_op(self.op, state, self.inverse);
             }
-            if (self.exp_type == ExpType::Antihermitian) {
-                auto exp_op = SparseFactExp(self.screen_thresh);
-                return exp_op.apply_antiherm(self.op, state, self.inverse);
-            }
+            auto exp_op = SparseFactExp(self.screen_thresh);
+            return exp_op.apply_antiherm(self.op, state, self.inverse);
         });
 
     // Provide a function "exp" that returns an ExpOperator object

@@ -226,7 +226,7 @@ void export_SparseOperator(py::module& m) {
             "T"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12,
             "Evaluate ... exp(i (T1^dagger + T1)) O exp(-i(T1 + T1^dagger)) ...")
         .def(
-            "__mul__",
+            "__matmul__",
             [](const SparseOperator& op, const SparseState& st) {
                 return apply_operator_lin(op, st);
             },
@@ -253,15 +253,13 @@ void export_SparseOperator(py::module& m) {
     // and overloads operator* to apply forte::SparseExp.
     py::class_<struct ExpOperator>(m, "ExpOperator")
         .def(py::init<const SparseOperator&, ExpType, int, double>())
-        .def("__mul__", [](const ExpOperator& self, const SparseState& state) {
+        .def("__matmul__", [](const ExpOperator& self, const SparseState& state) {
             if (self.exp_type == ExpType::Excitation) {
                 auto exp_op = SparseExp(self.maxk, self.screen_thresh);
                 return exp_op.apply_op(self.op, state);
             }
-            if (self.exp_type == ExpType::Antihermitian) {
-                auto exp_op = SparseExp(self.maxk, self.screen_thresh);
-                return exp_op.apply_antiherm(self.op, state);
-            }
+            auto exp_op = SparseExp(self.maxk, self.screen_thresh);
+            return exp_op.apply_antiherm(self.op, state);
         });
 
     // Provide a function "exp" that returns an ExpOperator object
