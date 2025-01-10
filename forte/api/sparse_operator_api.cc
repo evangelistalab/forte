@@ -36,6 +36,7 @@
 #include "integrals/active_space_integrals.h"
 
 #include "sparse_ci/sparse_operator.h"
+#include "sparse_ci/sparse_state.h"
 #include "sparse_ci/sq_operator_string_ops.h"
 #include "sparse_ci/sparse_operator_hamiltonian.h"
 
@@ -209,7 +210,24 @@ void export_SparseOperator(py::module& m) {
                 return O_copy;
             },
             "T"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12,
-            "Evaluate ... exp(i (T1^dagger + T1)) O exp(-i(T1 + T1^dagger)) ...");
+            "Evaluate ... exp(i (T1^dagger + T1)) O exp(-i(T1 + T1^dagger)) ...")
+        .def(
+            "matrix",
+            [](const SparseOperator& sop, const std::vector<Determinant>& dets,
+               double screen_thresh) {
+                std::vector<sparse_scalar_t> elements;
+                for (const auto& deti : dets) {
+                    SparseState deti_state;
+                    deti_state.add(deti, 1.0);
+                    auto op_deti = apply_operator_lin(sop, deti_state, screen_thresh);
+                    for (const auto& detj : dets) {
+                        elements.push_back(op_deti[detj]);
+                    }
+                }
+                return elements;
+            },
+            "dets"_a, "screen_thresh"_a = 1.0e-12,
+            "Compute the matrix elements of the operator between a list of determinants");
 
     m.def(
         "sparse_operator",

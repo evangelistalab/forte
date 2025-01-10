@@ -90,7 +90,7 @@ std::string SparseOperator::latex() const {
     }
     // sort v to guarantee a consistent order
     std::sort(v.begin(), v.end());
-    return join(v, " ");
+    return join(v, " + ");
 }
 
 void SparseOperator::add_term_from_str(const std::string& s, sparse_scalar_t coefficient,

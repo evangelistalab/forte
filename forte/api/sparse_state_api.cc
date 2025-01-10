@@ -68,7 +68,29 @@ void export_SparseState(py::module& m) {
         .def("__getitem__", [](SparseState& v, const Determinant& d) { return v[d]; })
         .def("__setitem__",
              [](SparseState& v, const Determinant& d, const sparse_scalar_t val) { v[d] = val; })
-        .def("__contains__", [](SparseState& v, const Determinant& d) { return v.count(d); });
+        .def("__contains__", [](SparseState& v, const Determinant& d) { return v.count(d); })
+        .def(
+            "apply",
+            [](const SparseState& v, const SparseOperator& op) {
+                return apply_operator_lin(op, v);
+            },
+            "Apply an operator to this SparseState and return a new SparseState")
+        .def(
+            "apply_antiherm",
+            [](const SparseState& v, const SparseOperator& op) {
+                return apply_operator_antiherm(op, v);
+            },
+            "Apply the antihermitian combination of the operator (op - op^dagger) to this "
+            "SparseState and return a new SparseState")
+        .def("number_project",
+             [](const SparseState& v, int na, int nb) { return apply_number_projector(na, nb, v); })
+        .def(
+            "spin2", [](const SparseState& v) { return spin2(v, v); },
+            "Calculate the expectation value of S^2 for this SparseState")
+        .def(
+            "overlap",
+            [](const SparseState& v, const SparseState& other) { return overlap(v, other); },
+            "Calculate the overlap between this SparseState and another SparseState");
 
     m.def("apply_op", &apply_operator_lin, "sop"_a, "state0"_a, "screen_thresh"_a = 1.0e-12);
 

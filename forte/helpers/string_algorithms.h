@@ -67,7 +67,7 @@ template <typename T> inline std::string to_string_latex(T value) {
         return "-";
     }
     if (value == T(1)) {
-        return "+";
+        return "";
     }
     if constexpr (std::is_same_v<T, std::complex<double>>) {
         return "(" + std::to_string(std::real(value)) + " + " + std::to_string(std::imag(value)) +

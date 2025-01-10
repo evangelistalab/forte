@@ -22,7 +22,7 @@ class Module(ABC):
         options: dict
             A dictionary of options. Defaults to None.
         """
-        self._options = options or {}
+        self._options = options
         self._executed = False
 
     @property
