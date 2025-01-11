@@ -76,6 +76,8 @@ class VectorSpace {
     VectorSpace(const container& elements) : elements_(elements) {}
     /// Move constructor
     VectorSpace(VectorSpace&& other) : elements_(std::move(other.elements_)) {}
+    /// Constructor from a single element
+    VectorSpace(const T& e, F c) { elements_[e] = c; }
 
     /// @brief Zero element of the field
     constexpr static F zero_{0};
@@ -167,7 +169,7 @@ class VectorSpace {
     /// @brief Negate a vector
     Derived operator-() const {
         Derived result = self();
-        result *= -1;
+        result *= F{-1};
         return result;
     }
 
@@ -326,6 +328,8 @@ template <typename Derived, typename T, typename F> class VectorSpaceList {
     VectorSpaceList(const VectorSpaceList& other) : elements_(other.elements_) {}
     /// Move constructor
     VectorSpaceList(VectorSpaceList&& other) : elements_(std::move(other.elements_)) {}
+    /// Constructor from a single element
+    VectorSpaceList(const T& e, F c) { elements_.emplace_back(e, c); }
 
     /// @brief Zero element of the field
     constexpr static F zero_{0};

@@ -41,9 +41,12 @@ namespace forte {
 void export_SparseState(py::module& m) {
     py::class_<SparseState, std::shared_ptr<SparseState>>(
         m, "SparseState", "A class to represent a vector of determinants")
-        .def(py::init<>())
-        .def(py::init<const SparseState&>())
-        .def(py::init<const SparseState::container&>())
+        .def(py::init<>(), "Default constructor")
+        .def(py::init<const SparseState&>(), "Copy constructor")
+        .def(py::init<const SparseState::container&>(),
+             "Create a SparseState from a container of Determinants")
+        .def(py::init<const Determinant&, sparse_scalar_t>(), "det"_a, "val"_a = 1,
+             "Create a SparseState with a single determinant")
         .def(
             "items", [](const SparseState& v) { return py::make_iterator(v.begin(), v.end()); },
             py::keep_alive<0, 1>()) // Essential: keep object alive while iterator exists
@@ -68,7 +71,29 @@ void export_SparseState(py::module& m) {
         .def("__getitem__", [](SparseState& v, const Determinant& d) { return v[d]; })
         .def("__setitem__",
              [](SparseState& v, const Determinant& d, const sparse_scalar_t val) { v[d] = val; })
-        .def("__contains__", [](SparseState& v, const Determinant& d) { return v.count(d); });
+        .def("__contains__", [](SparseState& v, const Determinant& d) { return v.count(d); })
+        .def(
+            "apply",
+            [](const SparseState& v, const SparseOperator& op) {
+                return apply_operator_lin(op, v);
+            },
+            "Apply an operator to this SparseState and return a new SparseState")
+        .def(
+            "apply_antiherm",
+            [](const SparseState& v, const SparseOperator& op) {
+                return apply_operator_antiherm(op, v);
+            },
+            "Apply the antihermitian combination of the operator (op - op^dagger) to this "
+            "SparseState and return a new SparseState")
+        .def("number_project",
+             [](const SparseState& v, int na, int nb) { return apply_number_projector(na, nb, v); })
+        .def(
+            "spin2", [](const SparseState& v) { return spin2(v, v); },
+            "Calculate the expectation value of S^2 for this SparseState")
+        .def(
+            "overlap",
+            [](const SparseState& v, const SparseState& other) { return overlap(v, other); },
+            "Calculate the overlap between this SparseState and another SparseState");
 
     m.def("apply_op", &apply_operator_lin, "sop"_a, "state0"_a, "screen_thresh"_a = 1.0e-12);
 

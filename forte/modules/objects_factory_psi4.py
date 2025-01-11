@@ -105,9 +105,6 @@ class ObjectsFromPsi4(Module):
             if data.options.get_str("BASIS"):
                 raise ValueError("Both basis set in options and kwargs are provided. Please provide only one.")
 
-        if "basis" not in kwargs:
-            kwargs["basis"] = basis
-
         # Step 2: Get the molecule object from the kwargs or the ref_wfn
         data.molecule = self.get_molecule(molecule, ref_wfn)
 

@@ -152,13 +152,13 @@ def test_sparse_operator_transform_cc_1():
     ref = forte.SparseState({forte.det("2" * o): 1.0})
     print(f"{ref = }")
 
-    print(f"{H.size() = }")
-    print(f"{T.size() = }")
+    print(f"{len(H) = }")
+    print(f"{len(T) = }")
     forte.fact_trans_lin(Hbar, T, screen_thresh=1.0e-10)
     Hbar_ref = forte.apply_op(Hbar, ref)
     E1 = forte.overlap(ref, Hbar_ref)
     print(f"{E1 = } (transform)")
-    print(f"{Hbar.size() = }")
+    print(f"{len(Hbar) = }")
 
     make_operator_histogram(Hbar, 10)
 
@@ -167,7 +167,7 @@ def test_sparse_operator_transform_cc_1():
     H_expT_ref = forte.apply_op(H, expT_ref)
     E2 = forte.overlap(ref, H_expT_ref)
     print(f"{E2 = } (exponential)")
-    print(f"{expT_ref.size() = }")
+    print(f"{len(expT_ref) = }")
 
     # assert the two energies are close
     assert abs(E1 - E2) < 1e-12
@@ -212,8 +212,8 @@ def test_sparse_operator_transform_ucc_1():
     ref = forte.SparseState({forte.det("+" * o): 1.0})
     print(f"{ref = }")
 
-    print(f"{H.size() = }")
-    print(f"{T.size() = }")
+    print(f"{len(H) = }")
+    print(f"{len(T) = }")
     forte.fact_unitary_trans_antiherm(Hbar, T, reverse=True, screen_thresh=1.0e-10)
 
     Hbar_ref = forte.apply_op(Hbar, ref)
@@ -229,9 +229,9 @@ def test_sparse_operator_transform_ucc_1():
 
     print(f"{E = } (wave function)")
     print(f"{E - Etr = }")
-    print(f"{Hbar.size() = }")
-    print(f"{expT_ref.size() = }")
-    print(f"{H_expT_ref.size() = }")
+    print(f"{len(Hbar) = }")
+    print(f"{len(expT_ref) = }")
+    print(f"{len(H_expT_ref) = }")
 
     # make_operator_histogram(Hbar, 10)
 

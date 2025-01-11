@@ -324,7 +324,7 @@ def test_sparse_operator_fast_product():
                             if j < k and n > m:
                                 A += forte.sparse_operator(f"[{i}a+ {j}b+ {k}b+ {n}b- {m}b- {l}a-]", 1.0)
 
-    print(f"Computing {A.size()} operators")
+    print(f"Computing {len(A)} operators")
 
     # add timing
     import time
@@ -347,9 +347,9 @@ def test_sparse_operator_fast_product():
     end = time.time()
     print(f"Time elapsed for new_product2: {end - start}")
 
-    print(f"Number of items in C: {C.size()}")
-    print(f"Number of items in D: {D.size()}")
-    print(f"Number of items in E: {E.size()}")
+    print(f"Number of items in C: {len(C)}")
+    print(f"Number of items in D: {len(D)}")
+    print(f"Number of items in E: {len(E)}")
 
     start = time.time()
     assert C == D
