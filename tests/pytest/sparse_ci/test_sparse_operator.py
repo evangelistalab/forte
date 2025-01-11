@@ -37,13 +37,13 @@ def test_sparse_operator():
     # remove one term from sop
     sop.remove("[0a+ 0b+ 0b- 0a-]")
     # check the size
-    assert sop.size() == 1
+    assert len(sop) == 1
     # check the element
     assert sop.coefficient("[]") == 0.5
     assert sop.coefficient("[0a+ 0b+ 0b- 0a-]") == 0.0
-    assert sop.size() == 1
+    assert len(sop) == 1
     sop.remove("[]")
-    assert sop.size() == 0
+    assert len(sop) == 0
 
     # copy a term into a new operator
     sop = forte.SparseOperator()
@@ -102,7 +102,7 @@ def test_sparse_operator():
 
     sop = forte.SparseOperator()
     sop.add("[]", 1.0)
-    assert sop.size() == 1
+    assert len(sop) == 1
 
     # test ordering: 0a+ 0b+ 0b- 0a- |2> = +|2>
     sop = forte.SparseOperator()

@@ -40,7 +40,7 @@ def test_sq_operator_product():
     op1 = forte.sparse_operator("[0a+ 1a+ 0a-]")
     op2 = forte.sparse_operator("[1a+]")
     op3 = op1 @ op2
-    assert op3.size() == 0
+    assert len(op3) == 0
 
     op1 = forte.sparse_operator("[0a+ 2a+ 4b+ 0a-]")
     op2 = forte.sparse_operator("[1a+]")
