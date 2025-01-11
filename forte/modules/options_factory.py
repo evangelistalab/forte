@@ -12,7 +12,7 @@ class OptionsFactory(Module):
     A module to generate the ForteOptions object
     """
 
-    def __init__(self, options: dict = None):
+    def __init__(self, options=None):
         """
         Parameters
         ----------

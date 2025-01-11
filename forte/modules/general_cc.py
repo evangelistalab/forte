@@ -498,7 +498,7 @@ class GeneralCC(Module):
                 flush=True,
             )
 
-            nops = selected_op.size()
+            nops = len(selected_op)
 
             calc_data.append((nops, e, e_proj))
 
@@ -506,7 +506,7 @@ class GeneralCC(Module):
                 break
 
             old_e = e
-            nops_old = selected_op.size()
+            nops_old = len(selected_op)
 
         print("=========================================================================")
 

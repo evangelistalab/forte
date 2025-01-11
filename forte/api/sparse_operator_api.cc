@@ -36,25 +36,46 @@
 #include "integrals/active_space_integrals.h"
 
 #include "sparse_ci/sparse_operator.h"
+#include "sparse_ci/sparse_state.h"
 #include "sparse_ci/sq_operator_string_ops.h"
 #include "sparse_ci/sparse_operator_hamiltonian.h"
+#include "sparse_ci/sparse_exp.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace forte {
 
+// enum used to specify the type of the exponential operator
+enum class ExpType { Excitation, Antihermitian };
+
+// this struct is used to implement exp(op) in Python
+// Note that it creates a copy of the operator
+struct ExpOperator {
+    const SparseOperator op;
+    ExpType exp_type;
+    int maxk;
+    double screen_thresh;
+    ExpOperator(const SparseOperator& op, ExpType exp_type, int maxk, double screen_thresh)
+        : op(op), exp_type(exp_type), maxk(maxk), screen_thresh(screen_thresh) {}
+};
+
 void export_SparseOperator(py::module& m) {
     py::class_<SparseOperator>(m, "SparseOperator", "A class to represent a sparse operator")
-        .def(py::init<>())
-        .def(py::init<SparseOperator>())
+        .def(py::init<>(), "Default constructor")
+        .def(py::init<SparseOperator>(), "Copy constructor")
+        .def(py::init<const SparseOperator::container&>(),
+             "Create a SparseOperator from a container of terms")
+        .def(py::init<const SQOperatorString&, sparse_scalar_t>(), "sqop"_a,
+             "coefficient"_a = sparse_scalar_t(1), "Create a SparseOperator with a single term")
         .def("add",
              py::overload_cast<const SQOperatorString&, sparse_scalar_t>(&SparseOperator::add),
-             "sqop"_a, "coefficient"_a = sparse_scalar_t(1))
+             "sqop"_a, "coefficient"_a = sparse_scalar_t(1), "Add a term to the operator")
         .def("add",
              py::overload_cast<const std::string&, sparse_scalar_t, bool>(
                  &SparseOperator::add_term_from_str),
-             "str"_a, "coefficient"_a = sparse_scalar_t(1), "allow_reordering"_a = false)
+             "str"_a, "coefficient"_a = sparse_scalar_t(1), "allow_reordering"_a = false,
+             "Add a term to the operator from a string representation")
         .def(
             "__iter__",
             [](const SparseOperator& v) {
@@ -81,7 +102,7 @@ void export_SparseOperator(py::module& m) {
                 const auto [sqop, factor] = make_sq_operator_string(s, false);
                 op[sqop] = factor * value;
             },
-            "Get the coefficient of a term")
+            "Set the coefficient of a term")
         .def(
             "remove",
             [](SparseOperator& op, const std::string& s) {
@@ -126,50 +147,64 @@ void export_SparseOperator(py::module& m) {
             [](SparseOperator& self, sparse_scalar_t scalar) {
                 return self /= scalar; // Call the in-place division operator
             },
-            py::is_operator())
+            py::is_operator(), "Divide this SparseOperator by a scalar")
         .def(
             "__truediv__",
             [](const SparseOperator& self, sparse_scalar_t scalar) {
                 return self / scalar; // Call the division operator
             },
-            py::is_operator())
-        .def("__mul__",
-             [](const SparseOperator& self, sparse_scalar_t scalar) {
-                 return self * scalar; // This uses the operator* we defined
-             })
-        .def("__rmul__",
-             [](const SparseOperator& self, sparse_scalar_t scalar) {
-                 // This enables the reversed operation: scalar * SparseOperator
-                 return self * scalar; // Reuse the __mul__ logic
-             })
-        .def("__mul__",
-             [](const SparseOperator& self, const SparseOperator& other) {
-                 SparseOperator C;
-                 for (const auto& [op, coeff] : self.elements()) {
-                     for (const auto& [op2, coeff2] : other.elements()) {
-                         new_product2(C, op, op2, coeff * coeff2);
-                     }
-                 }
-                 return C;
-             })
-        .def("__rdiv__",
-             [](const SparseOperator& self, sparse_scalar_t scalar) {
-                 return self * (1.0 / scalar); // This uses the operator* we defined
-             })
+            py::is_operator(), "Divide this SparseOperator by a scalar")
+        .def(
+            "__mul__",
+            [](const SparseOperator& self, sparse_scalar_t scalar) {
+                return self * scalar; // This uses the operator* we defined
+            },
+            "Multiply a SparseOperator by a scalar")
+        .def(
+            "__rmul__",
+            [](const SparseOperator& self, sparse_scalar_t scalar) {
+                // This enables the reversed operation: scalar * SparseOperator
+                return self * scalar; // Reuse the __mul__ logic
+            },
+            "Multiply a scalar by a SparseOperator")
+        .def(
+            "__mul__",
+            [](const SparseOperator& self, const SparseOperator& other) {
+                SparseOperator C;
+                for (const auto& [op, coeff] : self.elements()) {
+                    for (const auto& [op2, coeff2] : other.elements()) {
+                        new_product2(C, op, op2, coeff * coeff2);
+                    }
+                }
+                return C;
+            },
+            "Multiply two SparseOperators")
+        .def(
+            "__rdiv__",
+            [](const SparseOperator& self, sparse_scalar_t scalar) {
+                return self * (1.0 / scalar); // This uses the operator* we defined
+            },
+            "Divide a scalar by a SparseOperator")
         .def("__add__", &SparseOperator::operator+, "Add two SparseOperators")
-        .def(py::self - py::self)
-        .def(-py::self, "Negate the SparseOperator")
-        .def("copy", &SparseOperator::copy)
-        .def("size", &SparseOperator::size)
-        .def("__len__", &SparseOperator::size)
-        .def("norm", [](const SparseOperator& op) { return op.norm(); })
-        // .def("op_list", &SparseOperator::op_list)
-        .def("str", &SparseOperator::str)
-        .def("latex", &SparseOperator::latex)
-        .def("adjoint", [](const SparseOperator& op) { return op.adjoint(); })
-        .def("__eq__", &SparseOperator::operator==)
-        .def("__repr__", [](const SparseOperator& op) { return join(op.str(), "\n"); })
-        .def("__str__", [](const SparseOperator& op) { return join(op.str(), "\n"); })
+        .def(py::self - py::self, "Subtract two SparseOperators")
+        .def(
+            "__neg__", [](const SparseOperator& self) { return -self; }, "Negate the operator")
+        .def("copy", &SparseOperator::copy, "Create a copy of this SparseOperator")
+        .def("__len__", &SparseOperator::size, "Get the number of terms in the operator")
+        .def(
+            "norm", [](const SparseOperator& op) { return op.norm(); },
+            "Compute the norm of the operator")
+        .def("str", &SparseOperator::str, "Get a string representation of the operator")
+        .def("latex", &SparseOperator::latex, "Get a LaTeX representation of the operator")
+        .def(
+            "adjoint", [](const SparseOperator& op) { return op.adjoint(); }, "Get the adjoint")
+        .def("__eq__", &SparseOperator::operator==, "Check if two SparseOperators are equal")
+        .def(
+            "__repr__", [](const SparseOperator& op) { return join(op.str(), "\n"); },
+            "Get a string representation of the operator")
+        .def(
+            "__str__", [](const SparseOperator& op) { return join(op.str(), "\n"); },
+            "Get a string representation of the operator")
         .def(
             "fact_trans_lin",
             [](SparseOperator& O, const SparseOperatorList& T, bool reverse, double screen_thresh) {
@@ -209,7 +244,60 @@ void export_SparseOperator(py::module& m) {
                 return O_copy;
             },
             "T"_a, "reverse"_a = false, "screen_thresh"_a = 1.0e-12,
-            "Evaluate ... exp(i (T1^dagger + T1)) O exp(-i(T1 + T1^dagger)) ...");
+            "Evaluate ... exp(i (T1^dagger + T1)) O exp(-i(T1 + T1^dagger)) ...")
+        .def(
+            "__matmul__",
+            [](const SparseOperator& op, const SparseState& st) {
+                return apply_operator_lin(op, st);
+            },
+            "Multiply a SparseOperator and a SparseState")
+        .def(
+            "matrix",
+            [](const SparseOperator& sop, const std::vector<Determinant>& dets,
+               double screen_thresh) {
+                std::vector<sparse_scalar_t> elements;
+                for (const auto& deti : dets) {
+                    SparseState deti_state;
+                    deti_state.add(deti, 1.0);
+                    auto op_deti = apply_operator_lin(sop, deti_state, screen_thresh);
+                    for (const auto& detj : dets) {
+                        elements.push_back(op_deti[detj]);
+                    }
+                }
+                return elements;
+            },
+            "dets"_a, "screen_thresh"_a = 1.0e-12,
+            "Compute the matrix elements of the operator between a list of determinants");
+
+    // Define a small wrapper class that holds a SparseOperator
+    // and overloads operator* to apply forte::SparseExp.
+    py::class_<struct ExpOperator>(m, "ExpOperator")
+        .def(py::init<const SparseOperator&, ExpType, int, double>())
+        .def("__matmul__", [](const ExpOperator& self, const SparseState& state) {
+            const double scaling_factor = 1.0;
+            if (self.exp_type == ExpType::Excitation) {
+                auto exp_op = SparseExp(self.maxk, self.screen_thresh);
+                return exp_op.apply_op(self.op, state, scaling_factor);
+            }
+            auto exp_op = SparseExp(self.maxk, self.screen_thresh);
+            return exp_op.apply_antiherm(self.op, state, scaling_factor);
+        });
+
+    // Provide a function "exp" that returns an ExpOperator object
+    m.def(
+        "exp",
+        [](const SparseOperator& T, int maxk, double screen_thresh) {
+            return ExpOperator{T, ExpType::Excitation, maxk, screen_thresh};
+        },
+        "Allow usage of exp(T) * state", "T"_a, "maxk"_a = 20, "screen_thresh"_a = 1.0e-12);
+
+    m.def(
+        "exp_antiherm",
+        [](const SparseOperator& T, int maxk, double screen_thresh) {
+            return ExpOperator{T, ExpType::Antihermitian, maxk, screen_thresh};
+        },
+        "Allow usage of exp_antiherm(T) * state", "T"_a, "maxk"_a = 20,
+        "screen_thresh"_a = 1.0e-12);
 
     m.def(
         "sparse_operator",

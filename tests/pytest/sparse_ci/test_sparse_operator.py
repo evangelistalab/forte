@@ -1,13 +1,9 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import forte
+import pytest
+from forte import det
 
 
 def test_sparse_operator():
-    import forte
-    import pytest
-    from forte import det
 
     # test get/set
     sop = forte.SparseOperator()
@@ -18,7 +14,7 @@ def test_sparse_operator():
     to_latex = sop.latex()
     assert (
         to_latex
-        == r"(2.300000 + 0.000000 i)\; +\;\hat{a}_{0 \alpha}^\dagger\hat{a}_{0 \beta}^\dagger\hat{a}_{0 \beta}\hat{a}_{0 \alpha}"
+        == r"(2.300000 + 0.000000 i)\; + \;\hat{a}_{0 \alpha}^\dagger\hat{a}_{0 \beta}^\dagger\hat{a}_{0 \beta}\hat{a}_{0 \alpha}"
     )
 
     sop = forte.SparseOperator()
@@ -26,7 +22,7 @@ def test_sparse_operator():
     to_str = sop.str()
     assert to_str == ["(1 + 0i) * [1a+ 1b+ 0b- 0a-]"]
     to_latex = sop.latex()
-    assert to_latex == r"+\;\hat{a}_{1 \alpha}^\dagger\hat{a}_{1 \beta}^\dagger\hat{a}_{0 \beta}\hat{a}_{0 \alpha}"
+    assert to_latex == r"\;\hat{a}_{1 \alpha}^\dagger\hat{a}_{1 \beta}^\dagger\hat{a}_{0 \beta}\hat{a}_{0 \alpha}"
 
     sop = forte.SparseOperator()
     sop.add("[]", 1.0)
@@ -41,13 +37,13 @@ def test_sparse_operator():
     # remove one term from sop
     sop.remove("[0a+ 0b+ 0b- 0a-]")
     # check the size
-    assert sop.size() == 1
+    assert len(sop) == 1
     # check the element
     assert sop.coefficient("[]") == 0.5
     assert sop.coefficient("[0a+ 0b+ 0b- 0a-]") == 0.0
-    assert sop.size() == 1
+    assert len(sop) == 1
     sop.remove("[]")
-    assert sop.size() == 0
+    assert len(sop) == 0
 
     # copy a term into a new operator
     sop = forte.SparseOperator()
@@ -62,7 +58,7 @@ def test_sparse_operator():
     sop.add("[1a+ 1b+ 0b- 0a-]", 0.5)
     dtest = det("20")
     ref = forte.SparseState({dtest: 1.0})
-    wfn = forte.apply_op(sop, ref)
+    wfn = sop @ ref
     assert wfn[det("20")] == pytest.approx(0.0, abs=1e-9)
     assert wfn[det("-+")] == pytest.approx(0.1, abs=1e-9)
     assert wfn[det("+-")] == pytest.approx(0.3, abs=1e-9)
@@ -106,7 +102,7 @@ def test_sparse_operator():
 
     sop = forte.SparseOperator()
     sop.add("[]", 1.0)
-    assert sop.size() == 1
+    assert len(sop) == 1
 
     # test ordering: 0a+ 0b+ 0b- 0a- |2> = +|2>
     sop = forte.SparseOperator()
@@ -389,6 +385,75 @@ def test_sparse_operator():
     assert sopd.str() == ref.str()
 
 
+def test_sparse_operator_api():
+    from forte import SparseState, SparseOperator, SparseOperatorList, exp, exp_antiherm, fact_exp, fact_exp_antiherm
+
+    # Test apply
+    sop = SparseOperator()
+    sop.add("[1a+ 0a-]", 0.5)
+    sop.add("[1b+ 0b-]", 0.7)
+    state = SparseState({det("2"): 1.0})
+    new_state = sop @ state
+    test_state = SparseState({det("-+"): 0.5, det("+-"): 0.7})
+    assert new_state == test_state
+
+    # Test exp
+    new_state = exp(sop) @ state
+    test_state = forte.SparseState(
+        {
+            det("2"): 1.0,
+            det("-+"): 0.5,
+            det("+-"): 0.7,
+            det("02"): 0.35,
+        }
+    )
+    assert new_state == test_state
+
+    # Test apply_antiherm
+    new_state = exp_antiherm(sop) @ state
+    test_state = forte.SparseState(
+        {
+            det("2"): 0.67121217,
+            det("-+"): 0.36668488,
+            det("+-"): 0.56535421,
+            det("02"): 0.30885441,
+        }
+    )
+    diff = new_state - test_state
+    assert diff.norm() < 1e-7
+
+    # Test fact_exp
+    sop = SparseOperatorList()
+    sop.add("[1a+ 0a-]", 0.5)
+    sop.add("[1b+ 0b-]", 0.7)
+    new_state = fact_exp(sop) @ state
+    test_state = forte.SparseState(
+        {
+            det("2"): 1.0,
+            det("-+"): 0.5,
+            det("+-"): 0.7,
+            det("02"): 0.35,
+        }
+    )
+    assert new_state == test_state
+
+    # Test fact_exp_antiherm
+    sop = SparseOperatorList()
+    sop.add("[1a+ 0a-]", 0.5)
+    sop.add("[1b+ 0b-]", 0.7)
+    new_state = fact_exp_antiherm(sop) @ state
+    test_state = forte.SparseState(
+        {
+            det("2"): 0.67121217,
+            det("-+"): 0.36668488,
+            det("+-"): 0.56535421,
+            det("02"): 0.30885441,
+        }
+    )
+    diff = new_state - test_state
+    assert diff.norm() < 1e-7
+
+
 def test_sparse_operator_product():
     sop1 = forte.SparseOperator()
     sop1.add("[1a+ 1a-]", 1.0)
@@ -427,6 +492,7 @@ def test_sparse_operator_list_remove():
 
 if __name__ == "__main__":
     test_sparse_operator()
+    test_sparse_operator_api()
     test_sparse_operator_product()
     test_sparse_operator_list_reverse()
     test_sparse_operator_list_remove()
