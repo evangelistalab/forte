@@ -58,6 +58,9 @@ class SparseOperator : public VectorSpace<SparseOperator, SQOperatorString, spar
                                           SQOperatorString::Hash> {
   public:
     SparseOperator() = default;
+    using base_t =
+        VectorSpace<SparseOperator, SQOperatorString, sparse_scalar_t, SQOperatorString::Hash>;
+    using base_t::base_t; // Make the base class constructors visible
 
     /// @brief add a term to this operator
     /// @param str a string that defines the product of operators in the format [... q_2 q_1 q_0]

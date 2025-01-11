@@ -46,10 +46,11 @@ using namespace pybind11::literals;
 
 namespace forte {
 
-// implement the struct ExpOperator
-
+// enum used to specify the type of the exponential operator
 enum class ExpType { Excitation, Antihermitian };
 
+// this struct is used to implement exp(op) in Python
+// Note that it creates a copy of the operator
 struct ExpOperator {
     const SparseOperator op;
     ExpType exp_type;

@@ -43,10 +43,11 @@ using namespace pybind11::literals;
 
 namespace forte {
 
-// implement the struct ExpOperator
-
+// enum used to specify the type of the exponential operator
 enum class ExpType { Excitation, Antihermitian };
 
+// this struct is used to implement exp(op) in Python
+// Note that it creates a copy of the operator
 struct ExpOperatorList {
     const SparseOperatorList op;
     ExpType exp_type;
@@ -56,6 +57,8 @@ struct ExpOperatorList {
         : op(op), exp_type(exp_type), maxk(maxk), screen_thresh(screen_thresh) {}
 };
 
+// this struct is used to implement fact_exp(op) in Python
+// Note that it creates a copy of the operator
 struct ExpOperatorListFact {
     const SparseOperatorList op;
     ExpType exp_type;
@@ -129,7 +132,7 @@ void export_SparseOperatorList(py::module& m) {
             },
             "Get the nth operator");
 
-    // Define a small wrapper class that holds a SparseOperator
+    // Wrapper class that holds a SparseOperator
     // and overloads operator* to apply forte::SparseExp.
     py::class_<struct ExpOperatorList>(m, "ExpOperatorList")
         .def(py::init<const SparseOperatorList&, ExpType, bool, double>())
@@ -143,7 +146,7 @@ void export_SparseOperatorList(py::module& m) {
         });
 
     // Define a small wrapper class that holds a SparseOperator
-    // and overloads operator* to apply forte::SparseExp.
+    // and overloads operator* to apply forte::SparseFactExp.
     py::class_<struct ExpOperatorListFact>(m, "ExpOperatorListFact")
         .def(py::init<const SparseOperatorList&, ExpType, bool, double>())
         .def("__matmul__", [](const ExpOperatorListFact& self, const SparseState& state) {
@@ -155,7 +158,7 @@ void export_SparseOperatorList(py::module& m) {
             return exp_op.apply_antiherm(self.op, state, self.inverse);
         });
 
-    // Provide a function "exp" that returns an ExpOperator object
+    // Provide a function "exp" that returns an ExpOperatorList object
     m.def(
         "exp",
         [](const SparseOperatorList& T, int maxk, double screen_thresh) {
@@ -163,6 +166,7 @@ void export_SparseOperatorList(py::module& m) {
         },
         "Allow usage of exp(T) * state", "T"_a, "makx"_a = 20, "screen_thresh"_a = 1.0e-12);
 
+    // Provide a function "exp_antiherm" that returns an ExpOperatorList object
     m.def(
         "exp_antiherm",
         [](const SparseOperatorList& T, int maxk, double screen_thresh) {
@@ -171,19 +175,22 @@ void export_SparseOperatorList(py::module& m) {
         "Allow usage of exp_antiherm(T) * state", "T"_a, "makx"_a = 20,
         "screen_thresh"_a = 1.0e-12);
 
+    // Provide a function "fact_exp" that returns an ExpOperatorListFact object
     m.def(
         "fact_exp",
         [](const SparseOperatorList& T, bool inverse, double screen_thresh) {
             return ExpOperatorListFact{T, ExpType::Excitation, inverse, screen_thresh};
         },
-        "Allow usage of exp(T) * state", "T"_a, "inverse"_a = false, "screen_thresh"_a = 1.0e-12);
+        "Allow usage of fact_exp(T) * state", "T"_a, "inverse"_a = false,
+        "screen_thresh"_a = 1.0e-12);
 
+    // Provide a function "fact_exp_antiherm" that returns an ExpOperatorListFact object
     m.def(
         "fact_exp_antiherm",
         [](const SparseOperatorList& T, bool inverse, double screen_thresh) {
             return ExpOperatorListFact{T, ExpType::Antihermitian, inverse, screen_thresh};
         },
-        "Allow usage of exp_antiherm(T) * state", "T"_a, "inverse"_a = false,
+        "Allow usage of fact_exp_antiherm(T) * state", "T"_a, "inverse"_a = false,
         "screen_thresh"_a = 1.0e-12);
 
     m.def(

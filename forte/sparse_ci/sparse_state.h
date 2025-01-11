@@ -41,6 +41,9 @@ namespace forte {
 class SparseState
     : public VectorSpace<SparseState, Determinant, sparse_scalar_t, Determinant::Hash> {
   public:
+    using base_t = VectorSpace<SparseState, Determinant, sparse_scalar_t, Determinant::Hash>;
+    using base_t::base_t; // Make the base class constructors visible
+
     /// @return a string representation of the object
     /// @param n the number of spatial orbitals to print
     std::string str(int n = 0) const;
