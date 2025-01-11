@@ -41,9 +41,12 @@ namespace forte {
 void export_SparseState(py::module& m) {
     py::class_<SparseState, std::shared_ptr<SparseState>>(
         m, "SparseState", "A class to represent a vector of determinants")
-        .def(py::init<>())
-        .def(py::init<const SparseState&>())
-        .def(py::init<const SparseState::container&>())
+        .def(py::init<>(), "Default constructor")
+        .def(py::init<const SparseState&>(), "Copy constructor")
+        .def(py::init<const SparseState::container&>(),
+             "Create a SparseState from a container of Determinants")
+        .def(py::init<const Determinant&, sparse_scalar_t>(), "det"_a, "val"_a = 1,
+             "Create a SparseState with a single determinant")
         .def(
             "items", [](const SparseState& v) { return py::make_iterator(v.begin(), v.end()); },
             py::keep_alive<0, 1>()) // Essential: keep object alive while iterator exists

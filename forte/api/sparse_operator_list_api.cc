@@ -48,7 +48,7 @@ namespace forte {
 enum class ExpType { Excitation, Antihermitian };
 
 struct ExpOperatorList {
-    const SparseOperatorList& op;
+    const SparseOperatorList op;
     ExpType exp_type;
     int maxk;
     double screen_thresh;
@@ -57,7 +57,7 @@ struct ExpOperatorList {
 };
 
 struct ExpOperatorListFact {
-    const SparseOperatorList& op;
+    const SparseOperatorList op;
     ExpType exp_type;
     bool inverse;
     double screen_thresh;
