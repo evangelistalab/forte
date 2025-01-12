@@ -92,7 +92,6 @@ void export_SparseOperatorList(py::module& m) {
                 return py::make_iterator(v.elements().begin(), v.elements().end());
             },
             py::keep_alive<0, 1>())
-        .def("size", &SparseOperatorList::size)
         .def("__repr__", [](const SparseOperatorList& op) { return join(op.str(), "\n"); })
         .def("__str__", [](const SparseOperatorList& op) { return join(op.str(), "\n"); })
         .def(
@@ -130,7 +129,15 @@ void export_SparseOperatorList(py::module& m) {
                 }
                 return op(n);
             },
-            "Get the nth operator");
+            "Get the nth operator")
+        .def(
+            "__matmul__",
+            [](const SparseOperatorList& op, const SparseState& st) {
+                // form a temporary SparseOperator from the list of operators
+                auto sop = op.to_operator();
+                return apply_operator_lin(sop, st);
+            },
+            "Multiply a SparseOperator and a SparseState");
 
     // Wrapper class that holds a SparseOperator
     // and overloads operator* to apply forte::SparseExp.

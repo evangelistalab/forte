@@ -277,7 +277,7 @@ def prepare_ints_rdms(
     rdms = as_solver.compute_average_rdms(state_weights_map, rdm_level, rdm_type)
 
     # semicanonicalize orbitals
-    semi = forte.SemiCanonical(mo_space_info, ints, forte.forte_options, scf_info, mix_inactive, mix_active)
+    semi = forte.SemiCanonical(mo_space_info, ints, scf_info, mix_inactive, mix_active)
     semi.semicanonicalize(rdms, rdm_level)
 
     return {"reference_energy": Eref, "mo_space_info": mo_space_info, "ints": ints, "rdms": rdms}

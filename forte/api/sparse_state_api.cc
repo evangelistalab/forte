@@ -79,9 +79,24 @@ void export_SparseState(py::module& m) {
             },
             "Apply an operator to this SparseState and return a new SparseState")
         .def(
+            "apply",
+            [](const SparseState& v, const SparseOperatorList& op) {
+                auto sop = op.to_operator();
+                return apply_operator_lin(sop, v);
+            },
+            "Apply an operator to this SparseState and return a new SparseState")
+        .def(
             "apply_antiherm",
             [](const SparseState& v, const SparseOperator& op) {
                 return apply_operator_antiherm(op, v);
+            },
+            "Apply the antihermitian combination of the operator (op - op^dagger) to this "
+            "SparseState and return a new SparseState")
+        .def(
+            "apply_antiherm",
+            [](const SparseState& v, const SparseOperatorList& op) {
+                auto sop = op.to_operator();
+                return apply_operator_antiherm(sop, v);
             },
             "Apply the antihermitian combination of the operator (op - op^dagger) to this "
             "SparseState and return a new SparseState")
