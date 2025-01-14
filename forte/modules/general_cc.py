@@ -135,7 +135,7 @@ def make_cluster_operator(max_exc, naelpi, mo_space_info, psi4_wfn):
                                 den = e_bvir + e_avir - e_aocc - e_bocc
                                 denominators.append(den)
 
-    print(f"Number of amplitudes: {sop.size()}")
+    print(f"Number of amplitudes: {len(sop)}")
     return (sop, denominators)
 
 
@@ -203,7 +203,7 @@ def solve_cc_equations(
         residual, e, e_proj = residual_equations(cc_type, t, op, selected_op, ref, ham, exp, compute_threshold, linked)
 
         residual_norm = 0.0
-        for l in range(selected_op.size()):
+        for l in range(len(selected_op)):
             t[l] -= residual[op_pool[l]] / denominators[op_pool[l]]
             residual_norm += abs(residual[op_pool[l]]) ** 2
 
@@ -442,15 +442,15 @@ class GeneralCC(Module):
 
         # the list of operators selected from the full list
         if self.select_type is None:
-            op_pool = list(range(op.size()))
-            t = [0.0] * op.size()
-            print(f"\n The excitation operator pool contains {op.size()} elements")
+            op_pool = list(range(len(op)))
+            t = [0.0] * len(op)
+            print(f"\n The excitation operator pool contains {len(op)} elements")
         else:
             raise RuntimeError("Selected CC methods are not implemented yet")
             print(f"\n Selecting operators using the {selec_type} scheme")
             t = []
             op_pool = []
-            print(f"\n The selected operator pool contains {selected_op.size()} elements")
+            print(f"\n The selected operator pool contains {len(selected_op)} elements")
 
         old_e = 0.0
         start = time.time()
