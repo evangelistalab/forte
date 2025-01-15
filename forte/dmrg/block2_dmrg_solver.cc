@@ -1125,7 +1125,6 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
     std::vector<block2::ubond_t> ket0_bond_dims(1, bond_dim);
     std::vector<block2::ubond_t> bra_bond_dims(
         1, dmrg_options_->get_int("DSRG_3RDM_BLOCK2_CPS_BOND_DIMENSION"));
-    auto to_1dot = dmrg_options_->get_bool("DSRG_3RDM_BLOCK2_1DOT");
     std::vector<double> noises{1.0e-4};
 
     // system initialization
@@ -1152,28 +1151,19 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
 
         if (impl_->is_spin_adapted_) {
             auto ket0 = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
-
-            // to one-dot
-            if (ket0->dot == 2 and to_1dot) {
-                ket0->dot = 1;
-                if (ket0->center == ket0->n_sites - 2) {
-                    ket0->center = ket0->n_sites - 1;
-                    ket0->canonical_form[ket0->n_sites - 1] = 'S';
-                } else if (ket0->center == 0)
-                    ket0->canonical_form[0] = 'K';
-                else
-                    assert(false);
-                ket0->save_data();
-                ket0->load_mutable();
-                ket0->info->bond_dim =
-                    max(ket0->info->bond_dim, ket0->info->get_max_bond_dimension());
-            }
-            psi::outfile->Printf("\n I am %d dot", ket0->dot);
-
             // auto bond_dim = ket0->info->get_max_bond_dimension();
             auto bond_dim = ket0_bond_dims[0];
 
             for (size_t p = 0; p < np; ++p) {
+                // noises
+                auto xexpr = impl_->expr_builder();
+                xexpr->exprs.push_back("(C+D)0");
+                xexpr->add_sum_term(Tbra_data.data() + p * na3, na2, {na1, na1}, {1, nactv},
+                                    integral_cutoff, 1.0, actv_irreps, {}, p_syms[p]);
+                xexpr = xexpr->adjust_order();
+                auto xmpo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
+                    impl_->get_mpo(xexpr, dmrg_verbose));
+
                 auto bra_expr = impl_->expr_builder();
                 bra_expr->exprs.push_back("((C+D)0+D)1");
                 bra_expr->add_sum_term(Tbra_data.data() + p * na3, na3, tshape, tstride,
@@ -1244,6 +1234,11 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
                         binfo->save_data(impl_->scratch_ + "/" + tag + "-mps_info.bin");
                         bra->save_data();
 
+                        auto pme = std::make_shared<
+                            block2::MovingEnvironment<block2::SU2, double, double>>(xmpo, bra, bra,
+                                                                                    "DSRG-PERT");
+                        pme->init_environments(true);
+
                         auto bref = ket0->deep_copy("DSRG-BRA@TMP");
                         auto bme = std::make_shared<
                             block2::MovingEnvironment<block2::SU2, double, double>>(bmpo, bra, bref,
@@ -1253,11 +1248,12 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
                         bme->init_environments(true);
 
                         auto bcps = std::make_shared<block2::Linear<block2::SU2, double, double>>(
-                            bme, bra_bond_dims, std::vector<block2::ubond_t>{bref->info->bond_dim},
-                            noises);
+                            pme, bme, bra_bond_dims,
+                            std::vector<block2::ubond_t>{bref->info->bond_dim}, noises);
                         bcps->iprint = 2;
                         bcps->noise_type = block2::NoiseTypes::ReducedPerturbative;
                         bcps->eq_type = block2::EquationTypes::PerturbativeCompression;
+                        bcps->linear_conv_thrds = std::vector<double>(2 * maxiter_, 1.0e-8);
                         bcps->solve(2 * maxiter_, bra->center == 0, 1.0e-8);
                         if (bra->center != ket0->center)
                             bcps->solve(1, ket0->center != 0);
