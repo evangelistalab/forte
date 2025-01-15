@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2024 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2025 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -39,20 +39,26 @@
 
 namespace forte {
 
+// This is a naive implementation of the operator application that is used for testing
 SparseState apply_operator_impl_naive(bool is_antihermitian, const SparseOperator& sop,
                                       const SparseState& state, double screen_thresh);
 
+// This is the grouped implementation of the operator application. Fast, but scaling is not optimal.
 SparseState apply_operator_impl_grouped(bool is_antihermitian, const SparseOperator& sop,
                                         const SparseState& state, double screen_thresh);
 
+// The default implementation is the grouped implementation with grouping into alfa strings
+SparseState apply_operator_impl_grouped_string(bool is_antihermitian, const SparseOperator& sop,
+                                               const SparseState& state, double screen_thresh);
+
 SparseState apply_operator_lin(const SparseOperator& sop, const SparseState& state,
                                double screen_thresh) {
-    return apply_operator_impl_grouped(false, sop, state, screen_thresh);
+    return apply_operator_impl_grouped_string(false, sop, state, screen_thresh);
 }
 
 SparseState apply_operator_antiherm(const SparseOperator& sop, const SparseState& state,
                                     double screen_thresh) {
-    return apply_operator_impl_grouped(true, sop, state, screen_thresh);
+    return apply_operator_impl_grouped_string(true, sop, state, screen_thresh);
 }
 
 // This is a naive implementation of the operator application that is used for testing
@@ -168,6 +174,87 @@ SparseState apply_operator_impl_grouped(bool is_antihermitian, const SparseOpera
 
     // Call the kernel to apply the operator (subtracting the result)
     apply_operator_kernel<false>(sop_groups, state_sorted, screen_thresh, new_terms);
+
+    return new_terms;
+}
+
+// This is a kernel that applies the operator to the state using a grouped approach
+// It has a lower cost complexity
+// It assumes that the operator is grouped by the annihilation operators and that these are prepared
+// in another function calling this kernel
+template <bool positive>
+void apply_operator_kernel_string(const auto& sop_groups, const auto& state_groups,
+                                  const auto& screen_thresh, auto& new_terms) {
+    Determinant new_det;
+    Determinant sign_mask;
+    Determinant idx;
+    for (const auto& [sqop_ann_a, sqop_group] : sop_groups) {
+        for (const auto& [det_a, state_group] : state_groups) {
+            // can we annihilate the alfa string?
+            if (det_a.fast_a_and_b_equal_b(sqop_ann_a)) {
+                // loop over the creation operators in this group
+                for (const auto& [sqop_ann, sqop_cre, t] : sqop_group) {
+                    for (const auto& [det, c] : state_group) {
+                        if (det.faster_can_apply_operator(sqop_cre, sqop_ann)) {
+                            if (std::abs(c * t) > screen_thresh) {
+                                compute_sign_mask(sqop_cre, sqop_ann, sign_mask, idx);
+                                const auto value = faster_apply_operator_to_det(
+                                    det, new_det, sqop_cre, sqop_ann, sign_mask);
+                                if constexpr (positive) {
+                                    new_terms[new_det] += value * t * c;
+                                } else {
+                                    new_terms[new_det] -= value * t * c;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// This is the grouped implementation of the operator application. It mostly prepares the
+// operator and state and then calls the kernel to apply the operator
+SparseState apply_operator_impl_grouped_string(bool is_antihermitian, const SparseOperator& sop,
+                                               const SparseState& state, double screen_thresh) {
+    if (screen_thresh < 0) {
+        throw std::invalid_argument(
+            "apply_operator_impl_grouped:screen_thresh must be non-negative");
+    }
+    SparseState new_terms;
+
+    // Group the determinants by common alfa strings
+    std::unordered_map<String, std::vector<std::pair<Determinant, sparse_scalar_t>>, String::Hash>
+        state_groups;
+    for (const auto& [det, c] : state) {
+        state_groups[det.get_alfa_bits()].emplace_back(det, c);
+    }
+
+    // Group the operators by common alfa annihilation strings
+    std::unordered_map<String, std::vector<std::tuple<Determinant, Determinant, sparse_scalar_t>>,
+                       String::Hash>
+        sop_groups;
+    for (const auto& [sqop, t] : sop.elements()) {
+        sop_groups[sqop.ann().get_alfa_bits()].emplace_back(sqop.ann(), sqop.cre(), t);
+    }
+
+    // Call the kernel to apply the operator (adding the result)
+    apply_operator_kernel_string<true>(sop_groups, state_groups, screen_thresh, new_terms);
+
+    if (not is_antihermitian) {
+        return new_terms;
+    }
+
+    // Group the operators by common alfa creation strings
+    // Here we swap the annihilation and creation operators for the antihermitian case
+    sop_groups.clear();
+    for (const auto& [sqop, t] : sop.elements()) {
+        sop_groups[sqop.cre().get_alfa_bits()].emplace_back(sqop.cre(), sqop.ann(), t);
+    }
+
+    // Call the kernel to apply the operator (subtracting the result)
+    apply_operator_kernel_string<false>(sop_groups, state_groups, screen_thresh, new_terms);
 
     return new_terms;
 }

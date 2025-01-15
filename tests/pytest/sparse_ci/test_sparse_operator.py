@@ -475,7 +475,7 @@ def test_sparse_operator_list_reverse():
     sopl.add("[1a+ 1a-]", 1.0)
     sopl.add("[0a+ 0a-]", 2.0)
     reversed_sopl = sopl.reverse()
-    assert sopl.size() == 2
+    assert len(sopl) == 2
     assert reversed_sopl[0] == 2.0
     assert reversed_sopl[1] == 1.0
     assert reversed_sopl(0)[0].str() == "[0a+ 0a-]"
@@ -487,7 +487,7 @@ def test_sparse_operator_list_remove():
     sopl.add("[1a+ 1a-]", 1.0)
     sopl.add("[0a+ 0a-]", 1.0)
     sopl.remove("[1a+ 1a-]")
-    assert sopl.size() == 1
+    assert len(sopl) == 1
 
 
 if __name__ == "__main__":

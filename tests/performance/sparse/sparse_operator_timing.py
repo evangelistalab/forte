@@ -43,7 +43,7 @@ def sparse_operator_correctness():
     opH = forte.sparse_operator_hamiltonian(as_ints)
 
     print("\n\n  Number of determinants: ", len(dets))
-    print("  Number of integrals: ", opH.size())
+    print("  Number of integrals: ", len(opH))
 
     # Apply the Hamiltonian to a state that spans the entire Hilbert space
     c = 1 / np.sqrt(len(dets))
@@ -86,7 +86,7 @@ def sparse_operator_timing_1():
     opH = forte.sparse_operator_hamiltonian(as_ints)
 
     print("\n\n  Number of determinants: ", len(dets))
-    print("  Number of integrals: ", opH.size())
+    print("  Number of integrals: ", len(opH))
 
     # Apply the Hamiltonian to a state that spans the entire Hilbert space
     c = 1 / np.sqrt(len(dets))
@@ -133,7 +133,7 @@ def sparse_operator_timing_2():
 
     ndets = 7000
     print("\n\n  Number of determinants: ", ndets)
-    print("  Number of integrals: ", opH.size())
+    print("  Number of integrals: ", len(opH))
 
     # Apply the Hamiltonian to a state that spans 7000 determinants
     c = 1 / np.sqrt(ndets)
@@ -188,7 +188,7 @@ def sparse_operator_timing_3():
 
     ndets = 20000
     print("\n\n  Number of determinants: ", ndets)
-    print("  Number of integrals: ", opH.size())
+    print("  Number of integrals: ", len(opH))
 
     # Apply the Hamiltonian to a state that spans 7000 determinants
     c = 1 / np.sqrt(ndets)
