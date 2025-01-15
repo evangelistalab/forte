@@ -1125,7 +1125,8 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
     std::vector<block2::ubond_t> ket0_bond_dims(1, bond_dim);
     std::vector<block2::ubond_t> bra_bond_dims(
         1, dmrg_options_->get_int("DSRG_3RDM_BLOCK2_CPS_BOND_DIMENSION"));
-    std::vector<double> noises{0.0};
+    auto to_1dot = dmrg_options_->get_bool("DSRG_3RDM_BLOCK2_1DOT");
+    std::vector<double> noises{1.0e-4};
 
     // system initialization
     auto integral_cutoff = dmrg_options_->get_double("BLOCK2_INTERGRAL_CUTOFF");
@@ -1151,6 +1152,24 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
 
         if (impl_->is_spin_adapted_) {
             auto ket0 = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
+
+            // to one-dot
+            if (ket0->dot == 2 and to_1dot) {
+                ket0->dot = 1;
+                if (ket0->center == ket0->n_sites - 2) {
+                    ket0->center = ket0->n_sites - 1;
+                    ket0->canonical_form[ket0->n_sites - 1] = 'S';
+                } else if (ket0->center == 0)
+                    ket0->canonical_form[0] = 'K';
+                else
+                    assert(false);
+                ket0->save_data();
+                ket0->load_mutable();
+                ket0->info->bond_dim =
+                    max(ket0->info->bond_dim, ket0->info->get_max_bond_dimension());
+            }
+            psi::outfile->Printf("\n I am %d dot", ket0->dot);
+
             // auto bond_dim = ket0->info->get_max_bond_dimension();
             auto bond_dim = ket0_bond_dims[0];
 

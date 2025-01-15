@@ -56,6 +56,7 @@ Driver:
         "SA-MRDSRG",
         "DSRG_MRPT",
         "MRDSRG_SO",
+        "NONE"
       ]
     help: "Dynamical correlation solver type"
   CALC_TYPE:
@@ -1243,6 +1244,10 @@ DSRG:
     type: int
     default: 1000
     help: "Bond dimension of the compressed (N-1)-electron wave function"
+  DSRG_3RDM_BLOCK2_1DOT:
+    type: bool
+    default: false
+    help: "Convert to 1-site MPS before compression"
   DSRG_RDM_MS_AVG:
     type: bool
     default: false
