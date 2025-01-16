@@ -205,6 +205,7 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
             double E3v = H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * L3_("xyzuwv");
             double E3c = H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * L3_("xyzuwv");
             E3 += E3v - E3c;
+            H2_T2_C0_cu3_direct(H2, T2, S2);
         } else {
             if (L3_algorithm_ == "DIRECT") {
                 E3 += H2_T2_C0_cu3_direct(H2, T2, S2);

@@ -1114,6 +1114,8 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
     auto na1 = static_cast<int>(nactv);
     auto na2 = na1 * na1;
     auto na3 = na2 * na1;
+    auto na4 = na3 * na1;
+    auto na5 = na4 * na1;
     const std::vector<int> tshape{na1, na1, na1};
     const std::vector<size_t> tstride{nactv * nactv, 1, nactv};
 
@@ -1125,7 +1127,7 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
     std::vector<block2::ubond_t> ket0_bond_dims(1, bond_dim);
     std::vector<block2::ubond_t> bra_bond_dims(
         1, dmrg_options_->get_int("DSRG_3RDM_BLOCK2_CPS_BOND_DIMENSION"));
-    std::vector<double> noises{1.0e-4};
+    std::vector<double> noises{0.0};
 
     // system initialization
     auto integral_cutoff = dmrg_options_->get_double("BLOCK2_INTERGRAL_CUTOFF");
@@ -1141,6 +1143,7 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
 
     for (size_t ir = 0; ir < nroots; ++ir) {
         double value = 0.0;
+        double temp = 0.0;
 
         // loading MPSs from disk
         std::string ket_tag_sa = "KET@" + state().str_short();
@@ -1154,16 +1157,110 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
             // auto bond_dim = ket0->info->get_max_bond_dimension();
             auto bond_dim = ket0_bond_dims[0];
 
-            for (size_t p = 0; p < np; ++p) {
-                // noises
-                auto xexpr = impl_->expr_builder();
-                xexpr->exprs.push_back("(C+D)0");
-                xexpr->add_sum_term(Tbra_data.data() + p * na3, na2, {na1, na1}, {1, nactv},
-                                    integral_cutoff, 1.0, actv_irreps, {}, p_syms[p]);
-                xexpr = xexpr->adjust_order();
-                auto xmpo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
-                    impl_->get_mpo(xexpr, dmrg_verbose));
+            auto Tbra_sub = ambit::Tensor::build(ambit::CoreTensor, "Tbra_sub", {np, nactv, nactv});
+            auto W =
+                ambit::Tensor::build(ambit::CoreTensor, "W", {nactv, nactv, nactv, nactv, nactv});
 
+            // auto _W = ambit::Tensor::build(ambit::CoreTensor, "_W",
+            //                                {nactv, nactv, nactv, nactv, nactv, nactv});
+            // _W("xyzuwv") = Tbra("ewxy") * Tket("ezuv");
+
+            // {
+            //     std::vector<std::vector<uint16_t>> expr_indices(1);
+            //     std::vector<std::vector<double>> expr_data(1);
+            //     expr_indices[0].reserve(na5 * na1 * 6);
+            //     expr_data[0].reserve(na5 * na1);
+            //     _W.citerate([&](const std::vector<size_t>& i, const double& value) {
+            //         double v = 2 * sqrt(2) * fabs(value);
+            //         int irrep = 0;
+            //         for (auto _i : i)
+            //             irrep ^= actv_irreps[_i];
+            //         if (v > integral_cutoff and (!irrep)) {
+            //             expr_data[0].push_back(2 * sqrt(2) * value);
+            //             expr_indices[0].push_back(i[0]);
+            //             expr_indices[0].push_back(i[1]);
+            //             expr_indices[0].push_back(i[2]);
+            //             expr_indices[0].push_back(i[5]);
+            //             expr_indices[0].push_back(i[4]);
+            //             expr_indices[0].push_back(i[3]);
+            //         }
+            //     });
+            //     for (size_t i = 0, isize = expr_data[0].size(); i < isize; ++i) {
+            //         for (size_t j = 0; j < 6; ++j) {
+            //             psi::outfile->Printf("\n  i = %zu, j = %zu, indices[%zu] = %zu", i, j, i * 6 + j, expr_indices[0][i * 6 + j]);
+            //         }
+            //     }
+
+            //     auto ket_expr = impl_->expr_builder();
+            //     ket_expr->exprs.push_back("((C+((C+(C+D)0)1+D)0)1+D)0");
+            //     // ket_expr->add_sum_term(_W.data().data(), na5 * na1, {na1, na1, na1, na1, na1, na1},
+            //     //                        {nactv * nactv * nactv * nactv * nactv,
+            //     //                         nactv * nactv * nactv * nactv, nactv * nactv * nactv, 1,
+            //     //                         nactv, nactv * nactv},
+            //     //                        integral_cutoff, 2 * sqrt(2), actv_irreps);
+            //     ket_expr->data = expr_data;
+            //     ket_expr->indices = expr_indices;
+            //     ket_expr = ket_expr->adjust_order();
+            //     if (ket_expr->exprs.size() != 0) {
+            //         auto kmpo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
+            //             impl_->get_mpo(ket_expr, dmrg_verbose));
+            //         auto pvalue = impl_->driver_su2_->expectation(ket0, kmpo, ket0, true, bond_dim);
+            //         psi::outfile->Printf("\nXXXX  xvalue = %20.15f", pvalue);
+            //     }
+            // }
+
+            for (size_t x = 0; x < nactv; ++x) {
+                auto ket0 = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
+                Tbra_sub.iterate([&](const std::vector<size_t>& i, double& value) {
+                    value = Tbra.data()[i[0] * na3 + i[1] * na2 + x * na1 + i[2]];
+                });
+                W("yzuwv") = Tbra_sub("ewy") * Tket("ezuv");
+                // W.iterate([&](const std::vector<size_t>& i, double& value) {
+                //     value = _W.data()[x * na5 + i[0] * na4 + i[1] * na3 + i[2] * na2 + i[3] * na1
+                //     +
+                //                       i[4]];
+                // });
+
+                auto ket_expr = impl_->expr_builder();
+                ket_expr->exprs.push_back("((C+((C+(C+D)0)1+D)0)1+D)0");
+
+                // figure nonzero elements and indices
+                std::vector<std::vector<uint16_t>> expr_indices(1);
+                std::vector<std::vector<double>> expr_data(1);
+                expr_indices[0].reserve(na5 * 6);
+                expr_data[0].reserve(na5);
+                W.citerate([&](const std::vector<size_t>& i, const double& value) {
+                    double v = 2 * sqrt(2) * fabs(value);
+                    int irrep = actv_irreps[x];
+                    for (auto _i : i)
+                        irrep ^= actv_irreps[_i];
+                    if (v > integral_cutoff and (!irrep)) {
+                        expr_data[0].push_back(2 * sqrt(2) *value);
+                        expr_indices[0].push_back(x);
+                        expr_indices[0].push_back(i[0]);
+                        expr_indices[0].push_back(i[1]);
+                        expr_indices[0].push_back(i[4]);
+                        expr_indices[0].push_back(i[3]);
+                        expr_indices[0].push_back(i[2]);
+                    }
+                });
+
+                ket_expr->data = expr_data;
+                ket_expr->indices = expr_indices;
+                ket_expr = ket_expr->adjust_order();
+                if (ket_expr->exprs.size() == 0)
+                    continue;
+
+                auto kmpo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
+                    impl_->get_mpo(ket_expr, dmrg_verbose));
+
+                auto pvalue = impl_->driver_su2_->expectation(ket0, kmpo, ket0, true, bond_dim);
+                psi::outfile->Printf("\n x = %zu, xvalue = %20.15f", x, pvalue);
+                temp += pvalue;
+            }
+            psi::outfile->Printf("\n temp sum = %.15f", temp);
+
+            for (size_t p = 0; p < np; ++p) {
                 auto bra_expr = impl_->expr_builder();
                 bra_expr->exprs.push_back("((C+D)0+D)1");
                 bra_expr->add_sum_term(Tbra_data.data() + p * na3, na3, tshape, tstride,
@@ -1234,11 +1331,6 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
                         binfo->save_data(impl_->scratch_ + "/" + tag + "-mps_info.bin");
                         bra->save_data();
 
-                        auto pme = std::make_shared<
-                            block2::MovingEnvironment<block2::SU2, double, double>>(xmpo, bra, bra,
-                                                                                    "DSRG-PERT");
-                        pme->init_environments(true);
-
                         auto bref = ket0->deep_copy("DSRG-BRA@TMP");
                         auto bme = std::make_shared<
                             block2::MovingEnvironment<block2::SU2, double, double>>(bmpo, bra, bref,
@@ -1248,8 +1340,8 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
                         bme->init_environments(true);
 
                         auto bcps = std::make_shared<block2::Linear<block2::SU2, double, double>>(
-                            pme, bme, bra_bond_dims,
-                            std::vector<block2::ubond_t>{bref->info->bond_dim}, noises);
+                            bme, bra_bond_dims, std::vector<block2::ubond_t>{bref->info->bond_dim},
+                            noises);
                         bcps->iprint = 2;
                         bcps->noise_type = block2::NoiseTypes::ReducedPerturbative;
                         bcps->eq_type = block2::EquationTypes::PerturbativeCompression;

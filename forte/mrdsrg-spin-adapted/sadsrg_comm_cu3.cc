@@ -54,6 +54,37 @@ double SADSRG::H2_T2_C0_cu3_direct(BlockedTensor& H2, BlockedTensor& T2, Blocked
         Tket, Tbra, mo_space_info_->symmetry("RESTRICTED_UOCC"), "v", load_mps_);
     timer_v.stop();
 
+    auto nactv = actv_mos_.size();
+    auto Tbra_sub =
+        ambit::Tensor::build(ambit::CoreTensor, "Tbra_sub", {virt_mos_.size(), nactv, nactv});
+    auto W = ambit::Tensor::build(ambit::CoreTensor, "W", {nactv, nactv, nactv, nactv, nactv});
+
+    auto _W = ambit::Tensor::build(ambit::CoreTensor, "W", {nactv, nactv, nactv, nactv, nactv, nactv});
+    _W("xyzuwv") = H2.block("vaaa")("ewxy") * T2.block("aava")("uvez");
+
+    auto D3 = rdms_->SF_G3();
+
+    double yyy = 0.0;
+    for (size_t x = 0, na = actv_mos_.size(); x < na; ++x) {
+        Tbra_sub.iterate([&](const std::vector<size_t>& i, double& value) {
+            value = Tbra.data()[i[0] * na * na * na + i[1] * na * na + x * na + i[2]];
+        });
+        W("yzuwv") = Tbra_sub("ewy") * Tket("ezuv");
+        W.iterate([&](const std::vector<size_t>& i, double& value) {
+            value = _W.data()[x * na * na * na * na * na + i[0] * na * na * na * na +
+                              i[1] * na * na * na + i[2] * na * na + i[3] * na + i[4]];
+        });
+        auto D = ambit::Tensor::build(tensor_type_, "_D3", std::vector<size_t>(5, na));
+        D.iterate([&](const std::vector<size_t>& i, double& value) {
+            value = D3.data()[x * na * na * na * na * na + i[0] * na * na * na * na +
+                              i[1] * na * na * na + i[2] * na * na + i[3] * na + i[4]];
+        });
+        double xxx = W("yzuwv") * D("yzuwv");
+        outfile->Printf("\n x= %d, xxx = %.15f", x, xxx);
+        yyy += xxx;
+    }
+    outfile->Printf("\nYYY  temp = %.15f", yyy);
+
     timer timer_c("DSRG [H2, T2] D3C direct");
     Tket = T2.block("caaa").clone();
     Tket("mwuv") = T2.block("caaa")("mzxy") * Ua("wz") * Ua("ux") * Ua("vy");
@@ -62,6 +93,25 @@ double SADSRG::H2_T2_C0_cu3_direct(BlockedTensor& H2, BlockedTensor& T2, Blocked
     auto E3c_map = as_solver_->compute_complementary_H2caa_overlap(
         Tket, Tbra, mo_space_info_->symmetry("RESTRICTED_DOCC"), "c", load_mps_);
     timer_c.stop();
+
+    yyy = 0.0;
+    Tbra_sub =
+        ambit::Tensor::build(ambit::CoreTensor, "Tbra_sub", {core_mos_.size(), nactv, nactv});
+    for (size_t x = 0, na = actv_mos_.size(); x < na; ++x) {
+        Tbra_sub.iterate([&](const std::vector<size_t>& i, double& value) {
+            value = Tbra.data()[i[0] * na * na * na + i[1] * na * na + x * na + i[2]];
+        });
+        W("yzuwv") = Tbra_sub("ewy") * Tket("ezuv");
+        auto D = ambit::Tensor::build(tensor_type_, "_D3", std::vector<size_t>(5, na));
+        D.iterate([&](const std::vector<size_t>& i, double& value) {
+            value = D3.data()[x * na * na * na * na * na + i[0] * na * na * na * na +
+                              i[1] * na * na * na + i[2] * na * na + i[3] * na + i[4]];
+        });
+        double xxx = W("yzuwv") * D("yzuwv");
+        outfile->Printf("\n x= %d, xxx = %.15f", x, xxx);
+        yyy += xxx;
+    }
+    outfile->Printf("\nYYY  temp = %.15f", yyy);
 
     // - 2-RDM contributions
     auto G2 = ambit::BlockedTensor::build(ambit::CoreTensor, "G2", {"aaaa"});
@@ -81,6 +131,7 @@ double SADSRG::H2_T2_C0_cu3_direct(BlockedTensor& H2, BlockedTensor& T2, Blocked
             E3c -= weights[i] * E3c_map[state][i];
         }
     }
+    outfile->Printf("\n  E3v = %.15f, E3c = %.15f", E3v, E3c);
 
     // => spin-free 1- and 2-cumulant contributions <=
 
