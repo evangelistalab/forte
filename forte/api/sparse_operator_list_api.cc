@@ -77,6 +77,15 @@ void export_SparseOperatorList(py::module& m) {
         .def("add", &SparseOperatorList::add)
         .def("add", &SparseOperatorList::add_term_from_str, "str"_a,
              "coefficient"_a = sparse_scalar_t(1), "allow_reordering"_a = false)
+        // .def("add",
+        //      [](SparseOperatorList& op, const, sparse_scalar_t value, bool allow_reordering) {
+        //          make_sq_operator_string_from_list op.add(sqop, value);
+        //      })
+        .def("add_term",
+             py::overload_cast<const std::vector<std::tuple<bool, bool, int>>&, double, bool>(
+                 &SparseOperatorList::add_term),
+             "op_list"_a, "value"_a = 0.0, "allow_reordering"_a = false)
+        // .def("add_term", py::overload_cast<const SQOperator&>(&SparseOperator::add_term))
         .def("to_operator", &SparseOperatorList::to_operator)
         .def(
             "remove",

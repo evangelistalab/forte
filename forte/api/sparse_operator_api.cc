@@ -76,6 +76,14 @@ void export_SparseOperator(py::module& m) {
                  &SparseOperator::add_term_from_str),
              "str"_a, "coefficient"_a = sparse_scalar_t(1), "allow_reordering"_a = false,
              "Add a term to the operator from a string representation")
+        .def("add",
+             [](SparseOperator& op, const std::vector<size_t>& acre,
+                const std::vector<size_t>& bcre, const std::vector<size_t>& aann,
+                const std::vector<size_t>& bann, sparse_scalar_t coeff) {
+                 op.add(SQOperatorString({acre.begin(), acre.end()}, {bcre.begin(), bcre.end()},
+                                         {aann.begin(), aann.end()}, {bann.begin(), bann.end()}),
+                        coeff);
+             })
         .def(
             "__iter__",
             [](const SparseOperator& v) {

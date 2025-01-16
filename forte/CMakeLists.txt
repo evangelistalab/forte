@@ -83,6 +83,7 @@ pybind11_add_module(_forte
 api/active_space_integrals_api.cc
 api/active_space_method_api.cc
 api/active_space_solver_api.cc
+api/ci_rdms_api.cc
 api/configuration_api.cc
 api/cube_file_api.cc
 api/determinant_api.cc
