@@ -59,36 +59,33 @@ def dump_orbitals(wfn, filename="forte_Ca.npz"):
     psi4.core.print_out(" Done\n")
 
 
-def orbital_projection(ref_wfn, options, mo_space_info):
+def make_avas_orbitals(data):
     """
-    Functions that pre-rotate orbitals before calculations;
-    Requires a set of reference orbitals and mo_space_info.
+    Makes atomic valence active space (AVAS) orbitals.
+    Used to automate active space selection. It requires a set of reference orbitals
+    """
+    # Find the subspace projector
+    # - Parse the subspace planes for pi orbitals
+    from .aosubspace import parse_subspace_pi_planes
 
-    AVAS: an automatic active space selection and projection;
-    Embedding: simple frozen-orbital embedding with the overlap projector.
+    pi_planes = parse_subspace_pi_planes(data.psi_wfn.molecule(), data.options.get_list("SUBSPACE_PI_PLANES"))
 
+    # - Create the AO subspace projector
+    ps = forte.make_aosubspace_projector(data.psi_wfn, data.options, pi_planes)
+
+    # Apply the projector to rotate orbitals
+    forte.make_avas(data.psi_wfn, data.options, ps)
+
+
+def make_embedding_orbitals(data, mo_space_info):
+    """
+    Implements a simple frozen-orbital embedding with the overlap projector (ASET(mf)).
     Return a Forte MOSpaceInfo object
     """
-    if options.get_bool("AVAS"):
-        # Find the subspace projector
-        # - Parse the subspace planes for pi orbitals
-        from .aosubspace import parse_subspace_pi_planes
-
-        pi_planes = parse_subspace_pi_planes(ref_wfn.molecule(), options.get_list("SUBSPACE_PI_PLANES"))
-
-        # - Create the AO subspace projector
-        ps = forte.make_aosubspace_projector(ref_wfn, options, pi_planes)
-
-        # Apply the projector to rotate orbitals
-        forte.make_avas(ref_wfn, options, ps)
-
     # Create the fragment(embedding) projector and apply to rotate orbitals
-    if options.get_bool("EMBEDDING"):
-        forte.print_method_banner(["Frozen-orbital Embedding", "Nan He"])
-        fragment_projector, fragment_nbf = forte.make_fragment_projector(ref_wfn)
-        return forte.make_embedding(ref_wfn, options, fragment_projector, fragment_nbf, mo_space_info)
-    else:
-        return mo_space_info
+    forte.print_method_banner(["Frozen-orbital Embedding", "Nan He"])
+    fragment_projector, fragment_nbf = forte.make_fragment_projector(ref_wfn)
+    return forte.make_embedding(ref_wfn, options, fragment_projector, fragment_nbf, mo_space_info)
 
 
 def dmrg_initial_orbitals(wfn, options, mo_space_info):

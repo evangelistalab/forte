@@ -18,7 +18,7 @@ from forte._forte import (
 
 from forte.data import ForteData
 
-from forte.proc.orbital_helpers import add_orthogonal_vectors, orbital_projection, dmrg_initial_orbitals
+from forte.proc.orbital_helpers import add_orthogonal_vectors, make_avas_orbitals, dmrg_initial_orbitals
 from forte.proc.external_active_space_solver import write_wavefunction, read_wavefunction
 
 from .module import Module
@@ -358,7 +358,10 @@ class ObjectsFromPsi4(Module):
             The MO space information object
         """
         # Call methods that project the orbitals (AVAS, embedding)
-        data.mo_space_info = orbital_projection(data.psi_wfn, data.options, temp_mo_space_info)
+        if data.options.get_bool("AVAS"):
+            make_avas_orbitals(data)
+
+        data.mo_space_info = temp_mo_space_info  # TODO this should be removed
 
         # Reorder active orbitals for DMRG after AVAS
         if data.options.get_str("ACTIVE_SPACE_SOLVER") in ["DMRG", "BLOCK2"]:
