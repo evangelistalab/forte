@@ -1238,7 +1238,7 @@ DSRG:
   DSRG_CU3:
     type: str
     default: "EXPLICIT"
-    choices: ["EXPLICIT", "DIRECT", "APPROX"]
+    choices: ["EXPLICIT", "BATCHED", "DIRECT", "APPROX"]
     help: "Algorithm to compute 3-cumulant contributions in fully contracted [H2, T2]"
   DSRG_3RDM_BLOCK2_CPS_BOND_DIMENSION:
     type: int

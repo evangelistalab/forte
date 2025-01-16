@@ -392,8 +392,12 @@ class SADSRG : public DynamicCorrelationSolver {
     std::vector<double> H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2);
     /// Whether load available MPS for direct L3 algorithm of zero-body [H2, T2]
     bool load_mps_ = false;
-    /// Direct L3 algorithm of zero-body [H2, T2]
+    /// Batched L3 algorithm of zero-body [H2, T2] over an active index
+    double H2_T2_C0_cu3_batched(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2);
+    /// Direct L3 algorithm of zero-body [H2, T2] forming complementary states w^+ v u |Φ>
     double H2_T2_C0_cu3_direct(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2);
+    /// The 1- and 2-cumulant contributions to the L3 terms of zero-body [H2, T2]
+    double H2_T2_C0_cu3_cu12(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2);
     /// Approx. 5-index L3 algorithm of zero-body [H2, T2]
     double H2_T2_C0_cu3_approx(BlockedTensor& H2, BlockedTensor& T2);
 

@@ -1082,6 +1082,132 @@ Block2DMRGSolver::three_trdms_diag1(const std::vector<std::pair<size_t, size_t>>
     return out;
 }
 
+std::vector<double> Block2DMRGSolver::compute_H2T2C0_3rdm_batched(const std::vector<size_t>& roots,
+                                                                  ambit::Tensor Vbra,
+                                                                  ambit::Tensor Vket,
+                                                                  ambit::Tensor Cbra,
+                                                                  ambit::Tensor Cket) {
+    impl_->set_num_threads(true);
+    /// ( Vbra("xewy") * Vket("ezuv") - Cbra("xmwy") * Cket("mzuv") ) * D3("xyzuwv");
+    /// batched over index x
+    auto nroots = roots.size();
+    std::vector<double> out(nroots, 0.0);
+
+    auto nc = Cbra.dim(1);
+    auto nv = Vbra.dim(1);
+    auto na = mo_space_info_->size("ACTIVE");
+
+    auto na1 = static_cast<int>(na);
+    auto na2 = na1 * na1;
+    auto na3 = na2 * na1;
+    auto na4 = na3 * na1;
+    auto na5 = na4 * na1;
+
+    // read bond dimention
+    int bond_dim = 500;
+    auto sweep_bond_dims = dmrg_options_->get_int_list("BLOCK2_SWEEP_BOND_DIMS");
+    if (sweep_bond_dims.size() != 0)
+        bond_dim = sweep_bond_dims.back();
+    std::vector<block2::ubond_t> ket0_bond_dims(1, bond_dim);
+
+    // system initialization
+    int dmrg_verbose = dmrg_options_->get_int("BLOCK2_VERBOSE");
+    auto integral_cutoff = dmrg_options_->get_double("BLOCK2_INTERGRAL_CUTOFF");
+    bool singlet_embedding = dmrg_options_->get_bool("BLOCK2_SINGLET_EMBEDDING");
+    auto actv_irreps = mo_space_info_->symmetry("ACTIVE");
+    int n_sites = static_cast<int>(mo_space_info_->size("ACTIVE"));
+    int n_elec = na_ + nb_;
+    int spin = state_.multiplicity() - 1;
+    int pg_irrep = state_.irrep();
+    impl_->initialize_system(n_sites, n_elec, spin, pg_irrep, actv_irreps, singlet_embedding);
+
+    if (!impl_->is_spin_adapted_)
+        throw std::runtime_error(
+            "Not implemented for SZ symmetry in Block2DMRGSolver::compute_H2T2C0_3rdm_batched!");
+
+    for (size_t ir = 0; ir < nroots; ++ir) {
+        double value = 0.0;
+
+        // loading MPSs from disk
+        std::string ket_tag_sa = "KET@" + state().str_short();
+        std::string ket_tag =
+            "KET@" + block2::Parsing::to_string(ir) + "@" + state().str_short() + "@TMP";
+        auto ket = impl_->split_mps(impl_->load_mps(ket_tag_sa, this->nroot()), this->nroot(), ir,
+                                    ket_tag);
+
+        auto ket0 = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
+        auto bond_dim = ket0->info->get_max_bond_dimension();
+
+        auto W = ambit::Tensor::build(ambit::CoreTensor, "W", {na, na, na, na, na});
+
+        auto Vsub = ambit::Tensor::build(ambit::CoreTensor, "Vsub", {nv, na, na});
+        auto Csub = ambit::Tensor::build(ambit::CoreTensor, "Csub", {nc, na, na});
+        auto& Vsub_data = Vsub.data();
+        auto& Csub_data = Csub.data();
+
+        auto& Cbra_data = Cbra.data();
+        auto& Vbra_data = Vbra.data();
+        auto nva2 = nv * na2;
+        auto nca2 = nc * na2;
+
+        for (size_t x = 0; x < na; ++x) {
+            if (print_ > PrintLevel::Default)
+                psi::outfile->Printf("\n  orbital %2zu", x);
+
+            std::copy(Vbra_data.begin() + x * nva2, Vbra_data.begin() + x * nva2 + nva2,
+                      Vsub_data.begin());
+            std::copy(Cbra_data.begin() + x * nca2, Cbra_data.begin() + x * nca2 + nca2,
+                      Csub_data.begin());
+            W("yzuwv") = Vsub("ewy") * Vket("ezuv");
+            W("yzuwv") -= Csub("mwy") * Cket("mzuv");
+
+            auto ket_expr = impl_->expr_builder();
+            ket_expr->exprs.push_back("((C+((C+(C+D)0)1+D)0)1+D)0");
+
+            // figure nonzero elements and indices
+            std::vector<std::vector<uint16_t>> expr_indices(1);
+            std::vector<std::vector<double>> expr_data(1);
+            expr_indices[0].reserve(na5 * 6);
+            expr_data[0].reserve(na5);
+            W.citerate([&](const std::vector<size_t>& i, const double& value) {
+                double v = 2 * sqrt(2) * fabs(value);
+                int irrep = actv_irreps[x];
+                for (auto _i : i)
+                    irrep ^= actv_irreps[_i];
+                if (v > integral_cutoff and (!irrep)) {
+                    expr_data[0].push_back(2 * sqrt(2) * value);
+                    expr_indices[0].push_back(x);
+                    expr_indices[0].push_back(i[0]);
+                    expr_indices[0].push_back(i[1]);
+                    expr_indices[0].push_back(i[4]);
+                    expr_indices[0].push_back(i[3]);
+                    expr_indices[0].push_back(i[2]);
+                }
+            });
+
+            ket_expr->data = expr_data;
+            ket_expr->indices = expr_indices;
+            ket_expr = ket_expr->adjust_order();
+            if (ket_expr->exprs.size() == 0)
+                continue;
+
+            auto kmpo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
+                impl_->get_mpo(ket_expr, dmrg_verbose));
+
+            auto pvalue = impl_->driver_su2_->expectation(ket0, kmpo, ket0, true, bond_dim);
+            if (print_ > PrintLevel::Default)
+                psi::outfile->Printf(" pvalue: %20.15f", pvalue);
+            value += pvalue;
+        }
+        if (print_ > PrintLevel::Default)
+            psi::outfile->Printf("\n [H2,T2]0 3rdm contribution: %20.15f", value);
+
+        out[ir] = value;
+    }
+    impl_->set_num_threads(false);
+    return out;
+}
+
 std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
     const std::vector<size_t>& roots, ambit::Tensor Tbra, ambit::Tensor Tket,
     const std::vector<int>& p_syms, const std::string& name, bool load) {
@@ -1156,109 +1282,6 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
             auto ket0 = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
             // auto bond_dim = ket0->info->get_max_bond_dimension();
             auto bond_dim = ket0_bond_dims[0];
-
-            auto Tbra_sub = ambit::Tensor::build(ambit::CoreTensor, "Tbra_sub", {np, nactv, nactv});
-            auto W =
-                ambit::Tensor::build(ambit::CoreTensor, "W", {nactv, nactv, nactv, nactv, nactv});
-
-            // auto _W = ambit::Tensor::build(ambit::CoreTensor, "_W",
-            //                                {nactv, nactv, nactv, nactv, nactv, nactv});
-            // _W("xyzuwv") = Tbra("ewxy") * Tket("ezuv");
-
-            // {
-            //     std::vector<std::vector<uint16_t>> expr_indices(1);
-            //     std::vector<std::vector<double>> expr_data(1);
-            //     expr_indices[0].reserve(na5 * na1 * 6);
-            //     expr_data[0].reserve(na5 * na1);
-            //     _W.citerate([&](const std::vector<size_t>& i, const double& value) {
-            //         double v = 2 * sqrt(2) * fabs(value);
-            //         int irrep = 0;
-            //         for (auto _i : i)
-            //             irrep ^= actv_irreps[_i];
-            //         if (v > integral_cutoff and (!irrep)) {
-            //             expr_data[0].push_back(2 * sqrt(2) * value);
-            //             expr_indices[0].push_back(i[0]);
-            //             expr_indices[0].push_back(i[1]);
-            //             expr_indices[0].push_back(i[2]);
-            //             expr_indices[0].push_back(i[5]);
-            //             expr_indices[0].push_back(i[4]);
-            //             expr_indices[0].push_back(i[3]);
-            //         }
-            //     });
-            //     for (size_t i = 0, isize = expr_data[0].size(); i < isize; ++i) {
-            //         for (size_t j = 0; j < 6; ++j) {
-            //             psi::outfile->Printf("\n  i = %zu, j = %zu, indices[%zu] = %zu", i, j, i * 6 + j, expr_indices[0][i * 6 + j]);
-            //         }
-            //     }
-
-            //     auto ket_expr = impl_->expr_builder();
-            //     ket_expr->exprs.push_back("((C+((C+(C+D)0)1+D)0)1+D)0");
-            //     // ket_expr->add_sum_term(_W.data().data(), na5 * na1, {na1, na1, na1, na1, na1, na1},
-            //     //                        {nactv * nactv * nactv * nactv * nactv,
-            //     //                         nactv * nactv * nactv * nactv, nactv * nactv * nactv, 1,
-            //     //                         nactv, nactv * nactv},
-            //     //                        integral_cutoff, 2 * sqrt(2), actv_irreps);
-            //     ket_expr->data = expr_data;
-            //     ket_expr->indices = expr_indices;
-            //     ket_expr = ket_expr->adjust_order();
-            //     if (ket_expr->exprs.size() != 0) {
-            //         auto kmpo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
-            //             impl_->get_mpo(ket_expr, dmrg_verbose));
-            //         auto pvalue = impl_->driver_su2_->expectation(ket0, kmpo, ket0, true, bond_dim);
-            //         psi::outfile->Printf("\nXXXX  xvalue = %20.15f", pvalue);
-            //     }
-            // }
-
-            for (size_t x = 0; x < nactv; ++x) {
-                auto ket0 = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
-                Tbra_sub.iterate([&](const std::vector<size_t>& i, double& value) {
-                    value = Tbra.data()[i[0] * na3 + i[1] * na2 + x * na1 + i[2]];
-                });
-                W("yzuwv") = Tbra_sub("ewy") * Tket("ezuv");
-                // W.iterate([&](const std::vector<size_t>& i, double& value) {
-                //     value = _W.data()[x * na5 + i[0] * na4 + i[1] * na3 + i[2] * na2 + i[3] * na1
-                //     +
-                //                       i[4]];
-                // });
-
-                auto ket_expr = impl_->expr_builder();
-                ket_expr->exprs.push_back("((C+((C+(C+D)0)1+D)0)1+D)0");
-
-                // figure nonzero elements and indices
-                std::vector<std::vector<uint16_t>> expr_indices(1);
-                std::vector<std::vector<double>> expr_data(1);
-                expr_indices[0].reserve(na5 * 6);
-                expr_data[0].reserve(na5);
-                W.citerate([&](const std::vector<size_t>& i, const double& value) {
-                    double v = 2 * sqrt(2) * fabs(value);
-                    int irrep = actv_irreps[x];
-                    for (auto _i : i)
-                        irrep ^= actv_irreps[_i];
-                    if (v > integral_cutoff and (!irrep)) {
-                        expr_data[0].push_back(2 * sqrt(2) *value);
-                        expr_indices[0].push_back(x);
-                        expr_indices[0].push_back(i[0]);
-                        expr_indices[0].push_back(i[1]);
-                        expr_indices[0].push_back(i[4]);
-                        expr_indices[0].push_back(i[3]);
-                        expr_indices[0].push_back(i[2]);
-                    }
-                });
-
-                ket_expr->data = expr_data;
-                ket_expr->indices = expr_indices;
-                ket_expr = ket_expr->adjust_order();
-                if (ket_expr->exprs.size() == 0)
-                    continue;
-
-                auto kmpo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
-                    impl_->get_mpo(ket_expr, dmrg_verbose));
-
-                auto pvalue = impl_->driver_su2_->expectation(ket0, kmpo, ket0, true, bond_dim);
-                psi::outfile->Printf("\n x = %zu, xvalue = %20.15f", x, pvalue);
-                temp += pvalue;
-            }
-            psi::outfile->Printf("\n temp sum = %.15f", temp);
 
             for (size_t p = 0; p < np; ++p) {
                 auto bra_expr = impl_->expr_builder();

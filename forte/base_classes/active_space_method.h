@@ -199,6 +199,19 @@ class ActiveSpaceMethod {
             "ActiveSpaceMethod::compute_complementary_H2caa_overlap: Not yet implemented!");
     }
 
+    /// Compute the 3-RDM contribution of fully contracted term of two 2-body operators
+    /// batched over one active index and return a map from state to nroots of values.
+    /// There are two contributions:
+    /// core:     -Cbra("xmwy") * Cket("mzuv") * D3("xyzuwv");
+    /// virtual : +Vbra("xewy") * Vket("ezuv") * D3("xyzuwv");
+    virtual std::vector<double> compute_H2T2C0_3rdm_batched(
+        [[maybe_unused]] const std::vector<size_t>& roots, [[maybe_unused]] ambit::Tensor Vbra,
+        [[maybe_unused]] ambit::Tensor Vket, [[maybe_unused]] ambit::Tensor Cbra,
+        [[maybe_unused]] ambit::Tensor Cket) {
+        throw std::runtime_error(
+            "ActiveSpaceMethod::compute_H2T2C0_3rdm_batched: Not yet implemented!");
+    }
+
     /// Compute generalized RDM
     ///     Gamma' = C_I <Phi_I| H |Phi_J> X_J where H is the active space Hamiltonian (fci_ints)
     /// @param x: the X vector to be contracted with H_IJ

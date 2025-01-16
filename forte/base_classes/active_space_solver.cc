@@ -933,6 +933,22 @@ ActiveSpaceSolver::compute_complementary_H2caa_overlap(ambit::Tensor Tbra, ambit
     return out;
 }
 
+std::map<StateInfo, std::vector<double>>
+ActiveSpaceSolver::compute_H2T2C0_3rdm_batched(ambit::Tensor Vbra, ambit::Tensor Vket,
+                                               ambit::Tensor Cbra, ambit::Tensor Cket) {
+    std::map<StateInfo, std::vector<double>> out;
+    for (const auto& state_nroots : state_nroots_map_) {
+        const auto& state = state_nroots.first;
+
+        std::vector<size_t> roots(state_nroots.second);
+        std::iota(roots.begin(), roots.end(), 0);
+
+        const auto method = state_method_map_.at(state);
+        out[state] = method->compute_H2T2C0_3rdm_batched(roots, Vbra, Vket, Cbra, Cket);
+    }
+    return out;
+}
+
 void ActiveSpaceSolver::dump_wave_function() {
     const auto& state_filenames = state_filename_map();
     for (const auto& state_filename : state_filenames) {

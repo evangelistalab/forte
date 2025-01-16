@@ -111,6 +111,22 @@ class Block2DMRGSolver : public ActiveSpaceMethod {
                                                             const std::string& name,
                                                             bool load = false) override;
 
+    /// Compute the 3-RDM contribution of fully contracted term of two 2-body operators
+    /// batched over one active index and return a map from state to nroots of values.
+    /// There are two contributions:
+    /// core:     -Cbra("xmwy") * Cket("mzuv") * D3("xyzuwv");
+    /// virtual : +Vbra("xewy") * Vket("ezuv") * D3("xyzuwv");
+    /// @param roots a list of roots to be computed
+    /// @param Vbra the left Tensor to be batched for virtual contraction
+    /// @param Vket the right Tensor for virtual contraction
+    /// @param Cbra the left Tensor to be batched for core contraction
+    /// @param Cket the right Tensor for core contraction
+    /// @return a list of overlap for every root
+    virtual std::vector<double> compute_H2T2C0_3rdm_batched(const std::vector<size_t>& roots,
+                                                            ambit::Tensor Vbra, ambit::Tensor Vket,
+                                                            ambit::Tensor Cbra,
+                                                            ambit::Tensor Cket) override;
+
     /// Compute the 5-index diagonal parts of the 3-RDMs
     /// Return a vector of the 5-index diagonal 3RDMs in ambit::Tensor format
     /// For the spin-free case, this function returns two elements:
