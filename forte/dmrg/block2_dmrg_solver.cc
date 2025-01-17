@@ -336,6 +336,12 @@ struct Block2DMRGSolverImpl {
     }
     void set_num_threads(bool init) {
         if (init) {
+#ifdef _OPENMP
+            omp_set_num_threads(nthreads_);
+#endif
+#ifdef _HAS_INTEL_MKL
+            mkl_set_num_threads(1);
+#endif
             block2::threading_()->activate_normal();
         } else {
             block2::threading_()->activate_global_mkl();
@@ -1087,7 +1093,6 @@ std::vector<double> Block2DMRGSolver::compute_H2T2C0_3rdm_batched(const std::vec
                                                                   ambit::Tensor Vket,
                                                                   ambit::Tensor Cbra,
                                                                   ambit::Tensor Cket) {
-    impl_->set_num_threads(true);
     /// ( Vbra("xewy") * Vket("ezuv") - Cbra("xmwy") * Cket("mzuv") ) * D3("xyzuwv");
     /// batched over index x
     auto nroots = roots.size();
@@ -1151,6 +1156,8 @@ std::vector<double> Block2DMRGSolver::compute_H2T2C0_3rdm_batched(const std::vec
         auto nca2 = nc * na2;
 
         for (size_t x = 0; x < na; ++x) {
+            impl_->set_num_threads(false);
+
             if (print_ > PrintLevel::Default)
                 psi::outfile->Printf("\n  orbital %2zu", x);
 
@@ -1160,6 +1167,8 @@ std::vector<double> Block2DMRGSolver::compute_H2T2C0_3rdm_batched(const std::vec
                       Csub_data.begin());
             W("yzuwv") = Vsub("ewy") * Vket("ezuv");
             W("yzuwv") -= Csub("mwy") * Cket("mzuv");
+
+            impl_->set_num_threads(true);
 
             auto ket_expr = impl_->expr_builder();
             ket_expr->exprs.push_back("((C+((C+(C+D)0)1+D)0)1+D)0");
