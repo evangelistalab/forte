@@ -43,7 +43,6 @@ wfn = psi4.Wavefunction.from_file("wfn_cas.npy")
 set forte {
 int_type                   df
 active_space_solver        block2
-orbital_type               cholesky_active
 block2_sweep_bond_dims     [100,100,100]
 block2_sweep_energy_conv   1.0e-7
 block2_sweep_n_sweeps      [5,5,10]
@@ -65,9 +64,8 @@ dsrg_nivo                  true
 dsrg_hbar_seq              true
 dsrg_rsc_ncomm             4
 #dsrg_read_amps             true
-dsrg_3rdm_algorithm        direct
+dsrg_cu3                   batched
 mcscf_reference            false  # turn off mcscf
-dsrg_3rdm_block2_cps_bond_dimension 200
 }
 edsrg = energy("forte", ref_wfn=wfn)
 compare_values(Eref_fci_dsrg, edsrg, 3, "DMRG vs CAS LDSRG(2)/CASSCF(10,10)/6-31G energy for C10H10")

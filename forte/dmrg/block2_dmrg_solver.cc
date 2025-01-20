@@ -1155,12 +1155,17 @@ std::vector<double> Block2DMRGSolver::compute_H2T2C0_3rdm_batched(const std::vec
         auto nva2 = nv * na2;
         auto nca2 = nc * na2;
 
-        for (size_t x = 0; x < na; ++x) {
-            impl_->set_num_threads(false);
+        // nonzero elements and indices for every batch
+        std::vector<std::vector<uint16_t>> expr_indices(1);
+        std::vector<std::vector<double>> expr_data(1);
+        expr_indices[0].reserve(na5 * 6);
+        expr_data[0].reserve(na5);
 
+        for (size_t x = 0; x < na; ++x) {
             if (print_ > PrintLevel::Default)
                 psi::outfile->Printf("\n  orbital %2zu", x);
 
+            impl_->set_num_threads(false);
             std::copy(Vbra_data.begin() + x * nva2, Vbra_data.begin() + x * nva2 + nva2,
                       Vsub_data.begin());
             std::copy(Cbra_data.begin() + x * nca2, Cbra_data.begin() + x * nca2 + nca2,
@@ -1169,28 +1174,22 @@ std::vector<double> Block2DMRGSolver::compute_H2T2C0_3rdm_batched(const std::vec
             W("yzuwv") -= Csub("mwy") * Cket("mzuv");
 
             impl_->set_num_threads(true);
-
             auto ket_expr = impl_->expr_builder();
             ket_expr->exprs.push_back("((C+((C+(C+D)0)1+D)0)1+D)0");
 
-            // figure nonzero elements and indices
-            std::vector<std::vector<uint16_t>> expr_indices(1);
-            std::vector<std::vector<double>> expr_data(1);
-            expr_indices[0].reserve(na5 * 6);
-            expr_data[0].reserve(na5);
+            expr_data[0].clear();
+            expr_indices[0].clear();
             W.citerate([&](const std::vector<size_t>& i, const double& value) {
                 double v = 2 * sqrt(2) * fabs(value);
-                int irrep = actv_irreps[x];
-                for (auto _i : i)
-                    irrep ^= actv_irreps[_i];
+                int irrep = actv_irreps[x] ^ actv_irreps[i[0]] ^ actv_irreps[i[1]] ^
+                            actv_irreps[i[2]] ^ actv_irreps[i[3]] ^ actv_irreps[i[4]];
                 if (v > integral_cutoff and (!irrep)) {
                     expr_data[0].push_back(2 * sqrt(2) * value);
-                    expr_indices[0].push_back(x);
-                    expr_indices[0].push_back(i[0]);
-                    expr_indices[0].push_back(i[1]);
-                    expr_indices[0].push_back(i[4]);
-                    expr_indices[0].push_back(i[3]);
-                    expr_indices[0].push_back(i[2]);
+                    expr_indices[0].insert(
+                        expr_indices[0].end(),
+                        {static_cast<uint16_t>(x), static_cast<uint16_t>(i[0]),
+                         static_cast<uint16_t>(i[1]), static_cast<uint16_t>(i[4]),
+                         static_cast<uint16_t>(i[3]), static_cast<uint16_t>(i[2])});
                 }
             });
 
@@ -1203,7 +1202,7 @@ std::vector<double> Block2DMRGSolver::compute_H2T2C0_3rdm_batched(const std::vec
             auto kmpo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
                 impl_->get_mpo(ket_expr, dmrg_verbose));
 
-            auto pvalue = impl_->driver_su2_->expectation(ket0, kmpo, ket0, true, bond_dim);
+            auto pvalue = impl_->driver_su2_->expectation(ket0, kmpo, ket0, dmrg_verbose, bond_dim);
             if (print_ > PrintLevel::Default)
                 psi::outfile->Printf(" pvalue: %20.15f", pvalue);
             value += pvalue;
@@ -1249,8 +1248,6 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
     auto na1 = static_cast<int>(nactv);
     auto na2 = na1 * na1;
     auto na3 = na2 * na1;
-    auto na4 = na3 * na1;
-    auto na5 = na4 * na1;
     const std::vector<int> tshape{na1, na1, na1};
     const std::vector<size_t> tstride{nactv * nactv, 1, nactv};
 
@@ -1278,7 +1275,6 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
 
     for (size_t ir = 0; ir < nroots; ++ir) {
         double value = 0.0;
-        double temp = 0.0;
 
         // loading MPSs from disk
         std::string ket_tag_sa = "KET@" + state().str_short();
@@ -1383,7 +1379,8 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
                             bcps->solve(1, ket0->center != 0);
                     }
 
-                    auto pvalue = impl_->driver_su2_->expectation(bra, kmpo, ket0, true, bond_dim);
+                    auto pvalue =
+                        impl_->driver_su2_->expectation(bra, kmpo, ket0, dmrg_verbose, bond_dim);
 
                     if (print_ > PrintLevel::Default)
                         psi::outfile->Printf(" pvalue = %20.15f", pvalue);
@@ -1451,7 +1448,7 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
                         continue;
 
                     auto pvalue =
-                        impl_->driver_sz_->expectation(bra, kmpo, ket0, true, 2 * bond_dim);
+                        impl_->driver_sz_->expectation(bra, kmpo, ket0, dmrg_verbose, 2 * bond_dim);
                     if (print_ > PrintLevel::Default)
                         psi::outfile->Printf(" %s = %20.15f", sigma == 0 ? "alpha" : "beta",
                                              pvalue);
