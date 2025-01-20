@@ -75,7 +75,7 @@ void export_SQOperatorString(py::module& m) {
              "Get the string representation of the operator string")
         .def(
             "__mul__",
-            [](const SQOperatorString& sqop, const std::complex<double>& scalar) {
+            [](const SQOperatorString& sqop, const sparse_scalar_t& scalar) {
                 SparseOperator sop;
                 sop.add(sqop, scalar);
                 return sop;
@@ -83,7 +83,7 @@ void export_SQOperatorString(py::module& m) {
             py::is_operator(), "Multiply an operator string by a scalar")
         .def(
             "__rmul__",
-            [](const SQOperatorString& sqop, const std::complex<double>& scalar) {
+            [](const SQOperatorString& sqop, const sparse_scalar_t& scalar) {
                 SparseOperator sop;
                 sop.add(sqop, scalar);
                 return sop;
