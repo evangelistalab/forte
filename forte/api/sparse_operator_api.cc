@@ -62,12 +62,15 @@ struct ExpOperator {
 
 void export_SparseOperator(py::module& m) {
     py::class_<SparseOperator>(m, "SparseOperator", "A class to represent a sparse operator")
+        // Constructors
         .def(py::init<>(), "Default constructor")
         .def(py::init<SparseOperator>(), "Copy constructor")
         .def(py::init<const SparseOperator::container&>(),
              "Create a SparseOperator from a container of terms")
         .def(py::init<const SQOperatorString&, sparse_scalar_t>(), "sqop"_a,
              "coefficient"_a = sparse_scalar_t(1), "Create a SparseOperator with a single term")
+
+        // Add/Remove terms
         .def("add",
              py::overload_cast<const SQOperatorString&, sparse_scalar_t>(&SparseOperator::add),
              "sqop"_a, "coefficient"_a = sparse_scalar_t(1), "Add a term to the operator")
@@ -76,14 +79,27 @@ void export_SparseOperator(py::module& m) {
                  &SparseOperator::add_term_from_str),
              "str"_a, "coefficient"_a = sparse_scalar_t(1), "allow_reordering"_a = false,
              "Add a term to the operator from a string representation")
-        .def("add",
-             [](SparseOperator& op, const std::vector<size_t>& acre,
-                const std::vector<size_t>& bcre, const std::vector<size_t>& aann,
-                const std::vector<size_t>& bann, sparse_scalar_t coeff) {
-                 op.add(SQOperatorString({acre.begin(), acre.end()}, {bcre.begin(), bcre.end()},
-                                         {aann.begin(), aann.end()}, {bann.begin(), bann.end()}),
-                        coeff);
-             })
+        .def(
+            "add",
+            [](SparseOperator& op, const std::vector<size_t>& acre, const std::vector<size_t>& bcre,
+               const std::vector<size_t>& aann, const std::vector<size_t>& bann,
+               sparse_scalar_t coeff) {
+                op.add(SQOperatorString({acre.begin(), acre.end()}, {bcre.begin(), bcre.end()},
+                                        {aann.begin(), aann.end()}, {bann.begin(), bann.end()}),
+                       coeff);
+            },
+            "acre"_a, "bcre"_a, "aann"_a, "bann"_a, "coeff"_a = sparse_scalar_t(1),
+            "Add a term to the operator by passing lists of creation and annihilation indices. "
+            "This version is faster than the string version and does not check for reordering")
+        .def(
+            "remove",
+            [](SparseOperator& op, const std::string& s) {
+                const auto [sqop, _] = make_sq_operator_string(s, false);
+                op.remove(sqop);
+            },
+            "Remove a term")
+
+        // Accessors
         .def(
             "__iter__",
             [](const SparseOperator& v) {
@@ -91,14 +107,15 @@ void export_SparseOperator(py::module& m) {
             },
             py::keep_alive<0, 1>()) // Essential: keep object alive while iterator exists
         .def(
-            "coefficient",
+            "__getitem__",
             [](const SparseOperator& op, const std::string& s) {
                 const auto [sqop, factor] = make_sq_operator_string(s, false);
                 return factor * op[sqop];
             },
             "Get the coefficient of a term")
+        .def("__len__", &SparseOperator::size, "Get the number of terms in the operator")
         .def(
-            "__getitem__",
+            "coefficient",
             [](const SparseOperator& op, const std::string& s) {
                 const auto [sqop, factor] = make_sq_operator_string(s, false);
                 return factor * op[sqop];
@@ -111,23 +128,9 @@ void export_SparseOperator(py::module& m) {
                 op[sqop] = factor * value;
             },
             "Set the coefficient of a term")
-        .def(
-            "remove",
-            [](SparseOperator& op, const std::string& s) {
-                const auto [sqop, _] = make_sq_operator_string(s, false);
-                op.remove(sqop);
-            },
-            "Remove a term")
-        .def(
-            "__matmul__",
-            [](const SparseOperator& lhs, const SparseOperator& rhs) { return lhs * rhs; },
-            "Multiply two SparseOperator objects")
-        .def(
-            "commutator",
-            [](const SparseOperator& lhs, const SparseOperator& rhs) {
-                return commutator(lhs, rhs);
-            },
-            "Compute the commutator of two SparseOperator objects")
+
+        // Arithmetic Operations
+        .def("__add__", &SparseOperator::operator+, "Add two SparseOperators")
         .def("__iadd__", &SparseOperator::operator+=, "Add a SparseOperator to this SparseOperator")
         .def("__isub__", &SparseOperator::operator-=,
              "Subtract a SparseOperator from this SparseOperator")
@@ -150,6 +153,16 @@ void export_SparseOperator(py::module& m) {
                 return self;
             },
             "Multiply this SparseOperator by another SparseOperator")
+        .def(
+            "__matmul__",
+            [](const SparseOperator& lhs, const SparseOperator& rhs) { return lhs * rhs; },
+            "Multiply two SparseOperator objects")
+        .def(
+            "commutator",
+            [](const SparseOperator& lhs, const SparseOperator& rhs) {
+                return commutator(lhs, rhs);
+            },
+            "Compute the commutator of two SparseOperator objects")
         .def(
             "__itruediv__",
             [](SparseOperator& self, sparse_scalar_t scalar) {
@@ -176,6 +189,12 @@ void export_SparseOperator(py::module& m) {
             },
             "Multiply a scalar by a SparseOperator")
         .def(
+            "__rdiv__",
+            [](const SparseOperator& self, sparse_scalar_t scalar) {
+                return self * (1.0 / scalar); // This uses the operator* we defined
+            },
+            "Divide a scalar by a SparseOperator")
+        .def(
             "__mul__",
             [](const SparseOperator& self, const SparseOperator& other) {
                 SparseOperator C;
@@ -187,18 +206,10 @@ void export_SparseOperator(py::module& m) {
                 return C;
             },
             "Multiply two SparseOperators")
-        .def(
-            "__rdiv__",
-            [](const SparseOperator& self, sparse_scalar_t scalar) {
-                return self * (1.0 / scalar); // This uses the operator* we defined
-            },
-            "Divide a scalar by a SparseOperator")
-        .def("__add__", &SparseOperator::operator+, "Add two SparseOperators")
         .def(py::self - py::self, "Subtract two SparseOperators")
         .def(
             "__neg__", [](const SparseOperator& self) { return -self; }, "Negate the operator")
         .def("copy", &SparseOperator::copy, "Create a copy of this SparseOperator")
-        .def("__len__", &SparseOperator::size, "Get the number of terms in the operator")
         .def(
             "norm", [](const SparseOperator& op) { return op.norm(); },
             "Compute the norm of the operator")

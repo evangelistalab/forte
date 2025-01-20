@@ -139,7 +139,7 @@ def forte_driver(data: ForteData):
 
 def energy_forte(name, **kwargs):
     """
-    This function is called when the user calls energy('forte') in psi4.
+    This function is called when the user calls energy('forte').
     It sets up the computation and calls the Forte driver.
 
     Parameters
@@ -172,7 +172,7 @@ def energy_forte(name, **kwargs):
     elif data.options.get_str("INT_TYPE") == "PYSCF":
         data = ObjectsFromPySCF(kwargs.get("pyscf_obj"), options=kwargs).run(data)
     else:
-        data = ObjectsFromPsi4(**kwargs).run(data)  # <-- embedding and AVAS happen here
+        data = ObjectsFromPsi4(**kwargs).run(data)
 
     start = time.time()
 
@@ -381,6 +381,6 @@ def gradient_forte(name, **kwargs):
 #     return energy
 
 
-# Integration with driver routines, that is, energy('forte') and gradient('forte')
+# Integration with driver routines
 psi4.driver.procedures["energy"]["forte"] = energy_forte
 psi4.driver.procedures["gradient"]["forte"] = gradient_forte
