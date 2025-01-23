@@ -87,6 +87,7 @@ void export_Determinant(py::module& m) {
         .def("destroy_beta_bit", &Determinant::destroy_beta_bit, "n"_a, "Destroy a beta bit")
         .def("count_alfa", &Determinant::count_alfa, "Count the number of set alpha bits")
         .def("count_beta", &Determinant::count_beta, "Count the number of set beta bits")
+        .def("count_pairs", &Determinant::npair, "Count the number of set pairs of bits")
         .def("symmetry", &Determinant::symmetry, "Get the symmetry")
         .def(
             "gen_excitation",
