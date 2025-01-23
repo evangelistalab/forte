@@ -77,15 +77,15 @@ def make_avas_orbitals(data):
     forte.make_avas(data.psi_wfn, data.options, ps)
 
 
-def make_embedding_orbitals(data, mo_space_info):
+def make_embedding_orbitals(data):
     """
     Implements a simple frozen-orbital embedding with the overlap projector (ASET(mf)).
     Return a Forte MOSpaceInfo object
     """
     # Create the fragment(embedding) projector and apply to rotate orbitals
     forte.print_method_banner(["Frozen-orbital Embedding", "Nan He"])
-    fragment_projector, fragment_nbf = forte.make_fragment_projector(ref_wfn)
-    return forte.make_embedding(ref_wfn, options, fragment_projector, fragment_nbf, mo_space_info)
+    fragment_projector, fragment_nbf = forte.make_fragment_projector(data.psi_wfn)
+    return forte.make_embedding(data.psi_wfn, data.options, fragment_projector, fragment_nbf, data.mo_space_info)
 
 
 def dmrg_initial_orbitals(wfn, options, mo_space_info):
