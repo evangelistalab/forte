@@ -115,6 +115,8 @@ class CI_RDMS {
                   std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb,
                   std::vector<double>& tprdm_bbb);
 
+    size_t norb() const;
+
     void set_print(bool print) { print_ = print; }
 
     void set_max_rdm(int rdm);

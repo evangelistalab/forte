@@ -61,6 +61,13 @@ SQOperatorString::SQOperatorString() {}
 SQOperatorString::SQOperatorString(const Determinant& cre, const Determinant& ann)
     : cre_(cre), ann_(ann) {}
 
+SQOperatorString::SQOperatorString(const std::vector<size_t>& acre, const std::vector<size_t>& bcre,
+                                   const std::vector<size_t>& aann,
+                                   const std::vector<size_t>& bann) {
+    cre_ = Determinant(acre, bcre);
+    ann_ = Determinant(aann, bann);
+}
+
 SQOperatorString::SQOperatorString(const std::initializer_list<size_t> acre,
                                    const std::initializer_list<size_t> bcre,
                                    const std::initializer_list<size_t> aann,

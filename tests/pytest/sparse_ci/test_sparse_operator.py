@@ -3,8 +3,35 @@ import pytest
 from forte import det
 
 
-def test_sparse_operator():
+def test_sparse_operator_creation():
+    sop = forte.SparseOperator()
+    sop.add([1], [], [1], [])
+    assert sop["[1a+ 1a-]"] == 1.0
 
+    # verify that order is ignored when adding terms (1,3 and 3,1 are the same)
+    sop = forte.SparseOperator()
+    sop.add([3, 1], [], [], [])
+    assert sop["[1a+ 3a+]"] == 1.0
+
+    sop = forte.SparseOperator()
+    sop.add([1, 3], [], [], [])
+    assert sop["[1a+ 3a+]"] == 1.0
+
+    sop = forte.SparseOperatorList()
+    sop.add([1], [], [1], [])
+    assert sop["[1a+ 1a-]"] == 1.0
+
+    # verify that order is ignored when adding terms (1,3 and 3,1 are the same)
+    sop = forte.SparseOperatorList()
+    sop.add([3, 1], [], [], [])
+    assert sop["[1a+ 3a+]"] == 1.0
+
+    sop = forte.SparseOperatorList()
+    sop.add([1, 3], [], [], [])
+    assert sop["[1a+ 3a+]"] == 1.0
+
+
+def test_sparse_operator():
     # test get/set
     sop = forte.SparseOperator()
     sop.add("[]", 2.3)
@@ -491,6 +518,7 @@ def test_sparse_operator_list_remove():
 
 
 if __name__ == "__main__":
+    test_sparse_operator_creation()
     test_sparse_operator()
     test_sparse_operator_api()
     test_sparse_operator_product()

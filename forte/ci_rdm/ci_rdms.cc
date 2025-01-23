@@ -62,6 +62,8 @@ CI_RDMS::CI_RDMS(const std::vector<int>& mo_symmetry, DeterminantHashVec& wfn,
 
 CI_RDMS::~CI_RDMS() {}
 
+size_t CI_RDMS::norb() const { return norb_; }
+
 void CI_RDMS::startup() {
     // The number of correlated molecular orbitals
     norb_ = mo_symmetry_.size();

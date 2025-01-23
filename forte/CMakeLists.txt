@@ -5,7 +5,7 @@ endif ()
 cmake_policy(SET CMP0048 NEW)  # project_VERSION* variables populated from project(... VERSION x.x.x) string
 
 project(forte
-        VERSION 0.4.0
+        VERSION 0.4.3
         LANGUAGES CXX C)
 set(forte_AUTHORS      "Francesco A. Evangelista and Group")
 set(forte_DESCRIPTION  "Quantum Chemistry Methods for Strongly Correlated Electrons plugin to Psi4")
@@ -83,6 +83,7 @@ pybind11_add_module(_forte
 api/active_space_integrals_api.cc
 api/active_space_method_api.cc
 api/active_space_solver_api.cc
+api/ci_rdms_api.cc
 api/configuration_api.cc
 api/cube_file_api.cc
 api/determinant_api.cc
