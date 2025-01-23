@@ -58,6 +58,7 @@ void export_MCSCF(py::module& m);
 void export_Determinant(py::module& m);
 void export_String(py::module& m);
 void export_Configuration(py::module& m);
+void export_CI_RDMS(py::module& m);
 
 // Sparse Operators, States, and related classes
 void export_SQOperatorString(py::module& m);

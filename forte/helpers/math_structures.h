@@ -363,6 +363,17 @@ template <typename Derived, typename T, typename F> class VectorSpaceList {
     /// @return an element of the vector
     const auto& operator()(size_t n) const { return elements_[n]; }
 
+    /// @return the value of the element corresponding to the key e. Use the search function to
+    /// check if the element is present
+    F operator[](const T& e) const {
+        auto it = std::find_if(elements_.begin(), elements_.end(),
+                               [&e](const auto& p) { return p.first == e; });
+        if (it == elements_.end()) {
+            return zero_;
+        }
+        return it->second;
+    }
+
     /// @return the norm of the vector space
     /// @param p the norm to calculate (default is 2, -1 is infinity norm)
     double norm(int p = 2) const {

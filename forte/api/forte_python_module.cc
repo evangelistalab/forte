@@ -208,6 +208,7 @@ PYBIND11_MODULE(_forte, m) {
     export_Determinant(m);
     export_Configuration(m);
     export_String(m);
+    export_CI_RDMS(m);
 
     export_SQOperatorString(m);
     export_SparseExp(m);

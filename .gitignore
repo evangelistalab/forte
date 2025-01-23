@@ -14,6 +14,12 @@ forte/version.h
 forte.egg-info
 docs/build
 build/**
+*.cube
+*.npy
+*.dat
+*.bad
+*.old
+*.tga
 
 # Qt Creator project files
 *.config

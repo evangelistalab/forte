@@ -122,6 +122,15 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         }
     }
 
+    explicit DeterminantImpl(std::vector<size_t> alfa_list, std::vector<size_t> beta_list) {
+        for (auto i : alfa_list) {
+            set_alfa_bit(i, true);
+        }
+        for (auto i : beta_list) {
+            set_beta_bit(i, true);
+        }
+    }
+
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit DeterminantImpl(const BitArray<nbits_half>& Ia, const BitArray<nbits_half>& Ib) {
