@@ -269,12 +269,6 @@ class ProcedureDSRG:
                 np.savez(f"Mbar2_{i}", **Mbar2[i])
 
             del Mbar0, Mbar1, Mbar2
-            
-        if self.options.get_bool("FULL_HBAR_DEGNO") and self.solver_type in ["MRDSRG","SA-MRDSRG","SA_MRDSRG"] and self.relax_maxiter == 0:
-            psi4.core.print_out("\n  =>** Saving Full Hbar in de-normal-ordered basis (unrelaxed) **<=\n")
-            scalar, Hbar1, Hbar2 = self.dsrg_solver.compute_Heff_full_degno()
-            np.savez("save_Hbar_degno", scalar=scalar, **Hbar1, **Hbar2)
-
 
         # Reference relaxation procedure
         for n in range(self.relax_maxiter):
@@ -293,11 +287,6 @@ class ProcedureDSRG:
                 Hbar0, Hbar1, Hbar2 = self.dsrg_solver.save_Heff_full_ambit()
                 psi4.core.print_out(f"\n  The Hbar0 term is: {Hbar0}\n")
             
-            if self.options.get_bool("FULL_HBAR_DEGNO") and self.solver_type in ["MRDSRG","SA-MRDSRG","SA_MRDSRG"] and n == self.relax_maxiter - 1:
-                psi4.core.print_out("\n  =>** Saving Full Hbar in de-normal-ordered basis (relaxed) **<=\n")
-                scalar, Hbar1, Hbar2 = self.dsrg_solver.compute_Heff_full_degno()
-                np.savez("save_Hbar_degno", scalar=scalar, **Hbar1, **Hbar2)
-
             ints_dressed = self.dsrg_solver.compute_Heff_actv()
             if self.fno_pt2_Heff_shift is not None:
                 ints_dressed.add(self.fno_pt2_Heff_shift, 1.0)

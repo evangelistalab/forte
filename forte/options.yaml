@@ -1122,14 +1122,6 @@ DSRG:
     type: bool
     default: False
     help: "Save the full DSRG effective dipole integrals to disk."
-  FULL_HBAR_DEGNO:
-    type: bool
-    default: False
-    help: "Save the full DSRG effective Hamiltonian normal ordered w.r.t. the true vacuum to disk."
-  DO_WICKED:
-    type: bool
-    default: False
-    help: "Compute hbar with Wicked. (only for spin orbital ldsrg2)."
   FORM_HBAR3:
     type: bool
     default: False
