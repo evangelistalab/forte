@@ -832,7 +832,7 @@ double MRDSRG::compute_energy_ldsrg2() {
     // dump amplitudes to file
     dump_amps_to_disk();
     
-    if (foptions_->get_bool("FULL_HBAR") || foptions_->get_bool("FULL_HBAR_DEGNO")) {
+    if (foptions_->get_bool("FULL_HBAR")) {
         double rsc_conv = rsc_thres;
         compute_hbar(rsc_conv);
     }

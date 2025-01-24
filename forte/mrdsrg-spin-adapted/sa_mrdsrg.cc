@@ -96,7 +96,7 @@ void SA_MRDSRG::read_options() {
         dsrg_trans_type_ = "UNITARY";
     }
 
-    full_hbar_ = foptions_->get_bool("FULL_HBAR") || foptions_->get_bool("FULL_HBAR_DEGNO");
+    full_hbar_ = foptions_->get_bool("FULL_HBAR");
 }
 
 void SA_MRDSRG::startup() {
