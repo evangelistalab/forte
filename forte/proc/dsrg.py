@@ -254,7 +254,7 @@ class ProcedureDSRG:
             psi4.core.print_out("\n  =>** Saving Full Hbar (unrelaxed) **<=\n")
             Hbar0, Hbar1, Hbar2 = self.dsrg_solver.save_Heff_full()
             psi4.core.print_out(f"\n  The Hbar0 term is: {Hbar0}\n")
-            np.savez("save_Hbar", **Hbar1, **Hbar2)
+            np.savez("save_Hbar", Hbar0=Hbar0, **Hbar1, **Hbar2)
             
         if self.options.get_bool("FULL_MBAR") and self.solver_type in ["MRDSRG"] and self.relax_maxiter == 0:
             psi4.core.print_out("\n  =>** Getting dipole integral (unrelaxed) **<=\n")
@@ -435,7 +435,7 @@ class ProcedureDSRG:
                 psi4.core.print_out("\n  =>** Saving Full Hbar **<=\n")
                 Hbar0, Hbar1, Hbar2 = self.dsrg_solver.update_Heff_full(Hbar0, Hbar1, Hbar2, self.rdms)
                 psi4.core.print_out(f"\n  The Hbar0 term is: {Hbar0}\n")
-                np.savez("save_Hbar", **Hbar1, **Hbar2)
+                np.savez("save_Hbar", Hbar0=Hbar0, **Hbar1, **Hbar2)
                 
                 self.dsrg_solver.set_rdms(self.rdms) # Important to update the rdms in the solver
                 
