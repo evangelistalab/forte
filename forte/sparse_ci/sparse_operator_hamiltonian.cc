@@ -29,7 +29,6 @@
 #include <format>
 
 #include "sparse_ci/sparse_operator_hamiltonian.h"
-
 #include "integrals/active_space_integrals.h"
 
 namespace forte {
@@ -79,5 +78,53 @@ SparseOperator sparse_operator_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals>
     }
     return H;
 }
+
+SparseOperator sparse_operator_hamiltonian(double scalar, 
+                                           ndarray<double>& oei_a, ndarray<double>& oei_b,
+                                           ndarray<double>& tei_aa, ndarray<double>& tei_ab, ndarray<double>& tei_bb,
+                                           double screen_thresh) {
+    SparseOperator H;
+    size_t nmo = oei_a.shape()[0];
+    H.add_term_from_str("[]", scalar);
+    for (size_t p = 0; p < nmo; p++) {
+        for (size_t q = 0; q < nmo; q++) {
+            if (std::fabs(oei_a.at({p, q})) > screen_thresh) {
+                H.add(SQOperatorString({p}, {}, {q}, {}), oei_a.at({p, q}));
+            }
+            if (std::fabs(oei_b.at({p, q})) > screen_thresh) {
+                H.add(SQOperatorString({}, {p}, {}, {q}), oei_b.at({p, q}));
+            }
+        }
+    }
+    for (size_t p = 0; p < nmo; p++) {
+        for (size_t q = p + 1; q < nmo; q++) {
+            for (size_t r = 0; r < nmo; r++) {
+                for (size_t s = r + 1; s < nmo; s++) {
+                    if (std::fabs(tei_aa.at({p, q, r, s})) > screen_thresh) {
+                        H.add(SQOperatorString({p, q}, {}, {s, r}, {}),
+                              tei_aa.at({p, q, r, s}));
+                    }
+                    if (std::fabs(tei_bb.at({p, q, r, s})) > screen_thresh) {
+                        H.add(SQOperatorString({}, {p, q}, {}, {s, r}),
+                              tei_bb.at({p, q, r, s}));
+                    }
+                }
+            }
+        }
+    }
+    for (size_t p = 0; p < nmo; p++) {
+        for (size_t q = 0; q < nmo; q++) {
+            for (size_t r = 0; r < nmo; r++) {
+                for (size_t s = 0; s < nmo; s++) {
+                    if (std::fabs(tei_ab.at({p, q, r, s})) > screen_thresh) {
+                        H.add(SQOperatorString({p}, {q}, {r}, {s}), tei_ab.at({p, q, r, s}));
+                    }
+                }
+            }
+        }
+    }
+    return H;
+}
+
 
 } // namespace forte
