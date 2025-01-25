@@ -64,7 +64,6 @@ void export_CI_RDMS(py::module& m);
 void export_SQOperatorString(py::module& m);
 void export_SparseExp(py::module& m);
 void export_SparseFactExp(py::module& m);
-void export_SparseHamiltonian(py::module& m);
 void export_SparseOperator(py::module& m);
 void export_SparseOperatorList(py::module& m);
 void export_SparseOperatorSimTrans(py::module& m);

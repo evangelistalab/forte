@@ -102,6 +102,8 @@ class SQOperatorString {
     const Determinant& cre() const;
     /// @return a Determinant object that represents the annihilation operators
     const Determinant& ann() const;
+    /// @return the sign mask associated with this operator
+    const Determinant& sign_mask() const;
     /// @return a Determinant object that represents the creation operators
     Determinant& cre_mod();
     /// @return a Determinant object that represents the annihilation operators
@@ -161,6 +163,8 @@ class SQOperatorString {
     Determinant cre_;
     /// a Determinant that represents the annihilation operators
     Determinant ann_;
+    /// a Determinant that represents the adjoint of the creation operators
+    Determinant sign_mask_;
 };
 
 class SQOperatorProductComputer {
