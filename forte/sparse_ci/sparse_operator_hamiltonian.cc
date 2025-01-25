@@ -79,7 +79,7 @@ SparseOperator sparse_operator_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals>
     return H;
 }
 
-// template <typename T> 
+template <typename T> 
 SparseOperator sparse_operator_from_ndarray(double scalar, 
                                            ndarray<T>& oei_a, ndarray<T>& oei_b,
                                            ndarray<T>& tei_aa, ndarray<T>& tei_ab, ndarray<T>& tei_bb,

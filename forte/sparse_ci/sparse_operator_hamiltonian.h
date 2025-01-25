@@ -46,8 +46,8 @@ SparseOperator sparse_operator_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals>
 
 template <typename T> 
 SparseOperator sparse_operator_from_ndarray(double scalar, 
-                                           ndarray<R>& oei_a, ndarray<R>& oei_b,
-                                           ndarray<R>& tei_aa, ndarray<R>& tei_ab, ndarray<R>& tei_bb,
+                                           ndarray<T>& oei_a, ndarray<T>& oei_b,
+                                           ndarray<T>& tei_aa, ndarray<T>& tei_ab, ndarray<T>& tei_bb,
                                            double screen_thresh = 1e-12);
 
 
