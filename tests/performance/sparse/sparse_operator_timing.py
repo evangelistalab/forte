@@ -39,7 +39,6 @@ def sparse_operator_correctness():
     dets = forte.hilbert_space(wfn.nmo(), na, nb, nirrep, mo_symmetry, wfn_symmetry)
 
     # Build the Hamiltonian
-    spH = forte.SparseHamiltonian(as_ints)
     opH = forte.sparse_operator_hamiltonian(as_ints)
 
     print("\n\n  Number of determinants: ", len(dets))
@@ -49,10 +48,6 @@ def sparse_operator_correctness():
     c = 1 / np.sqrt(len(dets))
     state = forte.SparseState({det: c for det in dets})
     opH_state = forte.apply_op(opH, state)
-    spH_state = spH.apply(state)
-    spH_state -= opH_state
-    assert spH_state.norm() < 1e-9
-    print(f"  Norm of difference: {spH_state.norm()}")
 
 
 def sparse_operator_timing_1():

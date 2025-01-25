@@ -22,16 +22,11 @@ def test_sparse_operator2():
 
     as_ints = data.as_ints  # forte_objs["as_ints"]
 
-    ham = forte.SparseHamiltonian(as_ints)
+    ham = forte.sparse_operator_hamiltonian(as_ints)
 
     ref = forte.SparseState({det("20"): 1.0})
-    Href1 = ham.compute(ref, 0.0)
-    Href2 = ham.compute_on_the_fly(ref, 0.0)
+    Href1 = ham @ ref
     assert Href1[det("20")] == pytest.approx(-1.094572, abs=1e-6)
-    assert Href2[det("20")] == pytest.approx(-1.094572, abs=1e-6)
-
-    ham_op = ham.to_sparse_operator()
-    assert forte.overlap(ref, forte.apply_op(ham_op, ref)) == pytest.approx(-1.094572, abs=1e-6)
 
     psi4.core.clean()
 
