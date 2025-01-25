@@ -15,10 +15,10 @@ from forte._forte import (
     SparseOperatorList,
     Determinant,
     SparseState,
-    SparseHamiltonian,
     SparseFactExp,
     SparseExp,
     get_projection,
+    sparse_operator_hamiltonian,
 )
 
 
@@ -189,7 +189,7 @@ def solve_cc_equations(
         the number of iterations, and timings information
     """
     diis = DIIS(t, diis_start)
-    ham = SparseHamiltonian(as_ints)
+    ham = sparse_operator_hamiltonian(as_ints)
     if cc_type == "cc" or cc_type == "ucc":
         exp = SparseExp(maxk=maxk, screen_thresh=compute_threshold)
     if cc_type == "dcc" or cc_type == "ducc":
@@ -253,19 +253,19 @@ def residual_equations(cc_type, t, op, sop, ref, ham, exp, compute_threshold, li
     c0 = 0.0
     if cc_type == "cc":
         wfn = exp.apply_op(sop, ref)
-        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+        Hwfn = ham.apply_to_state(wfn, compute_threshold)
         R = exp.apply_op(sop, Hwfn, scaling_factor=-1.0)
     elif cc_type == "ucc":
         wfn = exp.apply_antiherm(sop, ref)
-        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+        Hwfn = ham.apply_to_state(wfn, compute_threshold)
         R = exp.apply_antiherm(sop, Hwfn, scaling_factor=-1.0)
     elif cc_type == "dcc":
         wfn = exp.apply_op(sop, ref)
-        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+        Hwfn = ham.apply_to_state(wfn, compute_threshold)
         R = exp.apply_op(sop, Hwfn, inverse=True)
     elif cc_type == "ducc":
         wfn = exp.apply_antiherm(sop, ref)
-        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+        Hwfn = ham.apply_to_state(wfn, compute_threshold)
         R = exp.apply_antiherm(sop, Hwfn, inverse=True)
     else:
         raise ValueError("Incorrect value for cc_type")

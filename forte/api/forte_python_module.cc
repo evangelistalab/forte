@@ -214,7 +214,6 @@ PYBIND11_MODULE(_forte, m) {
     export_SQOperatorString(m);
     export_SparseExp(m);
     export_SparseFactExp(m);
-    export_SparseHamiltonian(m);
     export_SparseOperator(m);
     export_SparseOperatorList(m);
     export_SparseOperatorSimTrans(m);
