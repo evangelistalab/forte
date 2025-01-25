@@ -44,9 +44,10 @@ class ActiveSpaceIntegrals;
 SparseOperator sparse_operator_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                                            double screen_thresh = 1e-12);
 
-SparseOperator sparse_operator_hamiltonian(double scalar, 
-                                           ndarray<double>& oei_a, ndarray<double>& oei_b,
-                                           ndarray<double>& tei_aa, ndarray<double>& tei_ab, ndarray<double>& tei_bb,
+template <typename T> 
+SparseOperator sparse_operator_from_ndarray(double scalar, 
+                                           ndarray<R>& oei_a, ndarray<R>& oei_b,
+                                           ndarray<R>& tei_aa, ndarray<R>& tei_ab, ndarray<R>& tei_bb,
                                            double screen_thresh = 1e-12);
 
 

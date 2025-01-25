@@ -364,12 +364,19 @@ void export_SparseOperator(py::module& m) {
         "list"_a, "Create a SparseOperator object from a list of Tuple[SQOperatorString, complex]");
 
     // two functions, need to be overloaded
-    m.def("sparse_operator_hamiltonian", py::overload_cast<std::shared_ptr<ActiveSpaceIntegrals>, double>(&sparse_operator_hamiltonian),
+    m.def("sparse_operator_hamiltonian", &sparse_operator_hamiltonian,
           "as_ints"_a, "screen_thresh"_a = 1.0e-12,
           "Create a SparseOperator representing the Hamiltonian from ActiveSpaceIntegrals");
-    m.def("sparse_operator_hamiltonian", py::overload_cast<double, ndarray<double>&, ndarray<double>&,
-                                           ndarray<double>&, ndarray<double>&, ndarray<double>&, double>(
-                                           &sparse_operator_hamiltonian),
+    m.def("sparse_operator_from_ndarray", &sparse_operator_from_ndarray<float>,
+                                           "scalar"_a, "oei_a"_a, "oei_b"_a, "tei_aa"_a, "tei_ab"_a, "tei_bb"_a, "screen_thresh"_a = 1.0e-12,
+                                           "Create a SparseOperator representing the Hamiltonian from raw integrals");
+    m.def("sparse_operator_from_ndarray", &sparse_operator_from_ndarray<double>,
+                                           "scalar"_a, "oei_a"_a, "oei_b"_a, "tei_aa"_a, "tei_ab"_a, "tei_bb"_a, "screen_thresh"_a = 1.0e-12,
+                                           "Create a SparseOperator representing the Hamiltonian from raw integrals");
+    m.def("sparse_operator_from_ndarray", &sparse_operator_from_ndarray<std::complex<float>>,
+                                           "scalar"_a, "oei_a"_a, "oei_b"_a, "tei_aa"_a, "tei_ab"_a, "tei_bb"_a, "screen_thresh"_a = 1.0e-12,
+                                           "Create a SparseOperator representing the Hamiltonian from raw integrals");
+    m.def("sparse_operator_from_ndarray", &sparse_operator_from_ndarray<std::complex<double>>,
                                            "scalar"_a, "oei_a"_a, "oei_b"_a, "tei_aa"_a, "tei_ab"_a, "tei_bb"_a, "screen_thresh"_a = 1.0e-12,
                                            "Create a SparseOperator representing the Hamiltonian from raw integrals");
 
