@@ -44,11 +44,55 @@ class ActiveSpaceIntegrals;
 SparseOperator sparse_operator_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                                            double screen_thresh = 1e-12);
 
-template <typename T> 
-SparseOperator sparse_operator_from_ndarray(double scalar, 
+
+// Templated function - needs to be defined in the header for portability
+template <typename T>
+SparseOperator sparse_operator_hamiltonian(double scalar, 
                                            ndarray<T>& oei_a, ndarray<T>& oei_b,
                                            ndarray<T>& tei_aa, ndarray<T>& tei_ab, ndarray<T>& tei_bb,
-                                           double screen_thresh = 1e-12);
-
+                                           double screen_thresh) {
+    SparseOperator H;
+    size_t nmo = oei_a.shape()[0];
+    H.add_term_from_str("[]", scalar);
+    for (size_t p = 0; p < nmo; p++) {
+        for (size_t q = 0; q < nmo; q++) {
+            // std::abs used to handle complex numbers
+            if (std::abs(oei_a.at({p, q})) > screen_thresh) {
+                H.add(SQOperatorString({p}, {}, {q}, {}), oei_a.at({p, q}));
+            }
+            if (std::abs(oei_b.at({p, q})) > screen_thresh) {
+                H.add(SQOperatorString({}, {p}, {}, {q}), oei_b.at({p, q}));
+            }
+        }
+    }
+    for (size_t p = 0; p < nmo; p++) {
+        for (size_t q = p + 1; q < nmo; q++) {
+            for (size_t r = 0; r < nmo; r++) {
+                for (size_t s = r + 1; s < nmo; s++) {
+                    if (std::abs(tei_aa.at({p, q, r, s})) > screen_thresh) {
+                        H.add(SQOperatorString({p, q}, {}, {s, r}, {}),
+                              tei_aa.at({p, q, r, s}));
+                    }
+                    if (std::abs(tei_bb.at({p, q, r, s})) > screen_thresh) {
+                        H.add(SQOperatorString({}, {p, q}, {}, {s, r}),
+                              tei_bb.at({p, q, r, s}));
+                    }
+                }
+            }
+        }
+    }
+    for (size_t p = 0; p < nmo; p++) {
+        for (size_t q = 0; q < nmo; q++) {
+            for (size_t r = 0; r < nmo; r++) {
+                for (size_t s = 0; s < nmo; s++) {
+                    if (std::abs(tei_ab.at({p, q, r, s})) > screen_thresh) {
+                        H.add(SQOperatorString({p}, {q}, {r}, {s}), tei_ab.at({p, q, r, s}));
+                    }
+                }
+            }
+        }
+    }
+    return H;
+}
 
 } // namespace forte
