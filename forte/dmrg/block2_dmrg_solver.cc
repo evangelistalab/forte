@@ -1273,6 +1273,17 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
 
     int dmrg_verbose = dmrg_options_->get_int("BLOCK2_VERBOSE");
 
+    // noises
+    auto xexpr = impl_->expr_builder();
+    xexpr->exprs.push_back("(C+D)0");
+    xexpr->add_sum_term(as_ints_->oei_a_vector().data(), as_ints_->oei_a_vector().size(),
+                        {na1, na1}, {nactv, 1}, integral_cutoff, sqrt(2.0), actv_irreps);
+    // xexpr->add_sum_term(Tbra_data.data() + p * na3, na2, {na1, na1}, {1, nactv},
+    // integral_cutoff, 1.0, actv_irreps, {}, p_syms[p]);
+    xexpr = xexpr->adjust_order();
+    auto xmpo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
+        impl_->get_mpo(xexpr, dmrg_verbose));
+
     for (size_t ir = 0; ir < nroots; ++ir) {
         double value = 0.0;
 
@@ -1285,8 +1296,7 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
 
         if (impl_->is_spin_adapted_) {
             auto ket0 = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
-            // auto bond_dim = ket0->info->get_max_bond_dimension();
-            auto bond_dim = ket0_bond_dims[0];
+            auto bond_dim = ket0->info->get_max_bond_dimension();
 
             for (size_t p = 0; p < np; ++p) {
                 auto bra_expr = impl_->expr_builder();
@@ -1359,20 +1369,26 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
                         binfo->save_data(impl_->scratch_ + "/" + tag + "-mps_info.bin");
                         bra->save_data();
 
+                        auto pme = std::make_shared<
+                            block2::MovingEnvironment<block2::SU2, double, double>>(xmpo, bra, bra,
+                                                                                    "DSRG-PERT");
+                        pme->init_environments(true);
+
                         auto bref = ket0->deep_copy("DSRG-BRA@TMP");
                         auto bme = std::make_shared<
                             block2::MovingEnvironment<block2::SU2, double, double>>(bmpo, bra, bref,
                                                                                     "DSRG-CPS1");
                         bme->delayed_contraction = block2::OpNamesSet::normal_ops();
-                        bme->cached_contraction = true;
+                        // bme->cached_contraction = true;
                         bme->init_environments(true);
 
                         auto bcps = std::make_shared<block2::Linear<block2::SU2, double, double>>(
-                            bme, bra_bond_dims, std::vector<block2::ubond_t>{bref->info->bond_dim},
-                            noises);
+                            pme, bme, bra_bond_dims,
+                            std::vector<block2::ubond_t>{bref->info->bond_dim}, noises);
                         bcps->iprint = 2;
                         bcps->noise_type = block2::NoiseTypes::ReducedPerturbative;
                         bcps->eq_type = block2::EquationTypes::PerturbativeCompression;
+                        bcps->cutoff = 1.0e-16;
                         bcps->linear_conv_thrds = std::vector<double>(2 * maxiter_, 1.0e-8);
                         bcps->solve(2 * maxiter_, bra->center == 0, 1.0e-8);
                         if (bra->center != ket0->center)
