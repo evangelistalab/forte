@@ -40,6 +40,9 @@ def dsrg_fno_procrouting(state_weights_map, scf_info, options, ints, mo_space_in
     pt2_correction = options.get_bool("DSRG_FNO_PT2_CORRECTION")
     dsrg_s = options.get_double("DSRG_S")
     options.set_double("DSRG_S", options.get_double("DSRG_FNO_PT2_S"))
+    threepdc = options.get_str("THREEPDC")
+    pt2_threepdc = options.get_bool("DSRG_FNO_PT2_CU3")
+    options.set_str("THREEPDC", threepdc if pt2_threepdc else "ZERO")
 
     # PT2 correction variables
     dept2 = 0.0
@@ -87,8 +90,9 @@ def dsrg_fno_procrouting(state_weights_map, scf_info, options, ints, mo_space_in
 
         pt2_solver = None  # clean up
 
-    # reset flow parameter
+    # reset options
     options.set_double("DSRG_S", dsrg_s)
+    options.set_str("THREEPDC", threepdc)
 
     # return
     return mo_space_info, ints, dept2, dhpt2
