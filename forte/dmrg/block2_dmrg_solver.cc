@@ -1252,14 +1252,11 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
     const std::vector<size_t> tstride{nactv * nactv, 1, nactv};
 
     // read bond dimention
-    int bond_dim = 500;
-    auto sweep_bond_dims = dmrg_options_->get_int_list("BLOCK2_SWEEP_BOND_DIMS");
-    if (sweep_bond_dims.size() != 0)
-        bond_dim = sweep_bond_dims.back();
-    std::vector<block2::ubond_t> ket0_bond_dims(1, bond_dim);
-    std::vector<block2::ubond_t> bra_bond_dims(
-        1, dmrg_options_->get_int("DSRG_3RDM_BLOCK2_CPS_BOND_DIMENSION"));
-    std::vector<double> noises{0.0};
+    block2::ubond_t bra_max_bond_dim =
+        dmrg_options_->get_int("DSRG_3RDM_BLOCK2_CPS_BOND_DIMENSION");
+    std::vector<block2::ubond_t> bra_bond_dims{bra_max_bond_dim / 2, bra_max_bond_dim,
+                                               bra_max_bond_dim};
+    std::vector<double> noises{1.0e-4, 1.0e-5, 0.0};
 
     // system initialization
     auto integral_cutoff = dmrg_options_->get_double("BLOCK2_INTERGRAL_CUTOFF");
@@ -1278,8 +1275,6 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
     xexpr->exprs.push_back("(C+D)0");
     xexpr->add_sum_term(as_ints_->oei_a_vector().data(), as_ints_->oei_a_vector().size(),
                         {na1, na1}, {nactv, 1}, integral_cutoff, sqrt(2.0), actv_irreps);
-    // xexpr->add_sum_term(Tbra_data.data() + p * na3, na2, {na1, na1}, {1, nactv},
-    // integral_cutoff, 1.0, actv_irreps, {}, p_syms[p]);
     xexpr = xexpr->adjust_order();
     auto xmpo = std::static_pointer_cast<block2::MPO<block2::SU2, double>>(
         impl_->get_mpo(xexpr, dmrg_verbose));
@@ -1297,6 +1292,8 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
         if (impl_->is_spin_adapted_) {
             auto ket0 = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
             auto bond_dim = ket0->info->get_max_bond_dimension();
+            std::vector<block2::ubond_t> ket_bond_dims(3, bond_dim);
+            std::vector<double> occ(nactv, (n_elec - 1.0) /  nactv);
 
             for (size_t p = 0; p < np; ++p) {
                 auto bra_expr = impl_->expr_builder();
@@ -1345,8 +1342,7 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
                         binfo->tag = tag;
                         binfo->load_mutable();
                         binfo->set_bond_dimension_fci(bra_left_vacuum[j], vacuum);
-                        binfo->set_bond_dimension(bond_dim);
-                        binfo->bond_dim = bond_dim;
+                        binfo->set_bond_dimension(bra_max_bond_dim);
                         if (binfo->get_max_bond_dimension() == 0)
                             continue;
                         bra->initialize(binfo);
@@ -1355,8 +1351,7 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
                     } else {
                         binfo->tag = tag;
                         binfo->set_bond_dimension_fci(bra_left_vacuum[j], vacuum);
-                        binfo->set_bond_dimension(bond_dim);
-                        binfo->bond_dim = bond_dim;
+                        binfo->set_bond_dimension_using_occ(bond_dim, occ, 0.5);
 
                         if (binfo->get_max_bond_dimension() == 0)
                             continue;
@@ -1383,20 +1378,22 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
                         bme->init_environments(true);
 
                         auto bcps = std::make_shared<block2::Linear<block2::SU2, double, double>>(
-                            pme, bme, bra_bond_dims,
-                            std::vector<block2::ubond_t>{bref->info->bond_dim}, noises);
+                            pme, bme, bra_bond_dims, ket_bond_dims, noises);
                         bcps->iprint = 2;
                         bcps->noise_type = block2::NoiseTypes::ReducedPerturbative;
                         bcps->eq_type = block2::EquationTypes::PerturbativeCompression;
-                        bcps->cutoff = 1.0e-16;
+                        bcps->cutoff = 1.0e-30;
                         bcps->linear_conv_thrds = std::vector<double>(2 * maxiter_, 1.0e-8);
                         bcps->solve(2 * maxiter_, bra->center == 0, 1.0e-8);
-                        if (bra->center != ket0->center)
+                        if (bra->center != ket0->center) {
+                            bcps->bra_bond_dims = {bra_bond_dims.back()};
+                            bcps->ket_bond_dims = {ket_bond_dims.back()};
+                            bcps->noises = {0.0};
                             bcps->solve(1, ket0->center != 0);
+                        }
                     }
 
-                    auto pvalue =
-                        impl_->driver_su2_->expectation(bra, kmpo, ket0, dmrg_verbose, bond_dim);
+                    auto pvalue = impl_->driver_su2_->expectation(bra, kmpo, ket0, dmrg_verbose);
 
                     if (print_ > PrintLevel::Default)
                         psi::outfile->Printf(" pvalue = %20.15f", pvalue);
@@ -1405,6 +1402,8 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
             }
         } else {
             auto ket0 = std::static_pointer_cast<block2::MPS<block2::SZ, double>>(ket);
+            auto bond_dim = ket0->info->get_max_bond_dimension();
+            std::vector<block2::ubond_t> ket_bond_dims(3, bond_dim);
 
             for (size_t p = 0; p < np; ++p) {
                 if (print_ > PrintLevel::Default)
@@ -1441,7 +1440,7 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
                     bme->init_environments(true);
 
                     auto bcps = std::make_shared<block2::Linear<block2::SZ, double, double>>(
-                        bme, bra_bond_dims, ket0_bond_dims, noises);
+                        bme, bra_bond_dims, ket_bond_dims, noises);
                     bcps->solve(maxiter_, true, 1.0e-8);
 
                     auto ket_expr = impl_->expr_builder();
@@ -1463,8 +1462,7 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
                     if (ket_expr->exprs.size() == 0)
                         continue;
 
-                    auto pvalue =
-                        impl_->driver_sz_->expectation(bra, kmpo, ket0, dmrg_verbose, 2 * bond_dim);
+                    auto pvalue = impl_->driver_sz_->expectation(bra, kmpo, ket0, dmrg_verbose);
                     if (print_ > PrintLevel::Default)
                         psi::outfile->Printf(" %s = %20.15f", sigma == 0 ? "alpha" : "beta",
                                              pvalue);

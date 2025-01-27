@@ -341,11 +341,14 @@ void SADSRG::check_init_memory() {
         if (L3_algorithm_ == "DIRECT") {
             dsrg_mem_.add_entry("1- and 2-density cumulants", {"aa", "aa", "aaaa"});
             dsrg_mem_.add_entry("Local intermediates for cu3 energy terms", {"vaaa"}, 4, false);
-        }
-        if (L3_algorithm_ == "APPROX") {
+        } else if (L3_algorithm_ == "APPROX") {
             dsrg_mem_.add_entry("1-, 2-, and 3-density cumulants",
                                 {"aa", "aa", "aaaa", "aaaaa", "aaaaa"});
             dsrg_mem_.add_entry("Local intermediates for cu3 energy terms", {"aaaaa", "vaaa"}, 3,
+                                false);
+        } else if (L3_algorithm_ == "BATCHED") {
+            dsrg_mem_.add_entry("1- and 2-density cumulants", {"aa", "aa", "aaaa"});
+            dsrg_mem_.add_entry("Local intermediates for cu3 energy terms", {"aaaaa", "vaaa"}, 2,
                                 false);
         }
     }
