@@ -85,7 +85,9 @@ def make_embedding_orbitals(data):
     # Create the fragment(embedding) projector and apply to rotate orbitals
     forte.print_method_banner(["Frozen-orbital Embedding", "Nan He"])
     fragment_projector, fragment_nbf = forte.make_fragment_projector(data.psi_wfn)
-    return forte.make_embedding(data.psi_wfn, data.options, fragment_projector, fragment_nbf, data.mo_space_info)
+    return forte.make_embedding(
+        data.psi_wfn, data.scf_info, data.options, fragment_projector, fragment_nbf, data.mo_space_info
+    )
 
 
 def dmrg_initial_orbitals(wfn, options, mo_space_info):

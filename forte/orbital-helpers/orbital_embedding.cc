@@ -40,6 +40,10 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsio/psio.hpp"
 
+#include "base_classes/scf_info.h"
+#include "base_classes/forte_options.h"
+#include "base_classes/mo_space_info.h"
+
 #include "helpers/helpers.h"
 #include "helpers/printing.h"
 
@@ -447,6 +451,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
 }
 
 std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
+                                            std::shared_ptr<SCFInfo> scf_info,
                                             std::shared_ptr<ForteOptions> options,
                                             std::shared_ptr<psi::Matrix> Pf, int nbf_A,
                                             std::shared_ptr<MOSpaceInfo> mo_space_info) {
@@ -454,7 +459,8 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     // 1. Get necessary information, print method initialization information and exceptions
     double thresh = options->get_double("EMBEDDING_THRESHOLD");
     if (thresh > 1.0 || thresh < 0.0) {
-        throw PSIEXCEPTION("make_embedding: Embedding threshold must be between 0.0 and 1.0 !");
+        throw std::invalid_argument(
+            "make_embedding: Embedding threshold must be between 0.0 and 1.0 !");
     }
 
     int A_docc = 0;
@@ -473,15 +479,21 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
         A_uocc = options->get_int("NUM_A_UOCC");
         outfile->Printf("\n  Number of A occupied/virtual MOs set to %d and %d\n", A_docc, A_uocc);
     } else {
-        throw PSIEXCEPTION("make_embedding: Impossible embedding cutoff method!");
+        throw std::invalid_argument("make_embedding: Impossible embedding cutoff method!");
     }
 
     if (not ref_wfn) {
-        throw PSIEXCEPTION("make_embedding: SCF has not been run yet!");
+        throw std::runtime_error("make_embedding: SCF has not been run yet!");
     }
 
     if (not Pf) {
-        throw PSIEXCEPTION("make_embedding: No projector (matrix) found!");
+        throw std::runtime_error("make_embedding: No projector (matrix) found!");
+    }
+
+    int nirrep = ref_wfn->nirrep();
+    if (nirrep > 1) {
+        throw std::invalid_argument(
+            "Fragment projection works only without symmetry! (symmetry C1)");
     }
 
     // Additional input parameters used to control numbers of orbitals in A/B space
@@ -491,11 +503,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     std::shared_ptr<PSIO> psio(_default_psio_lib_);
 
     const Dimension nmopi = ref_wfn->nmopi();
-    Dimension zeropi = nmopi - nmopi;
-    int nirrep = ref_wfn->nirrep();
-    if (nirrep > 1) {
-        throw PSIEXCEPTION("Fragment projection works only without symmetry! (symmetry C1)");
-    }
+    Dimension zeropi(nirrep);
 
     // 2. Apply projector to rotate the orbitals
 
@@ -831,8 +839,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     }
 
     // Update both the alpha and beta orbitals
-    ref_wfn->Ca()->copy(Ca_Rt);
-    ref_wfn->Cb()->copy(Ca_Rt);
+    scf_info->update_orbitals(Ca_Rt, Ca_Rt);
 
     // Write a new MOSpaceInfo:
     std::map<std::string, std::vector<size_t>> mo_space_map;
@@ -879,7 +886,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     // Return the new embedding MOSpaceInfo to pymodule
     outfile->Printf("\n\n  --------------- End of Frozen-orbital Embedding --------------- ");
     return mo_space_info_emb;
-} // namespace forte
+}
 
 std::shared_ptr<psi::Matrix> semicanonicalize_block(psi::SharedWavefunction ref_wfn,
                                                     std::shared_ptr<psi::Matrix> C_tilde,
