@@ -29,8 +29,6 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
-#include <future>
-#include <thread>
 
 #include "helpers/helpers.h"
 #include "helpers/timer.h"
@@ -180,40 +178,6 @@ SparseState apply_operator_impl_grouped(bool is_antihermitian, const SparseOpera
     return new_terms;
 }
 
-template <bool positive>
-SparseState apply_operator_kernel_string_chunk(const auto& sqop_ann_a, 
-                                            const auto& sqop_group, 
-                                            const auto& state_groups,
-                                            const double& screen_thresh) {
-    Determinant new_det;
-    Determinant sign_mask;
-    Determinant idx;
-    SparseState new_terms;
-    for (const auto& [det_a, state_group] : state_groups) {
-        // can we annihilate the alfa string?
-        if (det_a.fast_a_and_b_equal_b(sqop_ann_a)) {
-            // loop over the creation operators in this group
-            for (const auto& [sqop_ann, sqop_cre, t] : sqop_group) {
-                for (const auto& [det, c] : state_group) {
-                    if (det.faster_can_apply_operator(sqop_cre, sqop_ann)) {
-                        if (std::abs(c * t) > screen_thresh) {
-                            compute_sign_mask(sqop_cre, sqop_ann, sign_mask, idx);
-                            const auto value = faster_apply_operator_to_det(
-                                det, new_det, sqop_cre, sqop_ann, sign_mask);
-                            if constexpr (positive) {
-                                new_terms[new_det] += value * t * c;
-                            } else {
-                                new_terms[new_det] -= value * t * c;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return new_terms;
-}
-
 // This is a kernel that applies the operator to the state using a grouped approach
 // It has a lower cost complexity
 // It assumes that the operator is grouped by the annihilation operators and that these are prepared
@@ -221,27 +185,32 @@ SparseState apply_operator_kernel_string_chunk(const auto& sqop_ann_a,
 template <bool positive>
 void apply_operator_kernel_string(const auto& sop_groups, const auto& state_groups,
                                   const auto& screen_thresh, auto& new_terms) {
+    Determinant new_det;
+    Determinant sign_mask;
+    Determinant idx;
     for (const auto& [sqop_ann_a, sqop_group] : sop_groups) {
-        new_terms += apply_operator_kernel_string_chunk<positive>(sqop_ann_a, sqop_group, state_groups,
-                                                                  screen_thresh);
-    }
-}
-
-template <bool positive>
-void apply_operator_kernel_string_threaded(const auto& sop_groups, const auto& state_groups,
-                                  const auto& screen_thresh, auto& new_terms) {
-    std::vector<std::future<SparseState>> futures;
-    // structured bindings (i.e. auto [a, b] = ...) are avoided here because some compilers might complain
-    for (const auto& sop_group : sop_groups) {
-        const auto& sqop_ann_a = sop_group.first;
-        const auto& sqop_group = sop_group.second;
-        futures.push_back(std::async(std::launch::async, [&]() {
-            return apply_operator_kernel_string_chunk<positive>(sqop_ann_a, sqop_group, state_groups,
-                                                                screen_thresh);
-        }));
-    }
-    for (auto& fut : futures) {
-        new_terms += fut.get();
+        for (const auto& [det_a, state_group] : state_groups) {
+            // can we annihilate the alfa string?
+            if (det_a.fast_a_and_b_equal_b(sqop_ann_a)) {
+                // loop over the creation operators in this group
+                for (const auto& [sqop_ann, sqop_cre, t] : sqop_group) {
+                    for (const auto& [det, c] : state_group) {
+                        if (det.faster_can_apply_operator(sqop_cre, sqop_ann)) {
+                            if (std::abs(c * t) > screen_thresh) {
+                                compute_sign_mask(sqop_cre, sqop_ann, sign_mask, idx);
+                                const auto value = faster_apply_operator_to_det(
+                                    det, new_det, sqop_cre, sqop_ann, sign_mask);
+                                if constexpr (positive) {
+                                    new_terms[new_det] += value * t * c;
+                                } else {
+                                    new_terms[new_det] -= value * t * c;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -271,7 +240,7 @@ SparseState apply_operator_impl_grouped_string(bool is_antihermitian, const Spar
     }
 
     // Call the kernel to apply the operator (adding the result)
-    apply_operator_kernel_string_threaded<true>(sop_groups, state_groups, screen_thresh, new_terms);
+    apply_operator_kernel_string<true>(sop_groups, state_groups, screen_thresh, new_terms);
 
     if (not is_antihermitian) {
         return new_terms;
@@ -285,7 +254,7 @@ SparseState apply_operator_impl_grouped_string(bool is_antihermitian, const Spar
     }
 
     // Call the kernel to apply the operator (subtracting the result)
-    apply_operator_kernel_string_threaded<false>(sop_groups, state_groups, screen_thresh, new_terms);
+    apply_operator_kernel_string<false>(sop_groups, state_groups, screen_thresh, new_terms);
 
     return new_terms;
 }
