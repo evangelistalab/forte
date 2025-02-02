@@ -58,6 +58,10 @@ SparseState apply_operator_impl_grouped_string(bool is_antihermitian, const Spar
 SparseState apply_operator_lin(const SparseOperator& sop, const SparseState& state,
                                double screen_thresh) {
     size_t num_threads = std::thread::hardware_concurrency();
+    // hardware_concurrency() returns 0 if not well defined
+    if (num_threads <= 1){
+        return apply_operator_impl_grouped_string(false, sop, state, screen_thresh);
+    }
     auto chunks = split_state(state, num_threads);
     std::vector<std::future<SparseState>> futures;
     futures.reserve(num_threads);
@@ -76,6 +80,10 @@ SparseState apply_operator_lin(const SparseOperator& sop, const SparseState& sta
 SparseState apply_operator_antiherm(const SparseOperator& sop, const SparseState& state,
                                     double screen_thresh) {
     size_t num_threads = std::thread::hardware_concurrency();
+    // hardware_concurrency() returns 0 if not well defined
+    if (num_threads <= 1){
+        return apply_operator_impl_grouped_string(true, sop, state, screen_thresh);
+    }
     auto chunks = split_state(state, num_threads);
     std::vector<std::future<SparseState>> futures;
     futures.reserve(num_threads);
