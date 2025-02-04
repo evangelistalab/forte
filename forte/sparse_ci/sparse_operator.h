@@ -117,6 +117,9 @@ class SparseOperatorList
     /// @return a string representation of this operator
     std::vector<std::string> str() const;
 
+    void add_term(const std::vector<std::tuple<bool, bool, int>>& op_list, double coefficient,
+                  bool allow_reordering);
+
     SparseOperator to_operator() const;
 };
 

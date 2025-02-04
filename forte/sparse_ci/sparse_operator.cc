@@ -70,6 +70,8 @@ std::string format_term_in_sum(sparse_scalar_t coefficient, const std::string& t
     return std::format("({} + {}i) * {}", std::real(coefficient), std::imag(coefficient), term);
 }
 
+// void SparseOperator::add_term(const SQOperator& sqop) { op_list_.push_back(sqop); }
+
 std::vector<std::string> SparseOperator::str() const {
     std::vector<std::string> v;
     for (const auto& [sqop, c] : this->elements()) {
@@ -163,6 +165,12 @@ std::vector<std::string> SparseOperatorList::str() const {
         v.push_back(format_term_in_sum(c, sqop.str()));
     }
     return v;
+}
+
+void SparseOperatorList::add_term(const std::vector<std::tuple<bool, bool, int>>& op_list,
+                                  double coefficient, bool allow_reordering) {
+    auto [sqop, sign] = make_sq_operator_string_from_list(op_list, allow_reordering);
+    add(sqop, sign * coefficient);
 }
 
 } // namespace forte

@@ -77,6 +77,26 @@ void export_SparseOperatorList(py::module& m) {
         .def("add", &SparseOperatorList::add)
         .def("add", &SparseOperatorList::add_term_from_str, "str"_a,
              "coefficient"_a = sparse_scalar_t(1), "allow_reordering"_a = false)
+        // .def("add",
+        //      [](SparseOperatorList& op, const, sparse_scalar_t value, bool allow_reordering) {
+        //          make_sq_operator_string_from_list op.add(sqop, value);
+        //      })
+        .def("add_term",
+             py::overload_cast<const std::vector<std::tuple<bool, bool, int>>&, double, bool>(
+                 &SparseOperatorList::add_term),
+             "op_list"_a, "value"_a = 0.0, "allow_reordering"_a = false)
+        .def(
+            "add",
+            [](SparseOperatorList& op, const std::vector<size_t>& acre,
+               const std::vector<size_t>& bcre, const std::vector<size_t>& aann,
+               const std::vector<size_t>& bann, sparse_scalar_t coeff) {
+                op.add(SQOperatorString({acre.begin(), acre.end()}, {bcre.begin(), bcre.end()},
+                                        {aann.begin(), aann.end()}, {bann.begin(), bann.end()}),
+                       coeff);
+            },
+            "acre"_a, "bcre"_a, "aann"_a, "bann"_a, "coeff"_a = sparse_scalar_t(1),
+            "Add a term to the operator by passing lists of creation and annihilation indices. "
+            "This version is faster than the string version and does not check for reordering")
         .def("to_operator", &SparseOperatorList::to_operator)
         .def(
             "remove",
@@ -96,6 +116,13 @@ void export_SparseOperatorList(py::module& m) {
         .def("__str__", [](const SparseOperatorList& op) { return join(op.str(), "\n"); })
         .def(
             "__getitem__", [](const SparseOperatorList& op, const size_t n) { return op[n]; },
+            "Get the coefficient of a term")
+        .def(
+            "__getitem__",
+            [](const SparseOperatorList& op, const std::string& s) {
+                const auto [sqop, factor] = make_sq_operator_string(s, false);
+                return factor * op[sqop];
+            },
             "Get the coefficient of a term")
         .def(
             "__setitem__",

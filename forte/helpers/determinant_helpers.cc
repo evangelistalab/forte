@@ -120,12 +120,12 @@ std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, si
     }
     // find the maximum value in mo_symmetry and check that it is less than nirrep
     int max_sym = *std::max_element(mo_symmetry.begin(), mo_symmetry.end());
-    if (max_sym >= nirrep) {
+    if (max_sym >= static_cast<int>(nirrep)) {
         throw std::runtime_error("The symmetry of the MOs is greater than the number of irreps.");
     }
     // implement other sensible checks, like making sure that symmetry is less than nirrep and na <=
     // nmo, nb <= nmo
-    if (symmetry >= nirrep) {
+    if (symmetry >= static_cast<int>(nirrep)) {
         throw std::runtime_error(
             "The symmetry of the determinants is greater than the number of irreps.");
     }
