@@ -136,8 +136,11 @@ void Psi4Integrals::setup_psi4_ints() {
     // check that if we ask for restricted, we are actually restricted
     if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
         if (not is_restricted) {
-            throw std::runtime_error(
-                "Requested restricted integrals, but input orbitals are unrestricted");
+            print_h1("Warning from Forte Integrals Builder (Psi4)");
+            outfile->Printf("\n  Unequivalent alpha and beta orbital coefficients.");
+            outfile->Printf("\n  Using restricted formalism with alpha orbitals only to build integrals!\n");
+            wfn_->Ca()->copy(_Ca());
+            wfn_->Cb()->copy(_Ca());
         }
     }
 
