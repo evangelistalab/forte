@@ -249,6 +249,10 @@ class MRDSRG : public MASTER_DSRG {
 
     /// Compute DSRG-transformed Hamiltonian Hbar
     void compute_hbar(double& rsc_conv);
+
+    /// Compute DSRG-MRPT2 transformed Hamiltonian Hbar
+    void compute_hbar_pt2();
+
     /// Compute DSRG-transformed Hamiltonian Hbar sequentially
     void compute_hbar_sequential(double& rsc_conv);
     /// Compute DSRG-transformed Hamiltonian Hbar sequentially by orbital rotation
@@ -355,7 +359,7 @@ class MRDSRG : public MASTER_DSRG {
     /// Compute MR-LDSRG(2)
     double compute_energy_ldsrg2();
 
-    /// Modify the rdms_ member of the parent (base) class. Only used in EOM-DSRG. 
+    /// Modify the rdms_ member of the parent (base) class. Only used in EOM-DSRG.
     void set_rdms(std::shared_ptr<RDMs> rdms) override;
 
     /// Zeroth-order Hamiltonian
@@ -373,6 +377,8 @@ class MRDSRG : public MASTER_DSRG {
     std::vector<std::pair<std::string, double>> compute_energy_pt2_Ffull();
     /// Compute DSRG-MRPT2 energy using Fdiag_Vactv or Fdiag_Vdiag as H0th
     std::vector<std::pair<std::string, double>> compute_energy_pt2_FdiagV();
+    /// Compute DSRG-MRPT2 energy and return Full Hbar
+    std::vector<std::pair<std::string, double>> compute_energy_pt2_full_hbar();
 
     // => MR-SRG <= //
 

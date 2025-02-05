@@ -749,6 +749,7 @@ double MRDSRG::compute_energy_ldsrg2() {
         // compute Hbar
         local_timer t_hbar;
         timer hbar("Compute Hbar");
+
         double rsc_conv = rsc_adapt
                               ? get_adaptive_rsc_conv(cycle, Edelta, rsc_thres, rsc_adapt_thres,
                                                       rsc_adapt_delta_e, e_conv)
@@ -831,13 +832,13 @@ double MRDSRG::compute_energy_ldsrg2() {
 
     // dump amplitudes to file
     dump_amps_to_disk();
-    
+
     if (foptions_->get_bool("FULL_HBAR")) {
         double rsc_conv = rsc_thres;
         compute_hbar(rsc_conv);
     }
-    
-    if (foptions_->get_bool("FULL_MBAR")){
+
+    if (foptions_->get_bool("FULL_MBAR")) {
         auto mpints = std::make_shared<MultipoleIntegrals>(ints_, mo_space_info_);
         // bare dipoles
         std::vector<ambit::BlockedTensor> M1;
@@ -846,7 +847,7 @@ double MRDSRG::compute_energy_ldsrg2() {
             std::string name = "DIPOLE " + dp_dirs[z];
             ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, spin_cases({"gg"}));
             m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-                        double& value) { value = mpints->dp_ints_corr(z, i[0], i[1]); });
+                           double& value) { value = mpints->dp_ints_corr(z, i[0], i[1]); });
             M1.push_back(m1);
         }
         transform_one_body(M1);
@@ -866,8 +867,9 @@ void MRDSRG::compute_mbar() {
     for (int z = 0; z < 3; ++z) {
         std::string name = "DIPOLE " + dp_dirs[z];
         ambit::BlockedTensor m1 = BTF_->build(tensor_type_, name, spin_cases({"gg"}));
-        m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-                    double& value) { value = mpints->dp_ints_corr(z, i[0], i[1]); });
+        m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+            value = mpints->dp_ints_corr(z, i[0], i[1]);
+        });
         M1.push_back(m1);
     }
     transform_one_body(M1);
