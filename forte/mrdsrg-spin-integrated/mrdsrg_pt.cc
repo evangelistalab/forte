@@ -221,6 +221,14 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_full_hbar
     Hbar2_["pQrS"] = V_["pQrS"];
     Hbar2_["PQRS"] = V_["PQRS"];
 
+    Hbar1_first_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"gg"}));
+    Hbar2_first_ = BTF_->build(tensor_type_, "Hbar2", spin_cases({"gggg"}));
+    Hbar1_first_["pq"] = F_["pq"];
+    Hbar1_first_["PQ"] = F_["PQ"];
+    Hbar2_first_["pqrs"] = V_["pqrs"];
+    Hbar2_first_["pQrS"] = V_["pQrS"];
+    Hbar2_first_["PQRS"] = V_["PQRS"];
+
     // 2. Compute F0th, F1st, and V1st
     ambit::BlockedTensor F0th = BTF_->build(tensor_type_, "Fock 0th", spin_cases({"gg"}));
     for (const auto block : {"cc", "CC", "aa", "AA", "vv", "VV"}) {
@@ -288,6 +296,26 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_full_hbar
 
     // reference relaxation
     if (foptions_->get_str("RELAX_REF") != "NONE" || multi_state) {
+        // 0. Compute First-order DSRG transformed Hamiltonian
+        Hbar0_first_ = 0.0;
+        O1_.zero();
+        O2_.zero();
+        H1_T1_C1(F0th, T1_, 1.0, O1_);
+        H1_T2_C1(F0th, T2_, 1.0, O1_);
+        H1_T2_C2(F0th, T2_, 1.0, O2_);
+
+        Hbar1_first_["pq"] += O1_["pq"];
+        Hbar1_first_["PQ"] += O1_["PQ"];
+        Hbar2_first_["pqrs"] += O2_["pqrs"];
+        Hbar2_first_["pQrS"] += O2_["pQrS"];
+        Hbar2_first_["PQRS"] += O2_["PQRS"];
+
+        Hbar1_first_["pq"] += O1_["qp"];
+        Hbar1_first_["PQ"] += O1_["QP"];
+        Hbar2_first_["pqrs"] += O2_["rspq"];
+        Hbar2_first_["pQrS"] += O2_["rSpQ"];
+        Hbar2_first_["PQRS"] += O2_["RSPQ"];
+
         // 1. Compute F2nd and V2nd [(H + 0.5[H0th, A]), A]
         ambit::BlockedTensor F2nd = BTF_->build(tensor_type_, "Fock 2nd", spin_cases({"gg"}));
         ambit::BlockedTensor V2nd = BTF_->build(tensor_type_, "V 2nd", spin_cases({"gggg"}));

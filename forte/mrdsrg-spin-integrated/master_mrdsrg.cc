@@ -692,7 +692,7 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
 }
 
 void MASTER_DSRG::deGNO_ints_full(const std::string& name, double& H0, BlockedTensor& H1,
-                             BlockedTensor& H2) {
+                                  BlockedTensor& H2) {
     print_h2("De-Normal-Order Full DSRG Transformed " + name);
 
     // compute scalar
@@ -737,7 +737,7 @@ void MASTER_DSRG::deGNO_ints_full(const std::string& name, double& H0, BlockedTe
 }
 
 void MASTER_DSRG::GNO_ints_full(const std::string& name, double& H0, BlockedTensor& H1,
-                             BlockedTensor& H2, const std::shared_ptr<RDMs> rdms) {
+                                BlockedTensor& H2, const std::shared_ptr<RDMs> rdms) {
     print_h2("Normal-Order Full DSRG Transformed " + name);
 
     // compute scalar
@@ -786,7 +786,6 @@ void MASTER_DSRG::GNO_ints_full(const std::string& name, double& H0, BlockedTens
     H0 += scalar1 + scalar2;
     outfile->Printf("Done. Timing %8.3f s", t0.get());
 }
-
 
 void MASTER_DSRG::fill_three_index_ints(ambit::BlockedTensor T) {
     const auto& block_labels = T.block_labels();
@@ -2418,8 +2417,22 @@ std::pair<double, std::vector<BlockedTensor>> MASTER_DSRG::save_Heff_full() {
     return std::make_pair(Edsrg, Heff);
 }
 
-std::pair<double, std::vector<BlockedTensor>> MASTER_DSRG::update_Heff_full(double& H0, BlockedTensor& H1,
-                             BlockedTensor& H2, std::shared_ptr<RDMs> rdms) {
+std::pair<double, std::vector<BlockedTensor>> MASTER_DSRG::save_Heff_first_full() {
+    double Edsrg = Eref_ + Hbar0_first_;
+    ambit::BlockedTensor Hbar1_copy = BTF_->build(tensor_type_, "Hbar1_copy", spin_cases({"gg"}));
+    ambit::BlockedTensor Hbar2_copy = BTF_->build(tensor_type_, "Hbar2_copy", spin_cases({"gggg"}));
+    Hbar1_copy["pq"] = Hbar1_first_["pq"];
+    Hbar1_copy["PQ"] = Hbar1_first_["PQ"];
+    Hbar2_copy["pqrs"] = Hbar2_first_["pqrs"];
+    Hbar2_copy["pQrS"] = Hbar2_first_["pQrS"];
+    Hbar2_copy["PQRS"] = Hbar2_first_["PQRS"];
+    std::vector<ambit::BlockedTensor> Heff = {Hbar1_copy, Hbar2_copy};
+    return std::make_pair(Edsrg, Heff);
+}
+
+std::pair<double, std::vector<BlockedTensor>>
+MASTER_DSRG::update_Heff_full(double& H0, BlockedTensor& H1, BlockedTensor& H2,
+                              std::shared_ptr<RDMs> rdms) {
     deGNO_ints_full("Hamiltonian", H0, H1, H2); // De-normal ordering based on original RDMs.
     outfile->Printf("\n  H0 after deGNO: %20.12f", H0);
     GNO_ints_full("Hamiltonian", H0, H1, H2, rdms); // Re-normal ordering based on new RDMs.

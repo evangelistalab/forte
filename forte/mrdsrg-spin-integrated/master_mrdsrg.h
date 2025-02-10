@@ -47,17 +47,18 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute DSRG transformed Hamiltonian
     virtual std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
 
-    /// Modify the rdms_ member of the parent (base) class. Only used in EOM-DSRG. 
+    /// Modify the rdms_ member of the parent (base) class. Only used in EOM-DSRG.
     virtual void set_rdms(std::shared_ptr<RDMs> rdms) {
         throw std::runtime_error("Child class should override this function");
     };
 
     /// Save DSRG full transformed Hamiltonian
     std::pair<double, std::vector<BlockedTensor>> save_Heff_full();
+    std::pair<double, std::vector<BlockedTensor>> save_Heff_first_full();
 
     /// Update DSRG full transformed Hamiltonian
-    std::pair<double, std::vector<BlockedTensor>> update_Heff_full(double& H0, BlockedTensor& H1, \
-                                                                   BlockedTensor& H2, std::shared_ptr<RDMs> rdms);
+    std::pair<double, std::vector<BlockedTensor>>
+    update_Heff_full(double& H0, BlockedTensor& H1, BlockedTensor& H2, std::shared_ptr<RDMs> rdms);
 
     /// Compute DSRG full transformed Hamiltonian in the de-normal-ordered basis
     std::pair<double, std::vector<BlockedTensor>> compute_Heff_full_degno();
@@ -352,6 +353,13 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// DSRG transformed 3-body Hamiltonian (active only in DSRG-PT, but full in MRDSRG)
     ambit::BlockedTensor Hbar3_;
 
+    /// First-order energy.
+    double Hbar0_first_;
+    /// First-order DSRG transformed 1-body Hamiltonian
+    ambit::BlockedTensor Hbar1_first_;
+    /// First-order DSRG transformed 2-body Hamiltonian
+    ambit::BlockedTensor Hbar2_first_;
+
     /**
      * De-normal-order a 2-body DSRG transformed integrals
      * This will change H0 and H1 !!!
@@ -375,7 +383,8 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
      * Re-Normal-order the full DSRG transformed Hamiltonian
      * This will change H0, H1 and H2!!!
      */
-    void GNO_ints_full(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2, const std::shared_ptr<RDMs> rdms);
+    void GNO_ints_full(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2,
+                       const std::shared_ptr<RDMs> rdms);
 
     /**
      * De-normal-order the T1 and T2 amplitudes and return the effective T1

@@ -250,9 +250,6 @@ class MRDSRG : public MASTER_DSRG {
     /// Compute DSRG-transformed Hamiltonian Hbar
     void compute_hbar(double& rsc_conv);
 
-    /// Compute DSRG-MRPT2 transformed Hamiltonian Hbar
-    void compute_hbar_pt2();
-
     /// Compute DSRG-transformed Hamiltonian Hbar sequentially
     void compute_hbar_sequential(double& rsc_conv);
     /// Compute DSRG-transformed Hamiltonian Hbar sequentially by orbital rotation
