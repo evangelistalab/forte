@@ -155,6 +155,7 @@ def solve_cc_equations(
     linked=True,
     maxk=19,
     diis_start=3,
+    diis_nvec=10,
     maxiter=200,
 ):
     """Solve the CC equations
@@ -189,7 +190,7 @@ def solve_cc_equations(
         Returns the a tuple containign the converged amplitudes, the energy, the projective energy,
         the number of iterations, and timings information
     """
-    diis = DIIS(t, diis_start)
+    diis = DIIS(t, diis_start, diis_nvec)
     ham = SparseHamiltonian(as_ints)
     if cc_type == "cc" or cc_type == "ucc":
         exp = SparseExp(maxk=maxk, screen_thresh=compute_threshold)
@@ -385,6 +386,8 @@ class GeneralCC(Module):
             The maximum number of exponentials in the CC equations
         diis_start : int
             Start the iterations when the DIIS dimension is greather than this parameter (default = 3)
+        diis_nvec : int
+            The number of DIIS vectors to store (default = 10)
 
     Returns
     -------
@@ -412,6 +415,7 @@ class GeneralCC(Module):
         self.linked = self.options.get("linked", True)
         self.maxk = self.options.get("maxk", 19)
         self.diis_start = self.options.get("diis_start", 3)
+        self.diis_nvec = self.options.get("diis_nvec", 10)
 
     @module_validation(needs=[Feature.MO_SPACE_INFO, Feature.SCF_INFO, Feature.AS_INTS])
     def _run(self, data: ForteData) -> ForteData:
@@ -492,6 +496,7 @@ class GeneralCC(Module):
                 self.linked,
                 self.maxk,
                 self.diis_start,
+                self.diis_nvec,
             )
 
             print(
