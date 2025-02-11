@@ -3,6 +3,7 @@ import functools
 import time
 import math
 import copy
+from collections import deque
 
 import numpy as np
 
@@ -311,9 +312,9 @@ class DIIS:
         Start the iterations when the DIIS dimension is greather than this parameter (default = 3)
     """
 
-    def __init__(self, t, diis_start=3):
-        self.t_diis = [t]
-        self.e_diis = []
+    def __init__(self, t, diis_start=3, diis_nvec=8):
+        self.t_diis = deque(maxlen=diis_nvec)
+        self.e_diis = deque(maxlen=diis_nvec)
         self.diis_start = diis_start
 
     def update(self, t, t_old):
@@ -337,8 +338,8 @@ class DIIS:
         self.t_diis.append(t)
         self.e_diis.append(np.subtract(t, t_old))
 
-        diis_dim = len(self.t_diis) - 1
-        if (diis_dim >= self.diis_start) and (diis_dim < len(t)):
+        diis_dim = len(self.t_diis)
+        if (diis_dim >= self.diis_start):
             # consturct diis B matrix (following Crawford Group github tutorial)
             B = np.ones((diis_dim + 1, diis_dim + 1)) * -1.0
             bsol = np.zeros(diis_dim + 1)
@@ -353,7 +354,7 @@ class DIIS:
             x = np.linalg.solve(B, bsol)
             t_new = np.zeros((len(t)))
             for l in range(diis_dim):
-                temp_ary = x[l] * np.asarray(self.t_diis[l + 1])
+                temp_ary = x[l] * np.asarray(self.t_diis[l])
                 t_new = np.add(t_new, temp_ary)
             return copy.deepcopy(list(np.real(t_new)))
 
