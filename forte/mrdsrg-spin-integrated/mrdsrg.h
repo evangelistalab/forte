@@ -356,6 +356,8 @@ class MRDSRG : public MASTER_DSRG {
     /// Compute MR-LDSRG(2)
     double compute_energy_ldsrg2();
 
+    void freeze_core(double e_freeze);
+
     /// Modify the rdms_ member of the parent (base) class. Only used in EOM-DSRG.
     void set_rdms(std::shared_ptr<RDMs> rdms) override;
 

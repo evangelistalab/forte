@@ -731,6 +731,7 @@ double MRDSRG::compute_energy_ldsrg2() {
     bool rsc_adapt = foptions_->get_bool("DSRG_ADAPTIVE_RSC");
     double rsc_adapt_thres = foptions_->get_double("DSRG_ADAPTIVE_RSC_THRESHOLD");
     double rsc_adapt_delta_e = foptions_->get_double("DSRG_ADAPTIVE_RSC_DELTA_E_START");
+    double e_freeze = foptions_->get_double("E_FREEZE");
     converged_ = false;
     Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"gg"}));
     O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"gg"}));
@@ -758,6 +759,9 @@ double MRDSRG::compute_energy_ldsrg2() {
             compute_hbar_sequential_rotation(rsc_conv);
         } else {
             compute_hbar(rsc_conv);
+        }
+        if (e_freeze != 0.0) {
+            freeze_core(e_freeze);
         }
         hbar.stop();
         Edelta = Hbar0_ - Ecorr;
@@ -1029,6 +1033,41 @@ void MRDSRG::compute_mbar_ldsrg2(const ambit::BlockedTensor& M, int ind) {
         outfile->Printf("\n    Warning! Mbar is not converged in %3d-nested commutators!", maxn);
         outfile->Printf("\n    Please increase DSRG_RSC_NCOMM.");
     }
+}
+
+void MRDSRG::freeze_core(double e_freeze) {
+    outfile->Printf("\n    Freezing core orbitals with energy less than %20.15f", e_freeze);
+    Hbar2_.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
+                if (Fa_[i[0]] < e_freeze || Fa_[i[1]] < e_freeze || Fa_[i[2]] < e_freeze ||
+                    Fa_[i[3]] < e_freeze) {
+                    value = 0.0;
+                }
+            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
+                if (Fa_[i[0]] < e_freeze || Fb_[i[1]] < e_freeze || Fa_[i[2]] < e_freeze ||
+                    Fb_[i[3]] < e_freeze) {
+                    value = 0.0;
+                }
+            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
+                if (Fb_[i[0]] < e_freeze || Fb_[i[1]] < e_freeze || Fb_[i[2]] < e_freeze ||
+                    Fb_[i[3]] < e_freeze) {
+                    value = 0.0;
+                }
+            }
+        });
+    Hbar1_.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin) {
+                if (Fa_[i[0]] < e_freeze || Fa_[i[1]] < e_freeze) {
+                    value = 0.0;
+                }
+            } else {
+                if (Fb_[i[0]] < e_freeze || Fb_[i[1]] < e_freeze) {
+                    value = 0.0;
+                }
+            }
+        });
 }
 
 void MRDSRG::compute_hbar_qc() {
