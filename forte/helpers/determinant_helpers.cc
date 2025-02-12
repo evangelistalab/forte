@@ -113,7 +113,7 @@ std::vector<std::vector<String>> make_strings(int n, int k, size_t nirrep,
 }
 
 std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, size_t nirrep,
-                                            std::vector<int> mo_symmetry, int symmetry) {
+                                            std::vector<int> mo_symmetry, int symmetry, int truncation) {
     std::vector<Determinant> dets;
     if (mo_symmetry.size() != nmo) {
         mo_symmetry = std::vector<int>(nmo, 0);
@@ -137,13 +137,31 @@ std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, si
         throw std::runtime_error("The number of beta electrons is greater than the number of MOs.");
     }
 
+    String aufbau_a;
+    String aufbau_b;
+    aufbau_a.zero();
+    aufbau_b.zero();
+    for (size_t i = std::max(0, static_cast<int>(nmo - na)); i < nmo; ++i)
+        aufbau_a[i] = true; // 1
+    for (size_t i = std::max(0, static_cast<int>(nmo - nb)); i < nmo; ++i)
+        aufbau_b[i] = true; // 1
+
     auto strings_a = make_strings(nmo, na, nirrep, mo_symmetry);
     auto strings_b = make_strings(nmo, nb, nirrep, mo_symmetry);
     for (size_t ha = 0; ha < nirrep; ha++) {
         int hb = symmetry ^ ha;
         for (const auto& Ia : strings_a[ha]) {
+            int exc_a = (aufbau_a ^ Ia).count() / 2;
             for (const auto& Ib : strings_b[hb]) {
-                dets.push_back(Determinant(Ia, Ib));
+                int exc_b = (aufbau_b ^ Ib).count() / 2;
+                if (truncation == -1) {
+                    dets.push_back(Determinant(Ia, Ib));
+                }
+                else {
+                    if (exc_a + exc_b <= truncation) {
+                        dets.push_back(Determinant(Ia, Ib));
+                    } 
+                }
             }
         }
     }
