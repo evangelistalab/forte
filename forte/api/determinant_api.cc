@@ -165,7 +165,7 @@ void export_Determinant(py::module& m) {
 
     m.def(
         "hilbert_space", &make_hilbert_space, "nmo"_a, "na"_a, "nb"_a, "nirrep"_a = 1,
-        "mo_symmetry"_a = std::vector<int>(), "symmetry"_a = 0,
+        "mo_symmetry"_a = std::vector<int>(), "symmetry"_a = 0, "truncation"_a = -1,
         "Generate the Hilbert space for a given number of electrons and orbitals. If information "
         "about the symmetry of the MOs is not provided, it assumes that all MOs have symmetry 0.");
 }
