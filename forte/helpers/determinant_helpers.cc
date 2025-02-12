@@ -141,9 +141,9 @@ std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, si
     String aufbau_b;
     aufbau_a.zero();
     aufbau_b.zero();
-    for (size_t i = std::max(0, static_cast<int>(nmo - na)); i < nmo; ++i)
+    for (int i = 0; i < na; ++i)
         aufbau_a[i] = true; // 1
-    for (size_t i = std::max(0, static_cast<int>(nmo - nb)); i < nmo; ++i)
+    for (int i = 0; i < nb; ++i)
         aufbau_b[i] = true; // 1
 
     auto strings_a = make_strings(nmo, na, nirrep, mo_symmetry);
