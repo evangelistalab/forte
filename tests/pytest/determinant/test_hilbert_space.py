@@ -12,7 +12,7 @@ def test_determinant_hilbert_space():
 
     dets = forte.hilbert_space(2, 1, 1, truncation=1)
     # compare with the expected result of the determinant
-    expected = [det("02"), det("+-"), det("-+")]
+    expected = [det("20"), det("+-"), det("-+")]
     assert len(dets) == 3, dets
     assert sorted(dets) == sorted(expected)
 
@@ -32,9 +32,9 @@ def test_determinant_hilbert_space():
     dets = forte.hilbert_space(6, 3, 3, 8, [0, 2, 3, 5, 6, 7], 0)
     assert len(dets) == 56
 
-    # test with the case of 6 electrons and 6 orbitals, truncated to 2 excitations
-    dets = forte.hilbert_space(6, 3, 3, truncation=2)
-    assert len(dets) == 118
+    # test with the case of 6 electrons and 7 orbitals, truncated to 2 excitations
+    dets = forte.hilbert_space(7, 3, 3, truncation=2)
+    assert len(dets) == 205
 
 
 def test_determinant_hilbert_space_edge_cases():
@@ -69,7 +69,7 @@ def test_determinant_hilbert_space_edge_cases():
 
     dets = forte.hilbert_space(4, 2, 0, truncation=1)
     # compare with the expected result of the determinant
-    expected = [det("+0+0"), det("+00+"), det("0++0"), det("0+0+"), det("00++")]
+    expected = [det("++00"), det("+0+0"), det("+00+"), det("0++0"), det("0+0+")]
     assert len(dets) == 5
     assert sorted(dets) == sorted(expected)
 
