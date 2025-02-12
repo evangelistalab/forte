@@ -36,6 +36,9 @@ def test_determinant_hilbert_space():
     dets = forte.hilbert_space(7, 3, 3, truncation=2)
     assert len(dets) == 205
 
+    dets = forte.hilbert_space(18, 8, 8, truncation=3)
+    assert len(dets) == 224121
+
 
 def test_determinant_hilbert_space_edge_cases():
     dets = forte.hilbert_space(1, 1, 1)
