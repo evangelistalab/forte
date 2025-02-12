@@ -136,6 +136,12 @@ std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, si
     if (nb > nmo) {
         throw std::runtime_error("The number of beta electrons is greater than the number of MOs.");
     }
+    if (truncation < -1) {
+        throw std::runtime_error("The truncation level must be greater than or equal to -1.");
+    }
+    if (truncation > na + nb) {
+        throw std::runtime_error("The truncation level must be less than or equal to the total number of electrons.");
+    }
 
     String aufbau_a;
     String aufbau_b;
