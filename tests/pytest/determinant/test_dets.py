@@ -217,12 +217,12 @@ def test_excitation_connection():
     """Test the excitation_connection function"""
     d1 = det("220")
     d2 = det("022")
-    conn = d1.excitation_connection(d2, 3)
+    conn = d1.excitation_connection(d2)
     assert conn[0] == [0]  # alfa hole
     assert conn[1] == [2]  # alfa particle
     assert conn[2] == [0]  # beta hole
     assert conn[3] == [2]  # beta particle
-    conn = d2.excitation_connection(d1, 3)
+    conn = d2.excitation_connection(d1)
     assert conn[0] == [2]  # alfa hole
     assert conn[1] == [0]  # alfa particle
     assert conn[2] == [2]  # beta hole
@@ -231,12 +231,12 @@ def test_excitation_connection():
     # test different number of electrons
     d1 = det("2")
     d2 = det("0")
-    conn = d1.excitation_connection(d2, 1)
+    conn = d1.excitation_connection(d2)
     assert conn[0] == [0]  # alfa hole
     assert conn[1] == []  # alfa particle
     assert conn[2] == [0]  # beta hole
     assert conn[3] == []  # beta particle
-    conn = d2.excitation_connection(d1, 1)
+    conn = d2.excitation_connection(d1)
     assert conn[0] == []  # alfa hole
     assert conn[1] == [0]  # alfa particle
     assert conn[2] == []  # beta hole
@@ -244,20 +244,11 @@ def test_excitation_connection():
 
     d1 = det("222+-00000")
     d2 = det("-++0200-02")
-    conn = d1.excitation_connection(d2, 10)
+    conn = d1.excitation_connection(d2)
     assert conn[0] == [0, 3]  # alfa hole
     assert conn[1] == [4, 9]  # alfa particle
     assert conn[2] == [1, 2]  # beta hole
     assert conn[3] == [7, 9]  # beta particle
-
-    # test for when some electrons get masked by the norb argument
-    d1 = det("222+-00000")
-    d2 = det("-++0200-02")
-    conn = d1.excitation_connection(d2, 9)
-    assert conn[0] == [0, 3]  # alfa hole
-    assert conn[1] == [4]  # alfa particle
-    assert conn[2] == [1, 2]  # beta hole
-    assert conn[3] == [7]  # beta particle
 
 
 def test_det_symmetry():

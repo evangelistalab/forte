@@ -597,17 +597,9 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     /// Describe the excitation connection of a determinant relative to this one
     /// The excitation connection is a vector of 4 vectors:
     /// [[alfa holes], [alfa particles], [beta holes], [beta particles]]
-    std::vector<std::vector<size_t>> 
-    excitation_connection(const DeterminantImpl<N>& d, const int norb) const {
-        if (static_cast<size_t>(norb) > nbits_half) {
-            throw std::range_error(
-                "Determinant::excitation_connection(int norb) was passed a value of norb (" +
-                std::to_string(norb) +
-                "), which is larger than the maximum number of alpha orbitals (" +
-                std::to_string(nbits_half) + ").");
-        }
+    std::vector<std::vector<size_t>> excitation_connection(const DeterminantImpl<N>& d) const {
         std::vector<std::vector<size_t>> excitation(4);
-        for (size_t i = 0; i < static_cast<size_t>(norb); i++) {
+        for (size_t i = 0; i < nbits_half; i++) {
             if (get_alfa_bit(i) and not d.get_alfa_bit(i)) {
                 excitation[0].push_back(i);
             }

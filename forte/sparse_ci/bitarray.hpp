@@ -440,7 +440,7 @@ template <size_t N> class BitArray {
         return ~word_t(0);
     }
 
-    /// Find the first bit set to one (starting from the lowest index)
+    /// Find the last bit set to one (starting from the lowest index)
     /// @return the index of the the last bit, or if all bits are one, returns ~0
     uint64_t find_last_one(size_t begin = 0, size_t end = nwords_) const {
         for (; begin + 1 < end; end--) {
