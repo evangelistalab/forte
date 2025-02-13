@@ -112,7 +112,7 @@ std::vector<std::vector<String>> make_strings(int n, int k, size_t nirrep,
     return strings;
 }
 
-std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, size_t nirrep,
+std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, Determinant ref, size_t nirrep,
                                             std::vector<int> mo_symmetry, int symmetry, int truncation) {
     std::vector<Determinant> dets;
     if (mo_symmetry.size() != nmo) {
@@ -144,35 +144,36 @@ std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, si
         throw std::runtime_error("The truncation level must be less than or equal to the total number of electrons.");
     }
 
-    String aufbau_a;
-    String aufbau_b;
-    aufbau_a.zero();
-    aufbau_b.zero();
-    for (int i = 0; i < na; ++i)
-        aufbau_a[i] = true; // 1
-    for (int i = 0; i < nb; ++i)
-        aufbau_b[i] = true; // 1
-
     auto strings_a = make_strings(nmo, na, nirrep, mo_symmetry);
     auto strings_b = make_strings(nmo, nb, nirrep, mo_symmetry);
     for (size_t ha = 0; ha < nirrep; ha++) {
         int hb = symmetry ^ ha;
         for (const auto& Ia : strings_a[ha]) {
-            int exc_a = (aufbau_a ^ Ia).count() / 2;
             for (const auto& Ib : strings_b[hb]) {
-                int exc_b = (aufbau_b ^ Ib).count() / 2;
+                Determinant det(Ia, Ib);
                 if (truncation == -1) {
-                    dets.push_back(Determinant(Ia, Ib));
+                    dets.push_back(det);
                 }
                 else {
-                    if (exc_a + exc_b <= truncation) {
-                        dets.push_back(Determinant(Ia, Ib));
+                    if ((det ^ ref).count() / 2 <= truncation) {
+                        dets.push_back(det);
                     } 
                 }
             }
         }
     }
     return dets;
+}
+
+std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, size_t nirrep,
+                                            std::vector<int> mo_symmetry, int symmetry, int truncation) {
+    Determinant aufbau;
+    for (int i = 0; i < static_cast<int>(na); ++i)
+        aufbau.set_alfa_bit(i, true);
+    for (int i = 0; i < static_cast<int>(nb); ++i)
+        aufbau.set_beta_bit(i, true);
+    
+    return make_hilbert_space(nmo, na, nb, aufbau, nirrep, mo_symmetry, symmetry, truncation);
 }
 
 } // namespace forte
