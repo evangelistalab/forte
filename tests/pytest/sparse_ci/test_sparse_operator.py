@@ -524,6 +524,8 @@ def test_sparse_operator_list_add():
     sop2.add("[0a+ 0a-]", 1.0)
     sop3 = sop1 + sop2
     assert len(sop3) == 2
+    assert sop3(0)[0].str() == "[1a+ 1a-]"
+    assert sop3(1)[0].str() == "[0a+ 0a-]"
 
 
 if __name__ == "__main__":
