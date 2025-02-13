@@ -419,6 +419,19 @@ template <typename Derived, typename T, typename F> class VectorSpaceList {
     /// @brief Check if two vectors lists are equal
     bool operator==(const VectorSpaceList& rhs) const { return elements_ == rhs.elements_; }
 
+    /// @brief Concatenate two vectors
+    Derived operator+=(const Derived& rhs) {
+        elements_.insert(elements_.end(), rhs.elements_.begin(), rhs.elements_.end());
+        return static_cast<Derived&>(*this);
+    }
+
+    /// @brief Concatenate two vectors
+    Derived operator+(const Derived& rhs) const {
+        Derived result = static_cast<Derived&>(*this);
+        result += rhs;
+        return result;
+    }
+
     /// @brief  Get the adjoint of the vector
     VectorSpaceList adjoint() const {
         VectorSpaceList result;
