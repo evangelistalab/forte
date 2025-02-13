@@ -228,7 +228,7 @@ def test_excitation_connection():
     assert conn[2] == [2]  # beta hole
     assert conn[3] == [0]  # beta particle
 
-    # test different fock space
+    # test different number of electrons
     d1 = det("2")
     d2 = det("0")
     conn = d1.excitation_connection(d2, 1)
@@ -249,6 +249,15 @@ def test_excitation_connection():
     assert conn[1] == [4, 9]  # alfa particle
     assert conn[2] == [1, 2]  # beta hole
     assert conn[3] == [7, 9]  # beta particle
+
+    # test for when some electrons get masked by the norb argument
+    d1 = det("222+-00000")
+    d2 = det("-++0200-02")
+    conn = d1.excitation_connection(d2, 9)
+    assert conn[0] == [0, 3]  # alfa hole
+    assert conn[1] == [4]  # alfa particle
+    assert conn[2] == [1, 2]  # beta hole
+    assert conn[3] == [7]  # beta particle
 
 
 def test_det_symmetry():
