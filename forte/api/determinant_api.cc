@@ -164,9 +164,22 @@ void export_Determinant(py::module& m) {
         .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
 
     m.def(
-        "hilbert_space", &make_hilbert_space, "nmo"_a, "na"_a, "nb"_a, "nirrep"_a = 1,
+        "hilbert_space", [](size_t nmo, size_t na, size_t nb, size_t nirrep, std::vector<int> mo_symmetry,
+                            int symmetry, int truncation) {
+            return make_hilbert_space(nmo, na, nb, nirrep, mo_symmetry, symmetry, truncation);},
+         "nmo"_a, "na"_a, "nb"_a, "nirrep"_a = 1,
         "mo_symmetry"_a = std::vector<int>(), "symmetry"_a = 0, "truncation"_a = -1,
-        "Generate the Hilbert space for a given number of electrons and orbitals. If information "
-        "about the symmetry of the MOs is not provided, it assumes that all MOs have symmetry 0.");
+        "Generate the Hilbert space for a given number of electrons and orbitals, and optionally the truncation level."
+        "If information about the symmetry of the MOs is not provided, it assumes that all MOs have symmetry 0."
+        "If the reference determinant is not provided, the aufbau determinant is used.");
+    m.def(
+        "hilbert_space", [](size_t nmo, size_t na, size_t nb, Determinant ref, size_t nirrep,
+                            std::vector<int> mo_symmetry, int symmetry, int truncation) {
+            return make_hilbert_space(nmo, na, nb, ref, nirrep, mo_symmetry, symmetry, truncation);},
+        "nmo"_a, "na"_a, "nb"_a, "ref"_a, "nirrep"_a = 1,
+        "mo_symmetry"_a = std::vector<int>(), "symmetry"_a = 0, "truncation"_a = -1,
+        "Generate the Hilbert space for a given number of electrons and orbitals, and optionally the truncation level."
+        "If information about the symmetry of the MOs is not provided, it assumes that all MOs have symmetry 0."
+        "If the reference determinant is not provided, the aufbau determinant is used.");
 }
 } // namespace forte

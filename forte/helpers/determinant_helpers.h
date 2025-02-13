@@ -65,12 +65,16 @@ std::vector<std::vector<String>> make_strings(int n, int k, size_t nirrep,
 /// @param nmo The number of orbitals
 /// @param na The number of alpha electrons
 /// @param nb The number of beta electrons
-/// @param nirrep The number of irreps
-/// @param mo_symmetry The symmetry of the MOs
-/// @param symmetry The symmetry of the determinants
-/// @param truncation The excitation level truncation
+/// @param ref The reference determinant (optional)
+/// @param nirrep The number of irreps (optional)
+/// @param mo_symmetry The symmetry of the MOs (optional)
+/// @param symmetry The symmetry of the determinants (optional)
+/// @param truncation The excitation level truncation (optional)
 /// @return A vector of determinants
 std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, size_t nirrep = 1,
+                                            std::vector<int> mo_symmetry = std::vector<int>(),
+                                            int symmetry = 0, int truncation = -1);
+std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, Determinant ref, size_t nirrep = 1,
                                             std::vector<int> mo_symmetry = std::vector<int>(),
                                             int symmetry = 0, int truncation = -1);
 

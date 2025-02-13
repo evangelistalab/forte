@@ -10,6 +10,18 @@ def test_determinant_hilbert_space():
     assert len(dets) == 4
     assert sorted(dets) == sorted(expected)
 
+    ref = det("002")
+    dets = forte.hilbert_space(3, 1, 1, ref, truncation=2)
+    expected = [det("002"), det("0+-"), det("0-+"), det("+0-"), det("-0+"), det("020"), det("200"), det("+-0"), det("-+0")]
+    assert len(dets) == 9
+    assert sorted(dets) == sorted(expected)
+
+    ref = det("0+-")
+    dets = forte.hilbert_space(3, 1, 1, ref, truncation=1)
+    expected = [det("0+-"), det("-+0"), det("+0-"), det("002"), det("020")] 
+    assert len(dets) == 5
+    assert sorted(dets) == sorted(expected)
+
     dets = forte.hilbert_space(2, 1, 1, truncation=1)
     # compare with the expected result of the determinant
     expected = [det("20"), det("+-"), det("-+")]
