@@ -346,8 +346,8 @@ class DIIS:
             bsol = np.zeros(diis_dim + 1)
             B[-1, -1] = 0.0
             bsol[-1] = -1.0
-            for i in range(len(self.e_diis)):
-                for j in range(i, len(self.e_diis)):
+            for i in range(diis_dim):
+                for j in range(i, diis_dim):
                     B[i, j] = np.dot(np.real(self.e_diis[i]), np.real(self.e_diis[j]))
                     if i != j:
                         B[j, i] = B[i, j]
