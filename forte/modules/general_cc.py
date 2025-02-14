@@ -3,6 +3,7 @@ import functools
 import time
 import math
 import copy
+from collections import deque
 
 import numpy as np
 
@@ -154,6 +155,7 @@ def solve_cc_equations(
     linked=True,
     maxk=19,
     diis_start=3,
+    diis_nvec=10,
     maxiter=200,
 ):
     """Solve the CC equations
@@ -188,7 +190,7 @@ def solve_cc_equations(
         Returns the a tuple containign the converged amplitudes, the energy, the projective energy,
         the number of iterations, and timings information
     """
-    diis = DIIS(t, diis_start)
+    diis = DIIS(t, diis_start, diis_nvec)
     ham = SparseHamiltonian(as_ints)
     if cc_type == "cc" or cc_type == "ucc":
         exp = SparseExp(maxk=maxk, screen_thresh=compute_threshold)
@@ -311,9 +313,9 @@ class DIIS:
         Start the iterations when the DIIS dimension is greather than this parameter (default = 3)
     """
 
-    def __init__(self, t, diis_start=3):
-        self.t_diis = [t]
-        self.e_diis = []
+    def __init__(self, t, diis_start=3, diis_nvec=8):
+        self.t_diis = deque(maxlen=diis_nvec)
+        self.e_diis = deque(maxlen=diis_nvec)
         self.diis_start = diis_start
 
     def update(self, t, t_old):
@@ -337,15 +339,15 @@ class DIIS:
         self.t_diis.append(t)
         self.e_diis.append(np.subtract(t, t_old))
 
-        diis_dim = len(self.t_diis) - 1
-        if (diis_dim >= self.diis_start) and (diis_dim < len(t)):
+        diis_dim = len(self.t_diis)
+        if (diis_dim >= self.diis_start):
             # consturct diis B matrix (following Crawford Group github tutorial)
             B = np.ones((diis_dim + 1, diis_dim + 1)) * -1.0
             bsol = np.zeros(diis_dim + 1)
             B[-1, -1] = 0.0
             bsol[-1] = -1.0
-            for i in range(len(self.e_diis)):
-                for j in range(i, len(self.e_diis)):
+            for i in range(diis_dim):
+                for j in range(i, diis_dim):
                     B[i, j] = np.dot(np.real(self.e_diis[i]), np.real(self.e_diis[j]))
                     if i != j:
                         B[j, i] = B[i, j]
@@ -353,7 +355,7 @@ class DIIS:
             x = np.linalg.solve(B, bsol)
             t_new = np.zeros((len(t)))
             for l in range(diis_dim):
-                temp_ary = x[l] * np.asarray(self.t_diis[l + 1])
+                temp_ary = x[l] * np.asarray(self.t_diis[l])
                 t_new = np.add(t_new, temp_ary)
             return copy.deepcopy(list(np.real(t_new)))
 
@@ -384,6 +386,8 @@ class GeneralCC(Module):
             The maximum number of exponentials in the CC equations
         diis_start : int
             Start the iterations when the DIIS dimension is greather than this parameter (default = 3)
+        diis_nvec : int
+            The number of DIIS vectors to store (default = 10)
 
     Returns
     -------
@@ -411,6 +415,7 @@ class GeneralCC(Module):
         self.linked = self.options.get("linked", True)
         self.maxk = self.options.get("maxk", 19)
         self.diis_start = self.options.get("diis_start", 3)
+        self.diis_nvec = self.options.get("diis_nvec", 10)
 
     @module_validation(needs=[Feature.MO_SPACE_INFO, Feature.SCF_INFO, Feature.AS_INTS])
     def _run(self, data: ForteData) -> ForteData:
@@ -491,6 +496,7 @@ class GeneralCC(Module):
                 self.linked,
                 self.maxk,
                 self.diis_start,
+                self.diis_nvec,
             )
 
             print(
