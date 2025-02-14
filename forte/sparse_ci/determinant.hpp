@@ -593,6 +593,28 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         }
         return d;
     }
+
+    /// Describe the excitation connection of a determinant relative to this one
+    /// The excitation connection is a vector of 4 vectors:
+    /// [[alfa holes], [alfa particles], [beta holes], [beta particles]]
+    std::vector<std::vector<size_t>> excitation_connection(const DeterminantImpl<N>& d) const {
+        std::vector<std::vector<size_t>> excitation(4);
+        for (size_t i = 0; i < nbits_half; i++) {
+            if (get_alfa_bit(i) and not d.get_alfa_bit(i)) {
+                excitation[0].push_back(i);
+            }
+            if (not get_alfa_bit(i) and d.get_alfa_bit(i)) {
+                excitation[1].push_back(i);
+            }
+            if (get_beta_bit(i) and not d.get_beta_bit(i)) {
+                excitation[2].push_back(i);
+            }
+            if (not get_beta_bit(i) and d.get_beta_bit(i)) {
+                excitation[3].push_back(i);
+            }
+        }
+        return excitation;
+    }
 };
 
 // Functions
