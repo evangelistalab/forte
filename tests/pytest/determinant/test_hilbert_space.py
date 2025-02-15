@@ -52,6 +52,13 @@ def test_determinant_hilbert_space():
     assert len(dets) == 2
     assert sorted(dets) == sorted(expected)
 
+    ref = det("22000")
+    dets = forte.hilbert_space(5, 2, 2, ref, truncation=1, nirrep=4, mo_symmetry=[0, 1, 2, 3, 0], symmetry=2)
+    # compare with the expected result of the determinant
+    expected = [det("2+0-0"), det("2-0+0"), det("+2-00"), det("-2+00")]
+    assert len(dets) == 4
+    assert sorted(dets) == sorted(expected)
+
     # test with the case of 6 electrons and 6 orbitals
     dets = forte.hilbert_space(6, 3, 3, 8, [0, 2, 3, 5, 6, 7], 0)
     assert len(dets) == 56
