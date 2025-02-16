@@ -177,6 +177,18 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         }
     }
 
+    void set_alfa_str(const BitArray<nbits_half>& sa) {
+        for (size_t n = 0; n < nwords_half; n++) {
+            words_[n] = sa.get_word(n);
+        }
+    }
+
+    void set_beta_str(const BitArray<nbits_half>& sb) {
+        for (size_t n = 0; n < nwords_half; n++) {
+            words_[n + nwords_half] = sb.get_word(n);
+        }
+    }
+
     void set(std::initializer_list<size_t> alfa_list, std::initializer_list<size_t> beta_list) {
         zero();
         for (auto i : alfa_list) {
