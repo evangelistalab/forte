@@ -112,6 +112,53 @@ std::vector<std::vector<String>> make_strings(int n, int k, size_t nirrep,
     return strings;
 }
 
+std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, Determinant ref,
+                                            int truncation, size_t nirrep,
+                                            std::vector<int> mo_symmetry, int symmetry) {
+    std::vector<Determinant> dets;
+    if (mo_symmetry.size() != nmo) {
+        mo_symmetry = std::vector<int>(nmo, 0);
+    }
+    // find the maximum value in mo_symmetry and check that it is less than nirrep
+    int max_sym = *std::max_element(mo_symmetry.begin(), mo_symmetry.end());
+    if (max_sym >= static_cast<int>(nirrep)) {
+        throw std::runtime_error("The symmetry of the MOs is greater than the number of irreps.");
+    }
+    // implement other sensible checks, like making sure that symmetry is less than nirrep and na <=
+    // nmo, nb <= nmo
+    if (symmetry >= static_cast<int>(nirrep)) {
+        throw std::runtime_error(
+            "The symmetry of the determinants is greater than the number of irreps.");
+    }
+    if (na > nmo) {
+        throw std::runtime_error(
+            "The number of alpha electrons is greater than the number of MOs.");
+    }
+    if (nb > nmo) {
+        throw std::runtime_error("The number of beta electrons is greater than the number of MOs.");
+    }
+    if (truncation < 0 || truncation > static_cast<int>(na + nb)) {
+        throw std::runtime_error("The truncation level must an integer between 0 and na + nb.");
+    }
+
+    auto strings_a = make_strings(nmo, na, nirrep, mo_symmetry);
+    auto strings_b = make_strings(nmo, nb, nirrep, mo_symmetry);
+    for (size_t ha = 0; ha < nirrep; ha++) {
+        int hb = symmetry ^ ha;
+        for (const auto& Ia : strings_a[ha]) {
+            Determinant det;
+            det.set_alfa_str(Ia);
+            for (const auto& Ib : strings_b[hb]) {
+                det.set_beta_str(Ib);
+                if (det.fast_a_xor_b_count(ref) / 2 <= truncation) {
+                    dets.push_back(det);
+                }
+            }
+        }
+    }
+    return dets;
+}
+
 std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, size_t nirrep,
                                             std::vector<int> mo_symmetry, int symmetry) {
     std::vector<Determinant> dets;

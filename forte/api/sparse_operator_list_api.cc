@@ -164,7 +164,22 @@ void export_SparseOperatorList(py::module& m) {
                 auto sop = op.to_operator();
                 return apply_operator_lin(sop, st);
             },
-            "Multiply a SparseOperator and a SparseState");
+            "Multiply a SparseOperator and a SparseState")
+        .def(
+            "__add__",
+            [](const SparseOperatorList& op1, const SparseOperatorList& op2) {
+                SparseOperatorList result = op1;
+                result += op2;
+                return result;
+            },
+            "Add (concatenate) two SparseOperatorList objects")
+        .def(
+            "__iadd__",
+            [](SparseOperatorList& op1, const SparseOperatorList& op2) {
+                op1 += op2;
+                return op1;
+            },
+            "Add (concatenate) a SparseOperatorList object to this SparseOperatorList object");
 
     // Wrapper class that holds a SparseOperator
     // and overloads operator* to apply forte::SparseExp.

@@ -177,6 +177,18 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         }
     }
 
+    void set_alfa_str(const BitArray<nbits_half>& sa) {
+        for (size_t n = 0; n < nwords_half; n++) {
+            words_[n] = sa.get_word(n);
+        }
+    }
+
+    void set_beta_str(const BitArray<nbits_half>& sb) {
+        for (size_t n = 0; n < nwords_half; n++) {
+            words_[n + nwords_half] = sb.get_word(n);
+        }
+    }
+
     void set(std::initializer_list<size_t> alfa_list, std::initializer_list<size_t> beta_list) {
         zero();
         for (auto i : alfa_list) {
@@ -593,6 +605,31 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         }
         return d;
     }
+<<<<<<< HEAD
+=======
+
+    /// Describe the excitation connection of a determinant relative to this one
+    /// The excitation connection is a vector of 4 vectors:
+    /// [[alfa holes], [alfa particles], [beta holes], [beta particles]]
+    std::vector<std::vector<size_t>> excitation_connection(const DeterminantImpl<N>& d) const {
+        std::vector<std::vector<size_t>> excitation(4);
+        for (size_t i = 0; i < nbits_half; i++) {
+            if (get_alfa_bit(i) and not d.get_alfa_bit(i)) {
+                excitation[0].push_back(i);
+            }
+            if (not get_alfa_bit(i) and d.get_alfa_bit(i)) {
+                excitation[1].push_back(i);
+            }
+            if (get_beta_bit(i) and not d.get_beta_bit(i)) {
+                excitation[2].push_back(i);
+            }
+            if (not get_beta_bit(i) and d.get_beta_bit(i)) {
+                excitation[3].push_back(i);
+            }
+        }
+        return excitation;
+    }
+>>>>>>> origin/sparse_parallel
 };
 
 // Functions
