@@ -185,6 +185,24 @@ class ProcedureDSRG:
                 self.mo_space_info, self.ints, self.scf_info, inactive_mix, active_mix, semi_threshold
             )
 
+        if self.options.get_bool("FULL_HBAR") and self.solver_type in ["MRDSRG", "MRDSRG_SO", "MRDSRG-SO"]:
+            nmopi = list(self.scf_info.nmopi())
+            point_group = self.mo_space_info.point_group_label()
+            frozen_docc = list(self.mo_space_info.dimension("FROZEN_DOCC"))
+            restricted_docc = list(self.mo_space_info.dimension("RESTRICTED_DOCC"))
+            active = list(self.mo_space_info.dimension("ACTIVE"))
+            virtual = list(self.mo_space_info.dimension("VIRTUAL"))
+
+            np.savez(
+                "save_mo_space.npz",
+                nmopi=nmopi,
+                point_group=point_group,
+                frozen_docc=frozen_docc,
+                restricted_docc=restricted_docc,
+                active=active,
+                virtual=virtual,
+            )
+
     def make_dsrg_solver(self):
         """Make a DSRG solver."""
         args = (self.rdms, self.scf_info, self.options, self.ints, self.mo_space_info)
