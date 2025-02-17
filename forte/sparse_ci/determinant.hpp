@@ -605,8 +605,6 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         }
         return d;
     }
-<<<<<<< HEAD
-=======
 
     /// Describe the excitation connection of a determinant relative to this one
     /// The excitation connection is a vector of 4 vectors:
@@ -629,7 +627,6 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         }
         return excitation;
     }
->>>>>>> origin/sparse_parallel
 };
 
 // Functions
