@@ -114,13 +114,13 @@ SparseState SparseFactExp::apply_antiherm(const SparseOperatorList& sop, const S
                 if (det.faster_can_apply_operator(sqop.cre(), sqop.ann())) {
                     const auto theta = t * faster_apply_operator_to_det(det, new_det, sqop.cre(),
                                                                         sqop.ann(), sign_mask);
-                    new_terms.emplace_back(det, c * (std::cos(theta) - 1.0));
-                    new_terms.emplace_back(new_det, c * std::sin(theta));
+                    new_terms.emplace_back(det, c * (std::cos(std::abs(theta)) - 1.0));
+                    new_terms.emplace_back(new_det, c * theta * std::sin(std::abs(theta)) / std::abs(theta));
                 } else if (det.faster_can_apply_operator(sqop.ann(), sqop.cre())) {
-                    const auto theta = -t * faster_apply_operator_to_det(det, new_det, sqop.ann(),
+                    const auto theta = -std::conj(t) * faster_apply_operator_to_det(det, new_det, sqop.ann(),
                                                                          sqop.cre(), sign_mask);
-                    new_terms.emplace_back(det, c * (std::cos(theta) - 1.0));
-                    new_terms.emplace_back(new_det, c * std::sin(theta));
+                    new_terms.emplace_back(det, c * (std::cos(std::abs(theta)) - 1.0));
+                    new_terms.emplace_back(new_det, c * theta * std::sin(std::abs(theta)) / std::abs(theta));
                 }
             }
         }
