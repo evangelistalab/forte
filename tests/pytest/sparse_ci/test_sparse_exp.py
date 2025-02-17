@@ -123,6 +123,21 @@ def test_sparse_exp_1():
     assert wfn[det("020")] == pytest.approx(0.676180171388, abs=1e-9)
     assert wfn[det("-+0")] == pytest.approx(0.016058887563, abs=1e-9)
 
+    ### Test the exponential operator with an antihermitian operator with complex coefficients ###
+    op = forte.SparseOperatorList()
+    op.add("[1a+ 0a-]", 0.1 + 0.2j)
+
+    exp = forte.SparseExp()
+    ref = forte.SparseState({forte.det("20"): 0.5, forte.det("02"): 0.8660254038})
+
+    op_inv = forte.SparseOperatorList()
+    op_inv.add("[0a+ 1a-]", 0.1 - 0.2j)
+
+    s1 = exp.apply_antiherm(op, ref)
+    s2 = exp.apply_antiherm(op_inv, s1)
+    assert s2[det("20")] == pytest.approx(0.5, abs=1e-9)
+    assert s2[det("02")] == pytest.approx(0.8660254038, abs=1e-9)
+
 
 def test_sparse_exp_2():
     # Compare the performance of the two methods to apply an operator to a state
