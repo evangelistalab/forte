@@ -760,7 +760,7 @@ double MRDSRG::compute_energy_ldsrg2() {
         } else {
             compute_hbar(rsc_conv);
         }
-        if (e_freeze != 0.0) {
+        if (std::fabs(e_freeze) > 1.0e-15) {
             freeze_core(e_freeze);
         }
         hbar.stop();

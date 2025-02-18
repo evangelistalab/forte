@@ -174,7 +174,7 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
     T2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (std::fabs(value) > 1.0e-15) {
             if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-                if (e_freeze != 0.0) {
+                if (std::fabs(e_freeze) > 1.0e-10) {
                     if (Fa_[i[0]] < e_freeze || Fa_[i[1]] < e_freeze || Fa_[i[2]] < e_freeze ||
                         Fa_[i[3]] < e_freeze) {
                         value = 0.0;
@@ -190,7 +190,7 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
                 // value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
                 //                                                         Fa_[i[2]] - Fa_[i[3]]);
             } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-                if (e_freeze != 0.0) {
+                if (std::fabs(e_freeze) > 1.0e-10) {
                     if (Fa_[i[0]] < e_freeze || Fb_[i[1]] < e_freeze || Fa_[i[2]] < e_freeze ||
                         Fb_[i[3]] < e_freeze) {
                         value = 0.0;
@@ -205,7 +205,7 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
                 // value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] -
                 //                                                         Fa_[i[2]] - Fb_[i[3]]);
             } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-                if (e_freeze != 0.0) {
+                if (std::fabs(e_freeze) > 1.0e-10) {
                     if (Fb_[i[0]] < e_freeze || Fb_[i[1]] < e_freeze || Fb_[i[2]] < e_freeze ||
                         Fb_[i[3]] < e_freeze) {
                         value = 0.0;
@@ -360,7 +360,7 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
     T1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (std::fabs(value) > 1.0e-15) {
             if (spin[0] == AlphaSpin) {
-                if (e_freeze != 0.0) {
+                if (std::fabs(e_freeze) > 1.0e-10) {
                     if (Fa_[i[0]] < e_freeze || Fa_[i[1]] < e_freeze) {
                         value = 0.0;
                     } else {
@@ -372,7 +372,7 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
                 }
                 // value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
             } else {
-                if (e_freeze != 0.0) {
+                if (std::fabs(e_freeze) > 1.0e-10) {
                     if (Fb_[i[0]] < e_freeze || Fb_[i[1]] < e_freeze) {
                         value = 0.0;
                     } else {
@@ -382,7 +382,7 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
                 } else {
                     value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
                 }
-                value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
+                // value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
             }
         }
     });
