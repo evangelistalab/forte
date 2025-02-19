@@ -3,11 +3,10 @@ import forte
 import numpy as np
 import time
 from forte import det
+import pytest
 
 
 def test_sparse_exp_1():
-    import pytest
-
     ### Test the linear operator ###
     op = forte.SparseOperator()
     ref = forte.SparseState({det("22"): 1.0})
@@ -26,6 +25,8 @@ def test_sparse_exp_1():
     assert wfn[det("0220")] == pytest.approx(0.15, abs=1e-9)
     assert wfn[det("2002")] == pytest.approx(-0.21, abs=1e-9)
 
+
+def test_sparse_exp_2():
     ### Test the exponential operator with excitation operator ###
     op = forte.SparseOperator()
     ref = forte.SparseState({det("22"): 1.0})
@@ -53,6 +54,8 @@ def test_sparse_exp_1():
     assert wfn[det("+0-2")] == pytest.approx(-0.0077, abs=1e-9)
     assert wfn[det("-0+2")] == pytest.approx(-0.0077, abs=1e-9)
 
+
+def test_sparse_exp_3():
     ### Test the exponential operator with antihermitian operator ###
     op = forte.SparseOperator()
     ref = forte.SparseState({det("22"): 1.0})
@@ -75,6 +78,8 @@ def test_sparse_exp_1():
     assert wfn2[det("+2-0")] == pytest.approx(0.0, abs=1e-9)
     assert wfn2[det("-2+0")] == pytest.approx(0.0, abs=1e-9)
 
+
+def test_sparse_exp_4():
     ### Test the factorized exponential operator with an antihermitian operator ###
     op = forte.SparseOperatorList()
     op.add("[2a+ 0a-]", 0.1)
@@ -112,7 +117,6 @@ def test_sparse_exp_1():
     op.add("[1b+ 0b-]", 0.05)
     op.add("[2a+ 2b+ 1b- 1a-]", -0.07)
 
-    dtest = det("20")
     ref = forte.SparseState({det("20"): 0.5, det("02"): 0.8660254038})
     factexp = forte.SparseFactExp()
     wfn = factexp.apply_antiherm(op, ref)
@@ -123,6 +127,64 @@ def test_sparse_exp_1():
     assert wfn[det("020")] == pytest.approx(0.676180171388, abs=1e-9)
     assert wfn[det("-+0")] == pytest.approx(0.016058887563, abs=1e-9)
 
+
+def test_sparse_exp_5():
+    ### Test the reverse argument of factorized exponential operator ###
+
+    # this is the manually reversed op from test_sparse_exp_4
+    op = forte.SparseOperatorList()
+    op.add("[2a+ 2b+ 0b- 0a-]", 0.15)
+    op.add("[2b+ 0b-]", 0.2)
+    op.add("[2a+ 0a-]", 0.1)
+    ref = forte.SparseState({det("22"): 1.0})
+
+    factexp = forte.SparseFactExp()
+    wfn = factexp.apply_antiherm(op, ref, reverse=True)
+
+    assert wfn[det("+2-0")] == pytest.approx(-0.197676811654, abs=1e-9)
+    assert wfn[det("-2+0")] == pytest.approx(-0.097843395007, abs=1e-9)
+    assert wfn[det("0220")] == pytest.approx(+0.165338757995, abs=1e-9)
+    assert wfn[det("2200")] == pytest.approx(+0.961256283877, abs=1e-9)
+
+    wfn2 = factexp.apply_antiherm(op, wfn, inverse=True, reverse=True)
+
+    assert wfn2[det("2200")] == pytest.approx(1.0, abs=1e-9)
+
+    op = forte.SparseOperatorList()
+    op.add("[2a+ 2b+ 1b- 1a-]", -0.07)
+    op.add("[1b+ 0b-]", 0.05)
+    op.add("[1a+ 1b+ 0b- 0a-]", -0.3)
+    op.add("[1a+ 0a-]", 0.1)
+
+    ref = forte.SparseState({det("20"): 0.5, det("02"): 0.8660254038})
+    factexp = forte.SparseFactExp()
+    wfn = factexp.apply_antiherm(op, ref, reverse=True)
+
+    assert wfn[det("200")] == pytest.approx(0.733340213919, abs=1e-9)
+    assert wfn[det("+-0")] == pytest.approx(-0.049868863373, abs=1e-9)
+    assert wfn[det("002")] == pytest.approx(-0.047410073759, abs=1e-9)
+    assert wfn[det("020")] == pytest.approx(0.676180171388, abs=1e-9)
+    assert wfn[det("-+0")] == pytest.approx(0.016058887563, abs=1e-9)
+
+    op = forte.SparseOperatorList()
+    ref = forte.SparseState({det("22"): 1.0})
+    op.add("[2a+ 0a-]", 0.1)
+    op.add("[2b+ 0b-]", 0.1)
+    op.add("[2a+ 2b+ 0b- 0a-]", 0.15)
+    op.add("[3a+ 3b+ 1b- 1a-]", -0.077)
+
+    exp = forte.SparseFactExp()
+    wfn = exp.apply_op(op, ref, reverse=True)
+    assert wfn[det("2200")] == pytest.approx(1.0, abs=1e-9)
+    assert wfn[det("0220")] == pytest.approx(0.16, abs=1e-9)
+    assert wfn[det("+2-0")] == pytest.approx(-0.1, abs=1e-9)
+    assert wfn[det("-2+0")] == pytest.approx(-0.1, abs=1e-9)
+    assert wfn[det("2002")] == pytest.approx(-0.077, abs=1e-9)
+    assert wfn[det("+0-2")] == pytest.approx(-0.0077, abs=1e-9)
+    assert wfn[det("-0+2")] == pytest.approx(-0.0077, abs=1e-9)
+
+
+def test_sparse_exp_6():
     ### Test the factorized exponential operator with an antihermitian operator with complex coefficients ###
     op = forte.SparseOperatorList()
     op.add("[1a+ 0a-]", 0.1 + 0.2j)
@@ -142,6 +204,8 @@ def test_sparse_exp_1():
     s2 = exp.apply_antiherm(op_inv, ref, inverse=False)
     assert s1 == s2
 
+
+def test_sparse_exp_7():
     ### Test the exponential operator with an antihermitian operator with complex coefficients ###
     op = forte.SparseOperatorList()
     op.add("[1a+ 0a-]", 0.1 + 0.2j)
@@ -172,7 +236,7 @@ def test_sparse_exp_1():
     assert s1 == s2
 
 
-def test_sparse_exp_2():
+def test_sparse_exp_7():
     # Compare the performance of the two methods to apply an operator to a state
     # when the operator all commute with each other
     norb = 10
@@ -239,3 +303,8 @@ def test_sparse_exp_2():
 if __name__ == "__main__":
     test_sparse_exp_1()
     test_sparse_exp_2()
+    test_sparse_exp_3()
+    test_sparse_exp_4()
+    test_sparse_exp_5()
+    test_sparse_exp_6()
+    test_sparse_exp_7()

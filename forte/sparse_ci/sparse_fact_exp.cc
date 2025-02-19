@@ -36,7 +36,7 @@ namespace forte {
 SparseFactExp::SparseFactExp(double screen_thresh) : screen_thresh_(screen_thresh) {}
 
 SparseState SparseFactExp::apply_op(const SparseOperatorList& sop, const SparseState& state,
-                                    bool inverse) {
+                                    bool inverse, bool reverse) {
     // initialize a state object
     SparseState result(state);
 
@@ -47,7 +47,7 @@ SparseState SparseFactExp::apply_op(const SparseOperatorList& sop, const SparseS
     Determinant sign_mask;
     Determinant idx;
     for (size_t m = 0, nterms = sop.size(); m < nterms; m++) {
-        size_t n = inverse ? nterms - m - 1 : m;
+        size_t n = (inverse ^ reverse) ? nterms - m - 1 : m;
         const auto& [sqop, coefficient] = sop(n);
         if (not sqop.is_nilpotent()) {
             std::string msg =
@@ -82,7 +82,7 @@ SparseState SparseFactExp::apply_op(const SparseOperatorList& sop, const SparseS
 }
 
 SparseState SparseFactExp::apply_antiherm(const SparseOperatorList& sop, const SparseState& state,
-                                          bool inverse) {
+                                          bool inverse, bool reverse) {
 
     // initialize a state object
     SparseState result(state);
@@ -92,7 +92,7 @@ SparseState SparseFactExp::apply_antiherm(const SparseOperatorList& sop, const S
     Determinant sign_mask;
     Determinant idx;
     for (size_t m = 0, nterms = sop.size(); m < nterms; m++) {
-        size_t n = inverse ? nterms - m - 1 : m;
+        size_t n = (inverse ^ reverse) ? nterms - m - 1 : m;
 
         const auto& [sqop, coefficient] = sop(n);
         if (not sqop.is_nilpotent()) {
