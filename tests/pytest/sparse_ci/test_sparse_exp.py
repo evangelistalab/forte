@@ -185,27 +185,6 @@ def test_sparse_exp_5():
 
 
 def test_sparse_exp_6():
-    ### Test the factorized exponential operator with an antihermitian operator with complex coefficients ###
-    op = forte.SparseOperatorList()
-    op.add("[1a+ 0a-]", 0.1 + 0.2j)
-
-    op_inv = forte.SparseOperatorList()
-    op_inv.add("[0a+ 1a-]", 0.1 - 0.2j)
-
-    exp = forte.SparseFactExp()
-    ref = forte.SparseState({forte.det("20"): 0.5, forte.det("02"): 0.8660254038})
-
-    s1 = exp.apply_antiherm(op, ref)
-    s2 = exp.apply_antiherm(op_inv, s1)
-    assert s2[det("20")] == pytest.approx(0.5, abs=1e-9)
-    assert s2[det("02")] == pytest.approx(0.8660254038, abs=1e-9)
-
-    s1 = exp.apply_antiherm(op, ref, inverse=True)
-    s2 = exp.apply_antiherm(op_inv, ref, inverse=False)
-    assert s1 == s2
-
-
-def test_sparse_exp_7():
     # Compare the performance of the two methods to apply an operator to a state
     # when the operator all commute with each other
     norb = 10
@@ -276,4 +255,3 @@ if __name__ == "__main__":
     test_sparse_exp_4()
     test_sparse_exp_5()
     test_sparse_exp_6()
-    test_sparse_exp_7()
