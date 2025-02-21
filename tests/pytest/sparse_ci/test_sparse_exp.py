@@ -123,6 +123,27 @@ def test_sparse_exp_1():
     assert wfn[det("020")] == pytest.approx(0.676180171388, abs=1e-9)
     assert wfn[det("-+0")] == pytest.approx(0.016058887563, abs=1e-9)
 
+    ### Test idempotent operators with complex coefficients ###
+    op = forte.SparseOperatorList()
+    op.add("[0a+ 0a-]", np.pi * 0.25j)
+    exp = forte.SparseExp(maxk=100, screen_thresh=1e-15)
+    factexp = forte.SparseFactExp()
+    ref = forte.SparseState({forte.det("20"): 1.0})
+    s1 = exp.apply_op(op, ref)
+    s2 = factexp.apply_op(op, ref)
+    assert s1[det("20")] == pytest.approx(s2[det("20")], abs=1e-9)
+    assert s2[det("20")] == pytest.approx(np.sqrt(2) * (1.0 + 1.0j) / 2, abs=1e-9)
+    s1 = exp.apply_antiherm(op, ref)
+    s2 = factexp.apply_antiherm(op, ref)
+    assert s1[det("20")] == pytest.approx(s2[det("20")], abs=1e-9)
+    assert s2[det("20")] == pytest.approx(1.0j, abs=1e-9)
+    op = forte.SparseOperatorList()
+    op.add("[1a+ 1a-]", np.pi * 0.25j)
+    s1 = exp.apply_antiherm(op, ref)
+    s2 = factexp.apply_antiherm(op, ref)
+    assert s1[det("20")] == pytest.approx(s2[det("20")], abs=1e-9)
+    assert s2[det("20")] == pytest.approx(1.0, abs=1e-9)
+
     ### Test the factorized exponential operator with an antihermitian operator with complex coefficients ###
     op = forte.SparseOperatorList()
     op.add("[1a+ 0a-]", 0.1 + 0.2j)
@@ -130,16 +151,24 @@ def test_sparse_exp_1():
     op_inv = forte.SparseOperatorList()
     op_inv.add("[0a+ 1a-]", 0.1 - 0.2j)
 
-    exp = forte.SparseFactExp()
+    exp = forte.SparseExp(maxk=100, screen_thresh=1e-15)
+    factexp = forte.SparseFactExp()
     ref = forte.SparseState({forte.det("20"): 0.5, forte.det("02"): 0.8660254038})
+
+    s1 = exp.apply_antiherm(op, ref)
+    s2 = factexp.apply_antiherm(op, ref)
+    assert s1[det("20")] == pytest.approx(s2[det("20")], abs=1e-9)
+    assert s1[det("02")] == pytest.approx(s2[det("02")], abs=1e-9)
+    assert s1[det("+-")] == pytest.approx(s2[det("+-")], abs=1e-9)
+    assert s1[det("-+")] == pytest.approx(s2[det("-+")], abs=1e-9)
 
     s1 = exp.apply_antiherm(op, ref)
     s2 = exp.apply_antiherm(op_inv, s1)
     assert s2[det("20")] == pytest.approx(0.5, abs=1e-9)
     assert s2[det("02")] == pytest.approx(0.8660254038, abs=1e-9)
 
-    s1 = exp.apply_antiherm(op, ref, inverse=True)
-    s2 = exp.apply_antiherm(op_inv, ref, inverse=False)
+    s1 = factexp.apply_antiherm(op, ref, inverse=True)
+    s2 = factexp.apply_antiherm(op_inv, ref, inverse=False)
     assert s1 == s2
 
     ### Test the exponential operator with an antihermitian operator with complex coefficients ###
