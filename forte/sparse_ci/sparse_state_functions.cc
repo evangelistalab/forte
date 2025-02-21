@@ -203,7 +203,7 @@ void apply_operator_kernel_string(const auto& sop_groups, const auto& state_grou
                                 if constexpr (positive) {
                                     new_terms[new_det] += value * t * c;
                                 } else {
-                                    new_terms[new_det] -= value * t * c;
+                                    new_terms[new_det] -= value * std::conj(t) * c;
                                 }
                             }
                         }
