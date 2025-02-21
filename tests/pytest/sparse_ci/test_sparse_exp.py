@@ -324,6 +324,36 @@ def test_sparse_exp_6():
     print(f"|C| = {C.norm()}")
     assert abs(C.norm() - 1) < 1.0e-10
 
+def test_sparse_exp_7():
+    ### Test the exponential operator with an antihermitian operator with complex coefficients ###
+    op = forte.SparseOperatorList()
+    op.add("[1a+ 0a-]", 0.1 + 0.2j)
+    op_explicit = forte.SparseOperatorList()
+    op_explicit.add("[1a+ 0a-]", 0.1 + 0.2j)
+    op_explicit.add("[0a+ 1a-]", -0.1 + 0.2j)
+
+    op_inv = forte.SparseOperatorList()
+    op_inv.add("[0a+ 1a-]", 0.1 - 0.2j)
+    op_inv_explicit = forte.SparseOperatorList()
+    op_inv_explicit.add("[0a+ 1a-]", 0.1 - 0.2j)
+    op_inv_explicit.add("[1a+ 0a-]", -0.1 - 0.2j)
+
+    exp = forte.SparseExp()
+    ref = forte.SparseState({forte.det("20"): 0.5, forte.det("02"): 0.8660254038})
+
+    s1 = exp.apply_antiherm(op, ref)
+    s1_explicit = exp.apply_op(op_explicit, ref)
+    assert s1 == s1_explicit
+    s2 = exp.apply_antiherm(op_inv, s1)
+    assert s2[det("20")] == pytest.approx(0.5, abs=1e-9)
+    assert s2[det("02")] == pytest.approx(0.8660254038, abs=1e-9)
+    s2_explicit = exp.apply_op(op_inv_explicit, s1)
+    assert s2 == s2_explicit
+
+    s1 = exp.apply_antiherm(op, ref)
+    s2 = exp.apply_antiherm(op_inv, ref, scaling_factor=-1.0)
+    assert s1 == s2
+
 
 if __name__ == "__main__":
     test_sparse_exp_1()
@@ -332,3 +362,4 @@ if __name__ == "__main__":
     test_sparse_exp_4()
     test_sparse_exp_5()
     test_sparse_exp_6()
+    test_sparse_exp_7()
