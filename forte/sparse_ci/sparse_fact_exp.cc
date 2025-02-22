@@ -49,13 +49,8 @@ SparseState SparseFactExp::apply_op(const SparseOperatorList& sop, const SparseS
     for (size_t m = 0, nterms = sop.size(); m < nterms; m++) {
         size_t n = (inverse ^ reverse) ? nterms - m - 1 : m;
         const auto& [sqop, coefficient] = sop(n);
-        if (not sqop.is_nilpotent()) {
-            std::string msg =
-                "compute_on_the_fly_excitation is implemented only for nilpotent operators."
-                "Operator " +
-                sqop.str() + " is not nilpotent";
-            throw std::runtime_error(msg);
-        }
+        bool is_idempotent = !sqop.is_nilpotent();
+
         compute_sign_mask(sqop.cre(), sqop.ann(), sign_mask, idx);
         const auto t = (inverse ? -1.0 : 1.0) * coefficient;
         const auto screen_thresh_div_t = screen_thresh_ / std::abs(t);
@@ -66,9 +61,13 @@ SparseState SparseFactExp::apply_op(const SparseOperatorList& sop, const SparseS
             // test if we can apply this operator to this determinant
             if ((std::abs(c) > screen_thresh_div_t) and
                 det.faster_can_apply_operator(sqop.cre(), sqop.ann())) {
-                const auto sign =
-                    faster_apply_operator_to_det(det, new_det, sqop.cre(), sqop.ann(), sign_mask);
-                new_terms.push_back(std::make_pair(new_det, c * t * sign));
+                if (is_idempotent) {
+                    new_terms.emplace_back(det, c * (std::exp(t) - 1.0));
+                } else {
+                    const auto sign = faster_apply_operator_to_det(det, new_det, sqop.cre(),
+                                                                   sqop.ann(), sign_mask);
+                    new_terms.emplace_back(new_det, c * t * sign);
+                }
             }
         }
         for (const auto& [det, c] : new_terms) {
@@ -95,13 +94,8 @@ SparseState SparseFactExp::apply_antiherm(const SparseOperatorList& sop, const S
         size_t n = (inverse ^ reverse) ? nterms - m - 1 : m;
 
         const auto& [sqop, coefficient] = sop(n);
-        if (not sqop.is_nilpotent()) {
-            std::string msg =
-                "compute_on_the_fly_antihermitian is implemented only for nilpotent operators."
-                "Operator " +
-                sqop.str() + " is not nilpotent";
-            throw std::runtime_error(msg);
-        }
+        bool is_idempotent = !sqop.is_nilpotent();
+
         compute_sign_mask(sqop.cre(), sqop.ann(), sign_mask, idx);
         const auto t = (inverse ? -1.0 : 1.0) * coefficient;
         const auto screen_thresh_div_t = screen_thresh_ / std::abs(t);
@@ -111,16 +105,23 @@ SparseState SparseFactExp::apply_antiherm(const SparseOperatorList& sop, const S
             // to have an amplitude less than screen_thresh
             // (here we use the approximation sin(x) ~ x, for x small)
             if (std::abs(c) > screen_thresh_div_t) {
-                if (det.faster_can_apply_operator(sqop.cre(), sqop.ann())) {
-                    const auto theta = t * faster_apply_operator_to_det(det, new_det, sqop.cre(),
-                                                                        sqop.ann(), sign_mask);
-                    new_terms.emplace_back(det, c * (std::cos(std::abs(theta)) - 1.0));
-                    new_terms.emplace_back(new_det, c * std::polar(1.0,std::arg(theta)) * std::sin(std::abs(theta)));
-                } else if (det.faster_can_apply_operator(sqop.ann(), sqop.cre())) {
-                    const auto theta = -std::conj(t) * faster_apply_operator_to_det(det, new_det, sqop.ann(),
+                if (is_idempotent and det.faster_can_apply_operator(sqop.cre(), sqop.ann())) {
+                    new_terms.emplace_back(det, c * (std::polar(1.0, 2.0 * std::imag(t)) - 1.0));
+                } else {
+                    if (det.faster_can_apply_operator(sqop.cre(), sqop.ann())) {
+                        const auto theta = t * faster_apply_operator_to_det(
+                                                   det, new_det, sqop.cre(), sqop.ann(), sign_mask);
+                        new_terms.emplace_back(det, c * (std::cos(std::abs(theta)) - 1.0));
+                        new_terms.emplace_back(new_det, c * std::polar(1.0, std::arg(theta)) *
+                                                            std::sin(std::abs(theta)));
+                    } else if (det.faster_can_apply_operator(sqop.ann(), sqop.cre())) {
+                        const auto theta =
+                            -std::conj(t) * faster_apply_operator_to_det(det, new_det, sqop.ann(),
                                                                          sqop.cre(), sign_mask);
-                    new_terms.emplace_back(det, c * (std::cos(std::abs(theta)) - 1.0));
-                    new_terms.emplace_back(new_det, c * std::polar(1.0,std::arg(theta)) * std::sin(std::abs(theta)));
+                        new_terms.emplace_back(det, c * (std::cos(std::abs(theta)) - 1.0));
+                        new_terms.emplace_back(new_det, c * std::polar(1.0, std::arg(theta)) *
+                                                            std::sin(std::abs(theta)));
+                    }
                 }
             }
         }
