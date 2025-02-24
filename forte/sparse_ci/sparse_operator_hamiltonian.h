@@ -31,6 +31,7 @@
 #include <memory>
 
 #include "sparse_ci/sparse_operator.h"
+#include "helpers/ndarray/ndarray.hpp"
 
 namespace forte {
 
@@ -41,6 +42,13 @@ class ActiveSpaceIntegrals;
 /// @param as_ints the ActiveSpaceIntegrals object containing the integrals
 /// @param screen_thresh the threshold to screen the integrals
 SparseOperator sparse_operator_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                                           double screen_thresh = 1e-14);
+                                           double screen_thresh = 1e-12);
+
+
+template <typename T>
+SparseOperator sparse_operator_hamiltonian(double scalar, 
+                                           ndarray<T>& oei_a, ndarray<T>& oei_b,
+                                           ndarray<T>& tei_aa, ndarray<T>& tei_ab, ndarray<T>& tei_bb,
+                                           double screen_thresh);
 
 } // namespace forte
