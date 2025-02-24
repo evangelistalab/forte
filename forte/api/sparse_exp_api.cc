@@ -39,6 +39,8 @@ namespace forte {
 void export_SparseExp(py::module& m) {
     py::class_<SparseExp>(m, "SparseExp", "A class to compute the exponential of a sparse operator")
         .def(py::init<int, double>(), "maxk"_a = 19, "screen_thresh"_a = 1.0e-12)
+        .def("set_screen_thresh", &SparseExp::set_screen_thresh, "screen_thresh"_a)
+        .def("set_maxk", &SparseExp::set_maxk, "maxk"_a)
         .def("apply_op",
              py::overload_cast<const SparseOperator&, const SparseState&, double>(
                  &SparseExp::apply_op),

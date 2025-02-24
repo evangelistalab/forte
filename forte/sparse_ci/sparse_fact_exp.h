@@ -90,6 +90,8 @@ class SparseFactExp {
     SparseState apply_antiherm(const SparseOperatorList& sop, const SparseState& state,
                                bool inverse, bool reverse = false);
 
+    void set_screen_thresh(double screen_thresh) { screen_thresh_ = screen_thresh; }
+
   private:
     double screen_thresh_;
 };
