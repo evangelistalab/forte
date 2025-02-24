@@ -97,6 +97,10 @@ class SparseExp {
     SparseState apply_antiherm(const SparseOperatorList& sop, const SparseState& state,
                                double scaling_factor = 1.0);
 
+    void set_screen_thresh(double screen_thresh) { screen_thresh_ = screen_thresh; }
+
+    void set_maxk(int maxk) { maxk_ = maxk; }
+
   private:
     int maxk_ = 19;
     double screen_thresh_ = 1e-12;

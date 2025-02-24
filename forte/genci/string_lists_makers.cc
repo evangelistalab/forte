@@ -387,6 +387,97 @@ H3List make_3h_list(const StringList& strings, std::shared_ptr<StringAddress> ad
     return list;
 }
 
+H4List make_4h_list(const StringList& strings, std::shared_ptr<StringAddress> addresser,
+                    std::shared_ptr<StringAddress> addresser_4h) {
+    H4List list;
+    int n = addresser->nbits();
+    int k = addresser->nones();
+    size_t nmo = addresser->nbits();
+
+    if ((k >= 0) and (k <= n)) {
+        for (const auto& string_class : strings) {
+            for (const auto& I : string_class) {
+                const auto& [add_I, class_I] = addresser->address_and_class(I);
+                for (size_t s = 0; s < nmo; ++s) {
+                    for (size_t r = s + 1; r < nmo; ++r) {
+                        for (size_t q = r + 1; q < nmo; ++q) {
+                            for (size_t p = q + 1; p < nmo; ++p) {
+                                if (I[p] and I[q] and I[r] and I[s]) {
+                                    auto J = I;
+                                    J[s] = false;
+                                    const auto s_sign = J.slater_sign(s);
+                                    J[r] = false;
+                                    const auto r_sign = J.slater_sign(r);
+                                    J[q] = false;
+                                    const auto q_sign = J.slater_sign(q);
+                                    J[p] = false;
+                                    const auto p_sign = J.slater_sign(p);
+                                    if (auto it = addresser_4h->find(J);
+                                        it != addresser_4h->end()) {
+                                        const auto sign = p_sign * q_sign * r_sign * s_sign;
+                                        const auto& [add_J, class_J] = it->second;
+                                        std::tuple<int, size_t, int> I_tuple(class_J, add_J,
+                                                                             class_I);
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(-sign, p, q, r, s, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(+sign, p, q, s, r, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(+sign, p, r, q, s, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(-sign, p, r, s, q, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(-sign, p, s, q, r, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(+sign, p, s, r, q, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(+sign, q, p, r, s, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(-sign, q, p, s, r, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(-sign, q, r, p, s, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(+sign, q, r, s, p, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(+sign, q, s, p, r, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(-sign, q, s, r, p, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(-sign, r, p, q, s, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(+sign, r, p, s, q, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(+sign, r, q, p, s, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(-sign, r, q, s, p, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(-sign, r, s, p, q, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(+sign, r, s, q, p, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(+sign, s, p, q, r, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(-sign, s, p, r, q, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(-sign, s, q, p, r, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(+sign, s, q, r, p, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(+sign, s, r, p, q, add_I));
+                                        list[I_tuple].push_back(
+                                            H4StringSubstitution(-sign, s, r, q, p, add_I));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return list;
+}
+
 std::map<std::pair<int, int>, std::vector<std::pair<int, int>>>
 find_string_map(const GenCIStringLists& list_left, const GenCIStringLists& list_right, bool alfa) {
     std::map<std::pair<int, int>, std::vector<std::pair<int, int>>> m;

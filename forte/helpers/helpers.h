@@ -67,6 +67,14 @@ enum class Spin3 { aaa, aab, abb, bbb };
 py::array_t<double> ambit_to_np(ambit::Tensor t);
 
 /**
+ * @brief Convert an ambit BlockedTensor to a dictionary of numpy ndarray's.
+ *        The returned tensor is stored according to the C storage convention.
+ * @param t The input BlockedTensor
+ * @return A dictionary of numpy arrays
+ */
+py::dict blockedtensor_to_np(ambit::BlockedTensor bt);
+
+/**
  * @brief Convert a std::vector<double> to a numpy ndarray.
  *        The returned tensor is stored according to the C storage convention.
  * @param v The input vector

@@ -46,7 +46,7 @@ using namespace psi;
 
 /* CHEEV prototype */
 extern "C" {
-extern void zheev(char* jobz, char* uplo, int* n, std::complex<double>* a, int* lda, double* w,
+extern void zheev_(char* jobz, char* uplo, int* n, std::complex<double>* a, int* lda, double* w,
                   std::complex<double>* work, int* lwork, double* rwork, int* info);
 }
 
@@ -968,7 +968,7 @@ void TDCI::propagate_lanczos(std::shared_ptr<psi::Vector> C0, SharedMatrix H) {
 
         char jobz = 'V';
         char uplo = 'L';
-        zheev(&jobz, &uplo, &n, Hs.data(), &lda, w.data(), work.data(), &lwork, rwork.data(),
+        zheev_(&jobz, &uplo, &n, Hs.data(), &lda, w.data(), work.data(), &lwork, rwork.data(),
               &info);
         // Evecs are stored in Hs, let's unpack it and the energy
 

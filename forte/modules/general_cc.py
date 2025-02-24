@@ -340,7 +340,7 @@ class DIIS:
         self.e_diis.append(np.subtract(t, t_old))
 
         diis_dim = len(self.t_diis)
-        if (diis_dim >= self.diis_start):
+        if diis_dim >= self.diis_start:
             # consturct diis B matrix (following Crawford Group github tutorial)
             B = np.ones((diis_dim + 1, diis_dim + 1)) * -1.0
             bsol = np.zeros(diis_dim + 1)
