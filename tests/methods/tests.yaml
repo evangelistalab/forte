@@ -311,6 +311,7 @@ gasscf:
       - sa-gasscf-dsrg-mrpt2-1
    medium:
       - gasscf-2
+      - gasscf-3
       - gasscf-dsrg-mrpt2-1
 
 integrals:
