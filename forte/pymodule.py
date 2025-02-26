@@ -61,7 +61,7 @@ from forte.proc.external_active_space_solver import (
     make_hamiltonian,
 )
 from forte.proc.dsrg import ProcedureDSRG
-from forte.proc.orbital_helpers import dump_orbitals
+from forte.proc.orbital_helpers import dump_orbitals, make_embedding_orbitals
 
 
 def forte_driver(data: ForteData):
@@ -172,7 +172,7 @@ def energy_forte(name, **kwargs):
     elif data.options.get_str("INT_TYPE") == "PYSCF":
         data = ObjectsFromPySCF(kwargs.get("pyscf_obj"), options=kwargs).run(data)
     else:
-        data = ObjectsFromPsi4(**kwargs).run(data)
+        data = ObjectsFromPsi4(**kwargs).run(data)  # <--- This is where AVAS runs
 
     start = time.time()
 
@@ -203,6 +203,10 @@ def energy_forte(name, **kwargs):
 
         data = MCSCF(active_space_solver_type).run(data)
         energy = data.results.value("mcscf energy")
+
+    if data.options.get_bool("EMBEDDING"):
+        data.mo_space_info = make_embedding_orbitals(data)
+        data.ints = forte.make_ints_from_psi4(data.psi_wfn, data.options, data.scf_info, data.mo_space_info)
 
     # Run a method
     if job_type == "NONE":
