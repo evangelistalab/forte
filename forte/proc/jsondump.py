@@ -1,6 +1,7 @@
 import numpy as np
 import psi4
 import json
+from opt_einsum import contract
 
 def jsondump(wfn, frozen_docc, active_docc, active_socc, active_uocc, int_cutoff = 1e-13, fname="forte_molecule.json"):
     """
@@ -26,7 +27,7 @@ def jsondump(wfn, frozen_docc, active_docc, active_socc, active_uocc, int_cutoff
     #Active space is chosen for aufbau ordering (i.e. doccs, soccs, uoccs)
         
     orbitals = []
-    for irrep, block in enumerate(wfn.epsilon_a_subset("MO", "ACTIVE").nph):
+    for irrep, block in enumerate(wfn.epsilon_a_subset("MO", "ALL").nph):
         for orbital in block:
             orbitals.append([orbital, irrep])
     
@@ -42,7 +43,7 @@ def jsondump(wfn, frozen_docc, active_docc, active_socc, active_uocc, int_cutoff
         if irrep not in irrep_dict:
             irrep_dict[irrep] = []
         irrep_dict[irrep].append(i)
- 
+
     # Assign orbitals to categories based on count constraints
     for irrep, orbitals in irrep_dict.items():
         count_frozen = frozen_docc[irrep]
@@ -54,42 +55,39 @@ def jsondump(wfn, frozen_docc, active_docc, active_socc, active_uocc, int_cutoff
         categories["active_docc"].extend(orbitals[count_frozen:count_frozen + count_active_docc])
         categories["active_socc"].extend(orbitals[count_frozen + count_active_docc:count_frozen + count_active_docc + count_active_socc])
         categories["active_uocc"].extend(orbitals[count_frozen + count_active_docc + count_active_socc:count_frozen + count_active_docc + count_active_socc + count_active_uocc])
-        categories["frozen_uocc"].extend(orbitals[count_frozen + count_active_docc + count_active_socc + count_active_uocc:])
-    
+        categories["frozen_uocc"].extend(orbitals[count_frozen + count_active_docc + count_active_socc + count_active_uocc:])    
+
     for key in categories:
         categories[key].sort()
-    
+
     new_order = (categories["frozen_docc"] +
                  categories["active_docc"] +
                  categories["active_socc"] +
                  categories["active_uocc"] +
                  categories["frozen_uocc"])
-     
+    
     C = wfn.Ca_subset("AO", "ALL").np[:, new_order]
-    
-    
+    orb_irreps_to_int = np.array(orb_irreps_to_int)[new_order].tolist()
     
     #Compute frozen core energy and frozen core one electron integral.  (E_fc does NOT include nuclear repulsion.)
-    Pc = np.einsum('pi,si->ps', C[:,:num_frozen], C[:,:num_frozen])
-    ao_hc = ao_oeis + 2*np.einsum('psuv,ps->uv', ao_teis, Pc) - np.einsum('puvs,ps->uv', ao_teis, Pc)
+    Pc = contract('pi,si->ps', C[:,:num_frozen], C[:,:num_frozen])
+    ao_hc = ao_oeis + 2*contract('psuv,ps->uv', ao_teis, Pc, optimize = True) - contract('puvs,ps->uv', ao_teis, Pc)
     E_fc = np.trace(Pc.T@(ao_hc + ao_oeis))
     
-    mo_oeis = np.einsum("ui,vj,uv->ij", C, C, ao_oeis)[num_frozen:num_active+num_frozen,
-                                                       num_frozen:num_active+num_frozen]
     
-    mo_teis = np.einsum("pi,qj,rk,sl,pqrs->ijkl", C, C, C, C, ao_teis)[num_frozen:num_active+num_frozen,
-                                                                  num_frozen:num_active+num_frozen,
-                                                                  num_frozen:num_active+num_frozen,
-                                                                  num_frozen:num_active+num_frozen]
-
+    mo_oeis = contract("ui,vj,uv->ij", C, C, ao_hc, optimize = True) 
+    mo_teis = contract("pi,qj,rk,sl,pqrs->ijkl", C, C, C, C, ao_teis, optimize = True)
     
- 
+    mo_oeis = mo_oeis[num_frozen:num_active+num_frozen, num_frozen:num_active+num_frozen]
+    mo_teis = mo_teis[num_frozen:num_active+num_frozen, num_frozen:num_active+num_frozen,
+                      num_frozen:num_active+num_frozen, num_frozen:num_active+num_frozen]
+    
     nalpha = wfn.nalpha() - np.sum(frozen_docc)
     nbeta = wfn.nbeta() - np.sum(frozen_docc)
     so_irreps = []
-    for i in new_order:
+    for i in range(num_frozen,num_frozen+num_active):
         so_irreps += [orb_irreps_to_int[i],orb_irreps_to_int[i]]
-
+    
     print(f"({nalpha+nbeta}, {num_active}) active space.\n")
     print(f"Ms = {(nalpha - nbeta)/2}\n")
     print(f"Nuclear repulsion energy: {E_nuc}") 
@@ -104,51 +102,36 @@ def jsondump(wfn, frozen_docc, active_docc, active_socc, active_uocc, int_cutoff
     
     external_data["tei"] = {}
     external_data["tei"]["data"] = []
-    
-    kept = []
-    neglected = [0]
+
+    print("Effective integrals computed.  Writing them to json.")
     for p in range(num_active):
-        pa = p*2
-        pb = p*2 + 1
+        pa = 2 * p
+        pb = (2 * p) + 1
         for q in range(num_active):
-            qa = q*2
-            qb = q*2 + 1
+            qa = 2 * q
+            qb = (2 * q) + 1
             oei = float(mo_oeis[p,q])
             if abs(oei) > int_cutoff:
-                kept.append(oei)
                 external_data["oei"]["data"].append((pa, qa, oei))         
                 external_data["oei"]["data"].append((pb, qb, oei))
-            else:
-                neglected.append(oei)
             for r in range(num_active):
-                ra = r*2
-                rb = r*2 + 1
+                ra = 2 * r
+                rb = (2 * r) + 1
                 for s in range(num_active):
-                    sa = s*2
-                    sb = s*2 + 1 
-                    
-                    tei_J = -float(mo_teis[p,s,q,r])
-                    tei_K = -float(mo_teis[p,r,q,s])
-
-                    if abs(tei_J - tei_K) > int_cutoff:
-                        kept.append(tei_J - tei_K)
-                        external_data["tei"]["data"].append((pa,qa,ra,sa, tei_J - tei_K))
-                        external_data["tei"]["data"].append((pb,qb,rb,sb, tei_J - tei_K))
-                    else:
-                        neglected.append(tei_J - tei_K)
-                    
-                    if abs(tei_J) > int_cutoff:
-                        kept.append(tei_J)
-                        external_data["tei"]["data"].append((pa,qa,ra,sa,tei_J))
-                        external_data["tei"]["data"].append((pb,qb,rb,sb,tei_J))
-                    else:
-                        neglected.append(tei_J)
-
-    print(f"\nIntegral cutoff: {int_cutoff}\n")
-    print(f"{len(kept)}/{pow(num_active,2)*2 + pow(num_active,4)*4} integrals stored.")
-    print(f"Smallest included electron integral: {np.amin(abs(np.array(kept)))}")
-    print(f"Largest neglected electron integral: {np.amax(abs(np.array(neglected)))}\n")
-     
+                    sa = 2 * s
+                    sb = (2 * s) + 1
+                    pqrs = float(mo_teis[p,r,q,s])
+                    pqsr = float(mo_teis[p,s,q,r])
+                    if abs(pqrs - pqsr) > int_cutoff:
+                        external_data["tei"]["data"].append((pa,qa,ra,sa, pqrs - pqsr))
+                        external_data["tei"]["data"].append((pb,qb,rb,sb, pqrs - pqsr))
+                    if abs(pqrs) > int_cutoff:
+                        external_data["tei"]["data"].append((pa,qb,ra,sb, pqrs))
+                        external_data["tei"]["data"].append((pb,qa,rb,sa, pqrs))
+                    if abs(pqsr) > int_cutoff:
+                        external_data["tei"]["data"].append((pb,qa,ra,sb, -pqsr))
+                        external_data["tei"]["data"].append((pa,qb,rb,sa, -pqsr))
+    
     external_data["nso"] = {}
     external_data["nso"]["data"] = 2 * int(num_active)
     external_data["na"] = {}
