@@ -594,6 +594,8 @@ double Block2DMRGSolver::compute_energy() {
         psi::outfile->Printf("\n    N total sweeps = %10d", maxiter_);
         psi::outfile->Printf("\n    E convergence  = %10.2E", e_conv);
         psi::outfile->Printf("\n    Cutoff         = %10.2E", mps_cutoff);
+        psi::outfile->Printf("\n    Spin adapted   = %10s",
+                             impl_->is_spin_adapted_ ? "true" : "false");
         psi::outfile->Printf("\n    Initial guess  = %10s", (read_initial_guess ? "load" : "new"));
         psi::outfile->Printf("\n    Verbosity      = %10d", dmrg_verbose);
         psi::outfile->Printf("\n    Stack memory   = %10s",
@@ -1293,7 +1295,7 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
             auto ket0 = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
             auto bond_dim = ket0->info->get_max_bond_dimension();
             std::vector<block2::ubond_t> ket_bond_dims(3, bond_dim);
-            std::vector<double> occ(nactv, (n_elec - 1.0) /  nactv);
+            std::vector<double> occ(nactv, (n_elec - 1.0) / nactv);
 
             for (size_t p = 0; p < np; ++p) {
                 auto bra_expr = impl_->expr_builder();
