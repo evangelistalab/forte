@@ -19,12 +19,12 @@ F       -2.2714806355      1.3880717623      0.2062454513
 set {
   basis                       sto-3g
   docc                        [12]
-  freeze_core                 true
-  frozen_docc                 [3]
-  frozen_uocc                 [0]
 }
 
 set forte {
+  freeze_core                 true
+  frozen_docc                 [3]
+  frozen_uocc                 [0]
   restricted_docc             [7]
   active                      [4]
   embedding                   true
@@ -36,6 +36,7 @@ set forte {
   mcscf_algorithm             ts
   mcscf_max_rot               0.15
   mcscf_e_convergence         12
+  MCSCF_IGNORE_FROZEN_ORBS    false
 }
 
 energy('forte')

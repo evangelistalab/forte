@@ -549,11 +549,11 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
         double e_closed = J->vector_dot(psi::linalg::doublet(Csub, Csub, false, true));
 
         // pass AO fock to psi4 Wavefunction
-        if (wfn_->Fa() != nullptr) {
-            wfn_->Fa()->copy(J);
-            wfn_->Fb() = wfn_->Fa();
-            fock_ao_level_ = FockAOStatus::inactive;
-        }
+        // if (wfn_->Fa() != nullptr) {
+        //     wfn_->Fa()->copy(J);
+        //     wfn_->Fb() = wfn_->Fa();
+        //     fock_ao_level_ = FockAOStatus::inactive;
+        // }
 
         return std::make_tuple(F_closed, F_closed, e_closed);
     } else {
@@ -610,11 +610,11 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
         e_closed += 0.5 * K->vector_dot(psi::linalg::doublet(Cb_sub, Cb_sub, false, true));
 
         // pass AO fock to psi4 Wavefunction
-        if (wfn_->Fa() != nullptr) {
-            wfn_->Fa()->copy(J);
-            wfn_->Fb()->copy(K);
-            fock_ao_level_ = FockAOStatus::inactive;
-        }
+   //     if (wfn_->Fa() != nullptr) {
+     //       wfn_->Fa()->copy(J);
+       //     wfn_->Fb()->copy(K);
+         //   fock_ao_level_ = FockAOStatus::inactive;
+        //}
 
         return std::make_tuple(Fa_closed, Fb_closed, e_closed);
     }
@@ -734,10 +734,10 @@ Psi4Integrals::make_fock_active_restricted(std::shared_ptr<psi::Matrix> g1) {
     F_active->set_name("Fock_active");
 
     // pass AO fock to psi4 Wavefunction
-    if (fock_ao_level_ == FockAOStatus::inactive) {
-        wfn_->Fa()->add(K);
-        fock_ao_level_ = FockAOStatus::generalized;
-    }
+    // if (fock_ao_level_ == FockAOStatus::inactive) {
+    //     wfn_->Fa()->add(K);
+    //     fock_ao_level_ = FockAOStatus::generalized;
+    // }
 
     return F_active;
 }
@@ -800,17 +800,17 @@ Psi4Integrals::make_fock_active_unrestricted(std::shared_ptr<psi::Matrix> g1a,
     Fb_active->set_name("Fock_active beta");
 
     // pass AO fock to psi4 Wavefunction
-    if (fock_ao_level_ == FockAOStatus::inactive) {
-        if (wfn_->Fa() == wfn_->Fb()) {
-            Ka->add(Kb);
-            Ka->scale(0.5);
-            wfn_->Fa()->add(Ka);
-        } else {
-            wfn_->Fa()->add(Ka);
-            wfn_->Fb()->add(Kb);
-        }
-        fock_ao_level_ = FockAOStatus::generalized;
-    }
+    // if (fock_ao_level_ == FockAOStatus::inactive) {
+    //    if (wfn_->Fa() == wfn_->Fb()) {
+    //        Ka->add(Kb);
+    //        Ka->scale(0.5);
+    //        wfn_->Fa()->add(Ka);
+    //     } else {
+    //         wfn_->Fa()->add(Ka);
+    //         wfn_->Fb()->add(Kb);
+    //   }
+    //    fock_ao_level_ = FockAOStatus::generalized;
+    // }
 
     return {Fa_active, Fb_active};
 }

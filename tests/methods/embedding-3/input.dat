@@ -26,14 +26,13 @@ set {
   basis                         sto-3g
   scf_type                      pk
   docc                          [12]
-  freeze_core                   true
-  frozen_docc                   [3]
-  frozen_uocc                   [0]
-
 }
 
 
 set forte {
+  MCSCF_IGNORE_FROZEN_ORBS      false
+  frozen_docc                   [3]
+  frozen_uocc                   [0]
   embedding                     true
   embedding_reference           hf          # Only with CAS reference can we mix or fix ref! In HF reference, there is no active!
   embedding_cutoff_method       threshold
@@ -43,7 +42,6 @@ set forte {
   active_space_solver           fci
   correlation_solver            dsrg-mrpt2
   mcscf_reference               false
-  MCSCF_IGNORE_FROZEN_ORBS      true
 }
 
 energy('forte')

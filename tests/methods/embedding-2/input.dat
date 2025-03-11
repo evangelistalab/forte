@@ -19,12 +19,15 @@ F       -2.2714806355      1.3880717623      0.2062454513
 set {
   basis                               sto-3g
   docc                                [12]
-  # freeze_core                         true
-  # frozen_docc                         [3]
-  # frozen_uocc                         [0]
 }
 
+E, wfn_cas = energy('scf', return_wfn=True)
+print(wfn_cas.Fa().np)
+
 set forte {
+  MCSCF_IGNORE_FROZEN_ORBS            false           #freeze the core/virtual orbitals in MCSCF
+  frozen_docc                         [3]
+  frozen_uocc                         [0]
   restricted_docc                     [7]
   active                              [4]
   embedding                           true
@@ -36,10 +39,6 @@ set forte {
   correlation_solver                  dsrg-mrpt2
   mcscf_e_convergence                 15
   mcscf_maxiter                       300
-  MCSCF_IGNORE_FROZEN_ORBS            true
-  freeze_core                         true
-  frozen_docc                         [3]
-  frozen_uocc                         [0]
 }
 
 energy('forte')
