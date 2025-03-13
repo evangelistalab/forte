@@ -374,6 +374,19 @@ template <typename Derived, typename T, typename F> class VectorSpaceList {
         return it->second;
     }
 
+    /// @return a copy of the list with the leftmost element removed
+    Derived pop_left() {
+        assert(!elements_.empty());
+        elements_.erase(elements_.begin());
+        return static_cast<Derived&>(*this);
+    }
+
+    /// @return a copy of the list with the rightmost element removed
+    Derived pop_right() {
+        assert(!elements_.empty());
+        elements_.pop_back();
+        return static_cast<Derived&>(*this);
+    }
     /// @return the norm of the vector space
     /// @param p the norm to calculate (default is 2, -1 is infinity norm)
     double norm(int p = 2) const {

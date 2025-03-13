@@ -148,6 +148,8 @@ void export_SparseOperatorList(py::module& m) {
                  }
              })
         .def("reverse", &SparseOperatorList::reverse, "Reverse the order of the operators")
+        .def("pop_left", &SparseOperatorList::pop_left, "Remove the leftmost operator")
+        .def("pop_right", &SparseOperatorList::pop_right, "Remove the rightmost operator")
         .def(
             "__call__",
             [](const SparseOperatorList& op, const size_t n) {
