@@ -541,6 +541,15 @@ def test_sparse_operator_list_pop():
     assert len(sop) == 1
     assert sop(0)[0].str() == "[0a+ 0a-]"
 
+def test_sparse_operator_list_slice():
+    sop = forte.SparseOperatorList()
+    sop.add("[1a+ 1a-]", 1.0)
+    sop.add("[0a+ 0a-]", 1.0)
+    sop.add("[1a+ 1a-]", 1.0)
+    sop_sl = sop.slice(1,2)
+    assert len(sop_sl) == 1
+    assert sop_sl(0)[0].str() == "[0a+ 0a-]"
+
 
 if __name__ == "__main__":
     test_sparse_operator_creation()
@@ -551,3 +560,4 @@ if __name__ == "__main__":
     test_sparse_operator_list_remove()
     test_sparse_operator_list_add()
     test_sparse_operator_list_pop()
+    test_sparse_operator_list_slice()
