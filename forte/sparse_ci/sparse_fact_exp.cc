@@ -109,18 +109,17 @@ SparseState SparseFactExp::apply_antiherm(const SparseOperatorList& sop, const S
                     new_terms.emplace_back(det, c * (std::polar(1.0, 2.0 * std::imag(t)) - 1.0));
                 } else {
                     if (det.faster_can_apply_operator(sqop.cre(), sqop.ann())) {
-                        const auto theta = t * faster_apply_operator_to_det(
-                                                   det, new_det, sqop.cre(), sqop.ann(), sign_mask);
-                        new_terms.emplace_back(det, c * (std::cos(std::abs(theta)) - 1.0));
-                        new_terms.emplace_back(new_det, c * std::polar(1.0, std::arg(theta)) *
-                                                            std::sin(std::abs(theta)));
+                        const auto sign = faster_apply_operator_to_det(det, new_det, sqop.cre(),
+                                                                       sqop.ann(), sign_mask);
+                        new_terms.emplace_back(det, c * (std::cos(std::abs(t)) - 1.0));
+                        new_terms.emplace_back(new_det, sign * c * std::polar(1.0, std::arg(t)) *
+                                                            std::sin(std::abs(t)));
                     } else if (det.faster_can_apply_operator(sqop.ann(), sqop.cre())) {
-                        const auto theta =
-                            -std::conj(t) * faster_apply_operator_to_det(det, new_det, sqop.ann(),
-                                                                         sqop.cre(), sign_mask);
-                        new_terms.emplace_back(det, c * (std::cos(std::abs(theta)) - 1.0));
-                        new_terms.emplace_back(new_det, c * std::polar(1.0, std::arg(theta)) *
-                                                            std::sin(std::abs(theta)));
+                        const auto sign = faster_apply_operator_to_det(det, new_det, sqop.ann(),
+                                                                       sqop.cre(), sign_mask);
+                        new_terms.emplace_back(det, c * (std::cos(std::abs(t)) - 1.0));
+                        new_terms.emplace_back(new_det, -sign * c * std::polar(1.0, -std::arg(t)) *
+                                                            std::sin(std::abs(t)));
                     }
                 }
             }
@@ -133,6 +132,60 @@ SparseState SparseFactExp::apply_antiherm(const SparseOperatorList& sop, const S
         new_terms.reset();
     }
     return result;
+}
+
+std::pair<SparseState, SparseState> SparseFactExp::antiherm_deriv(const SQOperatorString& sqop,
+                                                                  const sparse_scalar_t t,
+                                                                  const SparseState& state) {
+
+    // initialize a state object
+    SparseState result_x;
+    SparseState result_y;
+
+    Determinant new_det;
+    Determinant sign_mask;
+    Determinant idx;
+    if (not sqop.is_nilpotent()) {
+        std::string msg = "apply_antiherm_deriv is implemented only for nilpotent operators."
+                          "Operator " +
+                          sqop.str() + " is not nilpotent";
+        throw std::runtime_error(msg);
+    }
+
+    compute_sign_mask(sqop.cre(), sqop.ann(), sign_mask, idx);
+    const auto tabs = std::abs(t);
+    const auto sint = std::sin(tabs);
+    const auto cost = std::cos(tabs);
+    const auto x = std::real(t);
+    const auto y = std::imag(t);
+    const sparse_scalar_t c1 =
+        std::pow(x, 2) * cost / std::pow(tabs, 2) + std::pow(y, 2) * sint / std::pow(tabs, 3);
+    const sparse_scalar_t c2 = x * y * cost / std::pow(tabs, 2) - x * y * sint / std::pow(tabs, 3);
+    const sparse_scalar_t c3 = -x * sint / tabs;
+    const sparse_scalar_t c4 =
+        std::pow(y, 2) * cost / std::pow(tabs, 2) + std::pow(x, 2) * sint / std::pow(tabs, 3);
+    const sparse_scalar_t c5 = -y * sint / tabs;
+    const sparse_scalar_t uimag = std::complex<double>(0.0, 1.0);
+
+    for (const auto& [det, c] : state) {
+        if (det.faster_can_apply_operator(sqop.cre(), sqop.ann())) {
+            const auto sign =
+                faster_apply_operator_to_det(det, new_det, sqop.cre(), sqop.ann(), sign_mask);
+            result_x[det] += c * c3;
+            result_y[det] += c * c5;
+            result_x[new_det] += c * sign * (c1 + uimag * c2);
+            result_y[new_det] += c * sign * (c2 + uimag * c4);
+        } else if (det.faster_can_apply_operator(sqop.ann(), sqop.cre())) {
+            const auto sign =
+                faster_apply_operator_to_det(det, new_det, sqop.ann(), sqop.cre(), sign_mask);
+            result_x[det] += c * c3;
+            result_y[det] += c * c5;
+            result_x[new_det] += c * sign * (-c1 + uimag * c2);
+            result_y[new_det] += c * sign * (-c2 + uimag * c4);
+        }
+    }
+
+    return std::make_pair(result_x, result_y);
 }
 
 } // namespace forte
