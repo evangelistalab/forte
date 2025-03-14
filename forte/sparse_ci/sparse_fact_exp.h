@@ -66,8 +66,8 @@ class SparseFactExp {
     ///
     /// @param reverse If true, apply the operator in reverse order:
     ///             ... exp(opN-1) exp(opN) |state>
-    SparseState apply_op(const SparseOperatorList& sop, const SparseState& state, 
-                         bool inverse, bool reverse = false);
+    SparseState apply_op(const SparseOperatorList& sop, const SparseState& state, bool inverse,
+                         bool reverse = false);
 
     /// @brief Compute the factorized exponential applied to a state using an exact algorithm
     ///
@@ -89,6 +89,9 @@ class SparseFactExp {
     ///             ... exp(opN-1) exp(opN) |state>
     SparseState apply_antiherm(const SparseOperatorList& sop, const SparseState& state,
                                bool inverse, bool reverse = false);
+
+    std::pair<SparseState, SparseState>
+    antiherm_deriv(const SQOperatorString& sqop, const sparse_scalar_t t, const SparseState& state);
 
     void set_screen_thresh(double screen_thresh) { screen_thresh_ = screen_thresh; }
 
