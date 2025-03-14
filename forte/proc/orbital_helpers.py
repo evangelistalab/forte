@@ -48,7 +48,7 @@ def read_orbitals(filename="forte_Ca.npz"):
 
 def dump_orbitals(wfn, filename="forte_Ca.npz"):
     """Dump orbitals to file."""
-    psi4.core.print_out(f"\n\n  Forte: Dump orbitals to file filename ...")
+    psi4.core.print_out(f"\n\n  Forte: Dump orbitals to file {filename} ...")
 
     Ca = wfn.Ca()
     Ca = [Ca.to_array()] if wfn.nirrep() == 1 else Ca.to_array()
@@ -170,6 +170,7 @@ def dmrg_initial_orbitals(wfn, options, mo_space_info):
     Ca[:, ndocc : ndocc + nactv] = Ca_actv[:, order]
     wfn.Ca().copy(psi4.core.Matrix.from_array(Ca))
     psi4.core.print_out("\n")
+    wfn.to_file("wfn_dmrg_init.npy")
 
 
 def add_orthogonal_vectors(C, S):

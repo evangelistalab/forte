@@ -594,8 +594,6 @@ double Block2DMRGSolver::compute_energy() {
         psi::outfile->Printf("\n    N total sweeps = %10d", maxiter_);
         psi::outfile->Printf("\n    E convergence  = %10.2E", e_conv);
         psi::outfile->Printf("\n    Cutoff         = %10.2E", mps_cutoff);
-        psi::outfile->Printf("\n    Spin adapted   = %10s",
-                             impl_->is_spin_adapted_ ? "true" : "false");
         psi::outfile->Printf("\n    Initial guess  = %10s", (read_initial_guess ? "load" : "new"));
         psi::outfile->Printf("\n    Verbosity      = %10d", dmrg_verbose);
         psi::outfile->Printf("\n    Stack memory   = %10s",

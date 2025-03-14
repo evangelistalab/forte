@@ -4,7 +4,7 @@ import numpy as np
 import psi4
 import forte
 
-from forte._forte import make_mo_space_info_from_map
+from forte._forte import make_mo_space_info_from_map, make_state_weights_map
 
 from forte.data import ForteData
 from .module import Module
@@ -152,8 +152,12 @@ def _prepare_forte_objects_from_fcidump(data, filename: str = None):
 
     data.scf_info = forte.SCFInfo(nmopi, doccpi, soccpi, 0.0, epsilon_a, epsilon_b, Ca, Cb)
 
-    state_info = _make_state_info_from_fcidump(fcidump, options)
-    data.state_weights_map = {state_info: [1.0]}
+    # state_info = _make_state_info_from_fcidump(fcidump, options)
+    # data.state_weights_map = {state_info: [1.0]}
+    data.options.set_int("CHARGE", 0)
+    data.options.set_int("MULTIPLICITY", fcidump['ms2'] + 1)
+    data.options.set_int("NEL", fcidump['nelec'])
+    data.state_weights_map = make_state_weights_map(data.options, data.mo_space_info)
     data.psi_wfn = None
 
     return data, fcidump
