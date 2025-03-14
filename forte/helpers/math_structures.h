@@ -462,6 +462,18 @@ template <typename Derived, typename T, typename F> class VectorSpaceList {
         return result;
     }
 
+    /// @brief Return a slice of the vector
+    Derived slice(size_t start, size_t end) {
+        // assert that the slice is within the bounds
+        assert(start < end);
+        assert(end <= size());
+        Derived result;
+        for (size_t i = start; i < end; ++i) {
+            result.add(elements_[i].first, elements_[i].second);
+        }
+        return result;
+    }
+
   private:
     // Using an unordered_map with a custom hash function
     container elements_;
