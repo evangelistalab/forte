@@ -282,8 +282,10 @@ void SADSRG::set_ambit_MOSpace() {
 void SADSRG::check_init_memory() {
     mem_sys_ = psi::Process::environment.get_memory();
     int64_t mem_left = mem_sys_ * 0.9;
-    if (ints_->integral_type() != DiskDF and ints_->integral_type() != Cholesky) {
-        mem_left -= ints_->jk()->memory_estimate() * sizeof(double);
+    if (ints_->integral_type() != Custom) {
+        if (ints_->integral_type() != DiskDF and ints_->integral_type() != Cholesky) {
+            mem_left -= ints_->jk()->memory_estimate() * sizeof(double);
+        }
     }
 
     // integrals already stored by the ForteIntegrals
