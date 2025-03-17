@@ -465,7 +465,7 @@ template <typename Derived, typename T, typename F> class VectorSpaceList {
     /// @brief Return a slice of the vector
     Derived slice(size_t start, size_t end) {
         // assert that the slice is within the bounds
-        assert(start < end);
+        assert(start <= end);
         assert(end <= size());
         Derived result;
         for (size_t i = start; i < end; ++i) {
