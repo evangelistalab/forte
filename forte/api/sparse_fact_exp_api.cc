@@ -44,8 +44,11 @@ void export_SparseFactExp(py::module& m) {
         .def(py::init<double>(), "screen_thresh"_a = 1.0e-12)
         .def("apply_op", &SparseFactExp::apply_op, "sop"_a, "state"_a, "inverse"_a = false,
              "reverse"_a = false)
+        .def("apply_op", &SparseFactExp::apply_op, "sop"_a, "state"_a, "inverse"_a = false,
+             "reverse"_a = false)
         .def("apply_antiherm", &SparseFactExp::apply_antiherm, "sop"_a, "state"_a,
-             "inverse"_a = false, "reverse"_a = false);
+             "inverse"_a = false, "reverse"_a = false)
+        .def("antiherm_deriv", &SparseFactExp::antiherm_deriv, "sqop"_a, "t"_a, "state"_a);
 }
 
 } // namespace forte
