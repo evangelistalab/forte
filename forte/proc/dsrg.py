@@ -490,6 +490,22 @@ class ProcedureDSRG:
                     psi4.core.print_out("\n\n  ==> Overlap of CI Vectors <this|prior> <==\n\n")
                     overlap.print_out()
 
+                    weights = self.state_weights_map[state]
+                    nstates = len(permutation)
+                    _bad = set([i for i in range(nstates)])
+                    _good = [-1] * nstates
+                    for i, j in enumerate(permutation):
+                        if overlap_np[i, j] > 0.5:
+                            _bad.remove(j)
+                            _good[i] = j
+                    if all(weights[i] < 1.0e-16 for i in _bad) and len(_bad) == _good.count(-1):
+                        for i in range(nstates):
+                            if _good[i] == -1:
+                                _good[i] = _bad.pop()
+                        check_pass = True
+                        permutation = _good
+                        psi4.core.print_out(f"\n\n Permutations (ignored zero weights): {permutation}")
+
             if check_pass:
                 if list(permutation) == list(range(len(permutation))):
                     continue
