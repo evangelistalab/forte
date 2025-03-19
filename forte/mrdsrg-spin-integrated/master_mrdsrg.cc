@@ -2417,26 +2417,11 @@ std::pair<double, std::vector<BlockedTensor>> MASTER_DSRG::save_Heff_full() {
     return std::make_pair(Edsrg, Heff);
 }
 
-std::pair<double, std::vector<BlockedTensor>> MASTER_DSRG::save_Heff_first_full() {
-    double Edsrg = Eref_ + Hbar0_first_;
-    ambit::BlockedTensor Hbar1_copy = BTF_->build(tensor_type_, "Hbar1_copy", spin_cases({"gg"}));
-    ambit::BlockedTensor Hbar2_copy = BTF_->build(tensor_type_, "Hbar2_copy", spin_cases({"gggg"}));
-    Hbar1_copy["pq"] = Hbar1_first_["pq"];
-    Hbar1_copy["PQ"] = Hbar1_first_["PQ"];
-    Hbar2_copy["pqrs"] = Hbar2_first_["pqrs"];
-    Hbar2_copy["pQrS"] = Hbar2_first_["pQrS"];
-    Hbar2_copy["PQRS"] = Hbar2_first_["PQRS"];
-    std::vector<ambit::BlockedTensor> Heff = {Hbar1_copy, Hbar2_copy};
-    return std::make_pair(Edsrg, Heff);
-}
-
 std::pair<double, std::vector<BlockedTensor>>
 MASTER_DSRG::update_Heff_full(double& H0, BlockedTensor& H1, BlockedTensor& H2,
                               std::shared_ptr<RDMs> rdms) {
-    deGNO_ints_full("Hamiltonian", H0, H1, H2); // De-normal ordering based on original RDMs.
-    outfile->Printf("\n  H0 after deGNO: %20.12f", H0);
+    deGNO_ints_full("Hamiltonian", H0, H1, H2);     // De-normal ordering based on original RDMs.
     GNO_ints_full("Hamiltonian", H0, H1, H2, rdms); // Re-normal ordering based on new RDMs.
-    outfile->Printf("\n  H0 after GNO: %20.12f", H0);
     std::vector<ambit::BlockedTensor> Heff = {H1, H2};
     return std::make_pair(H0, Heff);
 }

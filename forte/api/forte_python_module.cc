@@ -255,11 +255,6 @@ PYBIND11_MODULE(_forte, m) {
                  const auto Heff = self.save_Heff_full();
                  return py::make_tuple(Heff.first, Heff.second.at(0), Heff.second.at(1));
              })
-        .def("save_Heff_first_full",
-             [](MASTER_DSRG& self) {
-                 const auto Heff = self.save_Heff_first_full();
-                 return py::make_tuple(Heff.first, Heff.second.at(0), Heff.second.at(1));
-             })
         // .def("save_Heff_full", [](MASTER_DSRG& self) {
         //     const auto Heff = self.save_Heff_full();
         //     return py::make_tuple(Heff.first, blockedtensor_to_np(Heff.second.at(0)),

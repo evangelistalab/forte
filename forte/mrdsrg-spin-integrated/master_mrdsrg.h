@@ -54,7 +54,6 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
 
     /// Save DSRG full transformed Hamiltonian
     std::pair<double, std::vector<BlockedTensor>> save_Heff_full();
-    std::pair<double, std::vector<BlockedTensor>> save_Heff_first_full();
 
     /// Update DSRG full transformed Hamiltonian
     std::pair<double, std::vector<BlockedTensor>>
@@ -352,13 +351,6 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     ambit::BlockedTensor Hbar2_;
     /// DSRG transformed 3-body Hamiltonian (active only in DSRG-PT, but full in MRDSRG)
     ambit::BlockedTensor Hbar3_;
-
-    /// First-order energy.
-    double Hbar0_first_;
-    /// First-order DSRG transformed 1-body Hamiltonian
-    ambit::BlockedTensor Hbar1_first_;
-    /// First-order DSRG transformed 2-body Hamiltonian
-    ambit::BlockedTensor Hbar2_first_;
 
     /**
      * De-normal-order a 2-body DSRG transformed integrals

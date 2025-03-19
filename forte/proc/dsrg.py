@@ -295,13 +295,9 @@ class ProcedureDSRG:
                 raise NotImplementedError("Relaxed full Hbar not implemented for SO/SA-DSRG")
 
             if self.options.get_bool("FULL_HBAR") and self.solver_type in ["MRDSRG"] and n == self.relax_maxiter - 1:
-                psi4.core.print_out("\n  =>** Temporarily saving Full Hbar in de-normal-ordered basis (relaxed) **<=\n")
+                psi4.core.print_out("\n  =>** Temporarily saving Full Hbar in unrelaxed basis **<=\n")
                 Hbar0, Hbar1, Hbar2 = self.dsrg_solver.save_Heff_full()
-                psi4.core.print_out(f"\n  The Hbar0 term is: {Hbar0}\n")
-
-                if self.options.get_str("CORR_LEVEL") == "PT2":
-                    Hbar0_first, Hbar1_first, Hbar2_first = self.dsrg_solver.save_Heff_first_full()
-                    psi4.core.print_out(f"\n  The Hbar0 (first-order) term is: {Hbar0_first}\n")
+                psi4.core.print_out(f"\n  The Hbar0 term (unrelaxed energy) is: {Hbar0}\n")
 
             ints_dressed = self.dsrg_solver.compute_Heff_actv()
             if self.fno_pt2_Heff_shift is not None:
@@ -439,16 +435,10 @@ class ProcedureDSRG:
                 )
                 self.rdms.rotate(self.Ua, self.Ub)  # To previous semi-canonical basis
 
-                psi4.core.print_out("\n  =>** Saving Full Hbar **<=\n")
+                psi4.core.print_out("\n  =>** Updating Full Hbar **<=\n")
                 Hbar0, Hbar1, Hbar2 = self.dsrg_solver.update_Heff_full(Hbar0, Hbar1, Hbar2, self.rdms)
-                psi4.core.print_out(f"\n  The Hbar0 term is: {Hbar0}\n")
+                psi4.core.print_out(f"\n  The Hbar0 term (relaxed energy) is: {Hbar0}\n")
                 np.savez("save_Hbar", Hbar0=Hbar0, **Hbar1, **Hbar2)
-                if self.options.get_str("CORR_LEVEL") == "PT2":
-                    Hbar0_first, Hbar1_first, Hbar2_first = self.dsrg_solver.update_Heff_full(
-                        Hbar0_first, Hbar1_first, Hbar2_first, self.rdms
-                    )
-                    psi4.core.print_out(f"\n  The Hbar0 (first-order) term is: {Hbar0_first}\n")
-                    np.savez("save_Hbar_first", Hbar0=Hbar0_first, **Hbar1_first, **Hbar2_first)
 
                 self.dsrg_solver.set_rdms(self.rdms)  # Important to update the rdms in the solver
 
