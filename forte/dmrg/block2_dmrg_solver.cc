@@ -722,7 +722,7 @@ double Block2DMRGSolver::compute_energy() {
         S->save(psi::PSIOManager::shared_object()->get_default_path() + "forte." +
                 std::to_string(getpid()) + ".block2." +
                 std::to_string(mo_space_info_->size("ACTIVE")) + "." + state_.str_short() +
-                ".state_overlap.txt", false, false);
+                ".state_overlap.txt", false, false, true);
     }
 
     impl_->set_num_threads(false);
