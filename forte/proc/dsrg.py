@@ -457,61 +457,61 @@ class ProcedureDSRG:
         :param state_ci_wfn_map: the map to be compared to self.state_ci_wfn_map
         """
         for state in self.states:
+            nroots = len(self.state_weights_map[state])
             twice_ms = state.twice_ms()
             if twice_ms < 0:
                 continue
 
             if state_ci_wfn_map == "BLOCK2":
                 psi_io = psi4.core.IOManager.shared_object()
-                fperm = psi_io.get_default_path() + f"forte.{os.getpid()}.block2"
-                fperm += f".{self.mo_space_info.size('ACTIVE')}.{state.str_short()}.perm.txt"
-                try:
-                    permutation = [int(i) for i in open(fperm)]
-                    check_pass = len(permutation) == len(set(permutation))
-                    os.remove(fperm)
-                except FileNotFoundError:
-                    check_pass = False
+                Sname = psi_io.get_default_path() + f"forte.{os.getpid()}.block2"
+                Sname += f".{self.mo_space_info.size('ACTIVE')}.{state.str_short()}.state_overlap.txt"
+                overlap = psi4.core.Matrix(nroots, nroots)
+                overlap.load(Sname)
+                overlap.name = f"MPS Overlap of {state}"
+                os.remove(Sname)
             else:
                 # compute overlap between two sets of CI vectors <this|prior>
                 overlap = psi4.core.doublet(state_ci_wfn_map[state], self.state_ci_wfn_map[state], True, False)
                 overlap.name = f"CI Overlap of {state}"
 
-                # check overlap and determine if we need to permute states
-                overlap_np = np.abs(overlap.to_array())
-                max_values = np.max(overlap_np, axis=1)
-                permutation = np.argmax(overlap_np, axis=1)
-                psi4.core.print_out(f"\n\n Permutations: {permutation}")
-                check_pass = len(permutation) == len(set(permutation)) and np.all(max_values > 0.5)
+            # check overlap and determine if we need to permute states
+            overlap_np = np.abs(overlap.to_array())
+            max_values = np.max(overlap_np, axis=1)
+            permutation = np.argmax(overlap_np, axis=1)
+            check_pass = len(permutation) == len(set(permutation)) and np.all(max_values > 0.5)
 
-                if not check_pass:
-                    msg = "Relaxed states are likely wrong. Please increase the number of roots."
-                    warnings.warn(f"{msg}", UserWarning)
-                    psi4.core.print_out(f"\n\n  Forte Warning: {msg}")
-                    psi4.core.print_out("\n\n  ==> Overlap of CI Vectors <this|prior> <==\n\n")
-                    overlap.print_out()
+            if not check_pass:
+                psi4.core.print_out("\n\n  ==> Overlap of CI Vectors <this|prior> <==\n\n")
+                overlap.print_out()
 
-                    weights = self.state_weights_map[state]
-                    nstates = len(permutation)
-                    _bad = set([i for i in range(nstates)])
-                    _good = [-1] * nstates
-                    for i, j in enumerate(permutation):
-                        if overlap_np[i, j] > 0.5:
-                            _bad.remove(j)
-                            _good[i] = j
-                    if all(weights[i] < 1.0e-16 for i in _bad) and len(_bad) == _good.count(-1):
-                        for i in range(nstates):
-                            if _good[i] == -1:
-                                _good[i] = _bad.pop()
-                        check_pass = True
-                        permutation = _good
-                        psi4.core.print_out(f"\n\n Permutations (ignored zero weights): {permutation}")
+                weights = self.state_weights_map[state]
+                _bad = set([i for i in range(nroots)])
+                _good = [-1] * nroots
+                for i, j in enumerate(permutation):
+                    if overlap_np[i, j] > 0.5:
+                        _bad.remove(j)
+                        _good[i] = j
+                if all(weights[i] < 1.0e-16 for i in _bad) and len(_bad) == _good.count(-1):
+                    for i in range(nroots):
+                        if _good[i] == -1:
+                            _good[i] = _bad.pop()
+                    check_pass = True
+                    permutation = _good
+                    psi4.core.print_out(f"\n\n Permutations (ignored zero weights): {permutation}")
+                else:
+                    psi4.core.print_out(f"\n\n Permutations: {permutation}")
 
             if check_pass:
-                if list(permutation) == list(range(len(permutation))):
+                if list(permutation) == list(range(nroots)):
                     continue
                 msg = "Weights will be permuted to ensure consistency before and after relaxation."
                 psi4.core.print_out(f"\n\n  Forte Warning: {msg}\n")
                 self.permute_state_weights(state, permutation)
+            else:
+                msg = "Relaxed states are likely wrong. Please increase the number of roots."
+                warnings.warn(f"{msg}", UserWarning)
+                psi4.core.print_out(f"\n\n  Forte Warning: {msg}")
 
     def permute_state_weights(self, state, permutation):
         """

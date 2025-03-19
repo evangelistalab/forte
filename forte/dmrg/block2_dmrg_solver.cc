@@ -711,43 +711,18 @@ double Block2DMRGSolver::compute_energy() {
 
     // compute overlap between current and previous MPSs
     if (test_overlap) {
-        print_h2("Testing MPS overlap between current and previous MPSs");
-
         auto ket_old = impl_->load_mps(ket_tag + ".old", nroot_);
-        std::vector<size_t> perm(nroot_);
-        bool large_enough = true;
         auto S = std::make_shared<psi::Matrix>("MPS Overlap", nroot_, nroot_);
         for (size_t i = 0; i < nroot_; ++i) {
-            auto vj_max = 0.0;
             for (size_t j = 0; j < nroot_; ++j) {
                 auto v = impl_->mps_overlap(ket, ket_old, nroot_, i, j, dmrg_verbose);
-                S->set(i, j, v);
-                if (fabs(v) > vj_max) {
-                    vj_max = fabs(v);
-                    perm[i] = j;
-                }
-            }
-            large_enough &= vj_max > 0.5;
-        }
-        psi::outfile->Printf("\n    Permutation:");
-        for (size_t i = 0; i < nroot_; ++i) {
-            psi::outfile->Printf(" %3zu", perm[i]);
-        }
-        std::set<size_t> perm_set(perm.begin(), perm.end());
-        if (!large_enough or perm.size() != perm_set.size()) {
-            psi::outfile->Printf(
-                "\n  Forte Warning: Some old MPSs may not be found properly in the current MPSs\n");
-            S->print();
-        } else {
-            // dump permutation to disk
-            std::ofstream fperm(psi::PSIOManager::shared_object()->get_default_path() + "forte." +
-                                std::to_string(getpid()) + ".block2." +
-                                std::to_string(mo_space_info_->size("ACTIVE")) + "." +
-                                state_.str_short() + ".perm.txt");
-            for (size_t i = 0; i < nroot_; ++i) {
-                fperm << std::to_string(perm[i]) << (i == (nroot_ - 1) ? "" : "\n");
+                S->set(i, j, fabs(v));
             }
         }
+        S->save(psi::PSIOManager::shared_object()->get_default_path() + "forte." +
+                std::to_string(getpid()) + ".block2." +
+                std::to_string(mo_space_info_->size("ACTIVE")) + "." + state_.str_short() +
+                ".state_overlap.txt", false, false);
     }
 
     impl_->set_num_threads(false);
