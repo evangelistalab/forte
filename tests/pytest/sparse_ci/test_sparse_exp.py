@@ -332,6 +332,27 @@ def test_sparse_exp_8():
     dy2 = (res2[forte.det("-+")] - res[forte.det("-+")]) / dt.imag
     assert deriv[1][forte.det("-+")] == pytest.approx(dy2, abs=1e-6)
 
+    # Test the thresholding
+    factexp = forte.SparseFactExp()
+    exp = forte.SparseExp(maxk=100, screen_thresh=1e-15)
+    theta = 0
+    t = forte.SparseOperatorList()
+    t.add("[1a+ 0a-]", theta)
+    psi = forte.SparseState({forte.det("2"): 0.866, forte.det("-+"): 0.5})
+
+    res = exp.apply_antiherm(t, psi)
+    deriv = factexp.antiherm_deriv(*t(0), psi)
+
+    dt = 1e-6
+    tdt = forte.SparseOperatorList()
+    tdt.add("[1a+ 0a-]", theta + dt)
+    res2 = exp.apply_antiherm(tdt, psi)
+
+    dx1 = (res2[forte.det("2")] - res[forte.det("2")]) / dt
+    assert deriv[0][forte.det("2")] == pytest.approx(dx1, abs=1e-6)
+    dx2 = (res2[forte.det("-+")] - res[forte.det("-+")]) / dt
+    assert deriv[0][forte.det("-+")] == pytest.approx(dx2, abs=1e-6)
+
 
 if __name__ == "__main__":
     test_sparse_exp_1()
