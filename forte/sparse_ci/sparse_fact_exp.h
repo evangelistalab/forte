@@ -93,6 +93,24 @@ class SparseFactExp {
     std::pair<SparseState, SparseState>
     antiherm_deriv(const SQOperatorString& sqop, const sparse_scalar_t t, const SparseState& state);
 
+    void set_screen_thresh(double screen_thresh) { screen_thresh_ = screen_thresh; }
+
+    double sinc_taylor(double x) const {
+        int taylor_order = 5;
+        double taylor_thresh = 1.0e-3;
+        if (std::abs(x) < taylor_thresh) {
+            double result = 1.0;
+            double x_squared = x * x;
+            double term = 1.0;
+            for (int i = 1; i < taylor_order; i++) {
+                term *= -x_squared / (2 * i * (2 * i + 1));
+                result += term;
+            }
+            return result;
+        }
+        return std::sin(x) / x;
+    }
+
   private:
     double screen_thresh_;
 };

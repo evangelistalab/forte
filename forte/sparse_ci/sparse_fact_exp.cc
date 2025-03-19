@@ -154,17 +154,17 @@ std::pair<SparseState, SparseState> SparseFactExp::antiherm_deriv(const SQOperat
 
     compute_sign_mask(sqop.cre(), sqop.ann(), sign_mask, idx);
     const auto tabs = std::abs(t);
+    const auto phi = std::arg(t);
+    const auto sinphi = std::sin(phi);
+    const auto cosphi = std::cos(phi);
     const auto sint = std::sin(tabs);
     const auto cost = std::cos(tabs);
-    const auto x = std::real(t);
-    const auto y = std::imag(t);
-    const sparse_scalar_t c1 =
-        std::pow(x, 2) * cost / std::pow(tabs, 2) + std::pow(y, 2) * sint / std::pow(tabs, 3);
-    const sparse_scalar_t c2 = x * y * cost / std::pow(tabs, 2) - x * y * sint / std::pow(tabs, 3);
-    const sparse_scalar_t c3 = -x * sint / tabs;
-    const sparse_scalar_t c4 =
-        std::pow(y, 2) * cost / std::pow(tabs, 2) + std::pow(x, 2) * sint / std::pow(tabs, 3);
-    const sparse_scalar_t c5 = -y * sint / tabs;
+    const auto sinct = sinc_taylor(tabs);
+    const sparse_scalar_t c1 = std::pow(cosphi, 2) * cost + std::pow(sinphi, 2) * sinct;
+    const sparse_scalar_t c2 = cosphi * sinphi * cost - cosphi * sinphi * sinct;
+    const sparse_scalar_t c3 = -cosphi * sint;
+    const sparse_scalar_t c4 = std::pow(sinphi, 2) * cost + std::pow(cosphi, 2) * sinct;
+    const sparse_scalar_t c5 = -sinphi * sint;
     const sparse_scalar_t uimag = std::complex<double>(0.0, 1.0);
 
     for (const auto& [det, c] : state) {
