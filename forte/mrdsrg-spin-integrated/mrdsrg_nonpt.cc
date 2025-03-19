@@ -893,6 +893,10 @@ void MRDSRG::transform_one_body(const std::vector<ambit::BlockedTensor>& oetens)
 }
 
 void MRDSRG::compute_mbar_ldsrg2(const ambit::BlockedTensor& M, int ind) {
+    O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"gg"}));
+    O2_ = BTF_->build(tensor_type_, "O2", spin_cases({"gggg"}));
+    C1_ = BTF_->build(tensor_type_, "C1", spin_cases({"gg"}));
+    C2_ = BTF_->build(tensor_type_, "C2", spin_cases({"gggg"}));
     // compute reference multipole
     {
         Mbar0_full_[ind] = M["uv"] * Gamma1_["vu"];
