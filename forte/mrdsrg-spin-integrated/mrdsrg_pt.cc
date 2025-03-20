@@ -329,30 +329,34 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_full_hbar
         Hbar2_["PQRS"] += V2nd["PQRS"];
 
         // 2. Compute T1_2nd and T2_2nd
-        ambit::BlockedTensor T1_2nd =
-            BTF_->build(tensor_type_, "T1 Amplitudes", spin_cases({"hp"}));
-        ambit::BlockedTensor T2_2nd =
-            BTF_->build(tensor_type_, "T2 Amplitudes", spin_cases({"hhpp"}));
-        guess_t(V2nd, T2_2nd, F2nd, T1_2nd);
+        if (foptions_->get_bool("FULL_HBAR_PT2")) {
+            ambit::BlockedTensor T1_2nd =
+                BTF_->build(tensor_type_, "T1 Amplitudes", spin_cases({"hp"}));
+            ambit::BlockedTensor T2_2nd =
+                BTF_->build(tensor_type_, "T2 Amplitudes", spin_cases({"hhpp"}));
+            guess_t(V2nd, T2_2nd, F2nd, T1_2nd);
 
-        // 3. Compute [H0th, A2nd]
-        O1_.zero();
-        O2_.zero();
-        H1_T1_C1(F0th, T1_2nd, 1.0, O1_);
-        H1_T2_C1(F0th, T2_2nd, 1.0, O1_);
-        H1_T2_C2(F0th, T2_2nd, 1.0, O2_);
+            // 3. Compute [H0th, A2nd]
+            O1_.zero();
+            O2_.zero();
+            H1_T1_C1(F0th, T1_2nd, 1.0, O1_);
+            H1_T2_C1(F0th, T2_2nd, 1.0, O1_);
+            H1_T2_C2(F0th, T2_2nd, 1.0, O2_);
 
-        Hbar1_["pq"] += O1_["pq"];
-        Hbar1_["PQ"] += O1_["PQ"];
-        Hbar2_["pqrs"] += O2_["pqrs"];
-        Hbar2_["pQrS"] += O2_["pQrS"];
-        Hbar2_["PQRS"] += O2_["PQRS"];
+            Hbar1_["pq"] += O1_["pq"];
+            Hbar1_["PQ"] += O1_["PQ"];
+            Hbar2_["pqrs"] += O2_["pqrs"];
+            Hbar2_["pQrS"] += O2_["pQrS"];
+            Hbar2_["PQRS"] += O2_["PQRS"];
 
-        Hbar1_["pq"] += O1_["qp"];
-        Hbar1_["PQ"] += O1_["QP"];
-        Hbar2_["pqrs"] += O2_["rspq"];
-        Hbar2_["pQrS"] += O2_["rSpQ"];
-        Hbar2_["PQRS"] += O2_["RSPQ"];
+            Hbar1_["pq"] += O1_["qp"];
+            Hbar1_["PQ"] += O1_["QP"];
+            Hbar2_["pqrs"] += O2_["rspq"];
+            Hbar2_["pQrS"] += O2_["rSpQ"];
+            Hbar2_["PQRS"] += O2_["RSPQ"];
+        } else {
+            return energy;
+        }
     }
 
     return energy;

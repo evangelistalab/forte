@@ -1118,6 +1118,10 @@ DSRG:
     type: bool
     default: False
     help: "Save the full DSRG effective Hamiltonian to disk."
+  FULL_HBAR_PT2:
+    type: bool
+    default: True
+    help: "Generating the exact PT2-level Hbar"
   FULL_MBAR:
     type: bool
     default: False
