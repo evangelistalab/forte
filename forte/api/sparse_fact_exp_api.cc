@@ -43,10 +43,12 @@ void export_SparseFactExp(py::module& m) {
         "A class to compute the product exponential of a sparse operator using factorization")
         .def(py::init<double>(), "screen_thresh"_a = 1.0e-12)
         .def("set_screen_thresh", &SparseFactExp::set_screen_thresh, "screen_thresh"_a)
-        .def("apply_op", &SparseFactExp::apply_op, "sop"_a, "state"_a, "inverse"_a = false, "reverse"_a = false)
+        .def("apply_op", &SparseFactExp::apply_op, "sop"_a, "state"_a, "inverse"_a = false,
+             "reverse"_a = false)
         .def("apply_antiherm", &SparseFactExp::apply_antiherm, "sop"_a, "state"_a,
              "inverse"_a = false, "reverse"_a = false)
-        .def("antiherm_deriv", &SparseFactExp::antiherm_deriv, "sqop"_a, "t"_a, "state"_a);
+        .def("apply_antiherm_deriv", &SparseFactExp::apply_antiherm_deriv, "sqop"_a, "t"_a,
+             "state"_a);
 }
 
 } // namespace forte

@@ -134,9 +134,9 @@ SparseState SparseFactExp::apply_antiherm(const SparseOperatorList& sop, const S
     return result;
 }
 
-std::pair<SparseState, SparseState> SparseFactExp::antiherm_deriv(const SQOperatorString& sqop,
-                                                                  const sparse_scalar_t t,
-                                                                  const SparseState& state) {
+std::pair<SparseState, SparseState>
+SparseFactExp::apply_antiherm_deriv(const SQOperatorString& sqop, const sparse_scalar_t t,
+                                    const SparseState& state) {
 
     // initialize a state object
     SparseState result_x;
@@ -153,13 +153,16 @@ std::pair<SparseState, SparseState> SparseFactExp::antiherm_deriv(const SQOperat
     }
 
     compute_sign_mask(sqop.cre(), sqop.ann(), sign_mask, idx);
+
     const auto tabs = std::abs(t);
-    const auto phi = std::arg(t);
-    const auto sinphi = std::sin(phi);
-    const auto cosphi = std::cos(phi);
     const auto sint = std::sin(tabs);
     const auto cost = std::cos(tabs);
     const auto sinct = sinc_taylor(tabs);
+
+    const auto phi = std::arg(t);
+    const auto sinphi = std::sin(phi);
+    const auto cosphi = std::cos(phi);
+    
     const sparse_scalar_t c1 = std::pow(cosphi, 2) * cost + std::pow(sinphi, 2) * sinct;
     const sparse_scalar_t c2 = cosphi * sinphi * cost - cosphi * sinphi * sinct;
     const sparse_scalar_t c3 = -cosphi * sint;
@@ -168,19 +171,21 @@ std::pair<SparseState, SparseState> SparseFactExp::antiherm_deriv(const SQOperat
     const sparse_scalar_t uimag = std::complex<double>(0.0, 1.0);
 
     for (const auto& [det, c] : state) {
-        if (det.faster_can_apply_operator(sqop.cre(), sqop.ann())) {
+        if (det.faster_can_apply_operator(sqop.cre(),
+                                          sqop.ann())) { // case where sqop can be applied to det
             const auto sign =
                 faster_apply_operator_to_det(det, new_det, sqop.cre(), sqop.ann(), sign_mask);
             result_x[det] += c * c3;
-            result_y[det] += c * c5;
             result_x[new_det] += c * sign * (c1 + uimag * c2);
+            result_y[det] += c * c5;
             result_y[new_det] += c * sign * (c2 + uimag * c4);
-        } else if (det.faster_can_apply_operator(sqop.ann(), sqop.cre())) {
+        } else if (det.faster_can_apply_operator(
+                       sqop.ann(), sqop.cre())) { // case where sqop^+ can be applied to det
             const auto sign =
                 faster_apply_operator_to_det(det, new_det, sqop.ann(), sqop.cre(), sign_mask);
             result_x[det] += c * c3;
-            result_y[det] += c * c5;
             result_x[new_det] += c * sign * (-c1 + uimag * c2);
+            result_y[det] += c * c5;
             result_y[new_det] += c * sign * (-c2 + uimag * c4);
         }
     }

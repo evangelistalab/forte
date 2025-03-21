@@ -90,8 +90,9 @@ class SparseFactExp {
     SparseState apply_antiherm(const SparseOperatorList& sop, const SparseState& state,
                                bool inverse, bool reverse = false);
 
-    std::pair<SparseState, SparseState>
-    antiherm_deriv(const SQOperatorString& sqop, const sparse_scalar_t t, const SparseState& state);
+    std::pair<SparseState, SparseState> apply_antiherm_deriv(const SQOperatorString& sqop,
+                                                             const sparse_scalar_t t,
+                                                             const SparseState& state);
 
     void set_screen_thresh(double screen_thresh) { screen_thresh_ = screen_thresh; }
 

@@ -551,6 +551,8 @@ def test_sparse_operator_list_slice():
     sop_sl = sop.slice(1, 2)
     assert len(sop_sl) == 1
     assert sop_sl(0)[0].str() == "[0a+ 0a-]"
+    sop_sl = sop.slice(1,1)
+    assert len(sop_sl) == 0
 
 
 if __name__ == "__main__":

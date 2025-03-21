@@ -302,6 +302,7 @@ def test_sparse_exp_8():
     """
     Test the derivative of the exponential operator
     """
+    # Test a general case
     factexp = forte.SparseFactExp()
     exp = forte.SparseExp(maxk=100, screen_thresh=1e-15)
     theta = 0.271 + 0.829j
@@ -310,7 +311,7 @@ def test_sparse_exp_8():
     psi = forte.SparseState({forte.det("2"): 0.866, forte.det("-+"): 0.5})
 
     res = exp.apply_antiherm(t, psi)
-    deriv = factexp.antiherm_deriv(*t(0), psi)
+    deriv = factexp.apply_antiherm_deriv(*t(0), psi)
 
     dt = 1e-6
     tdt = forte.SparseOperatorList()
@@ -332,7 +333,31 @@ def test_sparse_exp_8():
     dy2 = (res2[forte.det("-+")] - res[forte.det("-+")]) / dt.imag
     assert deriv[1][forte.det("-+")] == pytest.approx(dy2, abs=1e-6)
 
-    # Test the thresholding
+    # Test the antiherm case
+    factexp = forte.SparseFactExp()
+    theta = 0.176
+    t = forte.SparseOperatorList()
+    t.add("[1a+ 0a-]", theta)
+    psi = forte.SparseState({forte.det("2"): 1.0})
+
+    deriv = factexp.apply_antiherm_deriv(*t(0), psi)
+    assert deriv[0][forte.det("2")] == pytest.approx(-np.sin(theta), abs=1e-6)
+    assert deriv[0][forte.det("-+")] == pytest.approx(np.cos(theta), abs=1e-6)
+    assert deriv[1][forte.det("2")] == pytest.approx(0.0, abs=1e-6)
+    assert deriv[1][forte.det("-+")] == pytest.approx(1j*np.sin(theta)/theta, abs=1e-6)
+
+    # Test the imagherm case
+    factexp = forte.SparseFactExp()
+    theta = 0.127
+    t = forte.SparseOperatorList()
+    t.add("[1a+ 0a-]", theta * 1j)
+    psi = forte.SparseState({forte.det("2"): 1.0})
+
+    deriv = factexp.apply_antiherm_deriv(*t(0), psi)
+    assert deriv[1][forte.det("2")] == pytest.approx(-np.sin(theta), abs=1e-6)
+    assert deriv[1][forte.det("-+")] == pytest.approx(1j * np.cos(theta), abs=1e-6)
+
+    # Make sure there's no division by zero errors
     factexp = forte.SparseFactExp()
     exp = forte.SparseExp(maxk=100, screen_thresh=1e-15)
     theta = 0
@@ -341,7 +366,7 @@ def test_sparse_exp_8():
     psi = forte.SparseState({forte.det("2"): 0.866, forte.det("-+"): 0.5})
 
     res = exp.apply_antiherm(t, psi)
-    deriv = factexp.antiherm_deriv(*t(0), psi)
+    deriv = factexp.apply_antiherm_deriv(*t(0), psi)
 
     dt = 1e-6
     tdt = forte.SparseOperatorList()
