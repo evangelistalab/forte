@@ -369,8 +369,6 @@ class MRDSRG : public MASTER_DSRG {
     double compute_energy_pt2();
     /// Compute DSRG-MRPT3 energy
     double compute_energy_pt3();
-    /// Compute DSRG-MRPT3 energy and return Full Hbar
-    double compute_energy_pt3_full_hbar();
 
     /// Compute DSRG-MRPT2 energy using Fdiag as H0th
     std::vector<std::pair<std::string, double>> compute_energy_pt2_Fdiag();
