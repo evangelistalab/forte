@@ -1127,15 +1127,15 @@ double MRDSRG::compute_energy_pt3() {
     if (foptions_->get_str("RELAX_REF") != "NONE" || multi_state) {
         O1_.zero();
         O2_.zero();
-
-        // [H~1st, A1st]
-        H1_T1_C1(Hbar1_, T1_, 1.0, O1_);
-        H1_T2_C1(Hbar1_, T2_, 1.0, O1_);
-        H2_T1_C1(Hbar2_, T1_, 1.0, O1_);
-        H2_T2_C1(Hbar2_, T2_, 1.0, O1_);
-        H1_T2_C2(Hbar1_, T2_, 1.0, O2_);
-        H2_T1_C2(Hbar2_, T1_, 1.0, O2_);
-        H2_T2_C2(Hbar2_, T2_, 1.0, O2_);
+        // SL: I move it to the end.
+        // // [H~1st, A1st]
+        // H1_T1_C1(Hbar1_, T1_, 1.0, O1_);
+        // H1_T2_C1(Hbar1_, T2_, 1.0, O1_);
+        // H2_T1_C1(Hbar2_, T1_, 1.0, O1_);
+        // H2_T2_C1(Hbar2_, T2_, 1.0, O1_);
+        // H1_T2_C2(Hbar1_, T2_, 1.0, O2_);
+        // H2_T1_C2(Hbar2_, T1_, 1.0, O2_);
+        // H2_T2_C2(Hbar2_, T2_, 1.0, O2_);
 
         // [H~2nd, A1st]
         H1_T1_C1(Hbar2nd_1, T1_, 1.0, O1_);
@@ -1155,6 +1155,35 @@ double MRDSRG::compute_energy_pt3() {
         H2_T1_C2(Hbar2_, T2nd_1, 1.0, O2_);
         H2_T2_C2(Hbar2_, T2nd_2, 1.0, O2_);
 
+        ambit::BlockedTensor H3rd_1;
+        ambit::BlockedTensor H3rd_2;
+
+        if (foptions_->get_bool("FULL_HBAR") && foptions_->get_bool("FULL_HBAR_PT3")) {
+            // SL: Compute third-order Hamiltonian for third-order amplitudes.
+            H3rd_1 = BTF_->build(tensor_type_, "H3rd_1", spin_cases({"gg"}));
+            H3rd_2 = BTF_->build(tensor_type_, "H3rd_2", spin_cases({"gggg"}));
+
+            H3rd_1["pq"] += O1_["pq"];
+            H3rd_1["pq"] += O1_["qp"];
+            H3rd_1["PQ"] += O1_["PQ"];
+            H3rd_1["PQ"] += O1_["QP"];
+            H3rd_2["pqrs"] += O2_["pqrs"];
+            H3rd_2["pqrs"] += O2_["rspq"];
+            H3rd_2["pQrS"] += O2_["pQrS"];
+            H3rd_2["pQrS"] += O2_["rSpQ"];
+            H3rd_2["PQRS"] += O2_["PQRS"];
+            H3rd_2["PQRS"] += O2_["RSPQ"];
+        }
+
+        // [H~1st, A1st]
+        H1_T1_C1(Hbar1_, T1_, 1.0, O1_);
+        H1_T2_C1(Hbar1_, T2_, 1.0, O1_);
+        H2_T1_C1(Hbar2_, T1_, 1.0, O1_);
+        H2_T2_C1(Hbar2_, T2_, 1.0, O1_);
+        H1_T2_C2(Hbar1_, T2_, 1.0, O2_);
+        H2_T1_C2(Hbar2_, T1_, 1.0, O2_);
+        H2_T2_C2(Hbar2_, T2_, 1.0, O2_);
+
         Hbar1_["pq"] += O1_["pq"];
         Hbar1_["pq"] += O1_["qp"];
         Hbar1_["PQ"] += O1_["PQ"];
@@ -1168,6 +1197,60 @@ double MRDSRG::compute_energy_pt3() {
 
         Hbar1_["pq"] += H0th_["pq"];
         Hbar1_["PQ"] += H0th_["PQ"];
+
+        if (foptions_->get_bool("FULL_HBAR")) {
+            outfile->Printf("\n  ==> Computing Full Hbar (For EOM-DSRG) <==\n");
+            O1_.zero();
+            O2_.zero();
+            outfile->Printf("\n  ==> Computing terms without third-order amplitudes. <==\n");
+            // 0.5 [H0th, A1st]
+            H1_T1_C1(H0th_, T1_, 0.5, O1_);
+            H1_T2_C1(H0th_, T2_, 0.5, O1_);
+            H1_T2_C2(H0th_, T2_, 0.5, O2_);
+            // [H0th, A2nd]
+            H1_T1_C1(H0th_, T2nd_1, 1.0, O1_);
+            H1_T2_C1(H0th_, T2nd_2, 1.0, O1_);
+            H1_T2_C2(H0th_, T2nd_2, 1.0, O2_);
+
+            Hbar1_["pq"] += O1_["pq"];
+            Hbar1_["pq"] += O1_["qp"];
+            Hbar1_["PQ"] += O1_["PQ"];
+            Hbar1_["PQ"] += O1_["QP"];
+            Hbar2_["pqrs"] += O2_["pqrs"];
+            Hbar2_["pqrs"] += O2_["rspq"];
+            Hbar2_["pQrS"] += O2_["pQrS"];
+            Hbar2_["pQrS"] += O2_["rSpQ"];
+            Hbar2_["PQRS"] += O2_["PQRS"];
+            Hbar2_["PQRS"] += O2_["RSPQ"];
+
+            if (foptions_->get_bool("FULL_HBAR_PT3")) {
+                // compute third-order amplitudes
+                outfile->Printf("\n  ==> Computing third-order amplitudes <==\n");
+                BlockedTensor T3rd_1 = BTF_->build(tensor_type_, "temp1", spin_cases({"hp"}));
+                BlockedTensor T3rd_2 = BTF_->build(tensor_type_, "temp2", spin_cases({"hhpp"}));
+                guess_t(H3rd_2, T3rd_2, H3rd_1, T3rd_1);
+
+                outfile->Printf("\n  ==> Computing [H0th, A3rd] <==\n");
+                O1_.zero();
+                O2_.zero();
+                // [H0th, A3rd]
+                H1_T1_C1(H0th_, T3rd_1, 1.0, O1_);
+                H1_T2_C1(H0th_, T3rd_2, 1.0, O1_);
+                H1_T2_C2(H0th_, T3rd_2, 1.0, O2_);
+
+                Hbar1_["pq"] += O1_["pq"];
+                Hbar1_["pq"] += O1_["qp"];
+                Hbar1_["PQ"] += O1_["PQ"];
+                Hbar1_["PQ"] += O1_["QP"];
+                Hbar2_["pqrs"] += O2_["pqrs"];
+                Hbar2_["pqrs"] += O2_["rspq"];
+                Hbar2_["pQrS"] += O2_["pQrS"];
+                Hbar2_["pQrS"] += O2_["rSpQ"];
+                Hbar2_["PQRS"] += O2_["PQRS"];
+                Hbar2_["PQRS"] += O2_["RSPQ"];
+            }
+        }
+        // compute third-order amplitudes
     }
 
     Hbar0_ = Ecorr;

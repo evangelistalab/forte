@@ -1122,6 +1122,10 @@ DSRG:
     type: bool
     default: True
     help: "Generating the exact PT2-level Hbar"
+  FULL_HBAR_PT3:
+    type: bool
+    default: True
+    help: "Generating the exact PT3-level Hbar"
   FULL_MBAR:
     type: bool
     default: False
