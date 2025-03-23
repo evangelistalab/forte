@@ -211,8 +211,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Fdiag() {
 
 std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_full_hbar() {
     // Shuhang: This function is for my own testing purpose.
-    // 1. Initialize Hbar with bare Hamiltonian
     outfile->Printf("\n\n    DSRG-MRPT2 with Full Hbar...\n");
+
     Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"gg"}));
     Hbar2_ = BTF_->build(tensor_type_, "Hbar2", spin_cases({"gggg"}));
     Hbar1_["pq"] = F_["pq"];
@@ -221,41 +221,30 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_full_hbar
     Hbar2_["pQrS"] = V_["pQrS"];
     Hbar2_["PQRS"] = V_["PQRS"];
 
-    // 2. Compute F0th, F1st, and V1st
-    ambit::BlockedTensor F0th = BTF_->build(tensor_type_, "Fock 0th", spin_cases({"gg"}));
+    // create zeroth-order Hamiltonian
+    H0th_ = BTF_->build(tensor_type_, "Zeroth-order H", spin_cases({"gg"}));
     for (const auto block : {"cc", "CC", "aa", "AA", "vv", "VV"}) {
-        F0th.block(block)("pq") = F_.block(block)("pq");
+        H0th_.block(block)("pq") = F_.block(block)("pq");
     }
-    ambit::BlockedTensor F1st = BTF_->build(tensor_type_, "Fock 1st", spin_cases({"gg"}));
-    F1st["pq"] = F_["pq"];
-    F1st["PQ"] = F_["PQ"];
-    for (auto block : {"cc", "aa", "vv", "CC", "AA", "VV"}) {
-        F1st.block(block).zero();
-    }
-    ambit::BlockedTensor V1st = BTF_->build(tensor_type_, "V 1st", spin_cases({"gggg"}));
-    V1st["pqrs"] = V_["pqrs"];
-    V1st["pQrS"] = V_["pQrS"];
-    V1st["PQRS"] = V_["PQRS"];
 
-    // 3. Compute F1st + 0.5*[F0th, A].
+    // create first-order bare Hamiltonian
+    BlockedTensor H1st_1 = BTF_->build(tensor_type_, "H1st_1", spin_cases({"gg"}));
+    BlockedTensor H1st_2 = BTF_->build(tensor_type_, "H1st_2", spin_cases({"gggg"}));
+    H1st_1["pq"] = F_["pq"];
+    H1st_1["PQ"] = F_["PQ"];
+    for (auto block : {"cc", "aa", "vv", "CC", "AA", "VV"}) {
+        H1st_1.block(block).zero();
+    }
+    H1st_2["pqrs"] = V_["pqrs"];
+    H1st_2["pQrS"] = V_["pQrS"];
+    H1st_2["PQRS"] = V_["PQRS"];
+
+    // compute [H0th, T1st]
     O1_ = BTF_->build(tensor_type_, "temp1", spin_cases({"gg"}));
     O2_ = BTF_->build(tensor_type_, "temp2", spin_cases({"gggg"}));
-
-    H1_T1_C1(F0th, T1_, 1.0, O1_);
-    H1_T2_C1(F0th, T2_, 1.0, O1_);
-    H1_T2_C2(F0th, T2_, 1.0, O2_);
-
-    F1st["pq"] += 0.5 * O1_["pq"];
-    F1st["PQ"] += 0.5 * O1_["PQ"];
-    V1st["pqrs"] += 0.5 * O2_["pqrs"];
-    V1st["pQrS"] += 0.5 * O2_["pQrS"];
-    V1st["PQRS"] += 0.5 * O2_["PQRS"];
-
-    F1st["pq"] += 0.5 * O1_["qp"];
-    F1st["PQ"] += 0.5 * O1_["QP"];
-    V1st["pqrs"] += 0.5 * O2_["rspq"];
-    V1st["pQrS"] += 0.5 * O2_["rSpQ"];
-    V1st["PQRS"] += 0.5 * O2_["RSPQ"];
+    H1_T1_C1(H0th_, T1_, 1.0, O1_);
+    H1_T2_C1(H0th_, T2_, 1.0, O1_);
+    H1_T2_C2(H0th_, T2_, 1.0, O2_);
 
     Hbar1_["pq"] += O1_["pq"];
     Hbar1_["PQ"] += O1_["PQ"];
@@ -269,24 +258,44 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_full_hbar
     Hbar2_["pQrS"] += O2_["rSpQ"];
     Hbar2_["PQRS"] += O2_["RSPQ"];
 
-    // 4. Compute PT2 energy
+    // compute H~1st = H1st + 0.5 * [H0th, A1st]
+    BlockedTensor Hbar1_temp = BTF_->build(tensor_type_, "Hbar1_temp", spin_cases({"gg"}));
+    BlockedTensor Hbar2_temp = BTF_->build(tensor_type_, "Hbar2_temp", spin_cases({"gggg"}));
+    Hbar1_temp["pq"] += 0.5 * O1_["pq"];
+    Hbar1_temp["PQ"] += 0.5 * O1_["PQ"];
+    Hbar2_temp["pqrs"] += 0.5 * O2_["pqrs"];
+    Hbar2_temp["pQrS"] += 0.5 * O2_["pQrS"];
+    Hbar2_temp["PQRS"] += 0.5 * O2_["PQRS"];
+    Hbar1_temp["pq"] += 0.5 * O1_["qp"];
+    Hbar1_temp["PQ"] += 0.5 * O1_["QP"];
+    Hbar2_temp["pqrs"] += 0.5 * O2_["rspq"];
+    Hbar2_temp["pQrS"] += 0.5 * O2_["rSpQ"];
+    Hbar2_temp["PQRS"] += 0.5 * O2_["RSPQ"];
+
+    Hbar1_temp["PQ"] += H1st_1["PQ"];
+    Hbar1_temp["pq"] += H1st_1["pq"];
+    Hbar2_temp["pqrs"] += H1st_2["pqrs"];
+    Hbar2_temp["pQrS"] += H1st_2["pQrS"];
+    Hbar2_temp["PQRS"] += H1st_2["PQRS"];
+
+    // compute PT2 energy
     std::vector<std::pair<std::string, double>> energy;
     energy.push_back({"E0 (reference)", Eref_});
     double Ecorr = 0.0, Etemp = 0.0;
 
-    H1_T1_C0(F1st, T1_, 1.0, Ecorr);
+    H1_T1_C0(Hbar1_temp, T1_, 1.0, Ecorr);
     energy.push_back({"<[F, A1]>", 2 * (Ecorr - Etemp)});
     Etemp = Ecorr;
 
-    H1_T2_C0(F1st, T2_, 1.0, Ecorr);
+    H1_T2_C0(Hbar1_temp, T2_, 1.0, Ecorr);
     energy.push_back({"<[F, A2]>", 2 * (Ecorr - Etemp)});
     Etemp = Ecorr;
 
-    H2_T1_C0(V1st, T1_, 1.0, Ecorr);
+    H2_T1_C0(Hbar2_temp, T1_, 1.0, Ecorr);
     energy.push_back({"<[V, A1]>", 2 * (Ecorr - Etemp)});
     Etemp = Ecorr;
 
-    H2_T2_C0(V1st, T2_, 1.0, Ecorr);
+    H2_T2_C0(Hbar2_temp, T2_, 1.0, Ecorr);
     energy.push_back({"<[V, A2]>", 2 * (Ecorr - Etemp)});
     Etemp = Ecorr;
 
@@ -300,61 +309,48 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_full_hbar
 
     // reference relaxation
     if (foptions_->get_str("RELAX_REF") != "NONE" || multi_state) {
-        // 1. Compute F2nd and V2nd [(H1st + 0.5[H0th, As]), A]
-        ambit::BlockedTensor F2nd = BTF_->build(tensor_type_, "Fock 2nd", spin_cases({"gg"}));
-        ambit::BlockedTensor V2nd = BTF_->build(tensor_type_, "V 2nd", spin_cases({"gggg"}));
-        ambit::BlockedTensor F2nd_temp =
-            BTF_->build(tensor_type_, "Fock 2nd temp", spin_cases({"gg"}));
-        ambit::BlockedTensor V2nd_temp =
-            BTF_->build(tensor_type_, "V 2nd temp", spin_cases({"gggg"}));
+        // compute [H~1st, T1st]
+        O1_.zero();
+        O2_.zero();
+        H1_T1_C1(Hbar1_temp, T1_, 1.0, O1_);
+        H1_T2_C1(Hbar1_temp, T2_, 1.0, O1_);
+        H2_T1_C1(Hbar2_temp, T1_, 1.0, O1_);
+        H2_T2_C1(Hbar2_temp, T2_, 1.0, O1_);
+        H1_T2_C2(Hbar1_temp, T2_, 1.0, O2_);
+        H2_T1_C2(Hbar2_temp, T1_, 1.0, O2_);
+        H2_T2_C2(Hbar2_temp, T2_, 1.0, O2_);
 
-        F2nd_temp.zero();
-        V2nd_temp.zero();
+        BlockedTensor Hbar1_temp2 = BTF_->build(tensor_type_, "Hbar1_temp2", spin_cases({"gg"}));
+        BlockedTensor Hbar2_temp2 = BTF_->build(tensor_type_, "Hbar2_temp2", spin_cases({"gggg"}));
+        Hbar1_temp2["pq"] += O1_["pq"];
+        Hbar1_temp2["pq"] += O1_["qp"];
+        Hbar1_temp2["PQ"] += O1_["PQ"];
+        Hbar1_temp2["PQ"] += O1_["QP"];
+        Hbar2_temp2["pqrs"] += O2_["pqrs"];
+        Hbar2_temp2["pqrs"] += O2_["rspq"];
+        Hbar2_temp2["pQrS"] += O2_["pQrS"];
+        Hbar2_temp2["pQrS"] += O2_["rSpQ"];
+        Hbar2_temp2["PQRS"] += O2_["PQRS"];
+        Hbar2_temp2["PQRS"] += O2_["RSPQ"];
 
-        H1_T1_C1(F1st, T1_, 1.0, F2nd_temp);
-        H1_T2_C1(F1st, T2_, 1.0, F2nd_temp);
-        H2_T1_C1(V1st, T1_, 1.0, F2nd_temp);
-        H2_T2_C1(V1st, T2_, 1.0, F2nd_temp);
+        Hbar1_["pq"] += Hbar1_temp2["pq"];
+        Hbar1_["PQ"] += Hbar1_temp2["PQ"];
+        Hbar2_["pqrs"] += Hbar2_temp2["pqrs"];
+        Hbar2_["pQrS"] += Hbar2_temp2["pQrS"];
+        Hbar2_["PQRS"] += Hbar2_temp2["PQRS"];
 
-        H1_T2_C2(F1st, T2_, 1.0, V2nd_temp);
-        H2_T1_C2(V1st, T1_, 1.0, V2nd_temp);
-        H2_T2_C2(V1st, T2_, 1.0, V2nd_temp);
-
-        F2nd.zero();
-        V2nd.zero();
-
-        F2nd["pq"] += F2nd_temp["pq"];
-        F2nd["pq"] += F2nd_temp["qp"];
-        F2nd["PQ"] += F2nd_temp["PQ"];
-        F2nd["PQ"] += F2nd_temp["QP"];
-        V2nd["pqrs"] += V2nd_temp["pqrs"];
-        V2nd["pqrs"] += V2nd_temp["rspq"];
-        V2nd["pQrS"] += V2nd_temp["pQrS"];
-        V2nd["pQrS"] += V2nd_temp["rSpQ"];
-        V2nd["PQRS"] += V2nd_temp["PQRS"];
-        V2nd["PQRS"] += V2nd_temp["RSPQ"];
-
-        // Update Hbar1 and Hbar2
-        Hbar1_["pq"] += F2nd["pq"];
-        Hbar1_["PQ"] += F2nd["PQ"];
-        Hbar2_["pqrs"] += V2nd["pqrs"];
-        Hbar2_["pQrS"] += V2nd["pQrS"];
-        Hbar2_["PQRS"] += V2nd["PQRS"];
-
-        // 2. Compute T1_2nd and T2_2nd
         if (foptions_->get_bool("FULL_HBAR_PT2")) {
             ambit::BlockedTensor T1_2nd =
                 BTF_->build(tensor_type_, "T1 Amplitudes", spin_cases({"hp"}));
             ambit::BlockedTensor T2_2nd =
                 BTF_->build(tensor_type_, "T2 Amplitudes", spin_cases({"hhpp"}));
-            guess_t(V2nd, T2_2nd, F2nd, T1_2nd);
+            guess_t(Hbar2_temp2, T2_2nd, Hbar1_temp2, T1_2nd);
 
-            // Compute [H0th, A2nd]
             O1_.zero();
             O2_.zero();
-            H1_T1_C1(F0th, T1_2nd, 1.0, O1_);
-            H1_T2_C1(F0th, T2_2nd, 1.0, O1_);
-            H1_T2_C2(F0th, T2_2nd, 1.0, O2_);
+            H1_T1_C1(H0th_, T1_2nd, 1.0, O1_);
+            H1_T2_C1(H0th_, T2_2nd, 1.0, O1_);
+            H1_T2_C2(H0th_, T2_2nd, 1.0, O2_);
 
             Hbar1_["pq"] += O1_["pq"];
             Hbar1_["PQ"] += O1_["PQ"];
@@ -367,11 +363,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_full_hbar
             Hbar2_["pqrs"] += O2_["rspq"];
             Hbar2_["pQrS"] += O2_["rSpQ"];
             Hbar2_["PQRS"] += O2_["RSPQ"];
-        } else {
-            return energy;
         }
     }
-
     return energy;
 }
 
