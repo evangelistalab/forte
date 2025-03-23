@@ -41,11 +41,10 @@ def test_sparse_vector():
     ref4 = forte.SparseState({det("+"): 1, det("-"): 1})
     ref4 = forte.normalize(ref4)
     assert ref4.norm() == pytest.approx(1.0, abs=1e-9)
-    assert forte.spin2(ref4,ref4) == pytest.approx(0.75, abs=1e-9)
+    assert forte.spin2(ref4, ref4) == pytest.approx(0.75, abs=1e-9)
 
     ref5 = forte.SparseState({det("2"): 1})
-    assert forte.spin2(ref5,ref5) == pytest.approx(0, abs=1e-9)
-    
+    assert forte.spin2(ref5, ref5) == pytest.approx(0, abs=1e-9)
 
 
 if __name__ == "__main__":

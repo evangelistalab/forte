@@ -33,6 +33,9 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
+
 #include "integrals/active_space_integrals.h"
 #include "base_classes/mo_space_info.h"
 #include "base_classes/state_info.h"
@@ -50,6 +53,7 @@ MRDSRG_SO::MRDSRG_SO(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_in
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
       BTF_(std::make_shared<BlockedTensorFactory>()), tensor_type_(ambit::CoreTensor) {
+    BlockedTensor::reset_mo_spaces();
     print_method_banner(
         {"SO-Based Multireference Driven Similarity Renormalization Group", "Chenyang Li"});
     startup();
@@ -643,6 +647,10 @@ double MRDSRG_SO::compute_energy() {
         ++cycle;
     } while (!converged);
 
+    if (foptions_->get_bool("FULL_HBAR")) {
+        compute_hbar();
+    }
+
     outfile->Printf("\n    "
                     "----------------------------------------------------------"
                     "----------------------------------------");
@@ -723,7 +731,7 @@ void MRDSRG_SO::compute_hbar() {
             O2["pqrs"] = C2["pqrs"];
             C2["pqrs"] += O2["rspq"];
         }
-
+        
         // Hbar += C
         Hbar0 += C0;
         Hbar1["pq"] += C1["pq"];
@@ -1368,5 +1376,14 @@ void MRDSRG_SO::H3_T2_C2(BlockedTensor& H3, BlockedTensor& T2, const double& alp
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ca"});
     temp["mx"] += 0.5 * T2["myuv"] * Lambda2["uvxy"];
     C2["toqr"] -= alpha * temp["mx"] * H3["xtomqr"];
+}
+std::pair<double, std::vector<BlockedTensor>> MRDSRG_SO::save_Heff_full() {
+    double Edsrg = Eref + Hbar0;
+    ambit::BlockedTensor Hbar1_copy = BTF_->build(tensor_type_, "Hbar1_copy", {"gg"});
+    ambit::BlockedTensor Hbar2_copy = BTF_->build(tensor_type_, "Hbar2_copy", {"gggg"});
+    Hbar1_copy["pq"] = Hbar1["pq"];
+    Hbar2_copy["pqrs"] = Hbar2["pqrs"];
+    std::vector<ambit::BlockedTensor> Heff = {Hbar1_copy, Hbar2_copy};
+    return std::make_pair(Edsrg, Heff);
 }
 } // namespace forte

@@ -1114,6 +1114,26 @@ DSRG:
       "  - Multi-state approach (currently only for MRPT2)\n"
       "    - MS:  form 2nd-order Heff_MN = <M|H|N> + 0.5 * [<M|(T_M)^+ H|N> + <M|H T_N|N>]\n"
       "    - XMS: rotate references such that <M|F|N> is diagonal before MS procedure"
+  FULL_HBAR:
+    type: bool
+    default: False
+    help: "Save the full DSRG effective Hamiltonian to disk."
+  FULL_HBAR_PT2:
+    type: bool
+    default: True
+    help: "Generating the exact PT2-level Hbar"
+  FULL_HBAR_PT3:
+    type: bool
+    default: True
+    help: "Generating the exact PT3-level Hbar"
+  FULL_MBAR:
+    type: bool
+    default: False
+    help: "Save the full DSRG effective dipole integrals to disk."
+  E_FREEZE:
+    type: double
+    default: 0.0
+    help: "Freeze core based on orbital energy."
   FORM_HBAR3:
     type: bool
     default: False
@@ -1570,6 +1590,11 @@ Old:
     default: "MK"
     choices: ["MK", "MK_DECOMP", "ZERO"]
     help: "The form of the three-particle density cumulant"
+  FOURPDC:
+    type: str
+    default: "ZERO"
+    choices: ["MK", "ZERO"]
+    help: "The form of the four-particle density cumulant"
   SRG_COMM:
     type: str
     default: "STANDARD"

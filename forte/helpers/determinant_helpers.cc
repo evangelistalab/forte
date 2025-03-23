@@ -112,8 +112,9 @@ std::vector<std::vector<String>> make_strings(int n, int k, size_t nirrep,
     return strings;
 }
 
-std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, Determinant ref, int truncation,
-                                            size_t nirrep, std::vector<int> mo_symmetry, int symmetry) {
+std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, Determinant ref,
+                                            int truncation, size_t nirrep,
+                                            std::vector<int> mo_symmetry, int symmetry) {
     std::vector<Determinant> dets;
     if (mo_symmetry.size() != nmo) {
         mo_symmetry = std::vector<int>(nmo, 0);
@@ -151,7 +152,7 @@ std::vector<Determinant> make_hilbert_space(size_t nmo, size_t na, size_t nb, De
                 det.set_beta_str(Ib);
                 if (det.fast_a_xor_b_count(ref) / 2 <= truncation) {
                     dets.push_back(det);
-                } 
+                }
             }
         }
     }

@@ -1,0 +1,42 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+molecule {
+0 1
+Li
+H 1 R
+
+R = 3.0
+units bohr 
+}
+
+set {
+  basis sto-3g
+  reference rhf
+  scf_type pk
+  e_convergence 12
+}
+
+set forte {
+  active_space_solver genci
+  fci_test_rdms true
+}
+
+energy('scf')
+energy('forte')
+
+compare_values(0.0, variable("AA 1-RDM ERROR"),12, "AA 1-RDM") #TEST
+compare_values(0.0, variable("BB 1-RDM ERROR"),12, "BB 1-RDM") #TEST
+compare_values(0.0, variable("AAAA 2-RDM ERROR"),12, "AAAA 2-RDM") #TEST
+compare_values(0.0, variable("BBBB 2-RDM ERROR"),12, "BBBB 2-RDM") #TEST
+compare_values(0.0, variable("ABAB 2-RDM ERROR"),12, "ABAB 2-RDM") #TEST
+compare_values(0.0, variable("AABAAB 3-RDM ERROR"),12, "AABAAB 3-RDM") #TEST
+compare_values(0.0, variable("ABBABB 3-RDM ERROR"),12, "ABBABB 3-RDM") #TEST
+compare_values(0.0, variable("AAAAAA 3-RDM ERROR"),12, "AAAAAA 3-RDM") #TEST
+compare_values(0.0, variable("BBBBBB 3-RDM ERROR"),12, "BBBBBB 3-RDM") #TEST
+compare_values(0.0, variable("AAAAAAAA 4-RDM ERROR"),12, "AAAAAAAA 4-RDM") #TEST
+compare_values(0.0, variable("AAABAAAB 4-RDM ERROR"),12, "AAABAAAB 4-RDM") #TEST
+compare_values(0.0, variable("AABBAABB 4-RDM ERROR"),12, "AABBAABB 4-RDM") #TEST
+compare_values(0.0, variable("ABBBABBB 4-RDM ERROR"),12, "ABBBABBB 4-RDM") #TEST
+compare_values(0.0, variable("BBBBBBBB 4-RDM ERROR"),12, "BBBBBBBB 4-RDM") #TEST

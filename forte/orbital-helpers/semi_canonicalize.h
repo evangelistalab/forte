@@ -158,6 +158,7 @@ class SemiCanonical {
     std::shared_ptr<psi::Matrix> Ua_;
     /// Unitary matrix for beta orbital rotation
     std::shared_ptr<psi::Matrix> Ub_;
+
     /// Unitary matrix for alpha orbital rotation in the active space
     ambit::Tensor Ua_t_;
     /// Unitary matrix for beta orbital rotation in the active space

@@ -180,7 +180,6 @@ void export_SparseOperatorList(py::module& m) {
                 return op1;
             },
             "Add (concatenate) a SparseOperatorList object to this SparseOperatorList object");
-        
 
     // Wrapper class that holds a SparseOperator
     // and overloads operator* to apply forte::SparseExp.

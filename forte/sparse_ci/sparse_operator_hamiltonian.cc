@@ -29,7 +29,6 @@
 #include <format>
 
 #include "sparse_ci/sparse_operator_hamiltonian.h"
-
 #include "integrals/active_space_integrals.h"
 
 namespace forte {
@@ -79,5 +78,68 @@ SparseOperator sparse_operator_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals>
     }
     return H;
 }
+
+template <typename T>
+SparseOperator sparse_operator_hamiltonian(double scalar, ndarray<T>& oei_a, ndarray<T>& oei_b,
+                                           ndarray<T>& tei_aa, ndarray<T>& tei_ab,
+                                           ndarray<T>& tei_bb, double screen_thresh) {
+    SparseOperator H;
+    size_t nmo = oei_a.shape()[0];
+    H.add_term_from_str("[]", scalar);
+    for (size_t p = 0; p < nmo; p++) {
+        for (size_t q = 0; q < nmo; q++) {
+            // std::abs used to handle complex numbers
+            if (std::abs(oei_a.at({p, q})) > screen_thresh) {
+                H.add(SQOperatorString({p}, {}, {q}, {}), oei_a.at({p, q}));
+            }
+            if (std::abs(oei_b.at({p, q})) > screen_thresh) {
+                H.add(SQOperatorString({}, {p}, {}, {q}), oei_b.at({p, q}));
+            }
+        }
+    }
+    for (size_t p = 0; p < nmo; p++) {
+        for (size_t q = p + 1; q < nmo; q++) {
+            for (size_t r = 0; r < nmo; r++) {
+                for (size_t s = r + 1; s < nmo; s++) {
+                    if (std::abs(tei_aa.at({p, q, r, s})) > screen_thresh) {
+                        H.add(SQOperatorString({p, q}, {}, {s, r}, {}), tei_aa.at({p, q, r, s}));
+                    }
+                    if (std::abs(tei_bb.at({p, q, r, s})) > screen_thresh) {
+                        H.add(SQOperatorString({}, {p, q}, {}, {s, r}), tei_bb.at({p, q, r, s}));
+                    }
+                }
+            }
+        }
+    }
+    for (size_t p = 0; p < nmo; p++) {
+        for (size_t q = 0; q < nmo; q++) {
+            for (size_t r = 0; r < nmo; r++) {
+                for (size_t s = 0; s < nmo; s++) {
+                    if (std::abs(tei_ab.at({p, q, r, s})) > screen_thresh) {
+                        H.add(SQOperatorString({p}, {q}, {r}, {s}), tei_ab.at({p, q, r, s}));
+                    }
+                }
+            }
+        }
+    }
+    return H;
+}
+
+// Explicit instantiation of the template function
+template SparseOperator sparse_operator_hamiltonian<float>(double, ndarray<float>&, ndarray<float>&,
+                                                           ndarray<float>&, ndarray<float>&,
+                                                           ndarray<float>&, double);
+template SparseOperator sparse_operator_hamiltonian<double>(double, ndarray<double>&,
+                                                            ndarray<double>&, ndarray<double>&,
+                                                            ndarray<double>&, ndarray<double>&,
+                                                            double);
+template SparseOperator sparse_operator_hamiltonian<std::complex<float>>(
+    double, ndarray<std::complex<float>>&, ndarray<std::complex<float>>&,
+    ndarray<std::complex<float>>&, ndarray<std::complex<float>>&, ndarray<std::complex<float>>&,
+    double);
+template SparseOperator sparse_operator_hamiltonian<std::complex<double>>(
+    double, ndarray<std::complex<double>>&, ndarray<std::complex<double>>&,
+    ndarray<std::complex<double>>&, ndarray<std::complex<double>>&, ndarray<std::complex<double>>&,
+    double);
 
 } // namespace forte

@@ -181,7 +181,6 @@ PYBIND11_MODULE(_forte, m) {
         },
         "Return the cumulants of the RDMs in a spinorbital basis. Spinorbitals follow the ordering "
         "abab...");
-
     m.def("get_gas_occupation", &get_gas_occupation);
     m.def("get_ci_occupation_patterns", &get_ci_occupation_patterns);
 
@@ -251,6 +250,77 @@ PYBIND11_MODULE(_forte, m) {
         .def("compute_gradient", &MASTER_DSRG::compute_gradient, "Compute the DSRG gradient")
         .def("compute_Heff_actv", &MASTER_DSRG::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals")
+        .def("save_Heff_full",
+             [](MASTER_DSRG& self) {
+                 const auto Heff = self.save_Heff_full();
+                 return py::make_tuple(Heff.first, Heff.second.at(0), Heff.second.at(1));
+             })
+        // .def("save_Heff_full", [](MASTER_DSRG& self) {
+        //     const auto Heff = self.save_Heff_full();
+        //     return py::make_tuple(Heff.first, blockedtensor_to_np(Heff.second.at(0)),
+        //     blockedtensor_to_np(Heff.second.at(1)));
+        //     })
+        .def("update_Heff_full",
+             [](MASTER_DSRG& self, double H0, BlockedTensor H1, BlockedTensor H2,
+                std::shared_ptr<RDMs> rdms) {
+                 const auto Heff = self.update_Heff_full(H0, H1, H2, rdms);
+                 return py::make_tuple(Heff.first, blockedtensor_to_np(Heff.second.at(0)),
+                                       blockedtensor_to_np(Heff.second.at(1)));
+             })
+        .def("compute_mbar", &MASTER_DSRG::compute_mbar,
+             "compute full transformed dipole integrals")
+        .def("compute_Mbar0_full", &MASTER_DSRG::compute_Mbar0_full,
+             "Return full transformed zero-body dipole integrals")
+        .def("compute_Mbar1_full",
+             [](MASTER_DSRG& self) {
+                 const auto Mbar1 = self.compute_Mbar1_full();
+                 return py::make_tuple(blockedtensor_to_np(Mbar1.at(0)),
+                                       blockedtensor_to_np(Mbar1.at(1)),
+                                       blockedtensor_to_np(Mbar1.at(2)));
+             })
+        .def("compute_Mbar2_full",
+             [](MASTER_DSRG& self) {
+                 const auto Mbar2 = self.compute_Mbar2_full();
+                 return py::make_tuple(blockedtensor_to_np(Mbar2.at(0)),
+                                       blockedtensor_to_np(Mbar2.at(1)),
+                                       blockedtensor_to_np(Mbar2.at(2)));
+             })
+        .def("get_gamma1",
+             [](MASTER_DSRG& self) {
+                 const auto gamma1 = self.get_gamma1();
+                 return blockedtensor_to_np(gamma1);
+             })
+        .def("get_eta1",
+             [](MASTER_DSRG& self) {
+                 const auto eta1 = self.get_eta1();
+                 return blockedtensor_to_np(eta1);
+             })
+        .def("get_lambda2",
+             [](MASTER_DSRG& self) {
+                 const auto lambda2 = self.get_lambda2();
+                 return blockedtensor_to_np(lambda2);
+             })
+        .def("get_lambda3",
+             [](MASTER_DSRG& self) {
+                 const auto lambda3 = self.get_lambda3();
+                 py::dict pyrdm;
+                 pyrdm[py::str("aaaaaa")] = ambit_to_np(lambda3.at(0));
+                 pyrdm[py::str("aaAaaA")] = ambit_to_np(lambda3.at(1));
+                 pyrdm[py::str("aAAaAA")] = ambit_to_np(lambda3.at(2));
+                 pyrdm[py::str("AAAAAA")] = ambit_to_np(lambda3.at(3));
+                 return pyrdm;
+             })
+        .def("get_lambda4",
+             [](MASTER_DSRG& self) {
+                 const auto lambda4 = self.get_lambda4();
+                 py::dict pyrdm;
+                 pyrdm[py::str("aaaaaaaa")] = ambit_to_np(lambda4.at(0));
+                 pyrdm[py::str("aaaAaaaA")] = ambit_to_np(lambda4.at(1));
+                 pyrdm[py::str("aaAAaaAA")] = ambit_to_np(lambda4.at(2));
+                 pyrdm[py::str("aAAAaAAA")] = ambit_to_np(lambda4.at(3));
+                 pyrdm[py::str("AAAAAAAA")] = ambit_to_np(lambda4.at(4));
+                 return pyrdm;
+             })
         .def("deGNO_DMbar_actv", &MASTER_DSRG::deGNO_DMbar_actv,
              "Return the DSRG dressed dipole integrals")
         .def("nuclear_dipole", &MASTER_DSRG::nuclear_dipole,
@@ -269,13 +339,20 @@ PYBIND11_MODULE(_forte, m) {
         .def("set_ci_vectors", &MASTER_DSRG::set_ci_vectors,
              "Set the CI eigenvector for DSRG-MRPT2 analytic gradients")
         .def("set_active_space_solver", &MASTER_DSRG::set_active_space_solver,
-             "Set the shared pointer for ActiveSpaceSolver");
+             "Set the shared pointer for ActiveSpaceSolver")
+        .def("set_rdms", &MASTER_DSRG::set_rdms, "Set external RDMs (dangerous, use with caution)");
 
     // export SADSRG
     py::class_<SADSRG>(m, "SADSRG")
         .def("compute_energy", &SADSRG::compute_energy, "Compute the DSRG energy")
         .def("compute_Heff_actv", &SADSRG::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals")
+        .def("compute_Heff_full",
+             [](SADSRG& self) {
+                 const auto Heff = self.compute_Heff_full();
+                 return py::make_tuple(blockedtensor_to_np(Heff.at(0)),
+                                       blockedtensor_to_np(Heff.at(1)));
+             })
         .def("compute_mp_eff_actv", &SADSRG::compute_mp_eff_actv,
              "Return the DSRG dressed ActiveMultipoleIntegrals")
         .def("set_Uactv", &SADSRG::set_Uactv, "Ua"_a,
@@ -300,7 +377,32 @@ PYBIND11_MODULE(_forte, m) {
     py::class_<MRDSRG_SO>(m, "MRDSRG_SO")
         .def("compute_energy", &MRDSRG_SO::compute_energy, "Compute DSRG energy")
         .def("compute_Heff_actv", &MRDSRG_SO::compute_Heff_actv,
-             "Return the DSRG dressed ActiveSpaceIntegrals");
+             "Return the DSRG dressed ActiveSpaceIntegrals")
+        .def("save_Heff_full",
+             [](MRDSRG_SO& self) {
+                 const auto Heff = self.save_Heff_full();
+                 return py::make_tuple(Heff.first, blockedtensor_to_np(Heff.second.at(0)),
+                                       blockedtensor_to_np(Heff.second.at(1)));
+             })
+        .def("get_gamma1",
+             [](MRDSRG_SO& self) {
+                 const auto gamma1 = self.get_gamma1();
+                 return blockedtensor_to_np(gamma1);
+             })
+        .def("get_eta1",
+             [](MRDSRG_SO& self) {
+                 const auto eta1 = self.get_eta1();
+                 return blockedtensor_to_np(eta1);
+             })
+        .def("get_lambda2",
+             [](MRDSRG_SO& self) {
+                 const auto lambda2 = self.get_lambda2();
+                 return blockedtensor_to_np(lambda2);
+             })
+        .def("get_lambda3", [](MRDSRG_SO& self) {
+            const auto lambda3 = self.get_lambda3();
+            return blockedtensor_to_np(lambda3);
+        });
 
     // export DSRG_MRPT spin-adapted code
     py::class_<DSRG_MRPT>(m, "DSRG_MRPT")

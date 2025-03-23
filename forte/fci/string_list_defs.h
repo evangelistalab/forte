@@ -74,6 +74,18 @@ struct H3StringSubstitution {
         : sign(sign_), p(p_), q(q_), r(r_), J(J_) {}
 };
 
+/// 4-hole string substitution
+struct H4StringSubstitution {
+    const int16_t sign;
+    const int16_t p;
+    const int16_t q;
+    const int16_t r;
+    const int16_t s;
+    const size_t J;
+    H4StringSubstitution(int16_t sign_, int16_t p_, int16_t q_, int16_t r_, int16_t s_, size_t J_)
+        : sign(sign_), p(p_), q(q_), r(r_), s(s_), J(J_) {}
+};
+
 using StringList = std::vector<std::vector<String>>;
 
 /// Maps the integers (p,q,h) to list of strings connected by a^{+}_p a_q, where the string
@@ -110,6 +122,10 @@ using H2List = std::map<std::tuple<int, size_t, int>, std::vector<H2StringSubsti
 /// Maps the integers (h_J, add_J, h_I) to list of strings connected by a_p a_q a_r, where the
 /// string I belongs to the irrep h_I and J belongs to the irrep h_J and add_J is the address of J
 using H3List = std::map<std::tuple<int, size_t, int>, std::vector<H3StringSubstitution>>;
+
+/// Maps the integers (h_J, add_J, h_I) to list of strings connected by a_p a_q a_r a_s, where the
+/// string I belongs to the irrep h_I and J belongs to the irrep h_J and add_J is the address of J
+using H4List = std::map<std::tuple<int, size_t, int>, std::vector<H4StringSubstitution>>;
 
 using Pair = std::pair<int, int>;
 using PairList = std::vector<std::vector<std::pair<int, int>>>;

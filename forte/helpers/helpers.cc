@@ -74,6 +74,15 @@ py::array_t<double> vector_to_np(const std::vector<double>& v, const std::vector
     return py::array_t<double>(dims, &(v.data()[0]));
 }
 
+py::dict blockedtensor_to_np(ambit::BlockedTensor bt) {
+    py::dict pybt;
+    auto labels = bt.block_labels();
+    for (const auto& label : labels) {
+        pybt[py::str(label)] = ambit_to_np(bt.block(label));
+    }
+    return pybt;
+}
+
 std::shared_ptr<psi::Matrix> tensor_to_matrix(ambit::Tensor t) {
     size_t size1 = t.dim(0);
     size_t size2 = t.dim(1);

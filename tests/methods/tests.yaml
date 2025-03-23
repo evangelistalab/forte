@@ -259,6 +259,7 @@ fci:
       - fci-ecp-1
       - fci-ecp-2
       - fci-rdms-2
+      - fci-rdms-3
       - fci-trdms-1
       - fci-trdms-2
    long:
