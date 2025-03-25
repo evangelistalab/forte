@@ -1,5 +1,6 @@
 import forte
 
+# refmcscf =   -206.083844698525638
 refdsrgpt2 = -206.105821145367486
 
 molecule {
@@ -20,9 +21,6 @@ set {
   basis                               sto-3g
   docc                                [12]
 }
-
-E, wfn_cas = energy('scf', return_wfn=True)
-print(wfn_cas.Fa().np)
 
 set forte {
   MCSCF_IGNORE_FROZEN_ORBS            false           #freeze the core/virtual orbitals in MCSCF
