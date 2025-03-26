@@ -454,22 +454,32 @@ double MCSCF_2STEP::compute_energy() {
         ActiveOrbitalType actv_orb_type(options_->get_str("MCSCF_FINAL_ORBITAL"));
         SemiCanonical semi(mo_space_info_, ints_, scf_info_, inactive_mix, active_mix);
         semi.semicanonicalize(rdms, false, actv_orb_type, false);
-
         cas_grad.canonicalize_final(semi.Ua());
 
-        // pass to wave function
+        // pass the MO coefficients to the wave function
         auto Ca = cas_grad.Ca();
         ints_->wfn()->Ca()->copy(Ca);
         ints_->wfn()->Cb()->copy(Ca);
 
-        // test if the coefficient matrix is invertible. If yes, update the Fock matrix in the psi4
-        // wave function
-        if (Ca->rowspi() == Ca->colspi()) {
-            // compute the Fock matrix in the AO basis
-            auto Ca_inv = Ca->clone();
-            auto F_ao = F->clone();
+        // pass the orbital energies to the wave function
+        auto F_rowspi = F->rowspi();
+        auto nirrep = F->nirrep();
+        for (int h = 0; h < nirrep; ++h) {
+            for (int p = 0; p < F_rowspi[h]; ++p) {
+                ints_->wfn()->epsilon_a()->set(h, p, F->get(h, p, p));
+                ints_->wfn()->epsilon_b()->set(h, p, F->get(h, p, p));
+            }
+        }
 
+        // test if the coefficient matrix is invertible.
+        // If yes, pass the Fock matrix to the psi4 wave function
+        if (Ca->rowspi() == Ca->colspi()) {
+            // compute the inverse of the coefficient matrix
+            auto Ca_inv = Ca->clone();
             Ca_inv->invert();
+
+            // compute the Fock matrix in the AO basis as F_ao = Ca_inv^T F Ca_inv
+            auto F_ao = F->clone();
             F_ao->transform(Ca_inv);
 
             // copy the Fock matrix to the psi4 wave function
