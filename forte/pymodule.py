@@ -29,6 +29,7 @@
 
 import time
 import os
+import numpy as np
 
 import psi4
 import psi4.driver.p4util as p4util
@@ -204,10 +205,11 @@ def energy_forte(name, **kwargs):
         data = MCSCF(active_space_solver_type).run(data)
         energy = data.results.value("mcscf energy")
 
+
     if data.options.get_bool("EMBEDDING"):
         data.mo_space_info = make_embedding_orbitals(data)
         data.ints = forte.make_ints_from_psi4(data.psi_wfn, data.options, data.scf_info, data.mo_space_info)
-
+    
     # Run a method
     if job_type == "NONE":
         psi4.core.set_scalar_variable("CURRENT ENERGY", energy)

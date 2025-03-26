@@ -1,0 +1,1836 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.10a1.dev62 
+
+                         Git: Rev {master} a25e716 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Tuesday, 25 March 2025 03:44PM
+
+    Process ID: 10750
+    Host:       CharliMacbook.local
+    PSIDATADIR: /Users/charli/packages/psi4/objdir-Release/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+import forte
+
+# refmcscf = -155.258496830757849
+refdsrgpt2 = -155.400196650103709
+
+molecule {
+  -1 1
+    C            0.736149969259     0.199718340898    -0.207219947401
+    C            1.894302493759    -0.319955293970     0.296207387267
+    H            0.861933668943     1.105847110317    -0.832928585892
+    H            1.842233711006    -1.252567898836     0.893040798768
+    H            2.864162955272     0.173377115363     0.186731686072
+--
+  1 1
+    C           -1.777918019119     0.526955710902     0.239774606960
+    C           -0.669802211906    -0.436809943125    -0.347092635549
+    H           -1.538823490089     0.918192642365     1.253716032316
+    H           -2.797322479987     0.052951758306     0.328948031715
+    H           -1.899218748385     1.428566644507    -0.416125458480
+    H           -0.863484663283    -0.665562244675    -1.411954335033
+    H           -0.645242334465    -1.402514539204     0.216831010104
+
+     units angstrom
+     no_reorient
+     symmetry c1
+}
+
+set {
+  basis                               3-21g
+  scf_type                            pk
+  docc                                [16]
+}
+
+
+set forte {
+  restricted_docc                     [15]
+  active                              [2]
+  embedding                           true
+  embedding_reference                 casscf
+  embedding_cutoff_method             threshold
+  embedding_threshold                 0.5
+  EMBEDDING_VIRTUAL_SPACE             PAO
+  PAO_THRESHOLD                       0.01
+  EMBEDDING_SEMICANONICALIZE_FROZEN   False
+  active_space_solver                 fci
+  correlation_solver                  dsrg-mrpt2
+  mcscf_algorithm                     ts
+  mcscf_max_rot                       0.1
+}
+
+energy('forte')
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8,"PT2-in-CASSCF energy")
+--------------------------------------------------------------------------
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: aset_updt - git commit: 27241ea1
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+
+  Preparing forte objects from a Psi4 Wavefunction object   => Libint2 <=
+
+    Primary   basis highest AM E, G, H:  5, 4, 3
+    Auxiliary basis highest AM E, G, H:  6, 5, 4
+    Onebody   basis highest AM E, G, H:  6, 5, 4
+    Solid Harmonics ordering:            Gaussian
+
+*** tstart() called on CharliMacbook.local
+*** at Tue Mar 25 15:44:38 2025
+
+   => Loading Basis Set <=
+
+    Name: 3-21G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2, 6-7  entry C          line    68 file /Users/charli/packages/psi4/objdir-Release/stage/share/psi4/basis/3-21g.gbs 
+    atoms 3-5, 8-12 entry H          line    21 file /Users/charli/packages/psi4/objdir-Release/stage/share/psi4/basis/3-21g.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c1
+    Full point group: C1
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         C            0.736149969259     0.199718340898    -0.207219947401    12.000000000000
+         C            1.894302493759    -0.319955293970     0.296207387267    12.000000000000
+         H            0.861933668943     1.105847110317    -0.832928585892     1.007825032230
+         H            1.842233711006    -1.252567898836     0.893040798768     1.007825032230
+         H            2.864162955272     0.173377115363     0.186731686072     1.007825032230
+         C           -1.777918019119     0.526955710902     0.239774606960    12.000000000000
+         C           -0.669802211906    -0.436809943125    -0.347092635549    12.000000000000
+         H           -1.538823490089     0.918192642365     1.253716032316     1.007825032230
+         H           -2.797322479987     0.052951758306     0.328948031715     1.007825032230
+         H           -1.899218748385     1.428566644507    -0.416125458480     1.007825032230
+         H           -0.863484663283    -0.665562244675    -1.411954335033     1.007825032230
+         H           -0.645242334465    -1.402514539204     0.216831010104     1.007825032230
+
+  Running in c1 symmetry.
+
+  Rotational constants: A =      0.76830  B =      0.12792  C =      0.12357 [cm^-1]
+  Rotational constants: A =  23032.90810  B =   3834.98641  C =   3704.54551 [MHz]
+  Nuclear repulsion =  113.811879343468092
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 32
+  Nalpha       = 16
+  Nbeta        = 16
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-08
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: 3-21G
+    Blend: 3-21G
+    Number of shells: 36
+    Number of basis functions: 52
+    Number of Cartesian functions: 52
+    Spherical Harmonics?: false
+    Max angular momentum: 1
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                  12
+      Number of AO shells:              36
+      Number of primitives:             60
+      Number of atomic orbitals:        52
+      Number of basis functions:        52
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 1900262 doubles for integral storage.
+  We computed 199059 shell quartets total.
+  Whereas there are 222111 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              375
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+  Minimum eigenvalue in the overlap matrix is 1.2739003501E-02.
+  Reciprocal condition number of the overlap matrix is 2.9173594016E-03.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     A         52      52 
+   -------------------------
+    Total      52      52
+   -------------------------
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter SAD:  -150.54429338475509   -1.50544e+02   0.00000e+00 
+   @RHF iter   1:  -151.46181670721819   -9.17523e-01   4.37856e-02 ADIIS/DIIS
+   @RHF iter   2:  -153.37385641575867   -1.91204e+00   3.83841e-02 ADIIS/DIIS
+   @RHF iter   3:  -155.13978716555772   -1.76593e+00   7.68263e-03 ADIIS/DIIS
+   @RHF iter   4:  -155.21583961850644   -7.60525e-02   2.72325e-03 ADIIS/DIIS
+   @RHF iter   5:  -155.22627702168478   -1.04374e-02   2.55958e-04 ADIIS/DIIS
+   @RHF iter   6:  -155.22645368572688   -1.76664e-04   8.95259e-05 DIIS
+   @RHF iter   7:  -155.22646885580554   -1.51701e-05   2.12148e-05 DIIS
+   @RHF iter   8:  -155.22647028250714   -1.42670e-06   7.14543e-06 DIIS
+   @RHF iter   9:  -155.22647046646614   -1.83959e-07   1.33839e-06 DIIS
+   @RHF iter  10:  -155.22647047630156   -9.83542e-09   3.53233e-07 DIIS
+   @RHF iter  11:  -155.22647047675079   -4.49234e-10   6.27875e-08 DIIS
+   @RHF iter  12:  -155.22647047676449   -1.36993e-11   1.25053e-08 DIIS
+   @RHF iter  13:  -155.22647047676483   -3.41061e-13   3.97341e-09 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1A    -11.186565     2A    -11.185514     3A    -11.172255  
+       4A    -11.172061     5A     -1.059768     6A     -0.976933  
+       7A     -0.852604     8A     -0.743085     9A     -0.633793  
+      10A     -0.591046    11A     -0.577669    12A     -0.520978  
+      13A     -0.512931    14A     -0.482245    15A     -0.457284  
+      16A     -0.352833  
+
+    Virtual:                                                              
+
+      17A      0.175302    18A      0.275938    19A      0.296158  
+      20A      0.303838    21A      0.323066    22A      0.338976  
+      23A      0.347729    24A      0.372544    25A      0.376534  
+      26A      0.413048    27A      0.494590    28A      0.579914  
+      29A      0.873066    30A      0.929377    31A      0.958715  
+      32A      0.995003    33A      1.009536    34A      1.028396  
+      35A      1.059277    36A      1.093754    37A      1.101195  
+      38A      1.200705    39A      1.225798    40A      1.269471  
+      41A      1.321976    42A      1.335511    43A      1.346645  
+      44A      1.362391    45A      1.391158    46A      1.399566  
+      47A      1.501492    48A      1.643907    49A      1.710134  
+      50A      1.950521    51A      2.113179    52A      2.398607  
+
+    Final Occupation by Irrep:
+              A 
+    DOCC [    16 ]
+    NA   [    16 ]
+    NB   [    16 ]
+
+  @RHF Final Energy:  -155.22647047676483
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =            113.8118793434680924
+    One-Electron Energy =                -433.1215737139614248
+    Two-Electron Energy =                 164.0832238937285013
+    Total Energy =                       -155.2264704767648311
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          1.9327103           -2.0397099           -0.1069996
+ Dipole Y            :         -0.3396008            0.3358865           -0.0037143
+ Dipole Z            :         -0.2770194            0.2046113           -0.0724081
+ Magnitude           :                                                    0.1292503
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on CharliMacbook.local at Tue Mar 25 15:44:39 2025
+Module time:
+	user time   =       0.35 seconds =       0.01 minutes
+	system time =       0.06 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+Total time:
+	user time   =       0.35 seconds =       0.01 minutes
+	system time =       0.06 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+
+
+  ==> MO Space Information <==
+
+  -------------------------------
+                        A   Sum
+  -------------------------------
+    FROZEN_DOCC         0     0
+    RESTRICTED_DOCC    15    15
+    GAS1                2     2
+    GAS2                0     0
+    GAS3                0     0
+    GAS4                0     0
+    GAS5                0     0
+    GAS6                0     0
+    RESTRICTED_UOCC    35    35
+    FROZEN_UOCC         0     0
+    Total              52    52
+  -------------------------------   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-2, 6-7  entry C          line    61 file /Users/charli/packages/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 3-5, 8-12 entry H          line    19 file /Users/charli/packages/psi4/objdir-Release/stage/share/psi4/basis/sto-3g.gbs 
+
+
+  State Singlet (Ms = 0) A GAS min: 0 0 0 0 0 0 ; GAS max: 4 0 0 0 0 0 ; weights:
+      1.000000000000
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: 3-21G
+    Blend: 3-21G
+    Number of shells: 36
+    Number of basis functions: 52
+    Number of Cartesian functions: 52
+    Spherical Harmonics?: false
+    Max angular momentum: 1
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                  12
+      Number of AO shells:              36
+      Number of primitives:             60
+      Number of atomic orbitals:        52
+      Number of basis functions:        52
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 1900262 doubles for integral storage.
+  We computed 199059 shell quartets total.
+  Whereas there are 222111 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              400
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         52
+  Number of correlated molecular orbitals:              52
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
+
+
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.10538412 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.163427 GB
+  Timing for conventional integral transformation:            0.283 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing conventional integrals:                0.284 s.
+
+          -----------------------------------------------------------
+                  Multi-Configurational Self Consistent Field
+                Two-Step Approximate Second-Order AO Algorithm
+            written by Chenyang Li, Kevin P. Hannon, and Shuhe Wang
+          -----------------------------------------------------------
+
+
+  ==> MCSCF Calculation Information <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Integral type                               CONVENTIONAL
+    CI solver type                                       FCI
+    Final orbital type                             CANONICAL
+    Derivative type                                     NONE
+    Optimize orbitals                                   TRUE
+    Include internal rotations                         FALSE
+    Debug printing                                     FALSE
+    Energy convergence                             1.000e-08
+    Gradient convergence                           1.000e-07
+    Max value for rotation                         2.000e-01
+    Max number of macro iter.                            100
+    Max number of micro iter. for orbitals                 6
+    Max number of micro iter. for CI                      12
+    DIIS start                                            15
+    Min DIIS vectors                                       3
+    Max DIIS vectors                                       8
+    Frequency of DIIS extrapolation                        1
+    --------------------------------------------------------
+
+  ==> Independent Orbital Rotations <==
+
+    ORBITAL SPACES                         A
+    ----------------------------------------
+             ACTIVE / RESTRICTED_DOCC     30
+    RESTRICTED_UOCC /          ACTIVE     70
+    RESTRICTED_UOCC / RESTRICTED_DOCC    525
+    ----------------------------------------
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              1
+    number of beta electrons                               1
+    number of alpha strings                                2
+    number of beta strings                                 2
+    --------------------------------------------------------
+
+  ==> FCI Solver <==
+
+    --------------------------------------------------------
+    Spin adapt                                         FALSE
+    Number of determinants                                 4
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         4
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+     3       1       *
+     1       3        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   singlet    0     -155.245903387130  +0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-06
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                      4
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                  4
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -155.245903387130      155.245903387130        0.000000000000      1
+       1     -155.245903387130        0.000000000000        0.000000000000      2
+  ---------------------------------------------------------------------------------
+
+  ==> Root No. 0 <==
+
+    20      0.98258983
+    02     -0.18562863
+
+    Total Energy:    -155.245903387130, <S^2>: 0.000000
+    Time for FCI:       0.001265500000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -155.245903387130   0.000000
+    --------------------------------------------------------
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A    -0.06721894    -0.01710350    -0.06556635     0.09544560
+    --------------------------------------------------------------------
+     Nuclear    -2.03970989     0.33588649     0.20461132     2.07728235
+    --------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+       16A      1.931065     17A      0.068935  
+
+
+  ==> MCSCF Iterations <==
+
+                      Energy CI                    Energy Orbital
+           ------------------------------  ------------------------------
+    Iter.        Total Energy       Delta        Total Energy       Delta  Orb. Grad.  Micro
+    ----------------------------------------------------------------------------------------
+       1    -155.245903387130 -1.5525e+02   -155.257448446014 -1.5526e+02  2.5706e-03    6/N
+       2    -155.258397718931 -1.2494e-02   -155.258486297369 -1.0379e-03  7.9405e-05    6/N
+       3    -155.258495774928 -9.8056e-05   -155.258496701857 -1.0404e-05  7.5843e-06    6/N
+       4    -155.258496808738 -1.0338e-06   -155.258496825732 -1.2388e-07  1.3594e-06    6/N
+       5    -155.258496829446 -2.0708e-08   -155.258496830396 -4.6638e-09  1.2318e-07    6/N
+       6    -155.258496830657 -1.2107e-09   -155.258496830729 -3.3339e-10  1.5595e-08    5/Y
+    ----------------------------------------------------------------------------------------
+
+  A miracle has come to pass: MCSCF iterations have converged!
+
+  Performing final CI Calculation using converged orbitals
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              1
+    number of beta electrons                               1
+    number of alpha strings                                2
+    number of beta strings                                 2
+    --------------------------------------------------------
+
+  ==> FCI Solver <==
+
+    --------------------------------------------------------
+    Spin adapt                                         FALSE
+    Number of determinants                                 4
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         4
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+     3       1       *
+     1       3        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   singlet    0     -155.258496830750  +0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-08
+    Residual convergence threshold                 1.000e-06
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                      4
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                  4
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -155.258496830750        0.000000000093        0.000000000000      1
+  ---------------------------------------------------------------------------------
+
+  ==> Root No. 0 <==
+
+    20     -0.97385200
+    02      0.22694530
+
+    Total Energy:    -155.258496830750, <S^2>: 0.000000
+    Time for FCI:       0.000173792000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -155.258496830750   0.000000
+    --------------------------------------------------------
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A    -0.05292947    -0.02161844    -0.06390431     0.08574757
+    --------------------------------------------------------------------
+     Nuclear    -2.03970989     0.33588649     0.20461132     2.07728235
+    --------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+       16A      1.896951     17A      0.103049  
+
+  Canonicalizing final MCSCF orbitals
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS         TRUE
+    MIX GAS ACTIVE ORBITALS       FALSE
+    GAS1                          CANONICAL
+    INACTIVE_DOCC                 CANONICAL
+    INACTIVE_UOCC                 CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    GAS1                 0.0015431452   0.0021823368
+    INACTIVE_DOCC        0.0029133883   0.0107130869
+    INACTIVE_UOCC        0.0116605245   0.0531721532
+    ------------------------------------------------
+
+    Canonicalization test failed
+
+  Timing for orbital canonicalization:                        0.000 s.
+
+                          ----------------------------
+                            Frozen-orbital Embedding
+                                     Nan He
+                          ----------------------------
+
+  The input molecule has 2 fragments, treating the first fragment as the system.
+
+  System Fragment 
+    Molecular point group: c1
+    Full point group: C1
+
+    Geometry (in Angstrom), charge = -1, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         C           -0.639592126188     0.252116432496    -0.255941465788    12.000000000000
+         C            0.518560398312    -0.267557202372     0.247485868880    12.000000000000
+         H           -0.513808426504     1.158245201915    -0.881650104279     1.007825032230
+         H            0.466491615559    -1.200169807238     0.844319280381     1.007825032230
+         H            1.488420859825     0.225775206961     0.138010167685     1.007825032230
+
+
+  Number of basis on all atoms: 52
+  Number of basis in the system fragment: 24
+
+  ==> Orbital partition done according to simple threshold <==
+
+  Simple threshold t = 0.50000000
+ ****** Build PAOs for virtual space ******
+ ****** Build Density ******
+ ****** Build overlap ******
+ ****** Initialization done! ******
+ ****** Update C_vir ******
+ ****** Build Slices ******
+ ****** Compute C_pao ******
+ ****** Orthogonalize C_pao ******
+ PAO truncation: 0.010000
+ PAO 0: 0.76601230
+ PAO 1: 0.72790176
+ PAO 2: 0.69892066
+ PAO 3: 0.63282108
+ PAO 4: 0.53661811
+ PAO 5: 0.50733297
+ PAO 6: 0.44555211
+ PAO 7: 0.40897055
+ PAO 8: 0.33922264
+ PAO 9: 0.31789973
+ PAO 10: 0.29902620
+ PAO 11: 0.13428797
+ PAO 12: 0.07523761
+ PAO 13: 0.07006005
+ PAO 14: 0.03563882
+ PAO 15: 0.02333099
+ ****** PAOs generated ******
+ ****** Create index lists ******
+ Orbital 18 built as PAO
+ Orbital 19 built as PAO
+ Orbital 20 built as PAO
+ Orbital 21 built as PAO
+ Orbital 22 built as PAO
+ Orbital 23 built as PAO
+ Orbital 24 built as PAO
+ Orbital 25 built as PAO
+ Orbital 26 built as PAO
+ Orbital 27 built as PAO
+ Orbital 28 built as PAO
+ Orbital 29 built as PAO
+ Orbital 30 built as PAO
+ Orbital 31 built as PAO
+ Orbital 32 built as PAO
+ Orbital 33 built as PAO
+ ****** PAOs done ******
+    Frozen-orbital Embedding MOs (System A)
+    ============================
+      MO     Type    <phi|P|phi>
+    ----------------------------
+       1   Occupied   1.000000
+       2   Occupied   0.999999
+       3   Occupied   0.999994
+       4   Occupied   0.999976
+       5   Occupied   0.999770
+       6   Occupied   0.999090
+       7   Occupied   0.907153
+      16     Active      --
+      17     Active      --
+    ============================
+
+    Frozen-orbital Embedding MOs (Environment B)
+    ============================
+      MO     Type    <phi|P|phi>
+    ----------------------------
+       8   Occupied   0.205891
+       9   Occupied   0.184181
+      10   Occupied   0.111944
+      11   Occupied   0.003343
+      12   Occupied   0.001743
+      13   Occupied   0.000355
+      14   Occupied   0.000051
+      15   Occupied   0.000001
+      34    Virtual   0.002714
+      35    Virtual   0.000914
+      36    Virtual   0.000255
+      37    Virtual   0.000126
+      38    Virtual   0.000024
+      39    Virtual   0.000005
+      40    Virtual   0.000001
+      41    Virtual   0.000000
+      42    Virtual   0.000000
+      43    Virtual   0.000000
+      44    Virtual   0.000000
+      45    Virtual   0.000000
+      46    Virtual   0.000000
+      47    Virtual   -0.000000
+      48    Virtual   -0.000000
+      49    Virtual   -0.000000
+      50    Virtual   -0.000000
+      51    Virtual   -0.000000
+      52    Virtual   -0.000000
+    ============================
+
+  Summary: 
+    System (A): 7 Occupied MOs, 2 Active MOs, 16 orthogonalized PAOs
+    Environment (B): 8 Occupied MOs, 19 Virtual MOs
+    Frozen Orbitals: 0 Core MOs, 0 Virtual MOs
+
+  Semi-canonicalizing active orbitals
+  Integrals are about to be updated.
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.09341650 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.163427 GB
+  Timing for conventional integral transformation:            0.267 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Integrals update took     0.267 s.  ## Ca rotated tilde (Symmetry 0) ##
+  Irrep: 1 Size: 52 x 52
+
+                 1                   2                   3                   4                   5
+
+    1     0.03960915059290     0.02746888385484    -0.01107412427515    -0.00236041109594     0.00374999998820
+    2    -0.03111896686705    -0.02300458638722     0.01215804919144    -0.00029019120201    -0.00453529127060
+    3     0.10599646317807     0.06696621507372    -0.02970572530365     0.00060233081026     0.00536198566573
+    4     0.04232410400969     0.05222582599965     0.00916358011152     0.00839851205248    -0.00271970945456
+    5     0.01770719134655    -0.00318185044924     0.02882124964356    -0.00003396188705    -0.00710755416693
+    6    -0.16708520630548    -0.11962236584059     0.04020770632601     0.02436728070228    -0.00249750792956
+    7     0.14667010083797     0.07876332803796    -0.01754728459478    -0.00080142193198     0.00454703262153
+    8     0.04526855596184     0.08280777081340    -0.00966169212977    -0.00069241487867    -0.00386040476018
+    9     0.02178310409392    -0.01971217233772    -0.00040965796842    -0.00202527852222     0.00667314741920
+   10    -0.01179055772413     0.00598873195846     0.00065309776159    -0.00213508832745     0.00024273499874
+   11     0.01504647947413    -0.00765565520301    -0.00048958149205     0.00187633743596    -0.00031832561821
+   12    -0.03572635737224     0.01358648866508     0.00266757156827    -0.00349630490150     0.00122593085801
+   13     0.01218912752216     0.00376472420222    -0.00605296442958    -0.00269170853262     0.00046121544208
+   14    -0.00869495103805     0.00226067887215    -0.01009310901797    -0.00014932445281     0.00218375881389
+   15     0.02840693384962    -0.02557451015991    -0.00573800354727     0.00725430228125    -0.00516728617157
+   16    -0.03695449375159    -0.01336293418622     0.00676555091293     0.00066444362431     0.00461039761076
+   17    -0.01632987517537    -0.01173585519174    -0.00971967802057    -0.00308855454643     0.00320300627484
+   18     0.00388007922364     0.00321898790782    -0.01737197384853    -0.00030727943656     0.00381055633989
+   19    -0.00615192204574     0.03860708532846     0.00127309063572     0.00098780255168    -0.00272645250838
+   20     0.00251579329953     0.06661615688229    -0.00126760027641    -0.01235212312578     0.00192237119837
+   21     0.00724086514712     0.00164585454007    -0.00183581818768     0.00338151904332     0.00068363371052
+   22    -0.00312707015537     0.01631309701579    -0.00218405020172     0.00033130914391     0.00213029537148
+   23    -0.01616164403789    -0.00141061870057     0.00135275890802    -0.00320667127943    -0.00036717864691
+   24    -0.02523267328961     0.00666430388856     0.00284042284369    -0.00652273659180    -0.00289222533074
+   25    -0.06169426709944     0.00616789513145    -0.05928232474341     0.02575678868238    -0.06890582274630
+   26     0.09660315795841    -0.00359177031150     0.07119283065981    -0.05380154462844    -0.00014256529041
+   27     0.20148743428025    -0.00202524481441     0.17673394673847     0.02040720025869     0.11184574725125
+   28    -0.03870632625679    -0.00639318545711    -0.04825197236285    -0.29908450942353     0.15866256329116
+   29    -0.07117942672539     0.04062229077167    -0.00847127389009     0.15286963293584     0.31075934054347
+   30     0.25497688553770    -0.04723816458599     0.24338476430210    -0.16757847139627     0.03907162791528
+   31     0.16973350121741    -0.00465855541321     0.15259360677630     0.00793342458741     0.11084650041660
+   32    -0.01487741773557     0.02300533717902    -0.04307809999134    -0.25694858157817     0.12924011267350
+   33    -0.03843766522899     0.02333626930453    -0.02688224655069     0.14122785272269     0.27186475329411
+   34     0.11173930170539     0.07423989632602    -0.02754090116266     0.26756075085063    -0.01720611301468
+   35     0.11145567922139     0.07755018353879    -0.04027570216042     0.04082139713557    -0.02735494002214
+   36    -0.25327732039263    -0.05306079564375    -0.04210714391935    -0.06483093651314     0.06862349153033
+   37     0.07897262683944    -0.28593529999976     0.16995044838271     0.07662471034702    -0.05210314730670
+   38    -0.09323430196013     0.18448003446750     0.29892015646585     0.00604437812862    -0.07693412704718
+   39     0.29665946517788     0.23153236168803    -0.13796267282674     0.04549613936498    -0.08396322687761
+   40    -0.17527817053802    -0.02668853985704    -0.02862959629668    -0.06761653805324     0.04455062574327
+   41     0.07670698762750    -0.24445532041741     0.12390711926273     0.09266968341153    -0.05421005427798
+   42    -0.09182711644126     0.17390589011743     0.24944202469717    -0.00402936762143    -0.09193643507772
+   43     0.04731293007741     0.01627308618836     0.04555063795462     0.00574720592105     0.27118388684857
+   44     0.01596964149469     0.01549003931150    -0.00623133816494     0.03388937442410     0.26085903976535
+   45    -0.07356000843925    -0.01085444071637    -0.05012324133644     0.06469169925653    -0.10961319641086
+   46    -0.11838794872478    -0.01633198759316    -0.07575511844794     0.09059256273996    -0.11704352523235
+   47     0.04529782179161    -0.00704107091964     0.01239053083547    -0.27626496870464    -0.05175253881695
+   48    -0.00499821125049     0.02013457454535    -0.02047549159378    -0.25625075271223    -0.05767594815704
+   49     0.14557627351951    -0.04185475057249    -0.24202090746287     0.01064582535753     0.05378808372444
+   50     0.09745845727765    -0.06070590515600    -0.20663466619460     0.01408830458661     0.07981210720160
+   51    -0.02469336826298     0.28574228572191    -0.01425133608254    -0.05361702716534    -0.01477979636997
+   52    -0.05227479597374     0.24897115951510    -0.00263014960175    -0.07414572113578    -0.00763687178763
+
+                 6                   7                   8                   9                  10
+
+    1    -0.00297085657701    -0.00142111472946    -0.00009735334428    -0.98704532296409    -0.00769178018197
+    2     0.00011659799468    -0.00191334083997    -0.00172414573366    -0.09790472323723     0.00280224822602
+    3    -0.00301831179185    -0.00209479761259     0.00115008244450     0.00016970679901     0.00199934426199
+    4    -0.00496652584393    -0.00177898131336    -0.00017029605849     0.00083125703238    -0.00102122056251
+    5    -0.00586654187579     0.00058265972426     0.00006511782696     0.00049258220903     0.00091058995457
+    6     0.03849244182574     0.03975231490683     0.00361762028193     0.07364204243388    -0.02376353512214
+    7    -0.02825510359597    -0.03841647274458    -0.00758976397903     0.00283347922216    -0.01285293299337
+    8    -0.01106492865049    -0.01646435306925    -0.00014148441935    -0.00784777341668     0.00629667637190
+    9    -0.00317909401579    -0.00159554582396    -0.00125503361555     0.00220847707619    -0.00633960163395
+   10     0.00090673634166     0.00010530129081    -0.00001919302194     0.00815110485670    -0.98683909451382
+   11    -0.00101076917511    -0.00079826865865    -0.00044476337113     0.00453428107036    -0.09609804579208
+   12     0.00099388584655     0.00052206499236     0.00014940728582    -0.00192881776382     0.00009626586585
+   13    -0.00137327963902    -0.00154467783138    -0.00009905451632     0.00063778056490    -0.00014029761609
+   14     0.00266580011858    -0.00003829995141     0.00003088989586    -0.00029707090132    -0.00018253600993
+   15    -0.00123643402177     0.00570583646329     0.00385857965865    -0.02521556201997     0.06871359518620
+   16     0.00406413191427     0.00203326879737    -0.00091236257930     0.01396115908499    -0.00764438518446
+   17     0.00518730981212     0.00742578065861     0.00173034903848    -0.00172346613873     0.00307872646201
+   18     0.00257737955325    -0.00479718164668    -0.00232597669140     0.00442727357484    -0.00258313231220
+   19     0.00129704309027    -0.00069867372854    -0.00038158323650     0.00104062266231     0.00088758742210
+   20     0.00158346700810     0.00590711631589    -0.00023772917279    -0.01081965241516    -0.00190373512591
+   21     0.00014380855479     0.00053878746225     0.00008221654085     0.00158375852328     0.00104199197334
+   22     0.00077846036003     0.00212516663187     0.00092939211089     0.00059080481867    -0.01197252417965
+   23     0.00019688708512    -0.00059587198800    -0.00029772012351     0.00049252111862     0.00138800258505
+   24     0.00113778446910    -0.00013563167495    -0.00033206007679    -0.00241590936044    -0.01181236150673
+   25     0.06255589836247    -0.12375204827347     0.99325105145529     0.00009609366516    -0.00001043027084
+   26     0.15799037660931    -0.05467661786157     0.05383297729711     0.00152358716362     0.00041304241088
+   27    -0.20978285496986     0.01352227361456     0.04603223857263     0.00115667502046     0.00029493120902
+   28    -0.02528237887881     0.11598175416231     0.02886785339411     0.00006927306032     0.00002803635450
+   29     0.08813854105193    -0.04875813776515     0.00000060999286    -0.00006163328665    -0.00017381375308
+   30     0.45648701517774    -0.05679360500460    -0.20506955051274    -0.00367920339563    -0.00041638630803
+   31    -0.16582229964502     0.02981359028831     0.03841067532533    -0.00319169814110    -0.00083979042294
+   32    -0.03942776947424     0.08479828872083     0.02544516750597     0.00072097735310    -0.00009113958683
+   33     0.06571371985980    -0.05302647095657     0.00102483793116     0.00260718212140    -0.00020671470808
+   34     0.26675417407051     0.92063912302345     0.09915267407450     0.00045419596486    -0.00001597340836
+   35     0.00409811917946     0.03939553205060    -0.00140733947414     0.00155851139309     0.00026987268580
+   36     0.02426541694811     0.05404501907538     0.01390085998741    -0.00007635882615     0.00032040636741
+   37    -0.01094616145400     0.00446317680837    -0.00441955927196    -0.00070734107933     0.00021137742607
+   38    -0.00929150547905     0.00780255377921    -0.00339255942474     0.00025152782813    -0.00018415906821
+   39    -0.17619005500331    -0.25613059575871    -0.00695111180349    -0.01147293505800    -0.00022752536847
+   40     0.04940216242375     0.02984168195861    -0.00790673793575    -0.01212832049994    -0.00050597839765
+   41    -0.03316990982050    -0.01223713478084     0.00385973555271     0.00012834476879    -0.00097462265935
+   42    -0.02924929906209     0.00866968842479     0.00546726366069    -0.00240523828101     0.00129273012691
+   43     0.09539749932742    -0.02642871480577    -0.01001649344701     0.00093847304396     0.00010364160541
+   44     0.02705539716928    -0.01329497820125     0.02390068076301    -0.00140477744060     0.00035249034569
+   45     0.23138339080028    -0.06920117327767    -0.06426777250404     0.00003782188488    -0.00007226061706
+   46     0.16810937931752    -0.05314496003016    -0.03209459760549    -0.00190420587039    -0.00053197635922
+   47     0.04048208885360     0.06670696946433    -0.01105519157651     0.00024701457432     0.00026869924851
+   48    -0.02440208951907     0.08354550705817     0.02278838683140     0.00131819011555    -0.00019971045854
+   49    -0.01190429208869    -0.04627031625236    -0.00380542936193     0.00133670740541     0.00024489528042
+   50     0.00416104120538    -0.00924761877044     0.00478645001760    -0.00238889616816     0.00050931038627
+   51    -0.01889826399758    -0.02365806516674    -0.00275865547076     0.00164878135279    -0.00022380033054
+   52    -0.00918376491910     0.01915503123386     0.00542006830101     0.00134358007358    -0.00089221117205
+
+                11                  12                  13                  14                  15
+
+    1     0.17837014485088     0.01201184450948    -0.09119239755228     0.02931045834652     0.00606271688648
+    2    -0.18944839472288    -0.00755624632808     0.09340344562836    -0.03730681426350     0.00056359304615
+    3     0.03538183494211     0.26777129418303     0.17504527901321    -0.14072445866822     0.06327721171861
+    4     0.07259241940764     0.02534804565750     0.16378856607660     0.17377348798176    -0.19881892776797
+    5     0.00087790136055     0.06003072994065    -0.07760395383357    -0.13412483639155     0.13646968853373
+    6    -0.41875739673511    -0.08075910481614     0.30495868375973    -0.07234337231768    -0.04035016614823
+    7     0.04219250697796     0.12446903178028     0.12509069707201    -0.10214258410280     0.01142149741359
+    8     0.04455639185334     0.03745567921696     0.11953763227480     0.11296621695498    -0.19987702165229
+    9     0.02017752669870     0.01759546062830    -0.06825132985564    -0.08614167744513     0.12888487661677
+   10     0.10802708608617    -0.16507421965005     0.06468411912508    -0.00698697787621    -0.01251456563271
+   11    -0.11905402546505     0.17488183560902    -0.06133372441080    -0.00177805855136     0.02084694664943
+   12     0.06765110112217    -0.02387310483895    -0.11798066204066     0.35551256792943    -0.00321072484613
+   13    -0.01781969886361     0.03485732315640     0.15281464989352     0.08371407105210     0.26661953482150
+   14     0.03770591185196    -0.01397268496014    -0.12963706977087     0.01929323723519    -0.16378546379301
+   15    -0.22276275218523     0.44561375494525    -0.25050363558384     0.06968828825946     0.01620325349210
+   16    -0.00573230846435    -0.02041498829642    -0.06178997030871     0.23781971859812     0.04932008707343
+   17    -0.00235392380019     0.00820759514051     0.08156828591638     0.09338301178980     0.24080455376973
+   18     0.01174202906242    -0.00133400780118    -0.07712937718314    -0.00295641678277    -0.13889301015552
+   19    -0.06928978061810     0.00525178117492     0.19199103632580     0.10555926894635    -0.18850563019728
+   20     0.01112224037883     0.01518555890807     0.13284950304495     0.10016697189815    -0.18712659097237
+   21    -0.04522698896065     0.09561069903357    -0.15962954913139    -0.04273249141176    -0.22469013979734
+   22     0.00015197145305     0.02984619003979    -0.10838971082993    -0.02010931636948    -0.22349134865408
+   23    -0.05020061581479     0.10218480965568    -0.07379284572257     0.23732143497970     0.12406743999285
+   24    -0.00545114755142     0.02511222783964    -0.05131671020179     0.19939929616316     0.09876838081755
+   25     0.00194491476986     0.00204792013846     0.00176721643253     0.00049440545829    -0.00162943333053
+   26    -0.01457568829220    -0.01352974084197    -0.00591196829109     0.00332063808943     0.00224468469133
+   27    -0.01586956986456    -0.01583049804645    -0.00802524978416     0.00393579165838     0.00355660114607
+   28    -0.00024170085766    -0.00107157900707     0.00002750705550     0.00184438505378    -0.00093259598064
+   29     0.00083289885250     0.00006487073757     0.00048863321280     0.00060269752440    -0.00054608495748
+   30     0.02347688053052     0.01926296028101     0.00074119140319    -0.00977183677215     0.00611293558970
+   31     0.02544331474799     0.02282294699510     0.00870311586917    -0.00682986883037    -0.00353090497972
+   32    -0.01167286878290    -0.01329385470687    -0.00581701146770     0.00441462671652     0.00540204115172
+   33    -0.01032456717556    -0.00841391653228    -0.00099618768715     0.00339411455534     0.00306849199173
+   34     0.01910339576483     0.02275925105785     0.01288087485227    -0.00436618439276    -0.00695453661416
+   35    -0.09564259334485    -0.10101547077256    -0.05226151194132     0.01667988282871     0.02608348004213
+   36    -0.13784158669376    -0.14651166239591    -0.07847436569409     0.01844396214365     0.04280946587613
+   37    -0.05782410883169    -0.06914875360816    -0.02976269048359     0.02542709291482     0.00085521902211
+   38    -0.01378319200092    -0.01459121117736    -0.01558181480265    -0.00600424290270     0.01640059956176
+   39    -0.23820862545534    -0.30488290178564    -0.18355472366426     0.06280945613419     0.09715390491386
+   40    -0.06977061753975    -0.11679666821960    -0.08510813847520     0.03031400214425     0.03210784197120
+   41    -0.04980196149715    -0.05961089242945    -0.03895168796304     0.00927923264247     0.01719411111367
+   42    -0.01362183278325    -0.01914106319302    -0.00826573178572     0.00785590834772    -0.00021434008099
+   43    -0.00434264792914    -0.00343687474306    -0.00091434506540     0.00040515064996     0.00034784881843
+   44     0.00531515121874     0.00707995763905     0.00351472252084    -0.00204757483694    -0.00647553379290
+   45    -0.00273925092299    -0.00359297170238    -0.00186730286858     0.00138644832723     0.00046767753479
+   46     0.00025922054871    -0.00680671186958    -0.00553235301194     0.00465398540274     0.00036958520364
+   47    -0.00273513499783    -0.00224542163072    -0.00067629528786     0.00082175902902     0.00024049449317
+   48     0.00309911811801     0.00578370519053     0.00811257199533     0.00127401852439    -0.00727332202819
+   49    -0.01776115972909    -0.01762274522639    -0.00892647325289     0.00369485299658     0.00492835152860
+   50     0.02940590390137     0.03079379289242     0.01164096681134    -0.00989832922374    -0.00869745567548
+   51    -0.01976013534692    -0.02016540521165    -0.01180233451424     0.00223140321133     0.00697410510315
+   52     0.02487807296116     0.02911624451520     0.02370965766943     0.00601566304408    -0.03155911255347
+
+                16                  17                  18                  19                  20
+
+    1     0.02331017567871     0.02138396626420     0.05916909473344     0.00753075552859    -0.05820186520662
+    2    -0.02594135024109    -0.02419611952538    -0.25994214459168    -0.00537964618673     0.28506636349615
+    3     0.07132496473443     0.10977316832120    -0.06754590406533     0.10028772918666     0.15048572426026
+    4    -0.16435088470909    -0.24365029423943    -0.51970204139356    -0.16802290227376     0.48918043727017
+    5    -0.27205075120485    -0.39530304321048     0.36730330952566     0.13896084523157    -0.32974633125155
+    6    -0.08556580799333    -0.15918404749252    -0.12023088674089     0.00643140468964     0.09619814200763
+    7     0.07803528914409     0.11190263287012     0.02219777799886    -0.06892371161129    -0.01991176532612
+    8    -0.18269766926162    -0.25727038033924     0.07423035766210     0.03166648070362    -0.03070225692490
+    9    -0.30391179693430    -0.44541830426043    -0.04665589688440    -0.02707910172416     0.02588395256346
+   10    -0.00630429533203    -0.00148906722015     0.00862742558122     0.14584179674936     0.04594768208644
+   11     0.00769212414486     0.00118152492994    -0.02977545170544    -0.61962609764919    -0.20626403279368
+   12     0.05356330676086    -0.09474490826014    -0.37295414414143    -0.34066661795577    -0.51539136654788
+   13    -0.17563724477064     0.25236198194566    -0.51583301325292     0.38984290792777    -0.48159964650359
+   14    -0.28307731071678     0.38543275099021     0.24944705849476    -0.34419422375790     0.19473770899157
+   15     0.02888115949307     0.01582097197871    -0.00568703910485    -0.23157628497867    -0.07655862139799
+   16     0.05695433790316    -0.11531230011788     0.07498978726903     0.07392565171243     0.06740464322247
+   17    -0.19505493010123     0.26565643731519     0.06060383581887    -0.05654921216744     0.05755378230625
+   18    -0.32046284662861     0.41053342921421    -0.03419180192408     0.05021720850530    -0.01573331321335
+   19    -0.00040290185805     0.02224229780671     0.35872494125270     0.07457601110480    -0.35929556005098
+   20     0.00551021485555     0.03694422724294     0.28410054133247     0.06292360670367    -0.23463112083530
+   21     0.00369514091950     0.00495234911151    -0.20920117170609     0.49813359898222    -0.08310327907186
+   22     0.00489628050919     0.00876544126098    -0.17664812712698     0.29373895613823    -0.10298578394532
+   23     0.00108975877879     0.00128728033275     0.21185100540668     0.34540002551425     0.36301787269387
+   24    -0.00483869034262     0.01214250733633     0.20392081416110     0.18366445827545     0.24075766853347
+   25    -0.01455922796931    -0.01421285240802    -0.00023035274864     0.00107369388811     0.00060653019741
+   26     0.00917637029820     0.01033028398186    -0.00070306384105    -0.00207240382446     0.00035884470519
+   27     0.03269382562660     0.03534712574308     0.00206405190896    -0.00339990360103    -0.00106662424864
+   28    -0.01679953385979    -0.01783680041628    -0.00504204497156    -0.00189193726256     0.00497733966728
+   29    -0.00579614615222    -0.00650237625818     0.00242927240756     0.00174929810403    -0.00113938684741
+   30     0.08797421796719     0.05781125066496     0.00311916149999    -0.00427964501991    -0.00711846704177
+   31     0.04000030546872     0.04297834926335     0.00437628078988    -0.00255026394874    -0.00462775608393
+   32    -0.02482282162735    -0.01267136150677    -0.00398533626420    -0.00218603916505     0.00526358881270
+   33    -0.00568415388925    -0.01361383379109     0.00090654578356     0.00170102775565    -0.00064033621662
+   34     0.00143251386082    -0.00691297978830     0.00254561362738    -0.00212709885808    -0.00655314013461
+   35     0.00141779087539     0.00231643255557     0.00166414180548    -0.00262108841670     0.00702588436275
+   36    -0.00772096718912     0.01802532206131    -0.00671871289964     0.00630978940279     0.01531937265414
+   37     0.00610200361396     0.02419346603513    -0.00895400638469     0.00562977900347    -0.00010131089358
+   38     0.01374792803248     0.02886014545831     0.00363000887214    -0.00264733211838     0.00523409286781
+   39    -0.02042387496032     0.04038861249312     0.01400492965643    -0.00606208676860     0.01336356273742
+   40    -0.00297333971680     0.02258294411948     0.00152332801770     0.00316330855827     0.00512120370000
+   41     0.00579623845920     0.04093698013124    -0.00155845915438     0.00527724339144    -0.00256252120683
+   42     0.02172347021326     0.06935797159370    -0.00049292012912    -0.00291791978364     0.00646881395093
+   43     0.00598104101857     0.00166439792665     0.00102789663934    -0.00102290041873    -0.00044618404371
+   44    -0.01690693707339    -0.00552420031458     0.00197496638021    -0.00067500886194    -0.00068436847533
+   45    -0.01271452360731    -0.01106521888817    -0.00061927577496     0.00215696024309    -0.00059058488034
+   46    -0.02907036678256    -0.01365487060344    -0.00034089674072     0.00330594040405    -0.00075308680752
+   47     0.00115571712481    -0.00006305454514    -0.00405087209136    -0.00309767035156     0.00357645875837
+   48    -0.00745194145815    -0.00993262937547    -0.00513916974906    -0.00280417349928     0.00503811658945
+   49    -0.03112892735091    -0.04184961944144     0.00237154690638    -0.00093781715568    -0.00225880021325
+   50    -0.05409044525745    -0.06492607756914     0.00446460423992    -0.00023321590384    -0.00557739763299
+   51     0.00187434921500    -0.00060614858239     0.00474624485976    -0.00672013324452     0.00719539355021
+   52     0.00324688175284    -0.00410060951113    -0.00034628387680    -0.00752112432441     0.00609447158223
+
+                21                  22                  23                  24                  25
+
+    1    -0.11330258991562     0.00384880280035    -0.05397669964355     0.08071938581030     0.02408827948745
+    2     0.46715615547662    -0.02109259767550     0.16350672339242    -0.49979244795948    -0.18726346104456
+    3     0.62791154524385     0.09022367427139    -0.48163830110204     0.69719187552813     0.07967714516069
+    4    -0.27784728759809    -0.40222939382213    -0.30412239221628     0.11865898297194     0.03154669343964
+    5     0.23462100014740    -0.60318659833570     0.02280025588585     0.16352433731134     0.02338043982361
+    6     0.11262098395326     0.00346732814277    -0.07418387565622     0.18849841738588    -0.09373597112506
+    7    -0.02247509655918    -0.08577227802688     0.35764080883803    -0.28854429323066    -0.20666576339371
+    8    -0.01573756606844     0.28908401235003     0.39423764615836     0.14296342108504     0.09750499795740
+    9     0.00583023169245     0.48214234611640    -0.15123376312240    -0.18074370038983    -0.11009281442983
+   10     0.09990944026741    -0.00374296499930     0.00926304745157    -0.00971101997480    -0.01670222349446
+   11    -0.37340242323845     0.01667303889659    -0.11625566605730     0.11748817068151     0.58473296814172
+   12     0.67773426227368     0.12195243278141    -0.02201780291182    -0.12747524900058     0.04328020919726
+   13    -0.27500579082144    -0.40729578887563    -0.16519706077206    -0.09262426390771    -0.08382679080908
+   14     0.29677360089394    -0.66701011635101     0.11268057690417    -0.08888809919707     0.00534082602611
+   15    -0.09033771175482    -0.00048208544583     0.02699101417715     0.00208393293576    -0.05862590332925
+   16    -0.03404183334550    -0.09739483101125     0.09496964445538     0.40508102132865    -0.31725430788677
+   17    -0.01401570894433     0.31244953861285     0.40662006100505     0.18299984327321     0.24984641471694
+   18    -0.00097033913024     0.53196962992640    -0.23985244955214     0.07348722864225    -0.16123169705484
+   19    -0.08234741123895     0.05238931642147    -0.69586073284498    -0.25179723889390     0.00292091069272
+   20     0.01640256707060    -0.00811259039880     0.28289819565082     0.09276262907017    -0.05053603268120
+   21     0.07569137912593    -0.03878802998839     0.50383165915028     0.14955124781942     0.83928302385073
+   22    -0.06930926120272     0.01198475024353    -0.11714710509733    -0.05308368725124    -0.63382491759450
+   23     0.10887529564578    -0.00447293639614    -0.45554706139059    -0.53512334715662     0.68167287623145
+   24    -0.09550979485234     0.00182662970261     0.18455824739768     0.20014752735625    -0.56269597477921
+   25    -0.00172571240283     0.00663858646155    -0.00297480840923     0.01533800599664     0.00498491326001
+   26     0.00035279596103    -0.00921832154089     0.00403307283233    -0.00868483273721    -0.00561971750965
+   27     0.00582392784136    -0.01985110617371     0.01131886843927    -0.03994420626250    -0.01567943168062
+   28    -0.00411920201133     0.00332165652593    -0.00519338229338     0.01144127525198     0.00500200110571
+   29    -0.00347175861523    -0.00276416776214     0.00152089278000     0.01443379629945     0.00522459253361
+   30     0.00786757943623    -0.02437971824653     0.01994583241464    -0.09399270798930    -0.02280416211663
+   31     0.00928121338183    -0.01566497831083     0.01857078501487    -0.08570790182504    -0.01997720494446
+   32    -0.00508620266015     0.00179472912655    -0.00045380955631     0.01826521024860     0.00515006108327
+   33    -0.00289685518122     0.00018628657394    -0.00181766820346     0.01720963323913     0.00340199941403
+   34     0.00389614261582     0.00372565912453     0.03078674335659    -0.08280316878613    -0.01714948718802
+   35    -0.01206613318406     0.00484648915252     0.00628414186050     0.09663410608577     0.00936844260961
+   36    -0.02879592971798     0.00172708336312    -0.06159734210357     0.30704715713218     0.05434904438164
+   37     0.00088439615727    -0.02279946542856    -0.06551690040935     0.10332746225695    -0.00241834797362
+   38    -0.00686058802757    -0.03775783613306     0.02067302791948     0.05365825871176     0.01942034535642
+   39    -0.03730127130038     0.01315428301887     0.02817091089257     0.28640921474110     0.02803273580160
+   40    -0.02271418845705     0.00041134433074    -0.03099148016750     0.21555802517015     0.03719438759750
+   41     0.00053046933524    -0.01717869187911    -0.05022535383260     0.09413510562784     0.00206565894171
+   42    -0.00769339795280    -0.02978902825369     0.01530567175554     0.05112794808011     0.01602094557004
+   43    -0.00057261300036    -0.00818894404496     0.00591017045115    -0.01397494705391    -0.00398985571705
+   44     0.00007625226323    -0.00363849113296     0.00595889623969    -0.02032339242011    -0.00362250120016
+   45    -0.00305282846375     0.00491732882329    -0.00805687954184     0.03086117961798     0.00709482014937
+   46    -0.00428982040959     0.00650768489540    -0.01238940646326     0.04695944406138     0.01040836766794
+   47    -0.00087905669542    -0.00106632297747     0.00154084543852    -0.00877383702685    -0.00157275433093
+   48    -0.00119911460419     0.00300517225476     0.00256956566893    -0.00976384948064     0.00039914484523
+   49     0.00180798186501     0.02795814750481     0.00651512651118    -0.03333996060220    -0.01357124703300
+   50     0.00723378602615     0.02050918081821     0.01000262408110    -0.08240028043332    -0.01852669336382
+   51    -0.00949579885275     0.00286136959886     0.04895263079142     0.00594083858747     0.01159210215563
+   52    -0.00234441022055     0.00247883798192     0.04543513066267    -0.05817353907646     0.00096100355602
+
+                26                  27                  28                  29                  30
+
+    1    -0.03453429201118     0.00242472869346     0.02285519125269     0.01838841160701     0.00189924400270
+    2     0.90165463877693     0.14479821930891    -0.25766740825097     0.18859997982247     0.22065664510346
+    3     0.15645458961415    -0.23995650436375     0.06265590381453    -0.25894475624762     0.11376888179477
+    4    -0.29938665136035     0.33209461653140    -0.18819273858751    -0.26296603353110    -0.06351696850854
+    5     0.07402291795051     0.25137330257467    -0.57604674728155     0.07269063378274     0.05824419549322
+    6    -0.18178196767099    -0.12247205599003     0.15132623185000    -0.14478505413922    -0.72459391037472
+    7    -0.36748357052409     0.54243404121044     0.03045654971921     1.25630116042054    -0.46107590491029
+    8     0.35680070184362    -0.66169675639762     0.20640140166826     0.88325709426108     0.19739606136513
+    9    -0.10857015712569    -0.21342487605069     1.03823445471720    -0.10954102082564    -0.16726388599881
+   10    -0.01844821032057     0.00602243221595     0.00747493760750    -0.00224400443117     0.03625865433164
+   11     0.55921252032482    -0.25952228559298    -0.24917869744145    -0.10491317399519     1.07524035160757
+   12    -0.40596289817031     0.14686126454821     0.01858182846731    -0.13828172874765     0.23233997810226
+   13     0.19847062097469    -0.31994480079312     0.18138935225288    -0.18820372771945    -0.18985437315121
+   14    -0.06456616247705    -0.20977950063526     0.53161300344311     0.13278743317198     0.17392760081310
+   15    -0.09103106126584    -0.05730148745362     0.01709309765366    -0.13635012227756    -2.29823538625990
+   16     0.81795629702428    -0.01644836637345     0.08600195476409     0.49869170763553    -1.17776245095925
+   17    -0.28347241220848     0.62640850170155    -0.17999267852009     0.29888012589782     0.85813580197697
+   18     0.14205533013021     0.27689967103754    -0.92599464532213    -0.22584438629016    -0.80797642240545
+   19     0.33431689690183     0.74665755396939     0.47947940819756     0.07295593421451     0.10651592243339
+   20    -0.46868061351308    -0.62961714441963    -0.37820687461596    -0.72467013609363    -0.22873358506297
+   21     0.15620049595413     0.42376687676343     0.33125386363793    -0.38889034055970    -0.13898868676472
+   22    -0.29099014144305    -0.26438081415575    -0.20217623230969     0.98503626022812     1.80507732995224
+   23    -0.26914427103238    -0.41153333194001    -0.27205205596808     0.44141495198303    -0.11865005283786
+   24    -0.02872109330004     0.32243398477577     0.25736988497123    -1.19236517940631     1.38395581016841
+   25     0.00491154193069    -0.01824457514178     0.00955647934077    -0.00702262157368     0.00268200642168
+   26    -0.00714351454016     0.02826455856570    -0.00504671546618     0.04058787573571    -0.01101316235532
+   27    -0.01457193838417     0.05300941203553    -0.02214491083273     0.04584686352765    -0.01428353532081
+   28     0.01100339475012     0.00145467382074     0.01250197076797     0.00565550637254     0.00127314919395
+   29     0.00691198215946    -0.01252802457102    -0.00873634648805    -0.00281251863912     0.00546824309569
+   30    -0.02579997675043     0.05635149414855    -0.05637939822893    -0.05138615627545     0.00127868744304
+   31    -0.01028530368521     0.02545712803561    -0.04348819578726    -0.06622352872751     0.00543010820564
+   32     0.01162031285102     0.00899551959169     0.01368594392878     0.04022579598055    -0.00358842410972
+   33     0.00506295132458    -0.00494801060557     0.00402547018868     0.02258696778646    -0.00212673717726
+   34     0.00266383959870    -0.02148538178672    -0.01602592244463    -0.06006885181232     0.00019944263484
+   35    -0.00511594693830     0.06502826837867     0.04757928058106     0.29433870815882    -0.03305114832284
+   36    -0.01893015355864     0.07886286840600     0.07675222715640     0.41526749294767    -0.02598188255287
+   37    -0.06699594551087     0.09057817465439     0.04031859558469     0.16232616458992    -0.00044850973212
+   38     0.01466799006384     0.01003196145857    -0.05450967755263     0.05061660063006    -0.01615946080423
+   39    -0.03688050607923     0.19589401400439     0.13027178262147     0.83880792153291    -0.02383966088735
+   40    -0.03576011247518     0.06056080021326     0.05133370203219     0.29469684154421     0.03665944059944
+   41    -0.05906148857800     0.08333866489687     0.03106513444212     0.15084741556552    -0.00292125554595
+   42     0.00783613835385     0.01780031243040    -0.06412090599354     0.05086299065801    -0.00059911037419
+   43     0.00122269450729     0.01397857928356    -0.01067500683117     0.01142631326224    -0.00403929458007
+   44     0.00591780389892    -0.00268366506698    -0.00717824642027    -0.01740156775069    -0.00034388052084
+   45    -0.00181562652767    -0.01422117351289     0.01081737998044     0.00697535834077     0.00359573493240
+   46    -0.00380999206001    -0.02071753178294     0.01661980590485     0.00787339673807     0.01401644971379
+   47     0.00292527789319     0.01528643382835     0.00288240272123     0.01123607769664    -0.00550014224766
+   48     0.01214459157582    -0.00363230920891     0.00286702398849    -0.01209095224369    -0.00335947753554
+   49     0.00062384593125     0.00402186276646     0.05657118084405     0.05480902761461    -0.00762060699722
+   50     0.00684849939520    -0.03325466072114     0.03852735905658    -0.08336966788102     0.00524221559983
+   51     0.04138090437046    -0.01617743491095    -0.02046747579759     0.07551705118745    -0.01535006537084
+   52     0.04333123388428    -0.04936328907796    -0.04423646531348    -0.07263496883821     0.00091491406697
+
+                31                  32                  33                  34                  35
+
+    1    -0.04404796601389    -0.01381644658344     0.09645516780117    -0.00203915779190    -0.00163173639296
+    2    -0.90053102270113    -0.19856851556603     1.05526810817314    -0.03175298913056    -0.01743836367034
+    3     0.13600544278417    -0.22713800845396     0.14955396006207     0.01413333797913     0.01116229217530
+    4    -0.25337089409465    -0.34061899844262    -0.06020531140781    -0.01588057645943    -0.04835998208322
+    5     0.24387230767583     0.16773293790688     0.05510802880168    -0.05922399805671     0.04670545635139
+    6     1.82951301887173     0.62846891792545    -4.76494010806771     0.17234530680347     0.17904101143838
+    7    -1.22426755692951     1.41275301201234    -2.22498824222565    -0.05794822170652    -0.07548093861807
+    8     0.88764644287032     2.10550736836775     1.10890481586727    -0.10039048657822     0.13270991343231
+    9    -1.10626211184910    -1.02178229286054    -0.93866498652912     0.09746153582975    -0.19922211629699
+   10    -0.00687490295980     0.00518391024302    -0.08887437273989     0.00079156444847    -0.00108262148964
+   11    -0.28482629501568     0.05842391389080    -0.98668267204788     0.00555158988225     0.00744097130471
+   12    -0.04442727498510     0.37914803200285     0.09935109256370     0.00682548204273    -0.04752188622388
+   13    -0.17951902933623     0.39467066281615    -0.02033655443458     0.00248959987872    -0.00380541825583
+   14     0.07809340250161    -0.17059395867501     0.02790076782346     0.01028423982062    -0.01218058829902
+   15     1.09712709021539    -0.44272091357145     4.59049742247247    -0.08162982372936     0.16766477128608
+   16    -0.09075649093563    -1.92911243277288    -2.27503260589732     0.03768864383394     0.09571824909220
+   17     0.72643696409579    -2.40233760741301     0.86138858281970     0.01523364062335    -0.00731020662144
+   18    -0.30796988508501     1.11751600718171    -0.92541179088693    -0.03774766309502     0.06287314483026
+   19     0.20946966151193    -0.23994541290066     0.16783601536490     0.01710456477191    -0.05152146324289
+   20    -1.94212895158766    -1.44190971718732     0.06853618329864     0.02572004392059    -0.11104730189292
+   21    -0.06590706533489    -0.19289339412350    -0.16353093055057     0.00282797736432     0.04772531972924
+   22     0.45845776217359    -1.47676338564276    -0.11286184395067     0.03845122886564    -0.17109850818476
+   23    -0.04039485575105     0.16804910491276    -0.12620208568413    -0.00412612339953    -0.01013636108514
+   24    -0.41401415539247     1.97670383802424     0.07207692924098    -0.00070441144918    -0.07520988704548
+   25     0.01506259877429    -0.00682309157899     0.00972196127980     0.09060511734807     0.05418132932424
+   26    -0.03910657534712     0.04132988721356    -0.03868328019851     0.08384209426608     0.07005147924498
+   27    -0.06148059471623     0.05253858065618    -0.05619730489144     0.02835475015145     0.04159026421251
+   28     0.00701465200542    -0.00745166363269     0.00156065312480     0.14326776336348     0.07135355198522
+   29     0.01206202949532     0.00263100910908     0.03002918306556     0.04759566361295     0.02922991859549
+   30    -0.01659243626714    -0.05198131534984    -0.00195877005668    -0.90439572301117    -0.58308817640563
+   31     0.01932232711357    -0.05008992036317    -0.01842192155986    -0.36777236552626    -0.16901258483340
+   32    -0.01735094438722     0.03039697022270    -0.00525050127084     0.26782552097427     0.03996373543181
+   33    -0.01127271825674     0.02471648490876     0.00437044246007     0.09315050885379     0.04599904276667
+   34     0.04705947891290    -0.01891057615232    -0.02595231222454    -0.00961029304205     0.01566026737380
+   35    -0.23047530304572     0.26972680275753    -0.00846023299602     0.05081501220617     0.03510118008454
+   36    -0.31196182142970     0.31367938384622     0.10616164679088    -0.21728059043063    -0.19651468500606
+   37    -0.21098528671999     0.09050231594907    -0.09959898508978     0.44327651482708     0.76377940325382
+   38     0.03230374229154     0.07571578062618     0.03705906057413     0.80272161768388    -0.52364217887928
+   39    -0.74133218205080     0.72084185121337     0.14958362292507     0.01258560098621    -0.31841019058088
+   40    -0.28812794037725     0.19008086751235     0.21280152515245    -0.27302158797726    -0.06941355263836
+   41    -0.20138627883948     0.07333931121965    -0.00778477845194     0.05614437683031    -0.07485221502422
+   42     0.01282949106236     0.08224054212843     0.03884070994842    -0.04407206577735     0.28187443409911
+   43    -0.01135044301518     0.01543944169517    -0.01398097387813     0.05843227546675     0.01526796756219
+   44     0.01701351994718    -0.00955577365051    -0.00954596841179     0.21938364021565     0.12682390057836
+   45    -0.00044075797563     0.00118847069242     0.01622646625319     0.04886831448741     0.03275655765078
+   46    -0.00589814919017    -0.00513914809470     0.03610415269243     0.19200528506685     0.10915784380157
+   47    -0.00532795025411     0.00601451623412    -0.02240655345602     0.01536173612933     0.02114788536795
+   48     0.03117744104734    -0.00468285754952    -0.03244583174809     0.09350090382769     0.23117939514094
+   49    -0.07830819948032     0.04053002446988    -0.03371201078878    -0.00460476330909     0.02788861766639
+   50     0.04169865724164    -0.08334736877424    -0.04605139093551     0.63192144252638    -0.09504783398160
+   51     0.01554921642402     0.12127637847268     0.05021983751638     0.02389137973771    -0.06948699220289
+   52     0.13671456568174     0.00357075085703    -0.00188276661930    -0.03939704975581     0.85719905161419
+
+                36                  37                  38                  39                  40
+
+    1     0.05303554626598     0.01473855025513     0.01808853365642    -0.02795857012910     0.01293456477486
+    2     0.47471270956744     0.12341189647507     0.18731005090580    -0.23780026887851     0.06968180605700
+    3    -0.19221283426765     0.06829736306123    -0.10416472456638     0.05524165243849     0.17054873474907
+    4    -0.12318333275460    -0.08036659852334    -0.04790678982970     0.08958156999142    -0.14707216746922
+    5     0.06007687257659    -0.10402180228186    -0.00542037467056    -0.06990388064950     0.11283810787084
+    6    -2.14360214520430    -0.71624029451762    -0.33161584927224     0.70117999980904    -0.98804311400616
+    7     2.25154780304486    -0.32571160190163     0.67436178010528     0.07793059723406    -1.31778270147610
+    8     1.35445248013373     0.52046471453676     0.24890201602848    -0.89708129373764     1.16005029607297
+    9    -0.25330852031389     0.55618497873631     0.08151352631426     0.56437060527197    -1.04066519346949
+   10    -0.00223343117288    -0.00404474505483     0.00082412970668     0.01063978652744    -0.02190645812633
+   11     0.02027218738095    -0.00737930333892     0.00896745170152     0.05466907585656    -0.13677759240379
+   12    -0.00200742723208    -0.05522199444986    -0.01538226506733    -0.00545309658697    -0.05704935921602
+   13     0.06889714534887    -0.01066565096741     0.01166182563367    -0.03461962728542     0.01494463861970
+   14    -0.06259019056070     0.00641530045087    -0.01357972936651     0.03587714888853    -0.01810249194455
+   15    -0.23744303628153     0.38578043850189    -0.16427543860380    -0.65113954541543     1.72672890743378
+   16    -0.42459385724901     0.00029511450639     0.06989939161197     0.62052832102356    -0.83384447676772
+   17    -0.95313230662463     0.08031879934002    -0.26405633218409     0.20568849953911     0.21911089661099
+   18     0.50037185973031    -0.29666180360324     0.15112431091519    -0.06389699061667    -0.23028609351893
+   19    -0.00145939644413     0.03055601310332     0.04617329533195     0.08445942638268    -0.18530688634634
+   20    -0.47433685948437     0.06064186108996    -0.15093775714544     0.31974023599343    -0.40355510624528
+   21    -0.10975786141867     0.02276817783039     0.01690390268658     0.09990850818019    -0.06608557964280
+   22    -0.50941916278679     0.03673493607411    -0.23435418747924     0.09371765806424    -0.03266420795067
+   23     0.14796728786838    -0.02832888425193     0.02880442581589    -0.04652565840949    -0.02675500417060
+   24     0.32137621660683    -0.09638273572752     0.02129216732640    -0.21759657282785     0.08695130549283
+   25     0.02255920607867    -0.10234422474104    -0.03534053409919    -0.02232322612490    -0.03202871410236
+   26    -0.21546114499078    -0.00479686248176    -0.13689791043122     0.42906955395009     0.43365099184737
+   27    -0.20282718455016     0.20397712902981    -0.15603523742716     0.41811622248244     0.49532019364378
+   28     0.02626908868251    -0.00855418164243    -0.11700805627480    -0.03624639706522     0.03745303517594
+   29     0.02524700634973     0.00300961990950    -0.04964669230348    -0.10755617213864    -0.33128419611353
+   30    -0.00177417929112     2.14364462451645     0.44595578834586    -0.53343155284243    -0.05015297106435
+   31     0.43489395181811     0.09325839739522     0.49161374691300    -0.66506036718620    -0.93208527620985
+   32     0.21386047132582    -0.70695069992778    -0.69460947225235    -0.07877840496832    -0.11312093848966
+   33    -0.37473776336734     0.21873828581918    -0.74446067537560     0.13872803866915    -0.53518522205497
+   34    -0.07284372971868     0.01847241534614     0.10928741258316     0.09232594320557     0.02245256647540
+   35    -0.63189226569659     0.14083812082732    -0.03180536108984     0.33761866679550     0.11162788133706
+   36    -0.59266816739311    -0.37211115322686     0.36793560856562    -0.14117239446338    -0.09706766868713
+   37    -0.14513716264918     0.29209099164908    -0.05721834150900    -0.32970638413172     0.12922068134728
+   38    -0.12658177742656     0.31496770201597     0.05196509863483     0.12998900157546    -0.18989008478340
+   39     2.60998684494914    -0.53416680610941    -1.50910758890706    -1.25973289876727    -0.37025250819810
+   40     2.34111598427344     1.33867768023268     0.77559823349596    -0.07805968073323     0.47812697850030
+   41     0.62118821705720    -0.82861263876457     0.37952036417492     1.60399493271387    -0.88783478976566
+   42     0.71865423772966    -1.43610800581615    -0.01820469894937    -0.51927366847585     1.42733079211500
+   43    -0.19643903355313     0.16131850704859    -0.01974689833988     0.13308744384627    -0.15559499069782
+   44     0.24144114009276    -0.84814576942179     0.74905025522070     0.02568950337701     0.83218629303815
+   45     0.06455130377063    -0.11041622492261    -0.05427216467933     0.05966970260072    -0.06395892229422
+   46     0.67122984923300    -0.58108934715645    -0.08863547138781    -0.14924720755363    -0.46021699157904
+   47    -0.07910539675473     0.05702280943345    -0.05687817119673     0.01476198916731     0.34613881590941
+   48    -0.26995009835099    -0.07488646513193    -0.01325315068343    -0.09372391593412    -0.72926421492995
+   49    -0.01667879749036    -0.36672616350893    -0.24205184219183     0.51712190607519     0.35365520221337
+   50     0.32206494073094    -0.38217890634821     1.10098669072498    -0.16780302975195     0.71987659458902
+   51    -0.16094553291777     0.07276329780235    -0.06404858432836     0.68075727205683    -0.39936483660452
+   52    -0.23824047999144     0.12534260047736     0.94508431333408     1.04874652807543    -0.51860871399679
+
+                41                  42                  43                  44                  45
+
+    1    -0.01192133540491     0.02821053437817     0.00586818239272     0.00360888516698     0.01031368682152
+    2    -0.03658966643378     0.11708786499160     0.02365225413607     0.01447027750045     0.04178453337717
+    3    -0.06854233636585     0.01215150144478     0.01794754342205     0.00973580028168     0.03271083467050
+    4     0.07936463809412    -0.03357218950358    -0.02616684390987     0.03794797392638    -0.03574646069826
+    5    -0.03585922443390    -0.03703488858271     0.05023392086958    -0.03804384594290     0.02203644624103
+    6     0.78969779466145    -0.94656785474761    -0.14619129283171    -0.02933983242250    -0.41598327009954
+    7     0.00860679471144     1.31646965644565    -0.16178925077337     0.01479119770231     0.22644036868593
+    8    -0.76608873928986     0.39318359782750     0.34713147247612    -0.21213226508322     0.33402863244310
+    9     0.57295176793520     0.31859539419544    -0.29436843392625     0.24884860763327    -0.11834624200913
+   10     0.00811043580189     0.00179668225631    -0.00359411602528     0.00100747306324    -0.00184322065825
+   11     0.04790675639381     0.00694799869447    -0.01464555150303     0.00385706772617    -0.00814689566140
+   12     0.00025071065934     0.02554239403939    -0.02264284534811     0.01721448670669    -0.01833244383655
+   13    -0.02891884118423     0.03778783654778    -0.00266635130476    -0.00537863528873     0.00881946441091
+   14     0.00678674228963    -0.00048503262749    -0.01693431019025     0.00917421507516    -0.00641758952982
+   15    -0.56274299214622    -0.43397275765615     0.32732616745392    -0.16126220436265     0.14563600063857
+   16     0.50524642182070    -0.06168313598364    -0.15931456442603     0.04868658539839    -0.08706927610491
+   17     0.13642033508393    -0.54953305861742     0.00606594201223     0.05585142285833    -0.13154367126484
+   18    -0.00767931597943     0.18450162282894     0.02422111905570    -0.06855998078030     0.05235758167853
+   19     0.06531350293976     0.02896657745075    -0.04302703657227     0.04953367412296    -0.03230657474184
+   20     0.36596914074322    -0.02147738241729    -0.17765426443887     0.14723362445756    -0.10221120427645
+   21     0.08263712195745    -0.04594629647130    -0.01250322620194    -0.00928269570401    -0.00582062696130
+   22     0.03671676077590    -0.23138318820313    -0.04724014024424     0.11706617379280    -0.12415621350707
+   23    -0.03176013108250     0.07957073631457     0.00291410936151    -0.00425137145115     0.01685627651395
+   24    -0.16325985871556     0.14870936452529     0.01779508252678    -0.00783181722279     0.02480925316142
+   25    -0.03182251557883     0.01928039153980     0.02818780363882     0.03291968402843     0.00142938257308
+   26    -0.42975185026406    -0.15412497003738    -0.04531884365302     0.42925271984551     0.94588360884437
+   27     0.20149622534842     0.11305079846536     0.28075696872073     0.05556673343818    -0.29339755085276
+   28     0.00984119217088    -0.00089648394258     0.16276373146796    -0.18153958983661     0.14016299688771
+   29    -0.14678421925703    -0.14202592532053     0.26583904211809    -0.17903886259057     0.50883521049328
+   30     1.00481666163805    -0.36492154839187    -0.08891108695150    -1.41866673040608    -1.85190394510891
+   31     0.46245366396212    -1.44363941473430     0.57300443461833     0.80585996185204    -0.11093845583532
+   32     0.51351333217393     0.49248412429616    -0.19341763850382     0.19188559715328     0.11990370020618
+   33     0.15654795283311     0.78231481943340    -0.45544777562767     0.56087519210416    -1.46795500430176
+   34     0.00943486488147    -0.07197578520213     0.04875529445443     0.02070640629427    -0.06805604274168
+   35     0.32697123552440    -1.69481299909986    -0.68781161929856    -0.33702607903233    -0.20593564031515
+   36     0.12724874033213     0.21838403467106     0.23587503486534     0.10897172655043    -0.10561106204736
+   37    -0.11175961104172    -0.14025098437451     0.12303363761859     0.08489515802837    -0.06146765883092
+   38     0.39933527295290     0.09229251337379     0.20056249033230    -0.01424751875576     0.09131095683569
+   39    -0.83456858795736     4.36392073874916     0.67046720132617     0.59579291524602     1.09814522865881
+   40    -0.56812071189341    -0.12070053426381     0.07788170132336    -0.20507828105480     0.21433675472906
+   41     0.00571864300825     1.29966432993784    -0.74769463632127    -0.16331752550811     0.17065600491764
+   42    -1.66837607676706    -0.20182222870298    -0.06107660129710    -0.35617235945866     0.07864005419743
+   43    -0.75857085217997     0.09480893969234     0.32811385658061     0.06269726862474     0.28696130303965
+   44     0.39924872103024    -0.35775351977972    -0.28234799280029    -0.30694108033985     1.13581618859385
+   45     0.06814191750107    -0.13457769254176     0.46934877520652    -0.66859136155696    -0.40500877171317
+   46     0.34297616645077    -0.72816425549027     0.28694403793088     1.92707908344323     0.74738894882320
+   47    -0.05708032164861     0.26067907254311    -0.02770140565056     0.48333332019570     0.03318952015744
+   48    -0.80352607919032    -0.43273702987256     0.24042248372056     0.07454358120669    -0.58252312642246
+   49    -0.04489716974167    -0.28435292742134     0.66902247921842    -0.23288107664828     0.07725418426853
+   50    -1.08357392399359    -0.63621447415968    -0.85560517325184    -0.04206988997760    -0.60014409030779
+   51    -0.31410081051684    -0.23144200528726    -0.33111937703084     0.35804763826996    -0.39252176979494
+   52     1.10958147706705     0.15870897678963    -0.12574806711444    -0.52587931150388     0.29454176914828
+
+                46                  47                  48                  49                  50
+
+    1     0.00488592038290     0.00020816205098    -0.00256658801736    -0.00564380375276     0.00066290435925
+    2     0.01713675049636     0.00126530140283    -0.00972032946032    -0.02306655864846     0.00163752832838
+    3     0.00414778950950     0.01348456807163    -0.00858579957941    -0.02165147005961    -0.00385840743728
+    4    -0.04259161343466    -0.02694769723484     0.03679108029437     0.01123085650636    -0.03544172201821
+    5    -0.04319013292609     0.00976345546001     0.00068780998466     0.00411065235752     0.01338416336411
+    6    -0.27949853692950    -0.02014384674931     0.06962773377695     0.25596565583730    -0.11818880616625
+    7     0.45611991890731    -0.21533472245210    -0.06986187854611     0.04863358539032     0.17970977675877
+    8     0.17973922222733     0.21760465446721    -0.21695768620685    -0.24239358584045     0.21663822515811
+    9     0.27331850959422    -0.17219261654855     0.14003835053080     0.08347046105153     0.01825985099559
+   10     0.00127636277830    -0.00229976511998     0.00142410281097     0.00226931846580    -0.00020527263880
+   11     0.00432682093722    -0.00905100984792     0.00614900691862     0.00862762965020    -0.00113234750631
+   12     0.00676960657204    -0.01890774686882     0.01908510803936    -0.00169521824726    -0.01303587567317
+   13     0.01538413928447    -0.00302506675630    -0.00275062161324    -0.00754148026981     0.00026785599396
+   14     0.01067042907894    -0.00640243640169     0.00025447731319    -0.00132016419716    -0.00400142463836
+   15    -0.18464556508416     0.24516232311731    -0.11937222447300    -0.14600550300246     0.02631990734338
+   16     0.03503392110746    -0.08294742372761     0.03129116342686     0.16385112147842     0.01541286626700
+   17    -0.21735036872360     0.03904061654797     0.06400346317317     0.01951702707561    -0.09424137938576
+   18     0.00822633378558    -0.02407576365521    -0.02626816057405     0.04956304914534     0.03490247499059
+   19     0.02933359540690    -0.02830146998565     0.00970167847610    -0.00134246113706     0.00750963941845
+   20    -0.05647184808523    -0.11731679420698     0.16058393810439     0.10047983592197    -0.15682110172175
+   21    -0.00012563139677    -0.00112050998840    -0.00643932968885     0.03644443274999     0.01550806188242
+   22    -0.10423824129190    -0.01423969302004     0.08939605010821    -0.05851328950973    -0.11393228721545
+   23     0.02127200473592    -0.00583259780598    -0.00466845530035    -0.00907131966522     0.00479242260152
+   24     0.04083288912928    -0.00659299848672    -0.00112329180365    -0.05383862217751     0.00191550511907
+   25     0.11205879330897    -0.00077970813421    -0.02069405438147     0.06610743605149    -0.04176561647930
+   26     0.31270495183820    -0.32645747992978    -0.37126144440818    -0.45000948760357     0.08847307330376
+   27     0.41814473093817     0.13916063530028    -0.43893097407571    -0.37146366202133    -0.12846086595906
+   28     0.46829592918564    -0.14398118843976     0.82756129462789    -0.50460050445487     0.03272229022879
+   29    -0.10399569328922    -0.59874796789703    -0.45736599989938    -0.21129655362267    -0.11148940906392
+   30    -1.71520244678565     0.58797326952878     0.95162232393434     0.64797160610912    -0.06207393923854
+   31    -0.51650161452604    -0.09711293179692     0.59777285624614     0.41631897274561    -0.08769828443531
+   32    -1.10880163637641     0.58902726633443    -1.15135301829068     0.34958877333096    -0.88638053195021
+   33     0.34072911121917    -0.00970485146392     0.27966092846153     0.20276251084888     0.79213455964870
+   34    -0.08266682036996    -0.00313127154160     0.02157718714409    -0.00959676639992     0.01397480061638
+   35     0.21123280198198     0.09520175454238    -0.01244735380308     0.44149569259683     0.18002439793005
+   36    -0.12923951258470    -0.01576723412338     0.00621379161047    -0.09034949985594    -0.08248136007800
+   37    -0.38608584888090     0.00702496452286     0.13495656351538    -0.12572844180700    -0.13488650639750
+   38    -0.02645924789794    -0.08844268987121     0.09461333383593     0.19273100180358     0.28430316895245
+   39     0.38942683654367    -0.06004393969007    -0.48609671621385    -0.83034462705336    -0.36331891967270
+   40     0.29670155780739     0.04965211422738     0.18347363127348    -0.06927981005561     0.50173747903536
+   41     0.93518043382090    -0.38724517324244    -0.25248423040624     0.33470385612038     0.36807349807669
+   42    -0.30969644701865     0.31880846588965    -0.62310787906198    -0.41103746727075    -0.50324447650958
+   43     0.31847615367151     0.71463923682139     0.06141316944727     0.51049703195034    -0.24509291491666
+   44     0.37778136650806    -0.69094211655327    -0.05541577628453    -0.50896474289338    -0.26046130339758
+   45     0.30953330685333    -0.22619991120846    -0.10750689323957     0.02087351699284    -0.63545767170682
+   46    -0.14484571994617     0.36367900262818    -0.12636570779276     0.15119573151340    -0.01788565217882
+   47     0.27070515914382    -0.80800152414960     0.00322599755346     0.74581308927206    -0.33288201721131
+   48     0.99873752561214     0.10659127452086     0.06677123154515    -0.72418043177863     1.40041989705345
+   49    -0.52585764438626    -0.04710742786687     0.24097832421424     0.30266327227594     0.51184803528641
+   50     0.15052426932398     0.10926729313348    -0.55949649232248    -0.35213746258060    -0.52639671211514
+   51    -0.34197303284422    -0.21204312081143     0.41362348382897    -0.28397309662058    -0.40651240740394
+   52     0.61338636780526    -0.05815014177963    -0.33364231095441     0.81969998062198     0.78017202944292
+
+                51                  52
+
+    1     0.00586841306801    -0.00585911649600
+    2     0.02152024349653    -0.02332057495077
+    3    -0.00232988013877    -0.06754756294814
+    4     0.02025750180547     0.00471520875623
+    5    -0.00761783050587    -0.00929068663263
+    6    -0.05952706944512     0.47531210729725
+    7     0.23133838774658     0.36672096742732
+    8    -0.05506397126653    -0.32058840546575
+    9     0.16248672311513     0.00397610170774
+   10     0.00079964501923     0.00407001229365
+   11     0.00278164096917     0.01567678327949
+   12     0.01586805823789     0.01725473884551
+   13     0.00085800288307     0.00514194518432
+   14     0.00508948657990     0.00170260834989
+   15    -0.18105597576898    -0.37520822524740
+   16     0.01225421227393     0.17945552121174
+   17    -0.06299848436611    -0.12031651764812
+   18     0.00507537443376     0.16183671111583
+   19     0.04687764049854     0.00932958818288
+   20     0.00957932944010     0.02808039929302
+   21    -0.01357714106137     0.02611773382813
+   22     0.02766033077978    -0.11833456631804
+   23     0.01164507498815     0.01316317737587
+   24     0.02958805471897     0.00043157166964
+   25     0.04551114555162    -0.05310449715942
+   26     1.30086235760692     0.59356319778247
+   27    -0.28357017855261    -0.25098709918918
+   28    -0.22477290407889     0.20915861317055
+   29    -0.48008033963267    -0.13703929790290
+   30    -2.87944626973307    -0.51798256997030
+   31     0.37175004661536     0.47530964166126
+   32     0.17127992682695     0.81471154299026
+   33     0.72956727371376     0.91110102868077
+   34    -0.03947302075049    -0.00451099340636
+   35    -0.54379924615727     0.15392938678376
+   36     0.01233584196036     0.16003490992370
+   37     0.13830140345450    -0.21555741275106
+   38     0.16327989284925    -0.08689706619302
+   39     1.86597282392394    -0.45660248594618
+   40    -0.47142777260719    -0.72524309683281
+   41    -0.02492130990655     0.78156048392060
+   42    -0.51971507213827     0.45805255217459
+   43     0.01062173585179     0.09643188618755
+   44     0.50957179873680    -1.34356907543186
+   45     0.60116202450552     0.11995054168562
+   46     0.12477938328358     0.56041550821239
+   47    -0.06215642730624     0.00382071768946
+   48     1.02910828910817    -0.27577761528460
+   49    -0.12491862670459    -0.19391577690802
+   50    -0.66442252781587     0.88021764172762
+   51    -0.00709516061620    -0.39376667940543
+   52    -0.24125081470802     0.82711374593610
+
+
+
+
+  Updating MOSpaceInfo
+
+  ==> MO Space Information <==
+
+  -------------------------------
+                        A   Sum
+  -------------------------------
+    FROZEN_DOCC         8     8
+    RESTRICTED_DOCC     7     7
+    GAS1                2     2
+    GAS2                0     0
+    GAS3                0     0
+    GAS4                0     0
+    GAS5                0     0
+    GAS6                0     0
+    RESTRICTED_UOCC    16    16
+    FROZEN_UOCC        19    19
+    Total              52    52
+  -------------------------------
+
+  --------------- End of Frozen-orbital Embedding --------------- 
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: 3-21G
+    Blend: 3-21G
+    Number of shells: 36
+    Number of basis functions: 52
+    Number of Cartesian functions: 52
+    Spherical Harmonics?: false
+    Max angular momentum: 1
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                  12
+      Number of AO shells:              36
+      Number of primitives:             60
+      Number of atomic orbitals:        52
+      Number of basis functions:        52
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 1900262 doubles for integral storage.
+  We computed 199059 shell quartets total.
+  Whereas there are 222111 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              400
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         52
+  Number of correlated molecular orbitals:              25
+  Number of frozen occupied orbitals:                    8
+  Number of frozen unoccupied orbitals:                 19
+  Two-electron integral type:                 Conventional
+
+
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.09173800 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.163427 GB
+  Timing for conventional integral transformation:            0.269 s.
+  Frozen-core energy        -158.774318248461356 a.u.
+  Timing for frozen one-body operator:                        0.002 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.015 s.
+  Timing for computing conventional integrals:                0.284 s.
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              1
+    number of beta electrons                               1
+    number of alpha strings                                2
+    number of beta strings                                 2
+    --------------------------------------------------------
+
+  ==> FCI Solver <==
+
+    --------------------------------------------------------
+    Spin adapt                                         FALSE
+    Number of determinants                                 4
+    Symmetry                                               0
+    Multiplicity                                           1
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         4
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+     3       1       *
+     1       3        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   singlet    0     -314.032815079211  +0.000000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-06
+    Residual convergence threshold                 1.000e-06
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                      4
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                  4
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0     -155.258496830750      155.258496830750        0.000000000000      1
+       1     -155.258496830750        0.000000000000        0.000000000000      2
+  ---------------------------------------------------------------------------------
+
+  ==> Root No. 0 <==
+
+    20      0.97386652
+    02     -0.22695982
+
+    Total Energy:    -155.258496830750, <S^2>: 0.000000
+    Time for FCI:       0.000177834000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)     A     0     -155.258496830750   0.000000
+    --------------------------------------------------------
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+          0A    -0.06597274    -0.00897185    -0.05446271     0.08601792
+    --------------------------------------------------------------------
+     Nuclear    -2.03970989     0.33588649     0.20461132     2.07728235
+    --------------------------------------------------------------------
+
+  ==> Natural Orbitals <==
+
+       16A      1.896951     17A      0.103049  
+
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS         FALSE
+    MIX GAS ACTIVE ORBITALS       FALSE
+    FROZEN_DOCC                   CANONICAL
+    FROZEN_UOCC                   CANONICAL
+    GAS1                          CANONICAL
+    RESTRICTED_DOCC               CANONICAL
+    RESTRICTED_UOCC               CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    FROZEN_DOCC          2.7304533318   7.1110788845
+    FROZEN_UOCC          0.3835575706   2.1537508830
+    GAS1                 0.0009393079   0.0013283820
+    RESTRICTED_DOCC      0.0012696550   0.0033804738
+    RESTRICTED_UOCC      0.4916040868   1.8331268255
+    ------------------------------------------------
+
+    Canonicalization test failed
+
+  Warning: Failed to fix orbital phase and order.
+  Integrals are about to be updated.
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.09470112 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.163427 GB
+  Timing for conventional integral transformation:            0.273 s.
+  Frozen-core energy        -158.774318248461327 a.u.
+  Timing for frozen one-body operator:                        0.002 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.014 s.
+  Integrals update took     0.287 s.
+  Orbital rotations on spin-dependent RDMs ...
+    Transformed 1 RDMs.
+    Transformed 2 RDMs.
+    Transformed 3 RDMs.
+  Timing for orbital canonicalization:                        0.431 s.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Computing Fock matrix and cleaning JK ........... Done
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Filling Fock matrix from ForteIntegrals ......... Done
+
+              ----------------------------------------------------
+                    MR-DSRG Second-Order Perturbation Theory
+                Chenyang Li, Kevin Hannon, Francesco Evangelista
+              ----------------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.
+      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.
+
+  ==> Calculation Information <==
+
+    --------------------------------------------------------
+    int_type                                    CONVENTIONAL
+    source operator                                 STANDARD
+    reference relaxation                                NONE
+    state_type                                STATE-SPECIFIC
+    form Hbar3                                         FALSE
+    flow parameter                                 5.000e-01
+    taylor expansion threshold                     1.000e-03
+    intruder_tamp                                  1.000e-01
+    ntamp                                                 15
+    --------------------------------------------------------
+  =>** Before self.dsrg_solver.compute_energy() **<=
+
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Block             Fa Max         Fa Mean           Fb Max         Fb Mean
+    -------------------------------------------------------------------------
+    CORE        0.0000000000    0.0000000000     0.0000000000    0.0000000000
+    VIRTUAL     0.0000000000    0.0000000000     0.0000000000    0.0000000000
+    GAS1        0.0000000000    0.0000000000     0.0000000000    0.0000000000
+    -------------------------------------------------------------------------
+    Orbitals are semi-canonicalized.
+
+  ==> Computing DSRG-MRPT2 ... <==
+
+    Computing T2 amplitudes                  ...  Done. Timing        0.001729 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.000666 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.001223 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.000464 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.000428 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.000623 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.000716 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.004533 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.001052 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.001235 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.004551 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.002467 s
+
+  ==> Excitation Amplitudes Summary <==
+
+    Active Indices:    7    8 
+    Largest T1 amplitudes for spin case A:
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [  8      17    ] 0.063300 [  8      16    ] 0.019809 [  7      16    ]-0.008818 
+    [  2       7    ]-0.007189 [  8      14    ] 0.006489 [  8      23    ]-0.004022 
+    [  8      19    ] 0.002625 [  7      17    ] 0.002448 [  4       7    ] 0.002327 
+    [  8      13    ]-0.002287 [  8      24    ]-0.002229 [  2       8    ]-0.001572 
+    [  0       7    ] 0.000900 [  5       7    ] 0.000893 [  7      15    ] 0.000850 
+    --------------------------------------------------------------------------------
+    Norm of T1A vector: (nonzero elements: 158)                   0.067994653198572.
+    --------------------------------------------------------------------------------
+    Largest T1 amplitudes for spin case B:
+       _       _                  _       _                  _       _               
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [  8      17    ] 0.063300 [  8      16    ] 0.019809 [  7      16    ]-0.008818 
+    [  2       7    ]-0.007189 [  8      14    ] 0.006489 [  8      23    ]-0.004022 
+    [  8      19    ] 0.002625 [  7      17    ] 0.002448 [  4       7    ] 0.002327 
+    [  8      13    ]-0.002287 [  8      24    ]-0.002229 [  2       8    ]-0.001572 
+    [  0       7    ] 0.000900 [  5       7    ] 0.000893 [  7      15    ] 0.000850 
+    --------------------------------------------------------------------------------
+    Norm of T1B vector: (nonzero elements: 158)                   0.067994653198572.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AA:
+     i   j   a   b              i   j   a   b              i   j   a   b             
+    --------------------------------------------------------------------------------
+    [  4   8   8  10] -0.020299 [  4   7   7  10] -0.020173 [  5   7   8  12]  0.020089 
+    [  5   8   8   9] -0.018718 [  6   8   8  11]  0.018227 [  5   7   7   9] -0.017951 
+    [  5   7   7  14]  0.017774 [  6   8   8  14]  0.017708 [  5   8   8  14]  0.017570 
+    [  6   7   7  14]  0.017490 [  6   7   7  11]  0.017403 [  7   8   7  17]  0.016757 
+    [  2   7   7  23] -0.014454 [  6   8   8  20] -0.014209 [  5   7   8  18]  0.013350 
+    --------------------------------------------------------------------------------
+    Norm of T2AA vector: (nonzero elements: 22028)                0.281516212918283.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AB:
+         _       _                  _       _                  _       _             
+     i   j   a   b              i   j   a   b              i   j   a   b             
+    --------------------------------------------------------------------------------
+    [  7   8   8  16] -0.034283 [  8   8  16  16] -0.034190 [  8   8   8  17]  0.034048 
+    [  7   7   7  16] -0.031569 [  8   8  17  17] -0.031382 [  7   8   7  17]  0.028882 
+    [  2   2   7   7] -0.023996 [  7   7  16  16] -0.022943 [  7   8  16  17]  0.022286 
+    [  5   5   9   9] -0.019637 [  6   6  10  10] -0.019360 [  4   4  10  10] -0.016393 
+    [  3   3  13  13] -0.016288 [  5   5  12  12] -0.015290 [  7   7   8  17]  0.014821 
+    --------------------------------------------------------------------------------
+    Norm of T2AB vector: (nonzero elements: 26228)                0.316863800485917.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case BB:
+     _   _   _   _              _   _   _   _              _   _   _   _             
+     i   j   a   b              i   j   a   b              i   j   a   b             
+    --------------------------------------------------------------------------------
+    [  4   8   8  10] -0.020299 [  4   7   7  10] -0.020173 [  5   7   8  12]  0.020089 
+    [  5   8   8   9] -0.018718 [  6   8   8  11]  0.018227 [  5   7   7   9] -0.017951 
+    [  5   7   7  14]  0.017774 [  6   8   8  14]  0.017708 [  5   8   8  14]  0.017570 
+    [  6   7   7  14]  0.017490 [  6   7   7  11]  0.017403 [  7   8   7  17]  0.016757 
+    [  2   7   7  23] -0.014454 [  6   8   8  20] -0.014209 [  5   7   8  18]  0.013350 
+    --------------------------------------------------------------------------------
+    Norm of T2BB vector: (nonzero elements: 22028)                0.281516212918283.
+    --------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000 for spin case A: NULL
+    T1 amplitudes larger than 0.1000 for spin case B: NULL
+    T2 amplitudes larger than 0.1000 for spin case AA: NULL
+    T2 amplitudes larger than 0.1000 for spin case AB: NULL
+    T2 amplitudes larger than 0.1000 for spin case BB: NULL
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =   -155.258496830749777
+    <[F, T1]>                      =     -0.002780649396066
+    <[F, T2]>                      =      0.002860738048263
+    <[V, T1]>                      =      0.002378272666250
+    <[V, T2]> (C_2)^4              =     -0.163859574631331
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.000937224934468
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.004349005702783
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.014587152436387
+    <[V, T2]> C_6 C_2              =     -0.000171989872330
+    <[V, T2]>                      =     -0.144158181430023
+    DSRG-MRPT2 correlation energy  =     -0.141699820111575
+    DSRG-MRPT2 total energy        =   -155.400196650861346
+    max(T1)                        =      0.063299515469784
+    max(T2)                        =      0.040019772434656
+    ||T1||                         =      0.096158960722276
+    ||T2||                         =      0.748407261125399
+
+  Energy took      0.023 s
+
+  =>** After self.dsrg_solver.compute_energy() **<=
+
+  Semicanonical orbitals must be used!
+
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+           [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]  
+    -----------------------------------------------------
+    -> C0       0.000       0.001       0.001       0.014
+    -> C1       0.000       0.000       0.000       0.000
+    -> C2                   0.000       0.000       0.000
+    -----------------------------------------------------
+
+
+  Time to prepare integrals:        0.944 seconds
+  Time to run job          :        1.698 seconds
+  Total                    :        2.642 seconds
+    PT2-in-CASSCF energy..................................................................PASSED
+
+    Psi4 stopped on: Tuesday, 25 March 2025 03:44PM
+    Psi4 wall time for execution: 0:00:02.86
+
+*** Psi4 exiting successfully. Buy a developer a beer!

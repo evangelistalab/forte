@@ -791,6 +791,8 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     outfile->Printf("\n    Frozen Orbitals: %d Core MOs, %d Virtual MOs\n", num_Fo, num_Fv);
 
     SharedMatrix Ca_tilde(ref_wfn->Ca()->clone());
+    // outfile->Printf("fock matrix")
+    // Fa()->print();
 
     bool semi_f = options->get_bool("EMBEDDING_SEMICANONICALIZE_FROZEN");
     bool semi_a = options->get_bool("EMBEDDING_SEMICANONICALIZE_ACTIVE");

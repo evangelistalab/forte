@@ -1,6 +1,6 @@
 import forte
 
-refmcscf = -155.258496830757849
+# refmcscf = -155.258496830757849
 refdsrgpt2 = -155.400196650103709
 
 molecule {
@@ -26,42 +26,27 @@ molecule {
 }
 
 set {
-  basis                  3-21g
-  reference              rhf
-  maxiter                500
-  scf_type               pk
-  e_convergence          11
-  d_convergence          11
-  docc                   [16]
-  restricted_docc        [15]
-  active                 [2]
-  mcscf_maxiter          400
-  mcscf_algorithm        ts
-  mcscf_r_convergence    8
-  mcscf_e_convergence    9
-  mcscf_max_rot          0.1
+  basis                               3-21g
+  scf_type                            pk
+  docc                                [16]
 }
 
-E, wfn_cas = energy('casscf', return_wfn = True)
-compare_values(refmcscf,variable("CURRENT ENERGY"),8,"CASSCF energy")
 
 set forte {
-  embedding true
-  embedding_reference casscf
-  embedding_cutoff_method threshold
-  embedding_threshold 0.5
-  EMBEDDING_VIRTUAL_SPACE PAO
-  PAO_THRESHOLD  0.01
-  EMBEDDING_SEMICANONICALIZE_FROZEN False
-  active_space_solver  fci
-  correlation_solver   dsrg-mrpt2
-  root_sym           0
-  nroot              1
-  root               0
-  d_convergence      10
-  dsrg_s             0.5
-  mcscf_reference   false
+  restricted_docc                     [15]
+  active                              [2]
+  embedding                           true
+  embedding_reference                 casscf
+  embedding_cutoff_method             threshold
+  embedding_threshold                 0.5
+  EMBEDDING_VIRTUAL_SPACE             PAO
+  PAO_THRESHOLD                       0.01
+  EMBEDDING_SEMICANONICALIZE_FROZEN   False
+  active_space_solver                 fci
+  correlation_solver                  dsrg-mrpt2
+  mcscf_algorithm                     ts
+  mcscf_max_rot                       0.1
 }
 
-Eforte, wfn_emb = energy('forte', ref_wfn = wfn_cas, return_wfn=True)
+energy('forte')
 compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8,"PT2-in-CASSCF energy")
