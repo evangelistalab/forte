@@ -114,10 +114,6 @@ class Psi4Integrals : public ForteIntegrals {
     /// Call JK intialize
     void jk_initialize(double mem_percentage = 0.8, int print_level = 1);
 
-    /// AO Fock control
-    // enum class FockAOStatus { none, inactive, generalized };
-    // FockAOStatus fock_ao_level_ = FockAOStatus::none;
-
   protected:
     void base_initialize_psi4();
     void freeze_core_orbitals() override;

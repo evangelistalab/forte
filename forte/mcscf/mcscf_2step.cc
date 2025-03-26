@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include <format>
+
 #include "ambit/tensor.h"
 
 #include "psi4/psi4-dec.h"
@@ -421,9 +423,9 @@ double MCSCF_2STEP::compute_energy() {
 
         diis_manager.reset_subspace();
         diis_manager.delete_diis_file();
-    }
+    } // end of MCSCF macro iterations
 
-    // perform final CI using converged orbitals
+    // perform final active space computation using converged orbitals
     if (print_ >= PrintLevel::Default)
         psi::outfile->Printf("\n\n  Performing final CI Calculation using converged orbitals");
 
@@ -445,7 +447,10 @@ double MCSCF_2STEP::compute_energy() {
             ignore_frozen ? ignore_frozen : options_->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
         auto active_mix = options_->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
 
-        psi::outfile->Printf("\n  Canonicalizing final MCSCF orbitals");
+        psi::outfile->Printf("%s", std::format("\n  Canonicalizing final MCSCF orbitals as {}",
+                                               options_->get_str("MCSCF_FINAL_ORBITAL"))
+                                       .c_str());
+
         ActiveOrbitalType actv_orb_type(options_->get_str("MCSCF_FINAL_ORBITAL"));
         SemiCanonical semi(mo_space_info_, ints_, scf_info_, inactive_mix, active_mix);
         semi.semicanonicalize(rdms, false, actv_orb_type, false);
@@ -456,6 +461,25 @@ double MCSCF_2STEP::compute_energy() {
         auto Ca = cas_grad.Ca();
         ints_->wfn()->Ca()->copy(Ca);
         ints_->wfn()->Cb()->copy(Ca);
+
+        // test if the coefficient matrix is invertible. If yes, update the Fock matrix in the psi4
+        // wave function
+        if (Ca->rowspi() == Ca->colspi()) {
+            // compute the Fock matrix in the AO basis
+            auto Ca_inv = Ca->clone();
+            auto F_ao = F->clone();
+
+            Ca_inv->invert();
+            F_ao->transform(Ca_inv);
+
+            // copy the Fock matrix to the psi4 wave function
+            ints_->wfn()->Fa()->copy(F_ao);
+            ints_->wfn()->Fb()->copy(F_ao);
+        } else {
+            psi::outfile->Printf("\n  The coefficient matrix is not square, cannot compute the "
+                                 "Fock matrix in the AO basis. The Fock matrix in the psi4 wave "
+                                 "function will not be updated.");
+        }
 
         // throw error if not converged
         if (not converged)

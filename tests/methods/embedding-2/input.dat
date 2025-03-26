@@ -35,7 +35,7 @@ set forte {
   embedding_semicanonicalize_active   true
   active_space_solver                 fci
   correlation_solver                  dsrg-mrpt2
-  mcscf_e_convergence                 15
+  mcscf_e_convergence                 12
   mcscf_maxiter                       300
 }
 
