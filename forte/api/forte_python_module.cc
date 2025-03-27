@@ -49,7 +49,8 @@
 
 #include "orbital-helpers/aosubspace.h"
 #include "orbital-helpers/mp2_nos.h"
-#include "orbital-helpers/orbital_embedding.h"
+#include "orbital-helpers/avas.h"
+#include "orbital-helpers/aset.h"
 #include "orbital-helpers/fragment_projector.h"
 
 #include "forte.h"
