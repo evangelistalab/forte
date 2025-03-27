@@ -107,7 +107,6 @@ template <bool positive>
 void apply_operator_kernel(const auto& sop_groups, const auto& state_sorted,
                            const auto& screen_thresh, auto& new_terms) {
     Determinant new_det;
-    // Determinant sign_mask;
     Determinant idx;
     for (const auto& [sqop_ann, sqop_group] : sop_groups) {
         for (const auto& [det, c] : state_sorted) {
@@ -116,7 +115,6 @@ void apply_operator_kernel(const auto& sop_groups, const auto& state_sorted,
                 for (const auto& [sqop_cre, sqop_sign_mask, t] : sqop_group) {
                     if (det.fast_a_and_b_minus_c_eq_zero(sqop_cre, sqop_ann)) {
                         if (std::abs(c * t) > screen_thresh) {
-                            // compute_sign_mask(sqop_cre, sqop_ann, sign_mask, idx);
                             const auto value = faster_apply_operator_to_det(
                                 det, new_det, sqop_cre, sqop_ann, sqop_sign_mask);
                             if constexpr (positive) {
