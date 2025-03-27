@@ -112,7 +112,7 @@ class ObjectsFromPsi4(Module):
         data.psi_wfn = self.get_psi4_wavefunction(data, ref_wfn, **kwargs)
 
         # Step 4: Create MO space information (this should be avoided if possible)
-        temp_mo_space_info = self.create_mo_space_info(data, **kwargs)
+        data.mo_space_info = self.create_mo_space_info(data, **kwargs)
 
         # Step 6: Inject DF and MINAO basis sets in the psi4 wavefunction if specified in options
         self.set_basis_sets(data)
@@ -123,7 +123,7 @@ class ObjectsFromPsi4(Module):
         self.copy_state_info_options_from_wfn(data)
 
         # Step 8: Prepare Forte objects from the wavefunction, including a new MOSpaceInfo object
-        self.prepare_forte_objects_from_wavefunction(data, temp_mo_space_info)
+        self.prepare_forte_objects_from_wavefunction(data)
 
         # Once we are done, all the objects are stored in the ForteData object
         return data
@@ -346,7 +346,7 @@ class ObjectsFromPsi4(Module):
                 UserWarning,
             )
 
-    def prepare_forte_objects_from_wavefunction(self, data, temp_mo_space_info):
+    def prepare_forte_objects_from_wavefunction(self, data):
         """
         Prepare Forte objects from the Psi4 wavefunction and MO space info.
 
@@ -357,11 +357,9 @@ class ObjectsFromPsi4(Module):
         temp_mo_space_info : Forte MOSpaceInfo
             The MO space information object
         """
-        # Call methods that project the orbitals (AVAS, embedding)
+        # If AVAS is requested, make the AVAS orbitals
         if data.options.get_bool("AVAS"):
             make_avas_orbitals(data)
-
-        data.mo_space_info = temp_mo_space_info  # TODO this should be removed
 
         # Reorder active orbitals for DMRG after AVAS
         if data.options.get_str("ACTIVE_SPACE_SOLVER") in ["DMRG", "BLOCK2"]:

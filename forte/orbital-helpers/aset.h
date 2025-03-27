@@ -39,9 +39,6 @@ class SCFInfo;
 class MOSpaceInfo;
 class ForteOptions;
 
-void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
-               std::shared_ptr<psi::Matrix> Ps);
-
 std::shared_ptr<MOSpaceInfo> make_embedding(std::shared_ptr<psi::Wavefunction> ref_wfn,
                                             std::shared_ptr<SCFInfo> scf_info,
                                             std::shared_ptr<ForteOptions> options,

@@ -447,11 +447,11 @@ double MCSCF_2STEP::compute_energy() {
             ignore_frozen ? ignore_frozen : options_->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
         auto active_mix = options_->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
 
-        psi::outfile->Printf("%s", std::format("\n  Canonicalizing final MCSCF orbitals as {}",
-                                               options_->get_str("MCSCF_FINAL_ORBITAL"))
-                                       .c_str());
+        auto final_orbital = options_->get_str("MCSCF_FINAL_ORBITAL");
+        auto s = std::format("\n  Canonicalizing final MCSCF orbitals as {}", final_orbital);
+        psi::outfile->Printf("%s", s.c_str());
 
-        ActiveOrbitalType actv_orb_type(options_->get_str("MCSCF_FINAL_ORBITAL"));
+        ActiveOrbitalType actv_orb_type(final_orbital);
         SemiCanonical semi(mo_space_info_, ints_, scf_info_, inactive_mix, active_mix);
         semi.semicanonicalize(rdms, false, actv_orb_type, false);
         cas_grad.canonicalize_final(semi.Ua());
