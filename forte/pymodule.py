@@ -29,8 +29,6 @@
 
 import time
 import os
-import numpy as np
-
 import psi4
 import psi4.driver.p4util as p4util
 
