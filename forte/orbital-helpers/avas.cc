@@ -26,29 +26,19 @@
  * @END LICENSE
  */
 
-#include <algorithm>
-#include <cmath>
-
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"
-#include "psi4/libmints/pointgrp.h"
 #include "psi4/libmints/wavefunction.h"
-
 #include "psi4/libpsi4util/process.h"
-#include "psi4/libpsio/psio.hpp"
 
-#include "base_classes/scf_info.h"
 #include "base_classes/forte_options.h"
-#include "base_classes/mo_space_info.h"
 
-#include "helpers/helpers.h"
 #include "helpers/printing.h"
 
 #include "avas.h"
-#include "pao_builder.h"
 
 using namespace psi;
 
