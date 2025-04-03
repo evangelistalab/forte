@@ -55,22 +55,23 @@ class HF(Module):
         molecule.set_multiplicity(state.multiplicity())
 
         # # prepare options for psi4
-        # scf_type_dict = {
-        #     "CONVENTIONAL": "PK",
-        #     "STD": "PK",
-        # }
-        # # convert to psi4 terminology
-        # int_type = self.model.int_type.upper()
-        # if int_type in scf_type_dict:
-        #     scf_type = scf_type_dict[int_type]
-        # else:
-        #     scf_type = int_type
-        scf_type = "PK"
+        scf_type_dict = {
+            "CONVENTIONAL": "PK",
+            "STD": "PK",
+        }
+        # convert to psi4 terminology
+        int_type = data.options.get_str("int_type")
+        if int_type in scf_type_dict:
+            scf_type = scf_type_dict[int_type]
+        else:
+            scf_type = int_type
 
         if self.restricted:
             ref = "RHF" if state.multiplicity() == 1 else "ROHF"
         else:
             ref = "UHF"
+
+        print(f"HF: using {scf_type} for the SCF calculation")
 
         options = {
             "BASIS": self.basis,

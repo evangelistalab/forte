@@ -7,7 +7,13 @@ from forte._forte import make_mo_space_info_from_map
 
 class ActiveSpaceSelector(Module):
     """
-    A module to prepare an ActiveSpaceIntegral
+    A module to prepare the active space for the MCSCF calculation.
+    This code will use the active space information from the input file to select the active space.
+
+    The active space can be specified in several ways:
+    - active_space = {"nel": 6, "norb": 6}  # 6 electrons in 6 orbitals
+    - active_space = {"nel": 6, "active_orbitals": ["1 A1", "2 A1", "3 A1"]}  # 6 electrons in the specified orbitals
+    - active_space = {"active": [2, 0, 1, 1]}  # select 2 x A1, 1 x B1, and 1 x B2 active orbitals
     """
 
     # accept as input a dictionary of string,int list pairs or a list of integers
@@ -19,7 +25,6 @@ class ActiveSpaceSelector(Module):
             The active space to be used for the calculation
         """
         super().__init__()
-        # assert isinstance(active_space, dict) or isinstance(active_space, list)
 
         self.active_space = active_space
 
@@ -29,7 +34,7 @@ class ActiveSpaceSelector(Module):
         Selects the active space based on the input
         """
 
-        # in the case where we have no active space selection, we just assemble this object from the options
+        # if no active space is provided, use the options object
         self.active_space = self.active_space or self.make_dict_from_data(data)
 
         # select the active space using the information in the active_space dictionary

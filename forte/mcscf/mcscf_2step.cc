@@ -425,16 +425,7 @@ double MCSCF_2STEP::compute_energy() {
         diis_manager.delete_diis_file();
     } // end of MCSCF macro iterations
 
-    // perform final active space computation using converged orbitals
-    if (print_ >= PrintLevel::Default)
-        psi::outfile->Printf("\n\n  Performing final CI Calculation using converged orbitals");
-
-    as_solver_->set_maxiter(as_maxiter);
-    as_solver_->set_die_if_not_converged(true);
-    energy_ =
-        diagonalize_hamiltonian(cas_grad.active_space_ints(),
-                                {print_, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
-
+    // Transform the orbitals to canonical or natural basis
     if (ints_->integral_type() != Custom) {
         // fix orbitals for redundant pairs
         rdms = as_solver_->compute_average_rdms(state_weights_map_, 1, RDMsType::spin_free);
@@ -455,6 +446,9 @@ double MCSCF_2STEP::compute_energy() {
         SemiCanonical semi(mo_space_info_, ints_, scf_info_, inactive_mix, active_mix);
         semi.semicanonicalize(rdms, false, actv_orb_type, false);
         cas_grad.canonicalize_final(semi.Ua());
+
+        // after this step, the integrals, CI coefficients, and rdms are no longer valid.
+        // Below we rediagonalize the Hamiltonian to get the new CI coefficients.
 
         // pass the MO coefficients to the wave function
         auto Ca = cas_grad.Ca();
@@ -516,6 +510,17 @@ double MCSCF_2STEP::compute_energy() {
         // throw error if not converged
         if (not converged)
             throw_convergence_error();
+    }
+
+    // Perform final active space computation using converged transformed orbitals
+    if (der_type_ != "FIRST" or options_->get_str("CORRELATION_SOLVER") != "NONE") {
+        if (print_ >= PrintLevel::Default)
+            psi::outfile->Printf("\n\n  Performing final CI Calculation using converged orbitals");
+        as_solver_->set_maxiter(as_maxiter);
+        as_solver_->set_die_if_not_converged(true);
+        energy_ = diagonalize_hamiltonian(
+            cas_grad.active_space_ints(),
+            {print_, e_conv_, r_conv, options_->get_bool("DUMP_ACTIVE_WFN")});
     }
 
     return energy_;

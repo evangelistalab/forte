@@ -1,2 +1,2 @@
-from .mcscf import run_mcscf
-from .hf import run_hf
+from .mcscf import mcscf
+from .hf import hf

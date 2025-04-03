@@ -6,16 +6,21 @@ from forte.modules.state_factory import StateFactory
 from forte.modules.hf import HF
 
 
-def run_hf(geom, basis, state):
+def hf(geom, basis, state, e_convergence=1e-8, d_convergence=1e-8, options=None):
     charge, multiplicity, sym = parse_state(state)
     hf_workflow = Workflow(
         [
-            OptionsFactory(),
+            # Pass the options to the ForteOptions object
+            OptionsFactory(options),
+            # Generate the molecule
             MoleculeFactory(geom),
+            # Generate the state
             StateFactory(charge=charge, multiplicity=multiplicity, sym=sym),
-            HF(basis=basis),
+            # Run the HF calculation
+            HF(basis=basis, e_convergence=e_convergence, d_convergence=d_convergence),
         ],
         name="HF Workflow",
     )
     data = hf_workflow.run()
+    data.options.set_str("basis", basis)
     return data
