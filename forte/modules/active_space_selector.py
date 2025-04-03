@@ -130,12 +130,23 @@ class ActiveSpaceSelector(Module):
         # parse the active orbitals
         active_orbital_indices = []
         for x in active_orbitals_str:
-            if len(x.split()) != 2:
-                raise ValueError("Invalid active orbital format")
-            index_in_irrep, irrep_label = x.split()
-            irrep = data.symmetry.irrep_label_to_index(irrep_label)
-            abs_index = int(index_in_irrep) - 1
-            active_orbital_indices.append((irrep, abs_index))
+            # parse the active orbital string passes as "1 A1" or "1-A1" using a regex
+            # to split the string into the index and irrep label
+            # if the string is not in the correct format, raise an error
+            import re
+
+            match = re.match(r"(\d+)[ -](\w+)", x)
+            if match:
+                index_in_irrep, irrep_label = match.groups()
+                irrep = data.symmetry.irrep_label_to_index(irrep_label)
+                abs_index = int(index_in_irrep) - 1
+                active_orbital_indices.append((irrep, abs_index))
+            else:
+                raise ValueError("Invalid active orbital format for orbital {x}")
+
+            # if len(x.split()) != 2:
+            #     raise ValueError("Invalid active orbital format")
+            # index_in_irrep, irrep_label = x.split()
 
         state = list(data.state_weights_map.items())[0][0]
         na = state.na()

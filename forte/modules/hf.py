@@ -51,7 +51,12 @@ class HF(Module):
             )
 
         state = list(data.state_weights_map.keys())[0]
-        molecule.set_molecular_charge(0)  # TODO: should be state.charge())
+
+        # calculate the charge from the number of electrons
+        charge = -state.na() - state.nb()
+        for i in range(molecule.natom()):
+            charge += int(molecule.charge(i))
+        molecule.set_molecular_charge(charge)
         molecule.set_multiplicity(state.multiplicity())
 
         # # prepare options for psi4
@@ -70,8 +75,6 @@ class HF(Module):
             ref = "RHF" if state.multiplicity() == 1 else "ROHF"
         else:
             ref = "UHF"
-
-        print(f"HF: using {scf_type} for the SCF calculation")
 
         options = {
             "BASIS": self.basis,
@@ -123,6 +126,9 @@ class HF(Module):
 
         # flog("info", "HF: calling psi4.core.clean()")
         psi4.core.clean()
+
+        # set the basis set
+        data.options.set_str("BASIS", self.basis)
 
         return data
 
