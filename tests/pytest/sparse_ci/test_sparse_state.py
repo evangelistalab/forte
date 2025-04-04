@@ -1,15 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import pytest
 import forte
+from forte import det
 
 
 def test_sparse_vector():
-    import pytest
-    import forte
-    from forte import det
-    import math
-
     ### Overlap tests ###
     ref = forte.SparseState({det(""): 1.0, det("+"): 1.0, det("-"): 1.0, det("2"): 1.0, det("02"): 1.0})
     ref2 = forte.SparseState({det("02"): 0.3})
@@ -41,12 +38,25 @@ def test_sparse_vector():
     ref4 = forte.SparseState({det("+"): 1, det("-"): 1})
     ref4 = forte.normalize(ref4)
     assert ref4.norm() == pytest.approx(1.0, abs=1e-9)
-    assert forte.spin2(ref4,ref4) == pytest.approx(0.75, abs=1e-9)
+    assert forte.spin2(ref4, ref4) == pytest.approx(0.75, abs=1e-9)
 
     ref5 = forte.SparseState({det("2"): 1})
-    assert forte.spin2(ref5,ref5) == pytest.approx(0, abs=1e-9)
-    
+    assert forte.spin2(ref5, ref5) == pytest.approx(0, abs=1e-9)
+
+
+def test_sparse_vector_complex():
+    psi1 = forte.SparseState({det("2"): 2.0 + 1j})
+    psi2 = forte.SparseState({det("2"): 1.0 - 1j})
+    assert forte.overlap(psi1, psi2) == pytest.approx(1.0-3.0j, abs=1e-9)
+    assert forte.overlap(psi2, psi1) == pytest.approx(1.0+3.0j, abs=1e-9)
+
+    # different lengths
+    psi3 = forte.SparseState({det("2"): 2.0 + 1j, det("+-"): 1.0 - 1j})
+    psi4 = forte.SparseState({det("2"): 1.0 - 1j})
+    assert forte.overlap(psi3, psi4) == pytest.approx(1.0-3.0j, abs=1e-9)
+    assert forte.overlap(psi4, psi3) == pytest.approx(1.0+3.0j, abs=1e-9)
 
 
 if __name__ == "__main__":
     test_sparse_vector()
+    test_sparse_vector_complex()
