@@ -287,11 +287,15 @@ class VectorSpace {
         bool self_smaller = size() < other.size();
         const auto& smaller = self_smaller ? elements() : other.elements();
         const auto& larger = self_smaller ? other.elements() : elements();
-        for (const auto& [e, c] : smaller) {
-            if (const auto it = larger.find(e); it != larger.end()) {
-                if (self_smaller) {
+        if (self_smaller) {
+            for (const auto& [e, c] : smaller) {
+                if (const auto it = larger.find(e); it != larger.end()) {
                     result += conjugate(c) * it->second;
-                } else {
+                }
+            }
+        } else {
+            for (const auto& [e, c] : smaller) {
+                if (const auto it = larger.find(e); it != larger.end()) {
                     result += c * conjugate(it->second);
                 }
             }
