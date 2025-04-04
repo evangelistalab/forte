@@ -285,8 +285,8 @@ class VectorSpace {
     F dot(const Derived& other) const {
         F result{0};
         bool self_smaller = size() < other.size();
-        const auto& smaller = size() < other.size() ? elements() : other.elements();
-        const auto& larger = size() < other.size() ? other.elements() : elements();
+        const auto& smaller = self_smaller ? elements() : other.elements();
+        const auto& larger = self_smaller ? other.elements() : elements();
         for (const auto& [e, c] : smaller) {
             if (const auto it = larger.find(e); it != larger.end()) {
                 if (self_smaller) {
