@@ -281,7 +281,7 @@ class VectorSpace {
         return result;
     }
 
-    /// @brief Calculate the dot product of two vectors
+    /// @brief Calculate the dot product of two vectors <this|other>
     F dot(const Derived& other) const {
         F result{0};
         bool self_smaller = size() < other.size();
