@@ -296,7 +296,7 @@ class VectorSpace {
         } else {
             for (const auto& [e, c] : smaller) {
                 if (const auto it = larger.find(e); it != larger.end()) {
-                    result += c * conjugate(it->second);
+                    result += conjugate(it->second) * c;
                 }
             }
         }
