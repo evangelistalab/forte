@@ -368,5 +368,6 @@ class ObjectsFromPsi4(Module):
         # Build Forte SCFInfo object
         data.scf_info = SCFInfo(data.psi_wfn)
 
-        # Build a map from Forte StateInfo to the weights
-        data.state_weights_map = make_state_weights_map(data.options, data.mo_space_info)
+        # Build a map of StateInfo and weights from the Options and MOSpaceInfo objects if not already done elsewhere
+        if data.state_weights_map is None:
+            data.state_weights_map = make_state_weights_map(data.options, data.mo_space_info)

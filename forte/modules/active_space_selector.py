@@ -7,7 +7,13 @@ from forte._forte import make_mo_space_info_from_map
 
 class ActiveSpaceSelector(Module):
     """
-    A module to prepare an ActiveSpaceIntegral
+    A module to prepare the active space for the MCSCF calculation.
+    This code will use the active space information from the input file to select the active space.
+
+    The active space can be specified in several ways:
+    - active_space = {"nel": 6, "norb": 6}  # 6 electrons in 6 orbitals
+    - active_space = {"nel": 6, "active_orbitals": ["1 A1", "2 A1", "3 A1"]}  # 6 electrons in the specified orbitals
+    - active_space = {"active": [2, 0, 1, 1]}  # select 2 x A1, 1 x B1, and 1 x B2 active orbitals
     """
 
     # accept as input a dictionary of string,int list pairs or a list of integers
@@ -19,7 +25,6 @@ class ActiveSpaceSelector(Module):
             The active space to be used for the calculation
         """
         super().__init__()
-        # assert isinstance(active_space, dict) or isinstance(active_space, list)
 
         self.active_space = active_space
 
@@ -29,7 +34,7 @@ class ActiveSpaceSelector(Module):
         Selects the active space based on the input
         """
 
-        # in the case where we have no active space selection, we just assemble this object from the options
+        # if no active space is provided, use the options object
         self.active_space = self.active_space or self.make_dict_from_data(data)
 
         # select the active space using the information in the active_space dictionary
@@ -125,12 +130,23 @@ class ActiveSpaceSelector(Module):
         # parse the active orbitals
         active_orbital_indices = []
         for x in active_orbitals_str:
-            if len(x.split()) != 2:
-                raise ValueError("Invalid active orbital format")
-            index_in_irrep, irrep_label = x.split()
-            irrep = data.symmetry.irrep_label_to_index(irrep_label)
-            abs_index = int(index_in_irrep) - 1
-            active_orbital_indices.append((irrep, abs_index))
+            # parse the active orbital string passes as "1 A1" or "1-A1" using a regex
+            # to split the string into the index and irrep label
+            # if the string is not in the correct format, raise an error
+            import re
+
+            match = re.match(r"(\d+)[ -](\w+)", x)
+            if match:
+                index_in_irrep, irrep_label = match.groups()
+                irrep = data.symmetry.irrep_label_to_index(irrep_label)
+                abs_index = int(index_in_irrep) - 1
+                active_orbital_indices.append((irrep, abs_index))
+            else:
+                raise ValueError("Invalid active orbital format for orbital {x}")
+
+            # if len(x.split()) != 2:
+            #     raise ValueError("Invalid active orbital format")
+            # index_in_irrep, irrep_label = x.split()
 
         state = list(data.state_weights_map.items())[0][0]
         na = state.na()

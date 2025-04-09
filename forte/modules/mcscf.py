@@ -35,7 +35,15 @@ class MCSCF(Module):
         mcscf = make_mcscf_two_step(
             data.active_space_solver, data.state_weights_map, data.scf_info, data.options, data.mo_space_info, data.ints
         )
-        energy = mcscf.compute_energy()
-        data.results.add("mcscf energy", energy, "MCSCF energy", "hartree")
+
+        average_energy = mcscf.compute_energy()
+        data.results.add("mcscf energy", average_energy, "MCSCF energy", "hartree")
+
+        # Store the energy of each state
+        state_index = 0
+        for state, energies in sorted(data.active_space_solver.state_energies_map().items()):
+            for energy in energies:
+                data.results.add(f"mcscf energy [{state_index}]", energy, f"MCSCF energy of state {state}", "hartree")
+                state_index += 1
 
         return data
