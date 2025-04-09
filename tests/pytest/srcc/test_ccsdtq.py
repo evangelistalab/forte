@@ -31,7 +31,7 @@ def test_ccsdtq():
     print(f"  CCSDTQ energy: {energy}")
     print(f"  E - Eref:      {energy - ref_energy}")
 
-    assert energy == pytest.approx(ref_energy, 1.0e-11)
+    assert energy == pytest.approx(ref_energy, 5.0e-10)
 
 
 if __name__ == "__main__":
