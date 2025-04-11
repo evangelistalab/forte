@@ -1,0 +1,1147 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.10a1.dev62 
+
+                         Git: Rev {master} a25e716 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, A. Jiang, S. Behnle, A. G. Heide,
+    M. F. Herbst, and D. L. Poole
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Tuesday, 04 February 2025 02:00PM
+
+    Process ID: 3554935
+    Host:       head
+    PSIDATADIR: /home/marink2/Bin/psi4-Release/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+# H2O singlet, 6-31G**/GASSCF calculation 
+
+import forte
+
+refgasscf = -75.549851219428 #TEST 
+
+molecule h2o{
+1 2
+   O
+   H  1 1.00
+   H  1 1.00 2 103.1
+}
+
+set global {
+  basis 6-31g**
+  e_convergence 12
+  d_convergence 8
+  scf_type direct
+  reference uhf
+}
+
+set forte {
+  active_space_solver                     genci
+  ms                                      0.5
+  multiplicity                            2
+  nroot                                   1
+  root_sym                                0
+  charge                                  1
+  e_convergence                           12
+  r_convergence                           8
+  restricted_docc                         [1,0,0,0]
+  gas1                                    [2,0,1,1]
+  gas2                                    [1,0,0,1]
+  restricted_uocc                         [8,2,3,5]
+  gas1min                                 [6]
+  gas2max                                 [2]
+  mcscf_maxiter                           200
+  mcscf_micro_maxiter                     1
+  mcscf_e_convergence                     1e-10
+  mcscf_g_convergence                     1e-8
+  mcscf_max_rotation                      0.5
+  mcscf_diis_start                        1
+}
+
+escf ,wfn = energy('scf',return_wfn = True)
+egasscf = energy('forte',ref_wfn = wfn)
+# compare_values(refgasscf, egasscf, 9, "GASSCF energy") #TEST
+
+--------------------------------------------------------------------------
+
+Scratch directory: /tmp/
+   => Libint2 <=
+
+    Primary   basis highest AM E, G, H:  6, 6, 3
+    Auxiliary basis highest AM E, G, H:  7, 7, 4
+    Onebody   basis highest AM E, G, H:  -, -, -
+    Solid Harmonics ordering:            Gaussian
+
+*** tstart() called on head
+*** at Tue Feb  4 14:00:35 2025
+
+   => Loading Basis Set <=
+
+    Name: 6-31G**
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1   entry O          line   149 file /home/marink2/Bin/psi4-Release/share/psi4/basis/6-31gss.gbs 
+    atoms 2-3 entry H          line    44 file /home/marink2/Bin/psi4-Release/share/psi4/basis/6-31gss.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              UHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2v
+    Full point group: C2v
+
+    Geometry (in Angstrom), charge = 1, multiplicity = 2:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         O            0.000000000000     0.000000000000    -0.069592187400    15.994914619570
+         H            0.000000000000    -0.783151105291     0.552239257834     1.007825032230
+         H            0.000000000000     0.783151105291     0.552239257834     1.007825032230
+
+  Running in c2v symmetry.
+
+  Rotational constants: A =     24.35462  B =     13.63610  C =      8.74166 [cm^-1]
+  Rotational constants: A = 730133.21529  B = 408800.04239  C = 262068.46393 [MHz]
+  Nuclear repulsion =    8.804686653247025
+
+  Charge       = 1
+  Multiplicity = 2
+  Electrons    = 9
+  Nalpha       = 5
+  Nbeta        = 4
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is DIRECT.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-12
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: 6-31G**
+    Blend: 6-31G**
+    Number of shells: 12
+    Number of basis functions: 25
+    Number of Cartesian functions: 25
+    Spherical Harmonics?: false
+    Max angular momentum: 2
+
+   => Loading Basis Set <=
+
+    Name: (6-31G** AUX)
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1   entry O          line   221 file /home/marink2/Bin/psi4-Release/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 2-3 entry H          line    51 file /home/marink2/Bin/psi4-Release/share/psi4/basis/cc-pvdz-jkfit.gbs 
+
+  Starting with a DF guess...
+
+  ==> Integral Setup <==
+
+  DFHelper Memory: AOs need 0.001 GiB; user supplied 0.366 GiB. 
+  SCF_SUBTYPE=INCORE selected. In-core MEM_DF algorithm will be used.
+  Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:               375
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       0.0000
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: (6-31G** AUX)
+    Blend: CC-PVDZ-JKFIT
+    Number of shells: 42
+    Number of basis functions: 131
+    Number of Cartesian functions: 131
+    Spherical Harmonics?: false
+    Max angular momentum: 3
+
+  Minimum eigenvalue in the overlap matrix is 2.2571686435E-02.
+  Reciprocal condition number of the overlap matrix is 5.1514795888E-03.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     A1        12      12 
+     A2         2       2 
+     B1         4       4 
+     B2         7       7 
+   -------------------------
+    Total      25      25
+   -------------------------
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+   @DF-UHF iter SAD:   -76.38155830011770   -7.63816e+01   0.00000e+00 
+   @DF-UHF iter   1:   -75.29675936569839    1.08480e+00   5.88922e-02 ADIIS/DIIS
+   @DF-UHF iter   2:   -75.57756917519301   -2.80810e-01   2.60044e-02 ADIIS/DIIS
+   @DF-UHF iter   3:   -75.62428768073885   -4.67185e-02   3.64086e-03 ADIIS/DIIS
+   @DF-UHF iter   4:   -75.62563128036965   -1.34360e-03   7.60736e-04 ADIIS/DIIS
+   @DF-UHF iter   5:   -75.62575475108979   -1.23471e-04   3.66777e-04 ADIIS/DIIS
+   @DF-UHF iter   6:   -75.62580020109948   -4.54500e-05   1.15167e-04 ADIIS/DIIS
+   @DF-UHF iter   7:   -75.62580545246063   -5.25136e-06   2.53961e-05 DIIS
+   @DF-UHF iter   8:   -75.62580567634974   -2.23889e-07   3.56138e-06 DIIS
+   @DF-UHF iter   9:   -75.62580567905643   -2.70668e-09   7.66660e-07 DIIS
+   @DF-UHF iter  10:   -75.62580567919090   -1.34477e-10   1.44528e-07 DIIS
+   @DF-UHF iter  11:   -75.62580567919650   -5.59908e-12   2.65852e-08 DIIS
+   @DF-UHF iter  12:   -75.62580567919669   -1.84741e-13   5.62421e-09 DIIS
+
+  DF guess converged.
+
+  ==> DirectJK: Integral-Direct J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Integrals threads:           1
+    Screening Type:           CSAM
+    Screening Cutoff:        1E-12
+    Incremental Fock:           No
+
+   @UHF iter  13:   -75.62583055044084   -7.56258e+01   9.99174e-06 DIIS
+   @UHF iter  14:   -75.62583055865137   -8.21053e-09   1.60873e-06 DIIS
+   @UHF iter  15:   -75.62583055893410   -2.82725e-10   4.36714e-07 DIIS
+   @UHF iter  16:   -75.62583055895693   -2.28368e-11   1.56187e-07 DIIS
+   @UHF iter  17:   -75.62583055896121   -4.27747e-12   7.61496e-08 DIIS
+   @UHF iter  18:   -75.62583055896300   -1.79057e-12   3.53152e-08 DIIS
+   @UHF iter  19:   -75.62583055896350   -4.97380e-13   4.02728e-09 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+   @Spin Contamination Metric:   7.136063331E-03
+   @S^2 Expected:                7.500000000E-01
+   @S^2 Observed:                7.571360633E-01
+   @S   Expected:                5.000000000E-01
+   @S   Observed:                5.000000000E-01
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Alpha Occupied:                                                       
+
+       1A1   -21.144188     2A1    -1.889697     1B2    -1.188232  
+       1B1    -1.121745     3A1    -1.084854  
+
+    Alpha Virtual:                                                        
+
+       4A1    -0.138524     2B2    -0.053023     3B2     0.588739  
+       5A1     0.630740     2B1     0.652063     6A1     0.708164  
+       4B2     0.859650     7A1     0.970563     1A2     1.311130  
+       8A1     1.343025     3B1     1.418837     9A1     2.008464  
+       5B2     2.123175     6B2     2.257589     2A2     2.453758  
+       4B1     2.490577    10A1     2.853609    11A1     3.163458  
+       7B2     3.426115    12A1     3.593399  
+
+    Beta Occupied:                                                        
+
+       1A1   -21.099575     2A1    -1.729852     1B2    -1.148709  
+       3A1    -1.032836  
+
+    Beta Virtual:                                                         
+
+       1B1    -0.306299     4A1    -0.122895     2B2    -0.043255  
+       3B2     0.583768     5A1     0.652334     6A1     0.733565  
+       2B1     0.848089     4B2     0.881879     7A1     1.003175  
+       8A1     1.369766     1A2     1.381545     3B1     1.496828  
+       9A1     2.088560     5B2     2.117695     6B2     2.267663  
+       2A2     2.487734     4B1     2.516296    10A1     2.859082  
+      11A1     3.179279     7B2     3.436302    12A1     3.627288  
+
+    Final Occupation by Irrep:
+             A1    A2    B1    B2 
+    DOCC [     3,    0,    0,    1 ]
+    SOCC [     0,    0,    1,    0 ]
+    NA   [     3,    0,    1,    1 ]
+    NB   [     3,    0,    0,    1 ]
+
+  @UHF Final Energy:   -75.62583055896350
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              8.8046866532470247
+    One-Electron Energy =                -117.4213475975334688
+    Two-Electron Energy =                  32.9908303853229512
+    Total Energy =                        -75.6258305589635000
+
+  UHF NO Occupations:
+  HONO-2 :    1 B2 1.9989550
+  HONO-1 :    3 A1 1.9978885
+  HONO-0 :    1 B1 1.0000000
+  LUNO+0 :    4 A1 0.0021115
+  LUNO+1 :    2 B2 0.0010450
+  LUNO+2 :    5 A1 0.0004140
+  LUNO+3 :    6 A1 0.0000004
+
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+
+ Multipole Moments:
+
+ ------------------------------------------------------------------------------------
+     Multipole            Electronic (a.u.)      Nuclear  (a.u.)        Total (a.u.)
+ ------------------------------------------------------------------------------------
+
+ L = 1.  Multiply by 2.5417464519 to convert [e a0] to [Debye]
+ Dipole X            :          0.0000000            0.0000000            0.0000000
+ Dipole Y            :          0.0000000            0.0000000            0.0000000
+ Dipole Z            :          0.0640726            1.0350805            1.0991531
+ Magnitude           :                                                    1.0991531
+
+ ------------------------------------------------------------------------------------
+
+*** tstop() called on head at Tue Feb  4 14:00:36 2025
+Module time:
+	user time   =       4.52 seconds =       0.08 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+Total time:
+	user time   =       4.52 seconds =       0.08 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+
+Scratch directory: /tmp/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: data-file - git commit: ad08d94b
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+
+  Preparing forte objects from a Psi4 Wavefunction object   => Loading Basis Set <=
+
+    Name: 6-31G**
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1   entry O          line   149 file /home/marink2/Bin/psi4-Release/share/psi4/basis/6-31gss.gbs 
+    atoms 2-3 entry H          line    44 file /home/marink2/Bin/psi4-Release/share/psi4/basis/6-31gss.gbs 
+
+
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0
+    RESTRICTED_DOCC     1     0     0     0     1
+    GAS1                2     0     1     1     4
+    GAS2                1     0     0     1     2
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
+    RESTRICTED_UOCC     8     2     3     5    18
+    FROZEN_UOCC         0     0     0     0     0
+    Total              12     2     4     7    25
+  -------------------------------------------------   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1   entry O          line    81 file /home/marink2/Bin/psi4-Release/share/psi4/basis/sto-3g.gbs 
+    atoms 2-3 entry H          line    19 file /home/marink2/Bin/psi4-Release/share/psi4/basis/sto-3g.gbs 
+
+
+  State Doublet (Ms = 1/2) A1 GAS min: 6 0 0 0 0 0 ; GAS max: 8 2 0 0 0 0 ; weights:
+      1.000000000000
+  Forte will use psi4 integrals
+
+
+  ---------------- Warning from Forte Integrals Builder (Psi4) -----------------
+  Unequivalent alpha and beta orbital coefficients.
+  Using restricted formalism with alpha orbitals only to build integrals!
+
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: 6-31G**
+    Blend: 6-31G**
+    Number of shells: 12
+    Number of basis functions: 25
+    Number of Cartesian functions: 25
+    Spherical Harmonics?: false
+    Max angular momentum: 2
+
+
+  JK created using conventional PK integrals
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   3
+      Number of AO shells:              12
+      Number of primitives:             25
+      Number of atomic orbitals:        25
+      Number of basis functions:        25
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 105950 doubles for integral storage.
+  We computed 3081 shell quartets total.
+  Whereas there are 3081 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              400
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                         25
+  Number of correlated molecular orbitals:              25
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:                 Conventional
+
+
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	h = 0; memfree         = 65535574
+	h = 0; rows_per_bucket = 119
+	h = 0; rows_left       = 0
+	h = 0; nbuckets        = 1
+	h = 1; memfree         = 65535792
+	h = 1; rows_per_bucket = 52
+	h = 1; rows_left       = 0
+	h = 1; nbuckets        = 1
+	h = 2; memfree         = 65535752
+	h = 2; rows_per_bucket = 62
+	h = 2; rows_left       = 0
+	h = 2; nbuckets        = 1
+	h = 3; memfree         = 65535632
+	h = 3; rows_per_bucket = 92
+	h = 3; rows_left       = 0
+	h = 3; nbuckets        = 1
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	h = 0; memfree         = 65535574
+	h = 0; rows_per_bucket = 119
+	h = 0; rows_left       = 0
+	h = 0; nbuckets        = 1
+	h = 1; memfree         = 65535792
+	h = 1; rows_per_bucket = 52
+	h = 1; rows_left       = 0
+	h = 1; nbuckets        = 1
+	h = 2; memfree         = 65535752
+	h = 2; rows_per_bucket = 62
+	h = 2; rows_left       = 0
+	h = 2; nbuckets        = 1
+	h = 3; memfree         = 65535632
+	h = 3; rows_per_bucket = 92
+	h = 3; rows_left       = 0
+	h = 3; nbuckets        = 1
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.00488388 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.008731 GB
+  Timing for conventional integral transformation:            0.014 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing conventional integrals:                0.015 s.
+
+          -----------------------------------------------------------
+                  Multi-Configurational Self Consistent Field
+                Two-Step Approximate Second-Order AO Algorithm
+            written by Chenyang Li, Kevin P. Hannon, and Shuhe Wang
+          -----------------------------------------------------------
+
+
+  ==> MCSCF Calculation Information <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Integral type                               CONVENTIONAL
+    CI solver type                                     GENCI
+    Final orbital type                             CANONICAL
+    Derivative type                                     NONE
+    Optimize orbitals                                   TRUE
+    Include internal rotations                         FALSE
+    Debug printing                                     FALSE
+    Energy convergence                             1.000e-10
+    Gradient convergence                           1.000e-08
+    Max value for rotation                         5.000e-01
+    Max number of macro iter.                            200
+    Max number of micro iter. for orbitals                 1
+    Max number of micro iter. for CI                      12
+    DIIS start                                             1
+    Min DIIS vectors                                       3
+    Max DIIS vectors                                       8
+    Frequency of DIIS extrapolation                        1
+    --------------------------------------------------------
+
+  ==> Independent Orbital Rotations <==
+
+    ORBITAL SPACES                        A1     A2     B1     B2
+    -------------------------------------------------------------
+               GAS1 /            GAS2      2      0      0      1
+             ACTIVE / RESTRICTED_DOCC      3      0      0      0
+    RESTRICTED_UOCC /          ACTIVE     24      0      3     10
+    RESTRICTED_UOCC / RESTRICTED_DOCC      8      0      0      0
+    -------------------------------------------------------------
+
+  ==> Possible Electron Occupations <==
+
+    Config.   Space 1   Space 2
+               α    β    α    β 
+    ---------------------------
+         1     3    3    1    0
+         2     4    2    0    1
+         3     4    3    0    0
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              4
+    number of beta electrons                               3
+    number of alpha strings                                9
+    number of beta strings                                16
+    --------------------------------------------------------
+
+  ==> String-based CI Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Spin adapt                                         FALSE
+    Number of determinants                                15
+    Symmetry                                               0
+    Multiplicity                                           2
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         15
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+    12       2       *
+     3       4        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   doublet    0      -75.527111759622  +0.750000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-10
+    Residual convergence threshold                 1.000e-08
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                     15
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0      -75.527111759622       75.527111759622        0.000000000000      1
+       1      -75.527111759622        0.000000000000        0.000000000000      2
+  ---------------------------------------------------------------------------------
+  Timing for CI:                                              0.001 s.
+
+  ==> Root No. 0 <==
+
+    2a0 2 20     -0.99543579
+
+    Total Energy:     -75.527111759622, <S^2>: 0.750000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       2  (  1)    A1     0      -75.527111759622   0.750000
+    --------------------------------------------------------
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.86783955     0.86783955
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Natural Orbitals Occupation Numbers <==
+
+        1B1     1.999952      2A1     1.998932      1B2     1.998575  
+        3A1     1.001120      2B2     0.001139      4A1     0.000282  
+
+
+  ==> MCSCF Iterations <==
+
+                      Energy CI                    Energy Orbital
+           ------------------------------  ------------------------------
+    Iter.        Total Energy       Delta        Total Energy       Delta  Orb. Grad.  Micro
+    ----------------------------------------------------------------------------------------
+       1     -75.527111759622 -7.5527e+01    -75.539483715754 -7.5539e+01  0.0000e+00    1/N   S
+       2     -75.540485859730 -1.3374e-02    -75.543441218504 -3.9575e-03  8.0517e-02    1/N   S
+       3     -75.544425937194 -3.9401e-03    -75.545625511338 -2.1843e-03  3.5892e-02    1/N   S
+       4     -75.545784784864 -1.3588e-03    -75.546282849218 -6.5734e-04  2.4816e-02    1/N   S/E
+       5     -75.546785162656 -1.0004e-03    -75.547299206605 -1.0164e-03  1.0473e-02    1/N   S/E
+       6     -75.547294732603 -5.0957e-04    -75.547808890957 -5.0968e-04  1.7670e-03    1/N   S/E
+       7     -75.544900409133  2.3943e-03    -75.545468629970  2.3403e-03  7.6400e-03    1/N   S/E
+       8     -75.544849702578  5.0707e-05    -75.545413353335  5.5277e-05  3.1429e-04    1/N   S/E
+       9     -75.545357542639 -5.0784e-04    -75.545721620965 -3.0827e-04  1.6666e-02    1/N   S/E
+      10     -75.545353120936  4.4217e-06    -75.545699329231  2.2292e-05  4.3933e-03    1/N   S/E
+      11     -75.545591128823 -2.3801e-04    -75.545928509247 -2.2918e-04  3.0097e-03    1/N   S/E
+      12     -75.546100978656 -5.0985e-04    -75.546694291411 -7.6578e-04  3.1821e-03    1/N   S/E
+      13     -75.546225932114 -1.2495e-04    -75.546808960363 -1.1467e-04  1.3081e-03    1/N   S/E
+      14     -75.545951345213  2.7459e-04    -75.546443133509  3.6583e-04  3.4895e-03    1/N   R/S
+      15     -75.546575648798 -6.2430e-04    -75.547187297755 -7.4416e-04  2.0822e-03    1/N   S
+      16     -75.547285898359 -7.1025e-04    -75.547881036978 -6.9374e-04  8.7154e-04    1/N   S
+      17     -75.547941703991 -6.5581e-04    -75.548429637177 -5.4860e-04  6.4893e-04    1/N   S/E
+      18     -75.547709514497  2.3219e-04    -75.548325714824  1.0392e-04  4.1148e-03    1/N   S/E
+      19     -75.548652032889 -9.4252e-04    -75.549023663375 -6.9795e-04  2.7138e-03    1/N   S/E
+      20     -75.548626079886  2.5953e-05    -75.549009352913  1.4310e-05  1.6159e-04    1/N   S/E
+      21     -75.548736930492 -1.1085e-04    -75.549019415119 -1.0062e-05  1.0868e-03    1/N   S/E
+      22     -75.548913747019 -1.7682e-04    -75.549139786237 -1.2037e-04  4.1287e-04    1/N   S/E
+      23     -75.549527424124 -6.1368e-04    -75.549598280712 -4.5849e-04  1.2099e-03    1/N   S/E
+      24     -75.549555922776 -2.8499e-05    -75.549619419845 -2.1139e-05  1.3822e-03    1/N   S/E
+      25     -75.549570089937 -1.4167e-05    -75.549631861276 -1.2441e-05  2.6698e-04    1/N   S/E
+      26     -75.549604538698 -3.4449e-05    -75.549661599518 -2.9738e-05  3.1591e-04    1/N   S/E
+      27     -75.549664233299 -5.9695e-05    -75.549710133935 -4.8534e-05  3.9108e-04    1/N   S/E
+      28     -75.549690497390 -2.6264e-05    -75.549732813967 -2.2680e-05  1.2052e-04    1/N   S/E
+      29     -75.549711236609 -2.0739e-05    -75.549749903565 -1.7090e-05  3.1316e-04    1/N   S/E
+      30     -75.549791534353 -8.0298e-05    -75.549824466830 -7.4563e-05  1.0810e-03    1/N   R/S
+      31     -75.549828007724 -3.6473e-05    -75.549853115343 -2.8649e-05  8.2901e-04    1/N   S
+      32     -75.549856953765 -2.8946e-05    -75.549878327027 -2.5212e-05  3.9245e-04    1/N   S
+      33     -75.549882119156 -2.5165e-05    -75.549900501314 -2.2174e-05  3.4263e-04    1/N   S/E
+      34     -75.549977241437 -9.5122e-05    -75.549987040075 -8.6539e-05  4.4074e-04    1/N   S/E
+      35     -75.550050010460 -7.2769e-05    -75.550056186805 -6.9147e-05  5.3950e-04    1/N   S/E
+      36     -75.550051211529 -1.2011e-06    -75.550057364482 -1.1777e-06  1.4057e-05    1/N   S/E
+      37     -75.550053249301 -2.0378e-06    -75.550059460341 -2.0959e-06  3.8667e-05    1/N   S/E
+      38     -75.550034236824  1.9012e-05    -75.550040155881  1.9304e-05  1.8495e-04    1/N   S/E
+      39     -75.550021954789  1.2282e-05    -75.550027141344  1.3015e-05  2.9393e-04    1/N   S/E
+      40     -75.550044872476 -2.2918e-05    -75.550049311079 -2.2170e-05  2.1890e-04    1/N   S/E
+      41     -75.550065097711 -2.0225e-05    -75.550069158930 -1.9848e-05  1.3094e-04    1/N   S/E
+      42     -75.550075030684 -9.9330e-06    -75.550078990607 -9.8317e-06  1.1946e-04    1/N   S/E
+      43     -75.550079687045 -4.6564e-06    -75.550083585952 -4.5953e-06  6.3877e-05    1/N   S/E
+      44     -75.550077671874  2.0152e-06    -75.550081614372  1.9716e-06  5.3633e-05    1/N   S/E
+      45     -75.550092014104 -1.4342e-05    -75.550095843721 -1.4229e-05  1.1596e-04    1/N   S/E
+      46     -75.550095278449 -3.2643e-06    -75.550099282685 -3.4390e-06  1.9160e-04    1/N   S/E
+      47     -75.550103828257 -8.5498e-06    -75.550107666104 -8.3834e-06  1.4463e-04    1/N   S/E
+      48     -75.550103764481  6.3776e-08    -75.550107602168  6.3936e-08  1.5306e-06    1/N   R/S
+      49     -75.550111317342 -7.5529e-06    -75.550115137798 -7.5356e-06  6.2003e-05    1/N   S
+      50     -75.550118846268 -7.5289e-06    -75.550122643866 -7.5061e-06  4.1731e-05    1/N   S
+      51     -75.550126357949 -7.5117e-06    -75.550130148775 -7.5049e-06  3.1951e-05    1/N   S/E
+      52     -75.550091161477  3.5196e-05    -75.550095040469  3.5108e-05  1.0461e-04    1/N   S/E
+      53     -75.550104210808 -1.3049e-05    -75.550108138910 -1.3098e-05  3.0301e-05    1/N   S/E
+      54     -75.550102476069  1.7347e-06    -75.550106473798  1.6651e-06  6.4606e-04    1/N   S/E
+      55     -75.550033112639  6.9363e-05    -75.550037003305  6.9470e-05  3.1150e-04    1/N   S/E
+      56     -75.550033542255 -4.2962e-07    -75.550037487736 -4.8443e-07  3.0960e-05    1/N   S/E
+      57     -75.549937593167  9.5949e-05    -75.549941578127  9.5910e-05  4.5654e-04    1/N   S/E
+      58     -75.549850096762  8.7496e-05    -75.549854169247  8.7409e-05  6.1975e-04    1/N   R/S
+      59     -75.549855882076 -5.7853e-06    -75.549858624519 -4.4553e-06  9.6944e-04    1/N   S
+      60     -75.549860352875 -4.4708e-06    -75.549862643105 -4.0186e-06  4.3154e-04    1/N   S
+      61     -75.549864345752 -3.9929e-06    -75.549866394030 -3.7509e-06  3.5324e-04    1/N   S/E
+      62     -75.549871634157 -7.2884e-06    -75.549873408082 -7.0141e-06  1.1690e-04    1/N   S/E
+      63     -75.549873856956 -2.2228e-06    -75.549875598491 -2.1904e-06  2.6778e-05    1/N   S/E
+      64     -75.549869309822  4.5471e-06    -75.549871062218  4.5363e-06  6.7468e-05    1/N   S/E
+      65     -75.549868032914  1.2769e-06    -75.549869704812  1.3574e-06  1.7223e-04    1/N   S/E
+      66     -75.549873313785 -5.2809e-06    -75.549874831245 -5.1264e-06  1.1046e-04    1/N   S/E
+      67     -75.549879465786 -6.1520e-06    -75.549880817593 -5.9863e-06  1.4325e-04    1/N   S/E
+      68     -75.549884190888 -4.7251e-06    -75.549885495579 -4.6780e-06  4.5899e-05    1/N   S/E
+      69     -75.549881688319  2.5026e-06    -75.549883003927  2.4917e-06  3.3875e-05    1/N   S/E
+      70     -75.549873145590  8.5427e-06    -75.549874513344  8.4906e-06  7.3289e-05    1/N   S/E
+      71     -75.549852983179  2.0162e-05    -75.549854301636  2.0212e-05  2.7424e-04    1/N   S/E
+      72     -75.549845377246  7.6059e-06    -75.549846660509  7.6411e-06  1.2079e-04    1/N   R/S
+      73     -75.549847565492 -2.1882e-06    -75.549848717502 -2.0570e-06  7.9690e-05    1/N   S
+      74     -75.549849578518 -2.0130e-06    -75.549850635356 -1.9179e-06  3.4933e-05    1/N   S
+      75     -75.549851466030 -1.8875e-06    -75.549852454608 -1.8193e-06  2.9070e-05    1/N   S/E
+      76     -75.549862233702 -1.0768e-05    -75.549862960455 -1.0506e-05  1.1701e-04    1/N   S/E
+      77     -75.549864756191 -2.5225e-06    -75.549865454137 -2.4937e-06  2.7892e-05    1/N   S/E
+      78     -75.549863281027  1.4752e-06    -75.549863980301  1.4738e-06  2.1997e-05    1/N   S/E
+      79     -75.549857934701  5.3463e-06    -75.549858681007  5.2993e-06  1.1347e-04    1/N   S/E
+      80     -75.549855404617  2.5301e-06    -75.549856199839  2.4812e-06  9.7216e-05    1/N   S/E
+      81     -75.549857630194 -2.2256e-06    -75.549858284602 -2.0848e-06  8.7818e-05    1/N   S/E
+      82     -75.549859349140 -1.7189e-06    -75.549859987377 -1.7028e-06  4.2258e-05    1/N   S/E
+      83     -75.549858932220  4.1692e-07    -75.549859570362  4.1701e-07  1.3918e-05    1/N   S/E
+      84     -75.549856695236  2.2370e-06    -75.549857422918  2.1474e-06  1.0756e-04    1/N   R/S
+      85     -75.549857946713 -1.2515e-06    -75.549858597178 -1.1743e-06  8.8207e-05    1/N   S
+      86     -75.549859138384 -1.1917e-06    -75.549859747550 -1.1504e-06  4.3816e-05    1/N   S
+      87     -75.549860308213 -1.1698e-06    -75.549860895087 -1.1475e-06  3.7322e-05    1/N   S/E
+      88     -75.549857418170  2.8900e-06    -75.549857999059  2.8960e-06  7.6810e-05    1/N   S/E
+      89     -75.549857541376 -1.2321e-07    -75.549857962383  3.6676e-08  1.5162e-04    1/N   S/E
+      90     -75.549858239758 -6.9838e-07    -75.549858650787 -6.8840e-07  3.2119e-05    1/N   S/E
+      91     -75.549858640448 -4.0069e-07    -75.549859048561 -3.9777e-07  6.9171e-06    1/N   S/E
+      92     -75.549857070317  1.5701e-06    -75.549857490276  1.5583e-06  1.8809e-05    1/N   S/E
+      93     -75.549852758512  4.3118e-06    -75.549853219404  4.2709e-06  5.5318e-05    1/N   S/E
+      94     -75.549850542860  2.2157e-06    -75.549850983463  2.2359e-06  8.1625e-05    1/N   S/E
+      95     -75.549849981110  5.6175e-07    -75.549850297756  6.8571e-07  9.7947e-05    1/N   R/S
+      96     -75.549850504951 -5.2384e-07    -75.549850762086 -4.6433e-07  6.8128e-05    1/N   S
+      97     -75.549850964914 -4.5996e-07    -75.549851197483 -4.3540e-07  2.8795e-05    1/N   S
+      98     -75.549851389870 -4.2496e-07    -75.549851604494 -4.0701e-07  1.6665e-05    1/N   S/E
+      99     -75.549853672427 -2.2826e-06    -75.549853838336 -2.2338e-06  5.4274e-05    1/N   S/E
+     100     -75.549853955509 -2.8308e-07    -75.549854117616 -2.7928e-07  7.8991e-06    1/N   S/E
+     101     -75.549853709959  2.4555e-07    -75.549853873343  2.4427e-07  8.1848e-06    1/N   S/E
+     102     -75.549853157009  5.5295e-07    -75.549853317083  5.5626e-07  3.7959e-05    1/N   S/E
+     103     -75.549852996728  1.6028e-07    -75.549853156275  1.6081e-07  4.2815e-05    1/N   S/E
+     104     -75.549853570727 -5.7400e-07    -75.549853714179 -5.5790e-07  4.4380e-05    1/N   S/E
+     105     -75.549853863917 -2.9319e-07    -75.549854003393 -2.8921e-07  1.3596e-05    1/N   S/E
+     106     -75.549853235548  6.2837e-07    -75.549853377289  6.2610e-07  2.2700e-05    1/N   S/E
+     107     -75.549852091566  1.1440e-06    -75.549852222446  1.1548e-06  6.0035e-05    1/N   R/S
+     108     -75.549852282116 -1.9055e-07    -75.549852385699 -1.6325e-07  2.8905e-05    1/N   S
+     109     -75.549852445498 -1.6338e-07    -75.549852534463 -1.4876e-07  1.5624e-05    1/N   S
+     110     -75.549852596273 -1.5078e-07    -75.549852678019 -1.4356e-07  1.2073e-05    1/N   S/E
+     111     -75.549852387705  2.0857e-07    -75.549852460771  2.1725e-07  2.4205e-05    1/N   S/E
+     112     -75.549852089918  2.9779e-07    -75.549852150876  3.0989e-07  3.7187e-05    1/N   S/E
+     113     -75.549852134115 -4.4197e-08    -75.549852185015 -3.4139e-08  3.5209e-05    1/N   S/E
+     114     -75.549852232209 -9.8094e-08    -75.549852282118 -9.7102e-08  6.2544e-06    1/N   S/E
+     115     -75.549851908785  3.2342e-07    -75.549851959921  3.2220e-07  1.2812e-05    1/N   S/E
+     116     -75.549851240090  6.6869e-07    -75.549851295932  6.6399e-07  2.3040e-05    1/N   S/E
+     117     -75.549850827666  4.1242e-07    -75.549850885411  4.1052e-07  2.1229e-05    1/N   S/E
+     118     -75.549850717200  1.1047e-07    -75.549850765526  1.1989e-07  3.2523e-05    1/N   R/S
+     119     -75.549850805206 -8.8005e-08    -75.549850847754 -8.2228e-08  1.1773e-05    1/N   S
+     120     -75.549850886016 -8.0811e-08    -75.549850925528 -7.7774e-08  6.9772e-06    1/N   S
+     121     -75.549850962914 -7.6898e-08    -75.549851000506 -7.4978e-08  5.6722e-06    1/N   S/E
+     122     -75.549851138850 -1.7594e-07    -75.549851173372 -1.7287e-07  1.3417e-05    1/N   S/E
+     123     -75.549851137275  1.5746e-09    -75.549851169454  3.9181e-09  7.4945e-06    1/N   S/E
+     124     -75.549851467754 -3.3048e-07    -75.549851487223 -3.1777e-07  3.5540e-05    1/N   S/E
+     125     -75.549851657871 -1.9012e-07    -75.549851672438 -1.8522e-07  2.1768e-05    1/N   S/E
+     126     -75.549851727811 -6.9939e-08    -75.549851741564 -6.9126e-08  7.8433e-06    1/N   S/E
+     127     -75.549851699880  2.7930e-08    -75.549851713777  2.7787e-08  3.0852e-06    1/N   S/E
+     128     -75.549851476704  2.2318e-07    -75.549851492889  2.2089e-07  1.9888e-05    1/N   S/E
+     129     -75.549851295048  1.8166e-07    -75.549851309628  1.8326e-07  3.1405e-05    1/N   R/S
+     130     -75.549851313191 -1.8143e-08    -75.549851323069 -1.3441e-08  1.2596e-05    1/N   S
+     131     -75.549851326475 -1.3284e-08    -75.549851333750 -1.0681e-08  5.5389e-06    1/N   S
+     132     -75.549851337179 -1.0704e-08    -75.549851342973 -9.2228e-09  4.3041e-06    1/N   S/E
+     133     -75.549851364209 -2.7030e-08    -75.549851367992 -2.5018e-08  1.0292e-05    1/N   S/E
+     134     -75.549851325344  3.8864e-08    -75.549851329135  3.8856e-08  6.6282e-06    1/N   S/E
+     135     -75.549851223260  1.0208e-07    -75.549851226316  1.0282e-07  1.9002e-05    1/N   S/E
+     136     -75.549851196983  2.6276e-08    -75.549851199796  2.6521e-08  9.0090e-06    1/N   S/E
+     137     -75.549851200570 -3.5870e-09    -75.549851203292 -3.4965e-09  3.3986e-06    1/N   S/E
+     138     -75.549851204679 -4.1090e-09    -75.549851207370 -4.0779e-09  1.2760e-06    1/N   S/E
+     139     -75.549851193665  1.1014e-08    -75.549851196367  1.1004e-08  3.0405e-06    1/N   S/E
+     140     -75.549851185415  8.2496e-09    -75.549851188048  8.3190e-09  3.9768e-06    1/N   R/S
+     141     -75.549851190119 -4.7043e-09    -75.549851192583 -4.5356e-09  1.8584e-06    1/N   S
+     142     -75.549851194585 -4.4657e-09    -75.549851196950 -4.3672e-09  1.1419e-06    1/N   S
+     143     -75.549851198883 -4.2980e-09    -75.549851201170 -4.2195e-09  1.0808e-06    1/N   S/E
+     144     -75.549851208190 -9.3073e-09    -75.549851210211 -9.0410e-09  3.6162e-06    1/N   S/E
+     145     -75.549851217786 -9.5952e-09    -75.549851219228 -9.0174e-09  6.3543e-06    1/N   S/E
+     146     -75.549851233643 -1.5858e-08    -75.549851234517 -1.5289e-08  8.4973e-06    1/N   S/E
+     147     -75.549851239126 -5.4826e-09    -75.549851239750 -5.2330e-09  5.0082e-06    1/N   S/E
+     148     -75.549851241129 -2.0029e-09    -75.549851241717 -1.9667e-09  1.3468e-06    1/N   S/E
+     149     -75.549851239693  1.4355e-09    -75.549851240315  1.4016e-09  1.0388e-06    1/N   S/E
+     150     -75.549851230920  8.7736e-09    -75.549851231602  8.7131e-09  5.1253e-06    1/N   S/E
+     151     -75.549851221549  9.3704e-09    -75.549851221763  9.8390e-09  7.2957e-06    1/N   S/E
+     152     -75.549851219575  1.9743e-09    -75.549851219616  2.1475e-09  5.1493e-06    1/N   S/E
+     153     -75.549851219393  1.8237e-10    -75.549851219408  2.0762e-10  1.8443e-06    1/N   R/S
+     154     -75.549851219416 -2.2780e-11    -75.549851219425 -1.7096e-11  8.0423e-07    1/N   S
+     155     -75.549851219433 -1.7380e-11    -75.549851219441 -1.5760e-11  3.4725e-07    1/N   S
+     156     -75.549851219450 -1.6954e-11    -75.549851219458 -1.7081e-11  2.4377e-07    1/N   S/E
+     157     -75.549851219385  6.5342e-11    -75.549851219390  6.7899e-11  7.1070e-07    1/N   S/E
+     158     -75.549851219386 -1.2079e-12    -75.549851219391 -2.4158e-13  1.9559e-07    1/N   S/E
+     159     -75.549851219404 -1.8645e-11    -75.549851219408 -1.7337e-11  2.7934e-07    1/N   S/E
+     160     -75.549851219425 -2.0350e-11    -75.549851219428 -1.9796e-11  2.1532e-07    1/N   S/E
+     161     -75.549851219443 -1.7891e-11    -75.549851219445 -1.7423e-11  1.8043e-07    1/N   S/E
+     162     -75.549851219460 -1.7479e-11    -75.549851219462 -1.7010e-11  2.2784e-07    1/N   S/E
+     163     -75.549851219463 -3.1832e-12    -75.549851219465 -3.1690e-12  7.5761e-08    1/N   S/E
+     164     -75.549851219459  4.0501e-12    -75.549851219461  4.0927e-12  6.7426e-08    1/N   S/E
+     165     -75.549851219451  8.1855e-12    -75.549851219453  8.1286e-12  1.4748e-07    1/N   S/E
+     166     -75.549851219446  4.8743e-12    -75.549851219448  5.2012e-12  2.5750e-07    1/N   S/E
+     167     -75.549851219439  7.4181e-12    -75.549851219440  8.2281e-12  4.7787e-07    1/N   S/E
+     168     -75.549851219439 -5.4001e-13    -75.549851219440 -5.4001e-13  2.0920e-07    1/N   S/E
+     169     -75.549851219440 -9.3792e-13    -75.549851219441 -1.1084e-12  7.1218e-08    1/N   S/E
+     170     -75.549851219435  5.3433e-12    -75.549851219436  5.6986e-12  2.5295e-07    1/N   R/S
+     171     -75.549851219436 -1.0516e-12    -75.549851219436 -9.0949e-13  6.3921e-08    1/N   S
+     172     -75.549851219437 -8.8107e-13    -75.549851219438 -1.0942e-12  3.8821e-08    1/N   S
+     173     -75.549851219438 -1.3216e-12    -75.549851219439 -1.1511e-12  3.7889e-08    1/N   S/E
+     174     -75.549851219432  5.8265e-12    -75.549851219433  6.0112e-12  2.9544e-07    1/N   S/E
+     175     -75.549851219433 -6.1107e-13    -75.549851219433 -4.6896e-13  5.8864e-08    1/N   S/E
+     176     -75.549851219433 -2.8422e-13    -75.549851219433 -2.8422e-13  1.9990e-08    1/N   S/E
+     177     -75.549851219432  9.0949e-13    -75.549851219433  9.0949e-13  2.5258e-08    1/N   S/E
+     178     -75.549851219428  4.7464e-12    -75.549851219428  4.6754e-12  1.1202e-07    1/N   S/E
+     179     -75.549851219426  1.5348e-12    -75.549851219426  1.6200e-12  7.3242e-08    1/N   S/E
+     180     -75.549851219426  2.2737e-13    -75.549851219426  2.9843e-13  4.5166e-08    1/N   S/E
+     181     -75.549851219427 -1.4211e-12    -75.549851219427 -1.3216e-12  1.1758e-07    1/N   R/S
+     182     -75.549851219427  0.0000e+00    -75.549851219427 -1.1369e-13  7.4828e-08    1/N   S
+     183     -75.549851219427 -9.9476e-14    -75.549851219428 -1.1369e-13  1.6553e-08    1/N   S
+     184     -75.549851219428 -1.8474e-13    -75.549851219428 -7.1054e-14  2.0012e-08    1/N   S/E
+     185     -75.549851219428 -4.5475e-13    -75.549851219428 -4.9738e-13  5.5081e-08    1/N   S/E
+     186     -75.549851219428 -1.7053e-13    -75.549851219428 -1.4211e-13  1.5641e-08    1/N   S/E
+     187     -75.549851219428  5.6843e-14    -75.549851219428 -1.4211e-14  3.7169e-08    1/N   S/E
+     188     -75.549851219428 -1.7053e-13    -75.549851219428 -5.6843e-14  2.9915e-08    1/N   S/E
+     189     -75.549851219428 -1.4211e-13    -75.549851219428 -1.4211e-13  5.0602e-08    1/N   S/E
+     190     -75.549851219428  1.4211e-14    -75.549851219428 -5.6843e-14  1.3975e-08    1/N   S/E
+     191     -75.549851219428 -4.2633e-14    -75.549851219429 -4.2633e-14  1.0464e-08    1/N   S/E
+     192     -75.549851219428  1.4211e-14    -75.549851219429  2.8422e-14  1.1456e-08    1/N   S/E
+     193     -75.549851219428  2.8422e-14    -75.549851219428  5.6843e-14  1.1712e-08    1/N   S/E
+     194     -75.549851219428  1.5632e-13    -75.549851219428  1.4211e-13  2.6354e-08    1/N   R/S
+     195     -75.549851219428  1.4211e-14    -75.549851219428 -2.8422e-14  1.5267e-08    1/N   S
+     196     -75.549851219428 -1.4211e-14    -75.549851219428  2.8422e-14  6.5771e-09    1/N
+    ----------------------------------------------------------------------------------------
+
+  A miracle has come to pass: MCSCF iterations have converged!
+
+  Performing final CI Calculation using converged orbitals
+
+  ==> Possible Electron Occupations <==
+
+    Config.   Space 1   Space 2
+               α    β    α    β 
+    ---------------------------
+         1     3    3    1    0
+         2     4    2    0    1
+         3     4    3    0    0
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              4
+    number of beta electrons                               3
+    number of alpha strings                                9
+    number of beta strings                                16
+    --------------------------------------------------------
+
+  ==> String-based CI Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Spin adapt                                         FALSE
+    Number of determinants                                15
+    Symmetry                                               0
+    Multiplicity                                           2
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         15
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+    12       2       *
+     3       4        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   doublet    0      -75.549851219428  +0.750000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-10
+    Residual convergence threshold                 1.000e-08
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                     15
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0      -75.549851219428       75.549851219428        0.000000000000      1
+       1      -75.549851219428        0.000000000000        0.000000000000      2
+  ---------------------------------------------------------------------------------
+  Timing for CI:                                              0.000 s.
+
+  ==> Root No. 0 <==
+
+    2a0 2 20      0.99604222
+
+    Total Energy:     -75.549851219428, <S^2>: 0.750000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       2  (  1)    A1     0      -75.549851219428   0.750000
+    --------------------------------------------------------
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000     0.00000000     0.94739768     0.94739768
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  ==> Natural Orbitals Occupation Numbers <==
+
+        1B1     1.999903      1B2     1.997205      2A1     1.995479  
+        3A1     1.002614      2B2     0.002778      4A1     0.002021  
+
+  Canonicalizing final MCSCF orbitals
+
+  ==> Semicanonicalize Orbitals <==
+
+    MIX INACTIVE ORBITALS         TRUE
+    MIX GAS ACTIVE ORBITALS       FALSE
+    GAS1                          CANONICAL
+    GAS2                          CANONICAL
+    INACTIVE_DOCC                 CANONICAL
+    INACTIVE_UOCC                 CANONICAL
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    GAS1                 0.0171537403   0.0242590522
+    GAS2                 0.0000000000   0.0000000000
+    INACTIVE_DOCC        0.0000000000   0.0000000000
+    INACTIVE_UOCC        0.6100144773   1.4042462267
+    ------------------------------------------------
+
+    Canonicalization test failed
+
+  Timing for orbital canonicalization:                        0.000 s.
+
+  !!! WARNING: Final Active Orbitals Maybe Different from the Original !!!
+
+    Based on projections of maximum overlap method:
+          3A1 -> 4A1       RESTRICTED_UOCC
+          1B2 -> 2B2       RESTRICTED_UOCC
+  Integrals are about to be updated.
+  Computing Conventional Integrals	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Constructing frozen core operators
+	Starting first half-transformation.
+	h = 0; memfree         = 65535574
+	h = 0; rows_per_bucket = 119
+	h = 0; rows_left       = 0
+	h = 0; nbuckets        = 1
+	h = 1; memfree         = 65535792
+	h = 1; rows_per_bucket = 52
+	h = 1; rows_left       = 0
+	h = 1; nbuckets        = 1
+	h = 2; memfree         = 65535752
+	h = 2; rows_per_bucket = 62
+	h = 2; rows_left       = 0
+	h = 2; nbuckets        = 1
+	h = 3; memfree         = 65535632
+	h = 3; rows_per_bucket = 92
+	h = 3; rows_left       = 0
+	h = 3; nbuckets        = 1
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	h = 0; memfree         = 65535574
+	h = 0; rows_per_bucket = 119
+	h = 0; rows_left       = 0
+	h = 0; nbuckets        = 1
+	h = 1; memfree         = 65535792
+	h = 1; rows_per_bucket = 52
+	h = 1; rows_left       = 0
+	h = 1; nbuckets        = 1
+	h = 2; memfree         = 65535752
+	h = 2; rows_per_bucket = 62
+	h = 2; rows_left       = 0
+	h = 2; nbuckets        = 1
+	h = 3; memfree         = 65535632
+	h = 3; rows_per_bucket = 92
+	h = 3; rows_left       = 0
+	h = 3; nbuckets        = 1
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.00368936 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.008731 GB
+  Timing for conventional integral transformation:            0.013 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Integrals update took     0.013 s.
+
+  The integrals are not consistent with the orbitals. Re-transforming them.
+
+
+  ==> Possible Electron Occupations <==
+
+    Config.   Space 1   Space 2
+               α    β    α    β 
+    ---------------------------
+         1     3    3    1    0
+         2     4    2    0    1
+         3     4    3    0    0
+
+  ==> String Lists <==
+
+    --------------------------------------------------------
+    number of alpha electrons                              4
+    number of beta electrons                               3
+    number of alpha strings                                9
+    number of beta strings                                16
+    --------------------------------------------------------
+
+  ==> String-based CI Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Spin adapt                                         FALSE
+    Number of determinants                                15
+    Symmetry                                               0
+    Multiplicity                                           2
+    Number of roots                                        1
+    Target root                                            0
+    --------------------------------------------------------
+
+  ==> Initial Guess <==
+
+  Initial guess determinants:         15
+
+  Classification of the initial guess solutions
+
+  Number   2S+1   Selected
+  ------------------------
+    12       2       *
+     3       4        
+  ------------------------
+
+    Spin    Root           Energy        <S^2>    Status
+  -------------------------------------------------------
+   doublet    0      -75.549851219428  +0.750000  added
+  -------------------------------------------------------
+
+  ==> Davidson-Liu Solver <==
+
+    --------------------------------------------------------
+    Print level                                      Default
+    Energy convergence threshold                   1.000e-12
+    Residual convergence threshold                 1.000e-08
+    Schmidt orthogonality threshold                1.000e-12
+    Schmidt discard threshold                      1.000e-07
+    Size of the space                                     15
+    Number of roots                                        1
+    Maximum number of iterations                         100
+    Collapse subspace size                                 2
+    Maximum subspace size                                 10
+    --------------------------------------------------------
+
+  Davidson-Liu solver: adding 1 guess vectors
+  Iteration     Average Energy            max(∆E)            max(Residual)  Vectors
+  ---------------------------------------------------------------------------------
+       0      -75.549851219428       75.549851219428        0.000000000000      1
+       1      -75.549851219428        0.000000000000        0.000000000000      2
+  ---------------------------------------------------------------------------------
+  Timing for CI:                                              0.000 s.
+
+  ==> Root No. 0 <==
+
+    2a0 2 20     -0.99675057
+
+    Total Energy:     -75.549851219428, <S^2>: 0.750000
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       2  (  1)    A1     0      -75.549851219428   0.750000
+    --------------------------------------------------------
+  Computing RDMs for dipole moments ... Done
+
+  ==> Summary of Dipole Moments [e a0] (Nuclear + Electronic) <==
+
+       State           DM_X           DM_Y           DM_Z           |DM|
+    --------------------------------------------------------------------
+         0A1     0.00000000    -0.00000000     0.95437250     0.95437250
+    --------------------------------------------------------------------
+     Nuclear     0.00000000     0.00000000     1.03508051     1.03508051
+    --------------------------------------------------------------------
+
+  Time to prepare integrals:        0.047 seconds
+  Time to run job          :        1.450 seconds
+  Total                    :        1.496 seconds
+
+    Psi4 stopped on: Tuesday, 04 February 2025 02:00PM
+    Psi4 wall time for execution: 0:00:02.22
+
+*** Psi4 exiting successfully. Buy a developer a beer!

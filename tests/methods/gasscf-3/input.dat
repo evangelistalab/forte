@@ -1,0 +1,48 @@
+# H2O singlet, 6-31G**/GASSCF calculation 
+
+import forte
+
+refgasscf = -75.549851219428 #TEST 
+
+molecule h2o{
+1 2
+   O
+   H  1 1.00
+   H  1 1.00 2 103.1
+}
+
+set global {
+  basis 6-31g**
+  e_convergence 12
+  d_convergence 8
+  scf_type direct
+  reference uhf
+}
+
+set forte {
+  active_space_solver                     genci
+  ms                                      0.5
+  multiplicity                            2
+  nroot                                   1
+  root_sym                                0
+  charge                                  1
+  e_convergence                           12
+  r_convergence                           8
+  restricted_docc                         [1,0,0,0]
+  gas1                                    [2,0,1,1]
+  gas2                                    [1,0,0,1]
+  restricted_uocc                         [8,2,3,5]
+  gas1min                                 [6]
+  gas2max                                 [2]
+  mcscf_maxiter                           200
+  mcscf_micro_maxiter                     1
+  mcscf_e_convergence                     1e-10
+  mcscf_g_convergence                     1e-8
+  mcscf_max_rotation                      0.5
+  mcscf_diis_start                        1
+}
+
+escf ,wfn = energy('scf',return_wfn = True)
+egasscf = energy('forte',ref_wfn = wfn)
+compare_values(refgasscf, egasscf, 9, "GASSCF energy") #TEST
+
