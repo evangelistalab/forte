@@ -154,9 +154,6 @@ def _prepare_forte_objects_from_fcidump(data, filename: str = None):
 
     # state_info = _make_state_info_from_fcidump(fcidump, options)
     # data.state_weights_map = {state_info: [1.0]}
-    data.options.set_int("CHARGE", 0)
-    data.options.set_int("MULTIPLICITY", fcidump['ms2'] + 1)
-    data.options.set_int("NEL", fcidump['nelec'])
     data.state_weights_map = make_state_weights_map(data.options, data.mo_space_info)
     data.psi_wfn = None
 
