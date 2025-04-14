@@ -1,0 +1,55 @@
+import forte
+memory 2 gb
+set_num_threads(4)
+
+Eref_scf  = -378.68387981901594
+Eref_dmrg = -378.8621734988314
+# Hachmann et al. (10.1063/1.2768362) reports the following
+# Eref_scf  = -378.68387984
+# Eref_dmrg = -378.86217348
+
+molecule naphthalene{
+0 1
+C -2.433661 0.708302 0.000000
+C -2.433661 -0.708302 0.000000
+H -3.378045 -1.245972 0.000000
+H -3.378045 1.245972 0.000000
+C -1.244629 1.402481 0.000000
+C -1.244629 -1.402481 0.000000
+C -0.000077 0.717168 0.000000
+C -0.000077 -0.717168 0.000000
+H -1.242734 2.490258 0.000000
+H -1.242734 -2.490258 0.000000
+C 1.244779 1.402533 0.000000
+C 1.244779 -1.402533 0.000000
+C 2.433606 0.708405 0.000000
+C 2.433606 -0.708405 0.000000
+H 1.242448 2.490302 0.000000
+H 1.242448 -2.490302 0.000000
+H 3.378224 1.245662 0.000000
+H 3.378224 -1.245662 0.000000
+symmetry c1
+}
+
+set {
+    reference           rhf
+    basis               sto-3g
+    scf_type            pk
+}
+
+set forte {
+    mcscf_reference false
+    orbital_type         local
+    localize_space       [26, 30, 31, 32, 33, 34, 35, 36, 37, 38]
+    subspace             ["C(2p)"]
+    subspace_pi_planes   [["C"]]
+    avas                 true
+    avas_diagonalize     false
+    avas_num_active      10
+    active_space_solver  block2
+    restricted_docc      [29]
+    active               [10]
+}
+
+energy('forte')
+compare_values(Eref_dmrg, variable("CURRENT ENERGY"), 6, "DMRGCI(10,10)/STO-3G energy")

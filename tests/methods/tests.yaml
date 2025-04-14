@@ -150,6 +150,7 @@ df-dsrg-mrpt2:
       - df-dsrg-mrpt2-testccvv
 dmrg:
    medium:
+      - dmrg-ci-1
       - dmrg-ci-2
 dmrg-dsrg:
    short:
