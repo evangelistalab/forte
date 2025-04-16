@@ -1233,6 +1233,12 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
                                                bra_max_bond_dim};
     std::vector<double> noises{1.0e-4, 1.0e-5, 0.0};
 
+    int bond_dim = 500;
+    auto sweep_bond_dims = dmrg_options_->get_int_list("BLOCK2_SWEEP_BOND_DIMS");
+    if (sweep_bond_dims.size() != 0)
+        bond_dim = sweep_bond_dims.back();
+    std::vector<block2::ubond_t> ket_bond_dims(3, bond_dim);
+
     // system initialization
     auto integral_cutoff = dmrg_options_->get_double("BLOCK2_INTERGRAL_CUTOFF");
     bool singlet_embedding = dmrg_options_->get_bool("BLOCK2_SINGLET_EMBEDDING");
@@ -1266,8 +1272,6 @@ std::vector<double> Block2DMRGSolver::compute_complementary_H2caa_overlap(
 
         if (impl_->is_spin_adapted_) {
             auto ket0 = std::static_pointer_cast<block2::MPS<block2::SU2, double>>(ket);
-            auto bond_dim = ket0->info->get_max_bond_dimension();
-            std::vector<block2::ubond_t> ket_bond_dims(3, bond_dim);
             std::vector<double> occ(nactv, (n_elec - 1.0) / nactv);
 
             for (size_t p = 0; p < np; ++p) {

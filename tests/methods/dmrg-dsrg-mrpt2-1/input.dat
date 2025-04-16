@@ -60,6 +60,8 @@ set forte{
   r_convergence          8
   dsrg_s                 1.0
   dsrg_cu3               direct
+  print                  3
+  block2_verbose         2
   block2_sweep_n_sweeps  [4,4,6]
   block2_sweep_bond_dims [500,600,600]
   block2_sweep_noises    [1.0e-5,1.0e-6,0.0]
