@@ -56,6 +56,7 @@ Driver:
         "SA-MRDSRG",
         "DSRG_MRPT",
         "MRDSRG_SO",
+        "NONE"
       ]
     help: "Dynamical correlation solver type"
   CALC_TYPE:
@@ -1234,11 +1235,11 @@ DSRG:
     default: "PT2"
     choices: ["PT2", "ZERO"]
     help: "The initial guess of T1 amplitudes for nonperturbative DSRG methods"
-  DSRG_3RDM_ALGORITHM:
+  DSRG_CU3:
     type: str
     default: "EXPLICIT"
-    choices: ["EXPLICIT", "DIRECT"]
-    help: "Algorithm to compute 3-RDM contributions in fully contracted [H2, T2]"
+    choices: ["EXPLICIT", "BATCHED", "DIRECT", "APPROX"]
+    help: "Algorithm to compute 3-cumulant contributions in fully contracted [H2, T2]"
   DSRG_3RDM_BLOCK2_CPS_BOND_DIMENSION:
     type: int
     default: 1000
@@ -1769,6 +1770,14 @@ BLOCK2:
     type: double
     default: 1.0e-12
     help: "Consider those integrals as zero if the absolute value is smaller than this value"
+  BLOCK2_CI_PRINT_CUTOFF:
+    type: double
+    default: 0.01
+    help: "Cutoff value for printing CI coefficients (only printed when PRINT > 1)"
+  BLOCK2_TEST_OVERLAP:
+    type: bool
+    default: False
+    help: "Test overlap between two MPSs, one of which must be available in scratch directory (used to identify corresponding states after DSRG)"
 
 DEPRECATED:
   CASSCF_MAXITER:

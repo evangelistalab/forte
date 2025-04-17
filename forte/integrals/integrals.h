@@ -357,10 +357,9 @@ class ForteIntegrals : public Observer, public std::enable_shared_from_this<Fort
 
     /// Make the orbital phase consistent when updating orbitals
     /// @param U the unitary transformation matrix so that C_new = C_old * U
-    /// @param is_alpha target Ca if true else Cb
     /// @param debug print MO overlap and transformation matrix if true
     /// @return true if success
-    bool fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool is_alpha, bool debug = false);
+    bool fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool debug = false);
 
     /// Return the type of spin restriction enforced
     IntegralSpinRestriction spin_restriction() const;

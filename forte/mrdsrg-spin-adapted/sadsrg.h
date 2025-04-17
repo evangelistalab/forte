@@ -72,6 +72,9 @@ class SADSRG : public DynamicCorrelationSolver {
     /// If the amplitudes are converged or not
     bool converged() { return converged_; }
 
+    /// Set the diagonal 3-cumulants
+    void set_L3d(ambit::Tensor& L3d1, ambit::Tensor& L3d2);
+
   protected:
     /// Startup function called in constructor
     void startup();
@@ -247,6 +250,10 @@ class SADSRG : public DynamicCorrelationSolver {
     ambit::BlockedTensor L2_;
     /// Three-body density cumulant
     ambit::Tensor L3_;
+    /// Diagonal 3-cumulant of 1st kind
+    ambit::Tensor L3d1_;
+    /// Diagonal 3-cumulant of 2nd kind
+    ambit::Tensor L3d2_;
 
     // ==> Fock matrix related <==
 
@@ -380,10 +387,19 @@ class SADSRG : public DynamicCorrelationSolver {
     double H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0);
     /// Compute zero-body term of commutator [H2, T2], S2[ijab] = 2 * T[ijab] - T[ijba]
     std::vector<double> H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2,
-                                 const double& alpha, double& C0, bool load_mps = false);
+                                 const double& alpha, double& C0);
     /// Compute zero-body term of commutator [H2, T2], T2 and S2 contain at least two active indices
-    std::vector<double> H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2,
-                                         bool load_mps = false);
+    std::vector<double> H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2);
+    /// Whether load available MPS for direct L3 algorithm of zero-body [H2, T2]
+    bool load_mps_ = false;
+    /// Batched L3 algorithm of zero-body [H2, T2] over an active index
+    double H2_T2_C0_cu3_batched(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2);
+    /// Direct L3 algorithm of zero-body [H2, T2] forming complementary states w^+ v u |Φ>
+    double H2_T2_C0_cu3_direct(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2);
+    /// The 1- and 2-cumulant contributions to the L3 terms of zero-body [H2, T2]
+    double H2_T2_C0_cu3_cu12(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2);
+    /// Approx. 5-index L3 algorithm of zero-body [H2, T2]
+    double H2_T2_C0_cu3_approx(BlockedTensor& H2, BlockedTensor& T2);
 
     /// Compute one-body term of commutator [H1, T1]
     void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
@@ -407,7 +423,7 @@ class SADSRG : public DynamicCorrelationSolver {
     void V_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0);
     /// Compute zero-body term of commutator [V, T2], V is constructed from B (DF/CD)
     std::vector<double> V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T1, BlockedTensor& S2,
-                                   const double& alpha, double& C0, bool load_mps = false);
+                                   const double& alpha, double& C0);
 
     /// Compute one-body term of commutator [V, T1], V is constructed from B (DF/CD)
     void V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);

@@ -158,8 +158,30 @@ class ActiveSpaceMethod {
                               const std::vector<std::pair<size_t, size_t>>& root_list,
                               std::shared_ptr<ActiveSpaceMethod> method2);
 
-    /// Compute the overlap of two wave functions acted by complementary operators
-    /// Return a map from state to roots of values
+    /**
+     * @brief Compute the diagonal three reduced density matrices
+     *
+     *        For the spin-free case, only two unique 5-index diagonal 3-RDMs are available:
+     *
+     *        d1(pqrst) = D^{pqr}_{str} = <I, this| a+_p a+_q a+_r a_r a_t a_s |J, this> and
+     *
+     *        d2(pqrst) = D^{pqr}_{srt} = <I, this| a+_p a+_q a+_r a_t a_r a_s |J, this>
+     *
+     *        where |I> is the I-th state of this object
+     *              |J> is the J-th state of this object
+     *
+     *        The return would be in the order of {d1, d2}.
+     *
+     * @param root_list  a list of pairs of roots to compute [(I_1, J_1), (I_2, J_2), ...]
+     * @param rdm_type   the RDM type
+     * @return a vector of the 5-index diagonal 3-RDMs
+     */
+    virtual std::vector<std::vector<ambit::Tensor>>
+    three_rdms_diag1([[maybe_unused]] const std::vector<std::pair<size_t, size_t>>& root_list,
+                     [[maybe_unused]] RDMsType type) {
+        throw std::runtime_error("ActiveSpaceMethod::three_rdms_diag: Not yet implemented!");
+    }
+
     /// Computes the overlap of \sum_{p} \sum_{σ} <Ψ| h^+_{pσ} (v) h_{pσ} (t) |Ψ>, where
     /// h_{pσ} (t) = \sum_{uvw} t_{pw}^{uv} \sum_{τ} w^+_{τ} v_{τ} u_{σ}
     /// Useful to get the 3-RDM contribution of fully contracted term of two 2-body operators:
@@ -175,6 +197,19 @@ class ActiveSpaceMethod {
         [[maybe_unused]] const std::string& name, [[maybe_unused]] bool load) {
         throw std::runtime_error(
             "ActiveSpaceMethod::compute_complementary_H2caa_overlap: Not yet implemented!");
+    }
+
+    /// Compute the 3-RDM contribution of fully contracted term of two 2-body operators
+    /// batched over one active index and return a map from state to nroots of values.
+    /// There are two contributions:
+    /// core:     -Cbra("xmwy") * Cket("mzuv") * D3("xyzuwv");
+    /// virtual : +Vbra("xewy") * Vket("ezuv") * D3("xyzuwv");
+    virtual std::vector<double> compute_H2T2C0_3rdm_batched(
+        [[maybe_unused]] const std::vector<size_t>& roots, [[maybe_unused]] ambit::Tensor Vbra,
+        [[maybe_unused]] ambit::Tensor Vket, [[maybe_unused]] ambit::Tensor Cbra,
+        [[maybe_unused]] ambit::Tensor Cket) {
+        throw std::runtime_error(
+            "ActiveSpaceMethod::compute_H2T2C0_3rdm_batched: Not yet implemented!");
     }
 
     /// Compute generalized RDM

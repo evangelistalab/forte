@@ -28,8 +28,8 @@
 
 import numpy as np
 import warnings
-import math
 import json
+import os
 import psi4
 
 import forte
@@ -70,14 +70,16 @@ class ProcedureDSRG:
             self.relax_ref = "NONE"
 
         self.max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
-        if options.get_str("DSRG_3RDM_ALGORITHM") == "DIRECT":
+        if options.get_str("DSRG_CU3") != "EXPLICIT":
             as_type = options.get_str("ACTIVE_SPACE_SOLVER")
             if as_type == "BLOCK2" and self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
                 self.max_rdm_level = 2
             else:
-                psi4.core.print_out("\n  DSRG 3RDM direct algorithm only available for BLOCK2/SA-MRDSRG")
-                psi4.core.print_out("\n  Set DSRG_3RDM_ALGORITHM to 'EXPLICIT' (default)")
-                options.set_str("DSRG_3RDM_ALGORITHM", "EXPLICIT")
+                dsrg_cu3 = options.get_str("DSRG_CU3")
+                psi4.core.print_out(f"\n  DSRG_CU3 {dsrg_cu3} algorithm only available for BLOCK2/SA-MRDSRG")
+                psi4.core.print_out("\n  Set DSRG_CU3 to 'EXPLICIT' (default)")
+                options.set_str("DSRG_CU3", "EXPLICIT")
+        self.cu3_approx = (options.get_str("DSRG_CU3") == "APPROX")
 
         self.relax_convergence = float("inf")
         self.e_convergence = options.get_double("E_CONVERGENCE")
@@ -147,7 +149,8 @@ class ProcedureDSRG:
         self.energies_environment = {}  # energies pushed to Psi4 environment globals
 
         # Compute RDMs from initial ActiveSpaceSolver
-        self.rdms = active_space_solver.compute_average_rdms(state_weights_map, self.max_rdm_level, self.rdm_type)
+        self.rdms = active_space_solver.compute_average_rdms(state_weights_map, self.max_rdm_level, self.rdm_type,
+                                                             self.cu3_approx)
 
         # Save a copy CI vectors
         try:
@@ -302,6 +305,7 @@ class ProcedureDSRG:
             self.active_space_solver.set_Uactv(self.Ua, self.Ub)
             if self.options.get_str("ACTIVE_SPACE_SOLVER") == "BLOCK2":
                 self.options.set_bool("READ_ACTIVE_WFN_GUESS", True)
+                self.options.set_bool("BLOCK2_TEST_OVERLAP", True)
             state_energies_list = self.active_space_solver.compute_energy()
 
             if self.Meff_implemented:
@@ -318,6 +322,8 @@ class ProcedureDSRG:
                 state_ci_wfn_map = self.active_space_solver.state_ci_wfn_map()
                 self.reorder_weights(state_ci_wfn_map)
                 self.state_ci_wfn_map = state_ci_wfn_map
+            if self.options.get_str("ACTIVE_SPACE_SOLVER") == "BLOCK2":
+                self.reorder_weights("BLOCK2")
 
             e_relax = forte.compute_average_state_energy(state_energies_list, self.state_weights_map)
             self.energies.append((e_dsrg, e_relax))
@@ -325,7 +331,7 @@ class ProcedureDSRG:
             # Compute relaxed dipole
             if self.do_dipole:
                 self.rdms = self.active_space_solver.compute_average_rdms(
-                    self.state_weights_map, self.max_rdm_level, self.rdm_type
+                    self.state_weights_map, self.max_rdm_level, self.rdm_type, self.cu3_approx
                 )
                 dm_u = ProcedureDSRG.grab_dipole_unrelaxed()
                 dm_r = self.compute_dipole_relaxed()
@@ -346,7 +352,7 @@ class ProcedureDSRG:
             #   These RDMs are computed in the original basis
             if self.do_multi_state or (not self.do_dipole):
                 self.rdms = self.active_space_solver.compute_average_rdms(
-                    self.state_weights_map, self.max_rdm_level, self.rdm_type
+                    self.state_weights_map, self.max_rdm_level, self.rdm_type, self.cu3_approx
                 )
 
             # - Transform RDMs to the semi-canonical basis used in the last step (stored in self.Ua/self.Ub)
@@ -413,7 +419,7 @@ class ProcedureDSRG:
         dipole_dressed = self.dsrg_solver.deGNO_DMbar_actv()
         for i in range(3):
             dipole_moments[i] += dipole_dressed[i].contract_with_rdms(self.rdms)
-        dm_total = math.sqrt(sum([i * i for i in dipole_moments]))
+        dm_total = sum([i * i for i in dipole_moments]) ** 0.5
         dipole_moments.append(dm_total)
         return dipole_moments
 
@@ -439,7 +445,8 @@ class ProcedureDSRG:
             e_diff_u = abs(self.energies[-1][0] - self.energies[-2][0])
             e_diff_r = abs(self.energies[-1][1] - self.energies[-2][1])
             e_diff = abs(self.energies[-1][0] - self.energies[-1][1])
-            if all(e < self.relax_convergence for e in [e_diff_u, e_diff_r, e_diff]):
+            tests = [e_diff_u, e_diff_r] if self.options.get_str("ACTIVE_SPACE_SOLVER") in ["BLOCK2", "DMRG"] else [e_diff_u, e_diff_r, e_diff]
+            if all(e < self.relax_convergence for e in tests):
                 self.converged = True
 
         return self.converged
@@ -449,65 +456,101 @@ class ProcedureDSRG:
         Check CI overlap and reorder weights between consecutive relaxation steps.
         :param state_ci_wfn_map: the map to be compared to self.state_ci_wfn_map
         """
-        # bypass this check if state to CI vectors map not available
-        if self.state_ci_wfn_map is None:
-            return
-
         for state in self.states:
+            nroots = len(self.state_weights_map[state])
             twice_ms = state.twice_ms()
             if twice_ms < 0:
                 continue
 
-            # compute overlap between two sets of CI vectors <this|prior>
-            overlap = psi4.core.doublet(state_ci_wfn_map[state], self.state_ci_wfn_map[state], True, False)
-            overlap.name = f"CI Overlap of {state}"
+            if state_ci_wfn_map == "BLOCK2":
+                psi_io = psi4.core.IOManager.shared_object()
+                Sname = psi_io.get_default_path() + f"forte.{os.getpid()}.block2"
+                Sname += f".{self.mo_space_info.size('ACTIVE')}.{state.str_short()}.state_overlap.txt"
+                overlap = psi4.core.Matrix(nroots, nroots)
+                overlap.load(Sname)
+                overlap.name = f"MPS Overlap of {state}"
+                os.remove(Sname)
+            else:
+                # compute overlap between two sets of CI vectors <this|prior>
+                overlap = psi4.core.doublet(state_ci_wfn_map[state], self.state_ci_wfn_map[state], True, False)
+                overlap.name = f"CI Overlap of {state}"
 
             # check overlap and determine if we need to permute states
             overlap_np = np.abs(overlap.to_array())
             max_values = np.max(overlap_np, axis=1)
             permutation = np.argmax(overlap_np, axis=1)
-            psi4.core.print_out(f"\n\n Permutations: {permutation}")
             check_pass = len(permutation) == len(set(permutation)) and np.all(max_values > 0.5)
 
             if not check_pass:
+                psi4.core.print_out("\n\n  ==> Overlap of CI Vectors <this|prior> <==\n\n")
+                overlap.print_out()
+
+                weights = self.state_weights_map[state]
+                _bad = set([i for i in range(nroots)])
+                _good = [-1] * nroots
+                for i, j in enumerate(permutation):
+                    if overlap_np[i, j] > 0.5:
+                        _bad.remove(j)
+                        _good[i] = j
+                if all(weights[i] < 1.0e-16 for i in _bad) and len(_bad) == _good.count(-1):
+                    for i in range(nroots):
+                        if _good[i] == -1:
+                            _good[i] = _bad.pop()
+                    check_pass = True
+                    permutation = _good
+                    psi4.core.print_out(f"\n\n Permutations (ignored zero weights): {permutation}")
+                else:
+                    psi4.core.print_out(f"\n\n Permutations: {permutation}")
+
+            if check_pass:
+                if list(permutation) == list(range(nroots)):
+                    continue
+                msg = "Weights will be permuted to ensure consistency before and after relaxation."
+                psi4.core.print_out(f"\n\n  Forte Warning: {msg}\n")
+                self.permute_state_weights(state, permutation)
+            else:
                 msg = "Relaxed states are likely wrong. Please increase the number of roots."
                 warnings.warn(f"{msg}", UserWarning)
                 psi4.core.print_out(f"\n\n  Forte Warning: {msg}")
-                psi4.core.print_out("\n\n  ==> Overlap of CI Vectors <this|prior> <==\n\n")
-                overlap.print_out()
-            else:
-                if list(permutation) == list(range(len(permutation))):
-                    continue
 
-                msg = "Weights will be permuted to ensure consistency before and after relaxation."
-                psi4.core.print_out(f"\n\n  Forte Warning: {msg}\n")
+    def permute_state_weights(self, state, permutation):
+        """
+        Permute state weights according to the given permutation list.
+        :param state: the state in self.states
+        :param permutation: the permutation list
+        """
+        if len(permutation) != len(set(permutation)):  # unable to permute
+            return
+        if list(permutation) == list(range(len(permutation))):  # no need to permute
+            return
 
-                weights_old = self.state_weights_map[state]
-                weights_new = [weights_old[i] for i in permutation]
-                self.state_weights_map[state] = weights_new
+        weights_old = self.state_weights_map[state]
+        weights_new = [weights_old[i] for i in permutation]
+        self.state_weights_map[state] = weights_new
 
-                psi4.core.print_out(f"\n  ==> Weights for {state} <==\n")
-                psi4.core.print_out("\n    Root    Old       New")
-                psi4.core.print_out(f"\n    {'-' * 24}")
-                for i, w_old in enumerate(weights_old):
-                    w_new = weights_new[i]
-                    psi4.core.print_out(f"\n    {i:4d} {w_old:9.3e} {w_new:9.3e}")
-                psi4.core.print_out(f"\n    {'-' * 24}\n")
+        psi4.core.print_out(f"\n  ==> Weights for {state} <==\n")
+        psi4.core.print_out("\n    Root    Old       New")
+        psi4.core.print_out(f"\n    {'-' * 24}")
+        for i, w_old in enumerate(weights_old):
+            w_new = weights_new[i]
+            psi4.core.print_out(f"\n    {i:4d} {w_old:9.3e} {w_new:9.3e}")
+        psi4.core.print_out(f"\n    {'-' * 24}\n")
 
-                # try to fix ms < 0
-                if twice_ms > 0:
-                    state_spin = forte.StateInfo(
-                        state.nb(),
-                        state.na(),
-                        state.multiplicity(),
-                        -twice_ms,
-                        state.irrep(),
-                        state.irrep_label(),
-                        state.gas_min(),
-                        state.gas_max(),
-                    )
-                    if state_spin in self.state_weights_map:
-                        self.state_weights_map[state_spin] = weights_new
+        # try to fix ms < 0
+        twice_ms = state.twice_ms()
+        if twice_ms > 0:
+            state_spin = forte.StateInfo(
+                state.nb(),
+                state.na(),
+                state.multiplicity(),
+                -twice_ms,
+                state.irrep(),
+                state.irrep_label(),
+                state.gas_min(),
+                state.gas_max(),
+            )
+            if state_spin in self.state_weights_map:
+                self.state_weights_map[state_spin] = weights_new
 
     def print_summary(self):
         """Print energies and dipole moment to output file."""

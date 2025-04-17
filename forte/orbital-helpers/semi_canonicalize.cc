@@ -275,7 +275,7 @@ void SemiCanonical::build_transformation_matrices(const bool& semi) {
 
     // keep phase and order unchanged
     if (!inactive_mix_)
-        fix_orbital_success_ = ints_->fix_orbital_phases(Ua_, true);
+        fix_orbital_success_ = ints_->fix_orbital_phases(Ua_);
 
     // fill in Ua_t_
     fill_Uactv(Ua_, Ua_t_);

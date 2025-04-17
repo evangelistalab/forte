@@ -241,12 +241,13 @@ int SA_MRDSRG::compute_hbar(double& rsc_conv) {
         // zero-body
         H1_T1_C0(O1_, T1_, factor, C0);
         H1_T2_C0(O1_, T2_, factor, C0);
+        load_mps_ = (L3_algorithm_ == "DIRECT" and (n != 1));
         if (n == 1 && eri_df_) {
             V_T1_C0_DF(B_, T1_, factor, C0);
-            V_T2_C0_DF(B_, T2_, DT2_, factor, C0, (not store_cu3_) and (n != 1));
+            V_T2_C0_DF(B_, T2_, DT2_, factor, C0);
         } else {
             H2_T1_C0(O2_, T1_, factor, C0);
-            H2_T2_C0(O2_, T2_, DT2_, factor, C0, (not store_cu3_) and (n != 1));
+            H2_T2_C0(O2_, T2_, DT2_, factor, C0);
         }
 
         // one-body
@@ -437,10 +438,11 @@ int SA_MRDSRG::compute_hbar_sequential(double& rsc_conv) {
             outfile->Printf("\n    %s", dash.c_str());
         }
 
+        load_mps_ = (L3_algorithm_ == "DIRECT" and (n != 1));
         if (n == 1 && eri_df_) {
             // zero-body
             H1_T2_C0(O1_, T2_, factor, C0);
-            V_T2_C0_DF(B, T2_, DT2_, factor, C0, (not store_cu3_) and (n != 1));
+            V_T2_C0_DF(B, T2_, DT2_, factor, C0);
             // one-body
             H1_T2_C1(O1_, T2_, factor, C1_);
             V_T2_C1_DF(B, T2_, DT2_, factor, C1_);
@@ -450,7 +452,7 @@ int SA_MRDSRG::compute_hbar_sequential(double& rsc_conv) {
         } else {
             // zero-body
             H1_T2_C0(O1_, T2_, factor, C0);
-            H2_T2_C0(O2_, T2_, DT2_, factor, C0, (not store_cu3_) and (n != 1));
+            H2_T2_C0(O2_, T2_, DT2_, factor, C0);
             // one-body
             H1_T2_C1(O1_, T2_, factor, C1_);
             H2_T2_C1(O2_, T2_, DT2_, factor, C1_);

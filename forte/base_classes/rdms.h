@@ -30,6 +30,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 namespace psi {
 class Dimension;
@@ -124,7 +125,7 @@ class RDMs {
                                                  const std::string& filename_prefix = "");
 
     /// Default desctructor
-    virtual ~RDMs(){};
+    virtual ~RDMs() {};
 
     /// @return the max RDM level
     size_t max_rdm_level() const { return max_rdm_; }
@@ -134,6 +135,9 @@ class RDMs {
 
     /// @return dimension of each index
     size_t dim() const { return n_orbs_; }
+
+    /// @return whether the given level of diagonal RDM is available
+    bool diag_rdm_available(size_t diag_rdm_level) const;
 
     /// Clone the current RDMs
     virtual std::shared_ptr<RDMs> clone() = 0;
@@ -151,6 +155,9 @@ class RDMs {
     virtual void dump_to_disk(const std::string& filename_prefix = "") const = 0;
     /// Save the spin-summed 1-RDMs to disk in human readable form
     void save_SF_G1(const std::string& filename);
+
+    /// Set 5-index diagonal 3-RDMs
+    virtual void set_g3d(const std::vector<ambit::Tensor>& g3d) = 0;
 
     // static methods
 
@@ -210,6 +217,10 @@ class RDMs {
     virtual ambit::Tensor SF_G2() const = 0;
     /// @return the spin-free 3-RDM
     virtual ambit::Tensor SF_G3() const = 0;
+    /// @return the diagonal spin-free 3-RDM pqrstr -> pqrst
+    virtual ambit::Tensor SF_G3d1() const = 0;
+    /// @return the diagonal spin-free 3-RDM pqrsru -> pqrsu
+    virtual ambit::Tensor SF_G3d2() const = 0;
 
     /// @return the spin-free 1-RDM in Psi4 Matrix format (nactv * nactv)
     std::shared_ptr<psi::Matrix> SF_G1mat();
@@ -245,6 +256,12 @@ class RDMs {
     ambit::Tensor SF_L2() const;
     /// @return the spin-free 3-cumulant
     ambit::Tensor SF_L3() const;
+    /// @return the two unique 5-index diagonal spin-free 3-cumulants
+    /// { L3_1(pqrst) = L^{pqr}_{str}, L3_2(pqrsu) = L^{pqr}_{sru} }
+    /// Other 5-index diagonal SF 3-cumulants can be obainted by index permutations.
+    /// Spin-orbital 5-index diagonal 3-cumulants are given in
+    /// J. Chem. Phys. 159, 114106 (2023), DOI: 10.1063/5.0159403
+    std::vector<ambit::Tensor> SF_L3d() const;
 
   protected:
     // ==> Class Data <==
@@ -258,11 +275,16 @@ class RDMs {
     /// Number of orbitals for each dimension
     size_t n_orbs_ = 0;
 
+    /// The available higher-order diagonal RDMs
+    std::unordered_set<size_t> diag_rdm_levels_;
+
     /// Test if the RDM dimensions are valid
     void _test_rdm_dims(const ambit::Tensor& T, const std::string& name,
                         size_t desired_dim_size) const;
     /// Test if a function is asked for the correct level of RDMs
     void _test_rdm_level(const size_t& level, const std::string& name) const;
+    /// Test if a function is asked for the correct level of diagonal RDMs
+    void _test_diag_rdm_level(const size_t& level, const std::string& name) const;
     /// Test if RDMs rotation can be bypassed (i.e., if Ua and Ub are identity matrices)
     bool _bypass_rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub,
                         const double& zero_threshold = 1.0e-12) const;
@@ -309,6 +331,10 @@ class RDMsSpinDependent : public RDMs {
     ambit::Tensor SF_G2() const override;
     /// @return the spin-free 3-RDM
     ambit::Tensor SF_G3() const override;
+    /// @return the diagonal spin-free 3-RDM pqrstr -> pqrst
+    ambit::Tensor SF_G3d1() const override;
+    /// @return the diagonal spin-free 3-RDM pqrsru -> pqrsu
+    ambit::Tensor SF_G3d2() const override;
 
     // Spin-dependent density cumulants
 
@@ -346,6 +372,9 @@ class RDMsSpinDependent : public RDMs {
 
     /// Save the current RDMs to disk
     void dump_to_disk(const std::string& filename_prefix = "") const override;
+
+    /// Set 5-index diagonal 3-RDMs
+    void set_g3d(const std::vector<ambit::Tensor>& G3d) override;
 
   private:
     /// The alpha 1-RDM
@@ -406,6 +435,10 @@ class RDMsSpinFree : public RDMs {
     ambit::Tensor SF_G2() const override;
     /// @return the spin-free 3-RDM
     ambit::Tensor SF_G3() const override;
+    /// @return the diagonal spin-free 3-RDM pqrstr -> pqrst
+    ambit::Tensor SF_G3d1() const override;
+    /// @return the diagonal spin-free 3-RDM pqrsru -> pqrsu
+    ambit::Tensor SF_G3d2() const override;
 
     // Spin-dependent density cumulants
 
@@ -444,6 +477,9 @@ class RDMsSpinFree : public RDMs {
     /// Save the current RDMs to disk
     void dump_to_disk(const std::string& filename_prefix = "") const override;
 
+    /// Set 5-index diagonal 3-RDMs
+    void set_g3d(const std::vector<ambit::Tensor>& G3d) override;
+
   private:
     /// Spin-free (spin-summed) 1-RDM defined as G1[pq] = g1a[pq] + g1b[pq]
     ambit::Tensor SF_G1_;
@@ -453,5 +489,10 @@ class RDMsSpinFree : public RDMs {
     /// Spin-free (spin-summed) 3-RDMs defined as G3[pqrstu] = g3aaa[pqrstu] + g3aab[pqrstu] +
     /// g3aab[prqsut] + g3aab[qrptus] + g3abb[pqrstu] + g3abb[qprtsu] + g3abb[rpqust]
     ambit::Tensor SF_G3_;
+
+    /// Spin-free diagonal 3-RDMs pqrstr
+    ambit::Tensor SF_G3d1_;
+    /// Spin-free diagonal 3-RDMs pqrsru
+    ambit::Tensor SF_G3d2_;
 };
 } // namespace forte

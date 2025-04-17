@@ -88,6 +88,7 @@ class SemiCanonical {
     /// @param threshold The threshold for testing orbitals
     /// @param inactive_mix Mix the frozen and restricted orbitals together?
     /// @param active_mix Mix all GAS orbitals together?
+    /// @param threshold The threshold for testing orbitals
     /// @param quiet_banner Method banner is not printed if set to true
     SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
                   std::shared_ptr<SCFInfo> scf_info, bool inactive_mix, bool active_mix,
