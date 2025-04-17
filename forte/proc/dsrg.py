@@ -428,6 +428,10 @@ class ProcedureDSRG:
                 psi4.core.print_out(f"\n\n    DSRG-MRPT2 FNO energy correction:  {self.fno_pt2_energy_shift:20.15f}")
                 psi4.core.print_out(f"\n    DSRG-MRPT2 FNO corrected energy:   {e_dsrg:20.15f}")
 
+        if self.solver_type in ["MRDSRG", "SA-MRDSRG", "SA_MRDSRG"]:
+            if not self.dsrg_solver.converged():
+                raise RuntimeError("DSRG amplitudes did not converge!")
+
         if self.options.get_bool("FULL_HBAR") and self.solver_type in ["MRDSRG", "MRDSRG_SO", "MRDSRG-SO"]:
             if self.relax_maxiter != 0:
                 self.rdms = self.active_space_solver.compute_average_rdms(
@@ -489,10 +493,6 @@ class ProcedureDSRG:
 
         e_current = e_dsrg if len(self.energies) == 0 else e_relax
         psi4.core.set_scalar_variable("CURRENT ENERGY", e_current)
-
-        if self.solver_type in ["MRDSRG", "SA-MRDSRG", "SA_MRDSRG"]:
-            if not self.dsrg_solver.converged():
-                raise RuntimeError("DSRG amplitudes did not converge!")
 
         return e_current
 
