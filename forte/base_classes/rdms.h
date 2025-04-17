@@ -256,7 +256,11 @@ class RDMs {
     ambit::Tensor SF_L2() const;
     /// @return the spin-free 3-cumulant
     ambit::Tensor SF_L3() const;
-    /// @return the 5-index diagonal spin-free 3-cumulant
+    /// @return the two unique 5-index diagonal spin-free 3-cumulants
+    /// { L3_1(pqrst) = L^{pqr}_{str}, L3_2(pqrsu) = L^{pqr}_{sru} }
+    /// Other 5-index diagonal SF 3-cumulants can be obainted by index permutations.
+    /// Spin-orbital 5-index diagonal 3-cumulants are given in
+    /// J. Chem. Phys. 159, 114106 (2023), DOI: 10.1063/5.0159403
     std::vector<ambit::Tensor> SF_L3d() const;
 
   protected:
