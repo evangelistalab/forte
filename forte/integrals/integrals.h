@@ -35,7 +35,7 @@
 #include "psi4/libmints/dimension.h"
 #include "ambit/blocked_tensor.h"
 
-#include "forte/helpers/observer.h"
+#include "../helpers/observer.h"
 
 class Tensor;
 
