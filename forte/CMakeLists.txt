@@ -335,6 +335,7 @@ install(
   FILES
     $<TARGET_FILE:_forte>
     ../pytest.ini
+    options.yaml
   COMPONENT Forte_Python
   DESTINATION ${FORTE_INSTALL_PYMODDIR}/forte
   )
