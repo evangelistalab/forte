@@ -30,7 +30,7 @@
 
 #include "psi4/libmints/dimension.h"
 
-#include "forte/helpers/observer.h"
+#include "../helpers/observer.h"
 
 namespace psi {
 class Vector;

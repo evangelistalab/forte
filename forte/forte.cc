@@ -27,7 +27,7 @@
  */
 
 // #include <fstream>
-// #include "ambit/tensor.h"
+#include "ambit/tensor.h"
 // #include "psi4/libpsi4util/process.h"
 
 #include "version.h"
