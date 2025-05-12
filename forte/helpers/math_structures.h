@@ -281,7 +281,7 @@ class VectorSpace {
         return result;
     }
 
-    /// @brief Calculate the dot product of two vectors
+    /// @brief Calculate the dot product of two vectors <this|other>
     F dot(const Derived& other) const {
         F result{0};
         bool self_smaller = size() < other.size();
@@ -296,7 +296,7 @@ class VectorSpace {
         } else {
             for (const auto& [e, c] : smaller) {
                 if (const auto it = larger.find(e); it != larger.end()) {
-                    result += c * conjugate(it->second);
+                    result += conjugate(it->second) * c;
                 }
             }
         }

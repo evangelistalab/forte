@@ -138,11 +138,10 @@ SparseState apply_operator_impl_naive(bool is_antihermitian, const SparseOperato
     Determinant sign_mask; // a temporary determinant to store the sign mask
     Determinant idx;       // a temporary determinant to store the index of the determinant
     for (const auto& [sqop, t] : sop) {
-        compute_sign_mask(sqop.cre(), sqop.ann(), sign_mask, idx);
         for (const auto& [det, c] : state) {
             if (det.faster_can_apply_operator(sqop.cre(), sqop.ann())) {
-                auto value =
-                    faster_apply_operator_to_det(det, new_det, sqop.cre(), sqop.ann(), sign_mask);
+                auto value = faster_apply_operator_to_det(det, new_det, sqop.cre(), sqop.ann(),
+                                                          sqop.sign_mask());
                 new_terms[new_det] += value * t * c;
             }
         }
@@ -153,11 +152,10 @@ SparseState apply_operator_impl_naive(bool is_antihermitian, const SparseOperato
     }
 
     for (const auto& [sqop, t] : sop) {
-        compute_sign_mask(sqop.ann(), sqop.cre(), sign_mask, idx);
         for (const auto& [det, c] : state) {
             if (det.faster_can_apply_operator(sqop.ann(), sqop.cre())) {
-                auto value =
-                    faster_apply_operator_to_det(det, new_det, sqop.ann(), sqop.cre(), sign_mask);
+                auto value = faster_apply_operator_to_det(det, new_det, sqop.ann(), sqop.cre(),
+                                                          sqop.sign_mask());
                 new_terms[new_det] -= value * t * c;
             }
         }
@@ -173,18 +171,16 @@ template <bool positive>
 void apply_operator_kernel(const auto& sop_groups, const auto& state_sorted,
                            const auto& screen_thresh, auto& new_terms) {
     Determinant new_det;
-    Determinant sign_mask;
     Determinant idx;
     for (const auto& [sqop_ann, sqop_group] : sop_groups) {
         for (const auto& [det, c] : state_sorted) {
             if (det.fast_a_and_b_equal_b(sqop_ann)) {
                 // loop over the creation operators in this group
-                for (const auto& [sqop_cre, t] : sqop_group) {
+                for (const auto& [sqop_cre, sqop_sign_mask, t] : sqop_group) {
                     if (det.fast_a_and_b_minus_c_eq_zero(sqop_cre, sqop_ann)) {
                         if (std::abs(c * t) > screen_thresh) {
-                            compute_sign_mask(sqop_cre, sqop_ann, sign_mask, idx);
-                            const auto value = faster_apply_operator_to_det(det, new_det, sqop_cre,
-                                                                            sqop_ann, sign_mask);
+                            const auto value = faster_apply_operator_to_det(
+                                det, new_det, sqop_cre, sqop_ann, sqop_sign_mask);
                             if constexpr (positive) {
                                 new_terms[new_det] += value * t * c;
                             } else {
@@ -215,11 +211,12 @@ SparseState apply_operator_impl_grouped(bool is_antihermitian, const SparseOpera
               [](const auto& a, const auto& b) { return a.first < b.first; });
 
     // Group the operators by common annihilation strings
-    std::unordered_map<Determinant, std::vector<std::pair<Determinant, sparse_scalar_t>>,
+    std::unordered_map<Determinant,
+                       std::vector<std::tuple<Determinant, Determinant, sparse_scalar_t>>,
                        Determinant::Hash>
         sop_groups;
     for (const auto& [sqop, t] : sop.elements()) {
-        sop_groups[sqop.ann()].emplace_back(sqop.cre(), t);
+        sop_groups[sqop.ann()].emplace_back(sqop.cre(), sqop.sign_mask(), t);
     }
 
     // Call the kernel to apply the operator (adding the result)
@@ -233,7 +230,7 @@ SparseState apply_operator_impl_grouped(bool is_antihermitian, const SparseOpera
     // Here we swap the annihilation and creation operators for the antihermitian case
     sop_groups.clear();
     for (const auto& [sqop, t] : sop.elements()) {
-        sop_groups[sqop.cre()].emplace_back(sqop.ann(), t);
+        sop_groups[sqop.cre()].emplace_back(sqop.ann(), sqop.sign_mask(), t);
     }
 
     // Call the kernel to apply the operator (subtracting the result)
@@ -250,18 +247,15 @@ template <bool positive>
 void apply_operator_kernel_string(const auto& sop_groups, const auto& state_groups,
                                   const auto& screen_thresh, auto& new_terms) {
     Determinant new_det;
-    Determinant sign_mask;
-    Determinant idx;
     for (const auto& [sqop_ann_a, sqop_group] : sop_groups) {
         for (const auto& [det_a, state_group] : state_groups) {
             // can we annihilate the alfa string?
             if (det_a.fast_a_and_b_equal_b(sqop_ann_a)) {
                 // loop over the creation operators in this group
-                for (const auto& [sqop_ann, sqop_cre, t] : sqop_group) {
+                for (const auto& [sqop_ann, sqop_cre, sign_mask, t] : sqop_group) {
                     for (const auto& [det, c] : state_group) {
                         if (det.faster_can_apply_operator(sqop_cre, sqop_ann)) {
                             if (std::abs(c * t) > screen_thresh) {
-                                compute_sign_mask(sqop_cre, sqop_ann, sign_mask, idx);
                                 const auto value = faster_apply_operator_to_det(
                                     det, new_det, sqop_cre, sqop_ann, sign_mask);
                                 if constexpr (positive) {
@@ -296,11 +290,13 @@ SparseState apply_operator_impl_grouped_string(bool is_antihermitian, const Spar
     }
 
     // Group the operators by common alfa annihilation strings
-    std::unordered_map<String, std::vector<std::tuple<Determinant, Determinant, sparse_scalar_t>>,
-                       String::Hash>
+    std::unordered_map<
+        String, std::vector<std::tuple<Determinant, Determinant, Determinant, sparse_scalar_t>>,
+        String::Hash>
         sop_groups;
     for (const auto& [sqop, t] : sop.elements()) {
-        sop_groups[sqop.ann().get_alfa_bits()].emplace_back(sqop.ann(), sqop.cre(), t);
+        sop_groups[sqop.ann().get_alfa_bits()].emplace_back(sqop.ann(), sqop.cre(),
+                                                            sqop.sign_mask(), t);
     }
 
     // Call the kernel to apply the operator (adding the result)
@@ -314,7 +310,8 @@ SparseState apply_operator_impl_grouped_string(bool is_antihermitian, const Spar
     // Here we swap the annihilation and creation operators for the antihermitian case
     sop_groups.clear();
     for (const auto& [sqop, t] : sop.elements()) {
-        sop_groups[sqop.cre().get_alfa_bits()].emplace_back(sqop.cre(), sqop.ann(), t);
+        sop_groups[sqop.cre().get_alfa_bits()].emplace_back(sqop.cre(), sqop.ann(),
+                                                            sqop.sign_mask(), t);
     }
 
     // Call the kernel to apply the operator (subtracting the result)

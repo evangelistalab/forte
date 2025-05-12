@@ -16,10 +16,10 @@ from forte._forte import (
     SparseOperatorList,
     Determinant,
     SparseState,
-    SparseHamiltonian,
     SparseFactExp,
     SparseExp,
     get_projection,
+    sparse_operator_hamiltonian,
 )
 
 
@@ -190,8 +190,8 @@ def solve_cc_equations(
         Returns the a tuple containign the converged amplitudes, the energy, the projective energy,
         the number of iterations, and timings information
     """
-    diis = DIIS(t, diis_start, diis_nvec)
-    ham = SparseHamiltonian(as_ints)
+    diis = DIIS(t, diis_start)
+    ham = sparse_operator_hamiltonian(as_ints)
     if cc_type == "cc" or cc_type == "ucc":
         exp = SparseExp(maxk=maxk, screen_thresh=compute_threshold)
     if cc_type == "dcc" or cc_type == "ducc":
@@ -255,19 +255,19 @@ def residual_equations(cc_type, t, op, sop, ref, ham, exp, compute_threshold, li
     c0 = 0.0
     if cc_type == "cc":
         wfn = exp.apply_op(sop, ref)
-        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+        Hwfn = ham.apply_to_state(wfn, compute_threshold)
         R = exp.apply_op(sop, Hwfn, scaling_factor=-1.0)
     elif cc_type == "ucc":
         wfn = exp.apply_antiherm(sop, ref)
-        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+        Hwfn = ham.apply_to_state(wfn, compute_threshold)
         R = exp.apply_antiherm(sop, Hwfn, scaling_factor=-1.0)
     elif cc_type == "dcc":
         wfn = exp.apply_op(sop, ref)
-        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+        Hwfn = ham.apply_to_state(wfn, compute_threshold)
         R = exp.apply_op(sop, Hwfn, inverse=True)
     elif cc_type == "ducc":
         wfn = exp.apply_antiherm(sop, ref)
-        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+        Hwfn = ham.apply_to_state(wfn, compute_threshold)
         R = exp.apply_antiherm(sop, Hwfn, inverse=True)
     else:
         raise ValueError("Incorrect value for cc_type")
@@ -340,7 +340,7 @@ class DIIS:
         self.e_diis.append(np.subtract(t, t_old))
 
         diis_dim = len(self.t_diis)
-        if (diis_dim >= self.diis_start):
+        if diis_dim >= self.diis_start:
             # consturct diis B matrix (following Crawford Group github tutorial)
             B = np.ones((diis_dim + 1, diis_dim + 1)) * -1.0
             bsol = np.zeros(diis_dim + 1)

@@ -49,7 +49,8 @@
 
 #include "orbital-helpers/aosubspace.h"
 #include "orbital-helpers/mp2_nos.h"
-#include "orbital-helpers/orbital_embedding.h"
+#include "orbital-helpers/avas.h"
+#include "orbital-helpers/aset.h"
 #include "orbital-helpers/fragment_projector.h"
 
 #include "forte.h"
@@ -214,7 +215,6 @@ PYBIND11_MODULE(_forte, m) {
     export_SQOperatorString(m);
     export_SparseExp(m);
     export_SparseFactExp(m);
-    export_SparseHamiltonian(m);
     export_SparseOperator(m);
     export_SparseOperatorList(m);
     export_SparseOperatorSimTrans(m);

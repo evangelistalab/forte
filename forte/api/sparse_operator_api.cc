@@ -227,6 +227,12 @@ void export_SparseOperator(py::module& m) {
             "__str__", [](const SparseOperator& op) { return join(op.str(), "\n"); },
             "Get a string representation of the operator")
         .def(
+            "apply_to_state",
+            [](const SparseOperator& op, const SparseState& state, double screen_thresh) {
+                return apply_operator_lin(op, state, screen_thresh);
+            },
+            "state"_a, "screen_thresh"_a = 1.0e-12, "Apply the operator to a state")
+        .def(
             "fact_trans_lin",
             [](SparseOperator& O, const SparseOperatorList& T, bool reverse, double screen_thresh) {
                 auto O_copy = O;

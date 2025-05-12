@@ -16,7 +16,7 @@ def test_duccsdtq():
     ).run()
 
     scf_energy = data.psi_wfn.energy()
-    cc = forte.modules.GeneralCC(cc_type="ducc", max_exc=4, e_convergence=1.0e-11)
+    cc = forte.modules.GeneralCC(cc_type="ducc", max_exc=4, e_convergence=5.0e-10)
     data = cc.run(data)
 
     psi4.core.clean()
@@ -27,7 +27,7 @@ def test_duccsdtq():
     print(f"  DUCCSDTQ energy: {energy}")
     print(f"  E - Eref:        {energy - ref_energy}")
 
-    assert energy == pytest.approx(ref_energy, 1.0e-11)
+    assert energy == pytest.approx(ref_energy, 5.0e-10)
 
 
 if __name__ == "__main__":

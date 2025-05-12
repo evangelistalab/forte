@@ -59,13 +59,18 @@ bool compare_ops(const std::tuple<bool, bool, int>& lhs, const std::tuple<bool, 
 SQOperatorString::SQOperatorString() {}
 
 SQOperatorString::SQOperatorString(const Determinant& cre, const Determinant& ann)
-    : cre_(cre), ann_(ann) {}
+    : cre_(cre), ann_(ann) {
+    Determinant temp;
+    compute_sign_mask(cre_, ann_, sign_mask_, temp);
+}
 
 SQOperatorString::SQOperatorString(const std::vector<size_t>& acre, const std::vector<size_t>& bcre,
                                    const std::vector<size_t>& aann,
                                    const std::vector<size_t>& bann) {
     cre_ = Determinant(acre, bcre);
     ann_ = Determinant(aann, bann);
+    Determinant temp;
+    compute_sign_mask(cre_, ann_, sign_mask_, temp);
 }
 
 SQOperatorString::SQOperatorString(const std::initializer_list<size_t> acre,
@@ -74,11 +79,15 @@ SQOperatorString::SQOperatorString(const std::initializer_list<size_t> acre,
                                    const std::initializer_list<size_t> bann) {
     cre_ = Determinant(acre, bcre);
     ann_ = Determinant(aann, bann);
+    Determinant temp;
+    compute_sign_mask(cre_, ann_, sign_mask_, temp);
 }
 
 const Determinant& SQOperatorString::cre() const { return cre_; }
 
 const Determinant& SQOperatorString::ann() const { return ann_; }
+
+const Determinant& SQOperatorString::sign_mask() const { return sign_mask_; }
 
 Determinant& SQOperatorString::cre_mod() { return cre_; }
 
