@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include <format>
+
 #include "ambit/tensor.h"
 
 #include "psi4/psi4-dec.h"
@@ -421,9 +423,9 @@ double MCSCF_2STEP::compute_energy() {
 
         diis_manager.reset_subspace();
         diis_manager.delete_diis_file();
-    }
+    } // end of MCSCF macro iterations
 
-    // perform final CI using converged orbitals
+    // perform final active space computation using converged orbitals
     if (print_ >= PrintLevel::Default)
         psi::outfile->Printf("\n\n  Performing final CI Calculation using converged orbitals");
 
@@ -445,17 +447,49 @@ double MCSCF_2STEP::compute_energy() {
             ignore_frozen ? ignore_frozen : options_->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
         auto active_mix = options_->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
 
-        psi::outfile->Printf("\n  Canonicalizing final MCSCF orbitals");
-        ActiveOrbitalType actv_orb_type(options_->get_str("MCSCF_FINAL_ORBITAL"));
+        auto final_orbital = options_->get_str("MCSCF_FINAL_ORBITAL");
+        auto s = std::format("\n  Canonicalizing final MCSCF orbitals as {}", final_orbital);
+        psi::outfile->Printf("%s", s.c_str());
+
+        ActiveOrbitalType actv_orb_type(final_orbital);
         SemiCanonical semi(mo_space_info_, ints_, scf_info_, inactive_mix, active_mix);
         semi.semicanonicalize(rdms, false, actv_orb_type, false);
-
         cas_grad.canonicalize_final(semi.Ua());
 
-        // pass to wave function
+        // pass the MO coefficients to the wave function
         auto Ca = cas_grad.Ca();
         ints_->wfn()->Ca()->copy(Ca);
         ints_->wfn()->Cb()->copy(Ca);
+
+        // pass the orbital energies to the wave function
+        auto F_rowspi = F->rowspi();
+        auto nirrep = F->nirrep();
+        for (int h = 0; h < nirrep; ++h) {
+            for (int p = 0; p < F_rowspi[h]; ++p) {
+                ints_->wfn()->epsilon_a()->set(h, p, F->get(h, p, p));
+                ints_->wfn()->epsilon_b()->set(h, p, F->get(h, p, p));
+            }
+        }
+
+        // test if the coefficient matrix is invertible.
+        // If yes, pass the Fock matrix to the psi4 wave function
+        if (Ca->rowspi() == Ca->colspi()) {
+            // compute the inverse of the coefficient matrix
+            auto Ca_inv = Ca->clone();
+            Ca_inv->invert();
+
+            // compute the Fock matrix in the AO basis as F_ao = Ca_inv^T F Ca_inv
+            auto F_ao = F->clone();
+            F_ao->transform(Ca_inv);
+
+            // copy the Fock matrix to the psi4 wave function
+            ints_->wfn()->Fa()->copy(F_ao);
+            ints_->wfn()->Fb()->copy(F_ao);
+        } else {
+            psi::outfile->Printf("\n  The coefficient matrix is not square, cannot compute the "
+                                 "Fock matrix in the AO basis. The Fock matrix in the psi4 wave "
+                                 "function will not be updated.");
+        }
 
         // throw error if not converged
         if (not converged)

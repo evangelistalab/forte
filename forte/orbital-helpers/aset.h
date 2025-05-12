@@ -28,18 +28,19 @@
 
 #pragma once
 
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/wavefunction.h"
-
-#include "base_classes/forte_options.h"
-#include "base_classes/mo_space_info.h"
+namespace psi {
+class Matrix;
+class Wavefunction;
+} // namespace psi
 
 namespace forte {
 
-void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
-               std::shared_ptr<psi::Matrix> Ps);
+class SCFInfo;
+class MOSpaceInfo;
+class ForteOptions;
 
-std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
+std::shared_ptr<MOSpaceInfo> make_embedding(std::shared_ptr<psi::Wavefunction> ref_wfn,
+                                            std::shared_ptr<SCFInfo> scf_info,
                                             std::shared_ptr<ForteOptions> options,
                                             std::shared_ptr<psi::Matrix> Pf, int nbf_A,
                                             std::shared_ptr<MOSpaceInfo> mo_space_info);

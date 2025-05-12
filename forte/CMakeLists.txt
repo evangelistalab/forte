@@ -102,7 +102,6 @@ api/scf_info_api.cc
 api/sparse_ci_solver_api.cc
 api/sparse_exp_api.cc
 api/sparse_fact_exp_api.cc
-api/sparse_hamiltonian_api.cc
 api/sparse_operator_api.cc
 api/sparse_operator_list_api.cc
 api/sparse_operator_sim_trans_api.cc
@@ -239,6 +238,8 @@ mrdsrg-spin-integrated/mrdsrg_srg.cc
 mrdsrg-spin-integrated/three_dsrg_mrpt2.cc
 orbital-helpers/ao_helper.cc
 orbital-helpers/aosubspace.cc
+orbital-helpers/aset.cc
+orbital-helpers/avas.cc
 orbital-helpers/ci-no/ci-no.cc
 orbital-helpers/ci-no/mrci-no.cc
 orbital-helpers/fragment_projector.cc
@@ -246,7 +247,6 @@ orbital-helpers/iao_builder.cc
 orbital-helpers/localize.cc
 orbital-helpers/mp2_nos.cc
 orbital-helpers/mrpt2_nos.cc
-orbital-helpers/orbital_embedding.cc
 orbital-helpers/orbitaloptimizer.cc
 orbital-helpers/pao_builder.cc
 orbital-helpers/semi_canonicalize.cc
@@ -275,7 +275,6 @@ sparse_ci/sorted_string_list.cc
 sparse_ci/sparse_ci_solver.cc
 sparse_ci/sparse_exp.cc
 sparse_ci/sparse_fact_exp.cc
-sparse_ci/sparse_hamiltonian.cc
 sparse_ci/sparse_initial_guess.cc
 sparse_ci/sparse_operator.cc
 sparse_ci/sparse_operator_sim_trans.cc
