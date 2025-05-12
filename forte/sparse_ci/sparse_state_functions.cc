@@ -29,6 +29,8 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
+#include <thread>
+#include <future>
 
 #include "helpers/helpers.h"
 #include "helpers/timer.h"
@@ -38,6 +40,8 @@
 #include "sparse_ci/sparse_state.h"
 
 namespace forte {
+
+std::vector<SparseState> split_state(const SparseState& state, size_t num_chunks);
 
 // This is a naive implementation of the operator application that is used for testing
 SparseState apply_operator_impl_naive(bool is_antihermitian, const SparseOperator& sop,
@@ -53,12 +57,72 @@ SparseState apply_operator_impl_grouped_string(bool is_antihermitian, const Spar
 
 SparseState apply_operator_lin(const SparseOperator& sop, const SparseState& state,
                                double screen_thresh) {
-    return apply_operator_impl_grouped_string(false, sop, state, screen_thresh);
+    size_t num_threads = std::thread::hardware_concurrency();
+    size_t nops = sop.size() * state.size();
+    size_t nops_thresh = 10000;
+    // hardware_concurrency() returns 0 if not well defined
+    if (num_threads <= 1 || nops < nops_thresh){
+        return apply_operator_impl_grouped_string(false, sop, state, screen_thresh);
+    }
+    auto chunks = split_state(state, num_threads);
+    std::vector<std::future<SparseState>> futures;
+    futures.reserve(num_threads);
+    for (auto& chunk : chunks) {
+        futures.emplace_back(std::async(std::launch::async, [&]() {
+            return apply_operator_impl_grouped_string(false, sop, chunk, screen_thresh);
+        }));
+    }
+    SparseState result;
+    for (auto& future : futures) {
+        result += future.get();
+    }
+    return result;
 }
 
 SparseState apply_operator_antiherm(const SparseOperator& sop, const SparseState& state,
                                     double screen_thresh) {
-    return apply_operator_impl_grouped_string(true, sop, state, screen_thresh);
+    size_t num_threads = std::thread::hardware_concurrency();
+    size_t nops = sop.size() * state.size();
+    size_t nops_thresh = 10000;
+    // hardware_concurrency() returns 0 if not well defined
+    if (num_threads <= 1 || nops < nops_thresh){
+        return apply_operator_impl_grouped_string(true, sop, state, screen_thresh);
+    }
+    auto chunks = split_state(state, num_threads);
+    std::vector<std::future<SparseState>> futures;
+    futures.reserve(num_threads);
+    for (auto& chunk : chunks) {
+        futures.emplace_back(std::async(std::launch::async, [&]() {
+            return apply_operator_impl_grouped_string(true, sop, chunk, screen_thresh);
+        }));
+    }
+    SparseState result;
+    for (auto& future : futures) {
+        result += future.get();
+    }
+    return result;
+}
+
+std::vector<SparseState> split_state(const SparseState& state, size_t num_chunks) {
+    if (num_chunks == 0 || state.size() == 0) {
+        return {};
+    }
+    const size_t total_elements =state.size();
+    const size_t chunk_size = total_elements / num_chunks;
+    const size_t remainder = total_elements % num_chunks;
+
+    std::vector<SparseState> chunks;
+    chunks.reserve(num_chunks);
+    auto it = state.elements().begin();
+    for (size_t chunk_idx = 0; chunk_idx < num_chunks; ++chunk_idx) {
+        size_t this_chunk_size = chunk_size + (chunk_idx < remainder);
+        SparseState chunk;
+        for (size_t j = 0; j < this_chunk_size; ++j, ++it) {
+            chunk.insert(it->first, it->second);
+        }
+        chunks.emplace_back(std::move(chunk));
+    }
+    return chunks;
 }
 
 // This is a naive implementation of the operator application that is used for testing
@@ -197,7 +261,7 @@ void apply_operator_kernel_string(const auto& sop_groups, const auto& state_grou
                                 if constexpr (positive) {
                                     new_terms[new_det] += value * t * c;
                                 } else {
-                                    new_terms[new_det] -= value * t * c;
+                                    new_terms[new_det] -= value * std::conj(t) * c;
                                 }
                             }
                         }
