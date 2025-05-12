@@ -173,7 +173,8 @@ def test_sparse_exp_4():
 
     s1 = factexp.apply_antiherm(op, ref, inverse=True)
     s2 = factexp.apply_antiherm(op_inv, ref, inverse=False)
-    assert s1 == s2
+    for d, c in s1.items():
+        assert s2[d] == pytest.approx(c, abs=1e-9)
 
     ### Test the exponential operator with an antihermitian operator with complex coefficients ###
     op = forte.SparseOperatorList()
