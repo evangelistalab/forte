@@ -18,11 +18,16 @@ def jsondump(wfn, frozen_docc, active_docc, active_socc, active_uocc, int_cutoff
     scalars = wfn.scalar_variables()
     E_nuc = scalars["NUCLEAR REPULSION ENERGY"]
     
+    print(f"Getting AO electronic integrals. (Not density fitted.)")
     ao_oeis = mints.ao_kinetic().np + mints.ao_potential().np
+    print("Done")
+    print(f"Getting AO electronic integrals. (Not density fitted.)")
     ao_teis = mints.ao_eri().np        
+    print("Done")
     num_frozen = np.sum(frozen_docc)
     num_active = np.sum(active_docc + active_socc + active_uocc)
-
+    
+    
     #Reorder C so that instead of orbital energy, it is sorted core->active->virtual
     #Active space is chosen for aufbau ordering (i.e. doccs, soccs, uoccs)
         
@@ -31,12 +36,15 @@ def jsondump(wfn, frozen_docc, active_docc, active_socc, active_uocc, int_cutoff
         for orbital in block:
             orbitals.append([orbital, irrep])
     
+    
     orbitals.sort()
     orb_irreps_to_int = []
     for [eps, irrep] in orbitals:
         orb_irreps_to_int.append(irrep)
+
     
     categories = {"frozen_docc": [], "active_docc": [], "active_socc": [], "active_uocc": [], "frozen_uocc": []}
+    
     
     irrep_dict = {}
     for i, irrep in enumerate(orb_irreps_to_int):
@@ -44,6 +52,7 @@ def jsondump(wfn, frozen_docc, active_docc, active_socc, active_uocc, int_cutoff
             irrep_dict[irrep] = []
         irrep_dict[irrep].append(i)
 
+    
     # Assign orbitals to categories based on count constraints
     for irrep, orbitals in irrep_dict.items():
         count_frozen = frozen_docc[irrep]
@@ -70,14 +79,16 @@ def jsondump(wfn, frozen_docc, active_docc, active_socc, active_uocc, int_cutoff
     orb_irreps_to_int = np.array(orb_irreps_to_int)[new_order].tolist()
     
     #Compute frozen core energy and frozen core one electron integral.  (E_fc does NOT include nuclear repulsion.)
-    Pc = contract('pi,si->ps', C[:,:num_frozen], C[:,:num_frozen])
-    ao_hc = ao_oeis + 2*contract('psuv,ps->uv', ao_teis, Pc, optimize = True) - contract('puvs,ps->uv', ao_teis, Pc)
+    
+    Pc = contract('pi,si->ps', C[:,:num_frozen], C[:,:num_frozen], optimize = True)
+    ao_hc = ao_oeis + 2*contract('psuv,ps->uv', ao_teis, Pc, optimize = True) - contract('puvs,ps->uv', ao_teis, Pc, optimize = True)
     E_fc = np.trace(Pc.T@(ao_hc + ao_oeis))
     
     
-    mo_oeis = contract("ui,vj,uv->ij", C, C, ao_hc, optimize = True) 
-    mo_teis = contract("pi,qj,rk,sl,pqrs->ijkl", C, C, C, C, ao_teis, optimize = True)
     
+    mo_oeis = contract("ui,vj,uv->ij", C, C, ao_hc, optimize = True)     
+    mo_teis = contract("pi,qj,rk,sl,pqrs->ijkl", C, C, C, C, ao_teis, optimize = True)
+
     mo_oeis = mo_oeis[num_frozen:num_active+num_frozen, num_frozen:num_active+num_frozen]
     mo_teis = mo_teis[num_frozen:num_active+num_frozen, num_frozen:num_active+num_frozen,
                       num_frozen:num_active+num_frozen, num_frozen:num_active+num_frozen]
