@@ -284,6 +284,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::unordered_set<std::string> vc_blocks_ = {"vc", "VC"};
     std::unordered_set<std::string> vvcc_blocks_ = {"vvcc", "VVCC", "vVcC"};
 
+
     /// Alpha core label
     std::string acore_label_;
     /// Alpha active label

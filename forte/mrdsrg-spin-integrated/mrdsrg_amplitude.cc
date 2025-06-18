@@ -170,58 +170,69 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
     }
 
     double e_freeze = foptions_->get_double("E_FREEZE");
-
-    T2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (std::fabs(value) > 1.0e-15) {
-            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-                if (std::fabs(e_freeze) > 1.0e-10) {
-                    if (Fa_[i[0]] < e_freeze || Fa_[i[1]] < e_freeze || Fa_[i[2]] < e_freeze ||
-                        Fa_[i[3]] < e_freeze) {
-                        value = 0.0;
-                    } else {
-                        value *= dsrg_source_->compute_renormalized_denominator(
-                            Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
-                    }
-                } else {
-                    value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
-                                                                            Fa_[i[2]] - Fa_[i[3]]);
-                }
-
-                // value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
-                //                                                         Fa_[i[2]] - Fa_[i[3]]);
-            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-                if (std::fabs(e_freeze) > 1.0e-10) {
-                    if (Fa_[i[0]] < e_freeze || Fb_[i[1]] < e_freeze || Fa_[i[2]] < e_freeze ||
-                        Fb_[i[3]] < e_freeze) {
-                        value = 0.0;
-                    } else {
-                        value *= dsrg_source_->compute_renormalized_denominator(
-                            Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
-                    }
-                } else {
-                    value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] -
-                                                                            Fa_[i[2]] - Fb_[i[3]]);
-                }
-                // value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] -
-                //                                                         Fa_[i[2]] - Fb_[i[3]]);
-            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-                if (std::fabs(e_freeze) > 1.0e-10) {
-                    if (Fb_[i[0]] < e_freeze || Fb_[i[1]] < e_freeze || Fb_[i[2]] < e_freeze ||
-                        Fb_[i[3]] < e_freeze) {
-                        value = 0.0;
-                    } else {
-                        value *= dsrg_source_->compute_renormalized_denominator(
-                            Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
-                    }
-                } else {
-                    value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] -
-                                                                            Fb_[i[2]] - Fb_[i[3]]);
-                }
-                // value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] -
-                //                                                         Fb_[i[2]] - Fb_[i[3]]);
-            }
-        }
+    auto t2_blocks = T2_.block_labels();
+    std::erase_if(t2_blocks, [&](const std::string& block) {
+        return ccvv_blocks_.find(block) != ccvv_blocks_.end();
     });
+
+    for (const std::string& block : t2_blocks) {
+        bool spin0 = std::islower(block[0]);
+        bool spin1 = std::islower(block[1]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        const std::vector<double>& F1_ = spin1 ? Fa_ : Fb_;
+        T2_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (std::fabs(value) > 1.0e-15) {
+                size_t i0 = label_to_spacemo_[block[0]][i[0]];
+                size_t i1 = label_to_spacemo_[block[1]][i[1]];
+                size_t i2 = label_to_spacemo_[block[2]][i[2]];
+                size_t i3 = label_to_spacemo_[block[3]][i[3]];
+                if (std::fabs(e_freeze) > 1.0e-10) {
+                    if (F0_[i0] < e_freeze || F1_[i1] < e_freeze || F0_[i2] < e_freeze ||
+                        F1_[i3] < e_freeze) {
+                        value = 0.0;
+                    } else {
+                        value *= dsrg_source_->compute_renormalized_denominator(F0_[i0] + F1_[i1] -
+                                                                                F0_[i2] - F1_[i3]);
+                    }
+                } else {
+                    value *= dsrg_source_->compute_renormalized_denominator(F0_[i0] + F1_[i1] -
+                                                                            F0_[i2] - F1_[i3]);
+                }
+            } else {
+                value = 0.0;
+            }
+        });
+    }
+
+    // loop over ccvv blocks
+    for (const std::string& block : ccvv_blocks_) {
+        bool spin0 = std::islower(block[0]);
+        bool spin1 = std::islower(block[1]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        const std::vector<double>& F1_ = spin1 ? Fa_ : Fb_;
+        T2_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (std::fabs(value) > 1.0e-15) {
+                size_t i0 = label_to_spacemo_[block[0]][i[0]];
+                size_t i1 = label_to_spacemo_[block[1]][i[1]];
+                size_t i2 = label_to_spacemo_[block[2]][i[2]];
+                size_t i3 = label_to_spacemo_[block[3]][i[3]];
+                if (std::fabs(e_freeze) > 1.0e-10) {
+                    if (F0_[i0] < e_freeze || F1_[i1] < e_freeze || F0_[i2] < e_freeze ||
+                        F1_[i3] < e_freeze) {
+                        value = 0.0;
+                    } else {
+                        value *= dsrg_source_ccvv_->compute_renormalized_denominator(
+                            F0_[i0] + F1_[i1] - F0_[i2] - F1_[i3]);
+                    }
+                } else {
+                    value *= dsrg_source_ccvv_->compute_renormalized_denominator(F0_[i0] + F1_[i1] -
+                                                                                 F0_[i2] - F1_[i3]);
+                }
+            } else {
+                value = 0.0;
+            }
+        });
+    }
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
@@ -357,35 +368,56 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
 
     double e_freeze = foptions_->get_double("E_FREEZE");
 
-    T1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (std::fabs(value) > 1.0e-15) {
-            if (spin[0] == AlphaSpin) {
-                if (std::fabs(e_freeze) > 1.0e-10) {
-                    if (Fa_[i[0]] < e_freeze || Fa_[i[1]] < e_freeze) {
-                        value = 0.0;
-                    } else {
-                        value *=
-                            dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
-                    }
-                } else {
-                    value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
-                }
-                // value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
-            } else {
-                if (std::fabs(e_freeze) > 1.0e-10) {
-                    if (Fb_[i[0]] < e_freeze || Fb_[i[1]] < e_freeze) {
-                        value = 0.0;
-                    } else {
-                        value *=
-                            dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
-                    }
-                } else {
-                    value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
-                }
-                // value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
-            }
-        }
+    auto t1_blocks = T1_.block_labels();
+    std::erase_if(t1_blocks, [&](const std::string& block) {
+        return cv_blocks_.find(block) != cv_blocks_.end();
     });
+
+    for (const std::string& block : t1_blocks) {
+        bool spin0 = std::islower(block[0]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        T1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (std::fabs(value) > 1.0e-15) {
+                size_t i0 = label_to_spacemo_[block[0]][i[0]];
+                size_t i1 = label_to_spacemo_[block[1]][i[1]];
+                if (std::fabs(e_freeze) > 1.0e-10) {
+                    if (F0_[i0] < e_freeze || F0_[i1] < e_freeze) {
+                        value = 0.0;
+                    } else {
+                        value *= dsrg_source_->compute_renormalized_denominator(F0_[i0] - F0_[i1]);
+                    }
+                } else {
+                    value *= dsrg_source_->compute_renormalized_denominator(F0_[i0] - F0_[i1]);
+                }
+            } else {
+                value = 0.0;
+            }
+        });
+    }
+
+    // loop over cv blocks
+    for (const std::string& block : cv_blocks_) {
+        bool spin0 = std::islower(block[0]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        T1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (std::fabs(value) > 1.0e-15) {
+                size_t i0 = label_to_spacemo_[block[0]][i[0]];
+                size_t i1 = label_to_spacemo_[block[1]][i[1]];
+                if (std::fabs(e_freeze) > 1.0e-10) {
+                    if (F0_[i0] < e_freeze || F0_[i1] < e_freeze) {
+                        value = 0.0;
+                    } else {
+                        value *=
+                            dsrg_source_cv_->compute_renormalized_denominator(F0_[i0] - F0_[i1]);
+                    }
+                } else {
+                    value *= dsrg_source_cv_->compute_renormalized_denominator(F0_[i0] - F0_[i1]);
+                }
+            } else {
+                value = 0.0;
+            }
+        });
+    }
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
@@ -740,19 +772,43 @@ void MRDSRG::update_t2_std() {
 
     timer t2("scale Hbar2 by renormalized denominator");
     // scale Hbar2 by renormalized denominator
-    DT2_.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-                value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
-                                                                        Fa_[i[2]] - Fa_[i[3]]);
-            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-                value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] -
-                                                                        Fa_[i[2]] - Fb_[i[3]]);
-            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-                value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] -
-                                                                        Fb_[i[2]] - Fb_[i[3]]);
-            }
+    auto dt2_labels = DT2_.block_labels();
+    std::erase_if(dt2_labels, [&](const std::string& block) {
+        return ccvv_blocks_.find(block) != ccvv_blocks_.end();
+    });
+
+    for (const std::string& block : dt2_labels) {
+        bool spin0 = std::islower(block[0]);
+        bool spin1 = std::islower(block[1]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        const std::vector<double>& F1_ = spin1 ? Fa_ : Fb_;
+        DT2_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            size_t i2 = label_to_spacemo_[block[2]][i[2]];
+            size_t i3 = label_to_spacemo_[block[3]][i[3]];
+
+            value *= dsrg_source_->compute_renormalized_denominator(F0_[i0] + F1_[i1] - F0_[i2] -
+                                                                    F1_[i3]);
         });
+    }
+
+    // loop over ccvv blocks
+    for (const std::string& block : ccvv_blocks_) {
+        bool spin0 = std::islower(block[0]);
+        bool spin1 = std::islower(block[1]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        const std::vector<double>& F1_ = spin1 ? Fa_ : Fb_;
+        DT2_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            size_t i2 = label_to_spacemo_[block[2]][i[2]];
+            size_t i3 = label_to_spacemo_[block[3]][i[3]];
+
+            value *= dsrg_source_ccvv_->compute_renormalized_denominator(F0_[i0] + F1_[i1] -
+                                                                         F0_[i2] - F1_[i3]);
+        });
+    }
     t2.stop();
 
     // Step 2: work on T2 where Hbar2 is treated as intermediate
@@ -779,19 +835,40 @@ void MRDSRG::update_t2_std() {
 
     timer t6("scale T2 by delta exponential");
     // scale T2 by delta exponential
-    T2_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-                    double& value) {
-        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-            value *=
-                dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
-        } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-            value *=
-                dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
-        } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-            value *=
-                dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
-        }
+    auto t2_labels = T2_.block_labels();
+    std::erase_if(t2_labels, [&](const std::string& block) {
+        return ccvv_blocks_.find(block) != ccvv_blocks_.end();
     });
+
+    for (const std::string& block : t2_labels) {
+        bool spin0 = std::islower(block[0]);
+        bool spin1 = std::islower(block[1]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        const std::vector<double>& F1_ = spin1 ? Fa_ : Fb_;
+        T2_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            size_t i2 = label_to_spacemo_[block[2]][i[2]];
+            size_t i3 = label_to_spacemo_[block[3]][i[3]];
+
+            value *= dsrg_source_->compute_renormalized(F0_[i0] + F1_[i1] - F0_[i2] - F1_[i3]);
+        });
+    }
+
+    // loop over ccvv blocks
+    for (const std::string& block : ccvv_blocks_) {
+        bool spin0 = std::islower(block[0]);
+        bool spin1 = std::islower(block[1]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        const std::vector<double>& F1_ = spin1 ? Fa_ : Fb_;
+        T2_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            size_t i2 = label_to_spacemo_[block[2]][i[2]];
+            size_t i3 = label_to_spacemo_[block[3]][i[3]];
+            value *= dsrg_source_ccvv_->compute_renormalized(F0_[i0] + F1_[i1] - F0_[i2] - F1_[i3]);
+        });
+    }
     t6.stop();
 
     timer t7("minus the renormalized T2 from renormalized Hbar2");
@@ -887,14 +964,31 @@ void MRDSRG::update_t1_std() {
     DT1_["IA"] = Hbar1_["IA"];
 
     // scale Hbar1 by renormalized denominator
-    DT1_.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin) {
-                value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
-            } else {
-                value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
-            }
+    auto dt1_labels = DT1_.block_labels();
+    std::erase_if(dt1_labels, [&](const std::string& block) {
+        return cv_blocks_.find(block) != cv_blocks_.end();
+    });
+
+    for (const std::string& block : dt1_labels) {
+        bool spin0 = std::islower(block[0]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        DT1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            value *= dsrg_source_->compute_renormalized_denominator(F0_[i0] - F0_[i1]);
         });
+    }
+
+    // loop over cv blocks
+    for (const std::string& block : cv_blocks_) {
+        bool spin0 = std::islower(block[0]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        DT1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            value *= dsrg_source_cv_->compute_renormalized_denominator(F0_[i0] - F0_[i1]);
+        });
+    }
 
     // Step 2: work on T1 where Hbar1 is treated as intermediate
 
@@ -913,14 +1007,30 @@ void MRDSRG::update_t1_std() {
     }
 
     // scale T1 by delta exponential
-    T1_.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin) {
-                value *= dsrg_source_->compute_renormalized(Fa_[i[0]] - Fa_[i[1]]);
-            } else {
-                value *= dsrg_source_->compute_renormalized(Fb_[i[0]] - Fb_[i[1]]);
-            }
+    auto t1_labels = T1_.block_labels();
+    std::erase_if(t1_labels, [&](const std::string& block) {
+        return cv_blocks_.find(block) != cv_blocks_.end();
+    });
+
+    for (const std::string& block : t1_labels) {
+        bool spin0 = std::islower(block[0]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        T1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            value *= dsrg_source_->compute_renormalized(F0_[i0] - F0_[i1]);
         });
+    }
+    // loop over cv blocks
+    for (const std::string& block : cv_blocks_) {
+        bool spin0 = std::islower(block[0]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        T1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            value *= dsrg_source_cv_->compute_renormalized(F0_[i0] - F0_[i1]);
+        });
+    }
 
     // minus the renormalized T1 from renormalized Hbar1
     DT1_["ia"] -= T1_["ia"];
