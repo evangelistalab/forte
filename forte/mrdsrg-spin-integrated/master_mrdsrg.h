@@ -175,10 +175,18 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
 
     /// The flow parameter
     double s_;
+    // The flow parameter for the CV block
+    double s_cv_;
+    /// The flow parameter for the CCVV block
+    double s_ccvv_;
     /// Source operator
     std::string source_;
     /// The dsrg source operator
     std::shared_ptr<DSRG_SOURCE> dsrg_source_;
+    /// The dsrg source operator for the CV block
+    std::shared_ptr<DSRG_SOURCE> dsrg_source_cv_;
+    /// The dsrg source operator for the CCVV block
+    std::shared_ptr<DSRG_SOURCE> dsrg_source_ccvv_;
     /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
     double taylor_threshold_;
 
@@ -255,6 +263,26 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::shared_ptr<BlockedTensorFactory> BTF_;
     /// Tensor type for Ambit
     ambit::TensorType tensor_type_;
+
+    std::vector<SpinType> block_label_to_spin(const std::string& label) {
+        std::vector<SpinType> spins;
+        for (auto& c : label) {
+            if (std::islower(c)) {
+                spins.push_back(AlphaSpin);
+            } else if (std::isupper(c)) {
+                spins.push_back(BetaSpin);
+            } else {
+                throw std::runtime_error("Invalid spin character in label: " + label);
+            }
+        }
+        return spins;
+    }
+
+    /// Reserved for special treatment of ccvv blocks
+    std::unordered_set<std::string> cv_blocks_ = {"cv", "CV"};
+    std::unordered_set<std::string> ccvv_blocks_ = {"ccvv", "CCVV", "cCvV"};
+    std::unordered_set<std::string> vc_blocks_ = {"vc", "VC"};
+    std::unordered_set<std::string> vvcc_blocks_ = {"vvcc", "VVCC", "vVcC"};
 
     /// Alpha core label
     std::string acore_label_;

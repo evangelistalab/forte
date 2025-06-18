@@ -995,6 +995,14 @@ DSRG:
     type: double
     default: 0.5
     help: "The value of the DSRG flow parameter s"
+  DSRG_S_CV:
+    type: double
+    default: None
+    help: "The value of the DSRG flow parameter s for the CV block"
+  DSRG_S_CCVV:
+    type: double
+    default: None
+    help: "The value of the DSRG flow parameter s for the CCVV block"
   DSRG_POWER:
     type: double
     default: 2.0

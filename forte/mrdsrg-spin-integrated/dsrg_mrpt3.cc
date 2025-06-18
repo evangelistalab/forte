@@ -995,23 +995,49 @@ void DSRG_MRPT3::compute_t2() {
         T2_["IJCD"] = tempT2["IJAB"] * U_["DB"] * U_["CA"];
     }
 
-    T2_.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+    auto t2_blocks = T2_.block_labels();
+    std::erase_if(t2_blocks, [&](const std::string& block) {
+        return ccvv_blocks_.find(block) != ccvv_blocks_.end();
+    });
+
+    for (const std::string& block : t2_blocks) {
+        bool spin0 = std::islower(block[0]);
+        bool spin1 = std::islower(block[1]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        const std::vector<double>& F1_ = spin1 ? Fa_ : Fb_;
+        T2_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
             if (std::fabs(value) > 1.0e-15) {
-                if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
-                    value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
-                                                                            Fa_[i[2]] - Fa_[i[3]]);
-                } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
-                    value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] -
-                                                                            Fa_[i[2]] - Fb_[i[3]]);
-                } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
-                    value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] -
-                                                                            Fb_[i[2]] - Fb_[i[3]]);
-                }
+                size_t i0 = label_to_spacemo_[block[0]][i[0]];
+                size_t i1 = label_to_spacemo_[block[1]][i[1]];
+                size_t i2 = label_to_spacemo_[block[2]][i[2]];
+                size_t i3 = label_to_spacemo_[block[3]][i[3]];
+                value *= dsrg_source_->compute_renormalized_denominator(F0_[i0] + F1_[i1] -
+                                                                        F0_[i2] - F1_[i3]);
             } else {
                 value = 0.0;
             }
         });
+    }
+
+    // loop over ccvv blocks
+    for (const std::string& block : ccvv_blocks_) {
+        bool spin0 = std::islower(block[0]);
+        bool spin1 = std::islower(block[1]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        const std::vector<double>& F1_ = spin1 ? Fa_ : Fb_;
+        T2_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (std::fabs(value) > 1.0e-15) {
+                size_t i0 = label_to_spacemo_[block[0]][i[0]];
+                size_t i1 = label_to_spacemo_[block[1]][i[1]];
+                size_t i2 = label_to_spacemo_[block[2]][i[2]];
+                size_t i3 = label_to_spacemo_[block[3]][i[3]];
+                value *= dsrg_source_ccvv_->compute_renormalized_denominator(F0_[i0] + F1_[i1] -
+                                                                             F0_[i2] - F1_[i3]);
+            } else {
+                value = 0.0;
+            }
+        });
+    }
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
@@ -1084,18 +1110,39 @@ void DSRG_MRPT3::compute_t1() {
         T1_["IA"] = tempT1["IA"];
     }
 
-    T1_.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+    auto t1_blocks = T1_.block_labels();
+    std::erase_if(t1_blocks, [&](const std::string& block) {
+        return cv_blocks_.find(block) != cv_blocks_.end();
+    });
+
+    for (const std::string& block : t1_blocks) {
+        bool spin0 = std::islower(block[0]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        T1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
             if (std::fabs(value) > 1.0e-15) {
-                if (spin[0] == AlphaSpin) {
-                    value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
-                } else {
-                    value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
-                }
+                size_t i0 = label_to_spacemo_[block[0]][i[0]];
+                size_t i1 = label_to_spacemo_[block[1]][i[1]];
+                value *= dsrg_source_->compute_renormalized_denominator(F0_[i0] - F0_[i1]);
             } else {
                 value = 0.0;
             }
         });
+    }
+
+    // loop over cv blocks
+    for (const std::string& block : cv_blocks_) {
+        bool spin0 = std::islower(block[0]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        T1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (std::fabs(value) > 1.0e-15) {
+                size_t i0 = label_to_spacemo_[block[0]][i[0]];
+                size_t i1 = label_to_spacemo_[block[1]][i[1]];
+                value *= dsrg_source_cv_->compute_renormalized_denominator(F0_[i0] - F0_[i1]);
+            } else {
+                value = 0.0;
+            }
+        });
+    }
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
@@ -1129,42 +1176,50 @@ void DSRG_MRPT3::renormalize_V(const bool& plusone) {
         V_["ABKL"] = tempV["ABIJ"] * U_["LJ"] * U_["KI"];
     }
 
-    if (plusone) {
-        V_.iterate(
-            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-                if (std::fabs(value) > 1.0e-15) {
-                    if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
-                        value *= 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] -
-                                                                          Fa_[i[2]] - Fa_[i[3]]);
-                    } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
-                        value *= 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] -
-                                                                          Fa_[i[2]] - Fb_[i[3]]);
-                    } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
-                        value *= 1.0 + dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] -
-                                                                          Fb_[i[2]] - Fb_[i[3]]);
-                    }
-                } else {
-                    value = 0.0;
-                }
-            });
-    } else {
-        V_.iterate(
-            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-                if (std::fabs(value) > 1.0e-15) {
-                    if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
-                        value *= dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] -
-                                                                    Fa_[i[2]] - Fa_[i[3]]);
-                    } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
-                        value *= dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] -
-                                                                    Fa_[i[2]] - Fb_[i[3]]);
-                    } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
-                        value *= dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] -
-                                                                    Fb_[i[2]] - Fb_[i[3]]);
-                    }
-                } else {
-                    value = 0.0;
-                }
-            });
+    auto v_blocks = V_.block_labels();
+    std::erase_if(v_blocks, [&](const std::string& block) {
+        return vvcc_blocks_.find(block) != vvcc_blocks_.end();
+    });
+
+    double shift = plusone ? 1.0 : 0.0;
+
+    for (const std::string& block : v_blocks) {
+        bool spin0 = std::islower(block[0]);
+        bool spin1 = std::islower(block[1]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        const std::vector<double>& F1_ = spin1 ? Fa_ : Fb_;
+        V_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (std::fabs(value) > 1.0e-15) {
+                size_t i0 = label_to_spacemo_[block[0]][i[0]];
+                size_t i1 = label_to_spacemo_[block[1]][i[1]];
+                size_t i2 = label_to_spacemo_[block[2]][i[2]];
+                size_t i3 = label_to_spacemo_[block[3]][i[3]];
+                value *= shift +
+                         dsrg_source_->compute_renormalized(F0_[i0] + F1_[i1] - F0_[i2] - F1_[i3]);
+            } else {
+                value = 0.0;
+            }
+        });
+    }
+
+    // loop over vvcc blocks
+    for (const std::string& block : vvcc_blocks_) {
+        bool spin0 = std::islower(block[0]);
+        bool spin1 = std::islower(block[1]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        const std::vector<double>& F1_ = spin1 ? Fa_ : Fb_;
+        V_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (std::fabs(value) > 1.0e-15) {
+                size_t i0 = label_to_spacemo_[block[0]][i[0]];
+                size_t i1 = label_to_spacemo_[block[1]][i[1]];
+                size_t i2 = label_to_spacemo_[block[2]][i[2]];
+                size_t i3 = label_to_spacemo_[block[3]][i[3]];
+                value *= shift + dsrg_source_ccvv_->compute_renormalized(F0_[i0] + F1_[i1] -
+                                                                         F0_[i2] - F1_[i3]);
+            } else {
+                value = 0.0;
+            }
+        });
     }
 
     // transform back to non-canonical basis
@@ -1237,18 +1292,39 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
         sum["AI"] = tempF["AI"];
     }
 
-    sum.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+    auto sum_blocks = sum.block_labels();
+    std::erase_if(sum_blocks, [&](const std::string& block) {
+        return vc_blocks_.find(block) != vc_blocks_.end();
+    });
+
+    for (const std::string& block : sum_blocks) {
+        bool spin0 = std::islower(block[0]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        sum.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
             if (std::fabs(value) > 1.0e-15) {
-                if (spin[0] == AlphaSpin) {
-                    value *= dsrg_source_->compute_renormalized(Fa_[i[0]] - Fa_[i[1]]);
-                } else {
-                    value *= dsrg_source_->compute_renormalized(Fb_[i[0]] - Fb_[i[1]]);
-                }
+                size_t i0 = label_to_spacemo_[block[0]][i[0]];
+                size_t i1 = label_to_spacemo_[block[1]][i[1]];
+                value *= dsrg_source_->compute_renormalized(F0_[i0] - F0_[i1]);
             } else {
                 value = 0.0;
             }
         });
+    }
+
+    // loop over vc blocks
+    for (const std::string& block : vc_blocks_) {
+        bool spin0 = std::islower(block[0]);
+        const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
+        sum.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (std::fabs(value) > 1.0e-15) {
+                size_t i0 = label_to_spacemo_[block[0]][i[0]];
+                size_t i1 = label_to_spacemo_[block[1]][i[1]];
+                value *= dsrg_source_cv_->compute_renormalized(F0_[i0] - F0_[i1]);
+            } else {
+                value = 0.0;
+            }
+        });
+    }
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
@@ -4204,7 +4280,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VC_EX(BlockedTensor& B, BlockedTensor& T2, const dou
                 } // end if "qs" ab, "jb" ba
 
             } // end loop "jb"
-        }     // end loop partition of virtual
+        } // end loop partition of virtual
 
         end_ = std::chrono::system_clock::now();
         tt2_ = std::chrono::system_clock::to_time_t(end_);
@@ -4559,7 +4635,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
                     } // end if G1beta
 
                 } // end loop "jb"
-            }     // partition of virtual
+            } // partition of virtual
 
         } // end loop for G1label
 

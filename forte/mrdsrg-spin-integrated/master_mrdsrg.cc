@@ -113,6 +113,22 @@ void MASTER_DSRG::read_options() {
     if (s_ < 0) {
         throw_error("S parameter for DSRG must >= 0!");
     }
+    if (foptions_->is_none("DSRG_S_CV")) {
+        s_cv_ = s_;
+    } else {
+        s_cv_ = foptions_->get_double("DSRG_S_CV");
+    }
+    if (s_cv_ < 0) {
+        throw_error("S_CV parameter for DSRG must >= 0!");
+    }
+    if (foptions_->is_none("DSRG_S_CCVV")) {
+        s_ccvv_ = s_;
+    } else {
+        s_ccvv_ = foptions_->get_double("DSRG_S_CCVV");
+    }
+    if (s_ccvv_ < 0) {
+        throw_error("S_CCVV parameter for DSRG must >= 0!");
+    }
     taylor_threshold_ = foptions_->get_int("TAYLOR_THRESHOLD");
     if (taylor_threshold_ <= 0) {
         throw_error("Threshold for Taylor expansion must be an integer greater than 0!");
@@ -129,6 +145,8 @@ void MASTER_DSRG::read_options() {
     }
     if (source_ == "STANDARD") {
         dsrg_source_ = std::make_shared<STD_SOURCE>(s_, taylor_threshold_);
+        dsrg_source_cv_ = std::make_shared<STD_SOURCE>(s_cv_, taylor_threshold_); // for CV
+        dsrg_source_ccvv_ = std::make_shared<STD_SOURCE>(s_ccvv_, taylor_threshold_);
     } else if (source_ == "LABS") {
         dsrg_source_ = std::make_shared<LABS_SOURCE>(s_, taylor_threshold_);
     } else if (source_ == "DYSON") {
