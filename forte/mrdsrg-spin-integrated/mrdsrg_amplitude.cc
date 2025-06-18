@@ -170,7 +170,7 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
     }
 
     double e_freeze = foptions_->get_double("E_FREEZE");
-    auto t2_blocks = T2_.block_labels();
+    auto t2_blocks = T2.block_labels();
     std::erase_if(t2_blocks, [&](const std::string& block) {
         return ccvv_blocks_.find(block) != ccvv_blocks_.end();
     });
@@ -180,7 +180,7 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
         bool spin1 = std::islower(block[1]);
         const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
         const std::vector<double>& F1_ = spin1 ? Fa_ : Fb_;
-        T2_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+        T2.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 size_t i0 = label_to_spacemo_[block[0]][i[0]];
                 size_t i1 = label_to_spacemo_[block[1]][i[1]];
@@ -210,7 +210,7 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
         bool spin1 = std::islower(block[1]);
         const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
         const std::vector<double>& F1_ = spin1 ? Fa_ : Fb_;
-        T2_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+        T2.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 size_t i0 = label_to_spacemo_[block[0]][i[0]];
                 size_t i1 = label_to_spacemo_[block[1]][i[1]];
@@ -368,7 +368,7 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
 
     double e_freeze = foptions_->get_double("E_FREEZE");
 
-    auto t1_blocks = T1_.block_labels();
+    auto t1_blocks = T1.block_labels();
     std::erase_if(t1_blocks, [&](const std::string& block) {
         return cv_blocks_.find(block) != cv_blocks_.end();
     });
@@ -376,7 +376,7 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
     for (const std::string& block : t1_blocks) {
         bool spin0 = std::islower(block[0]);
         const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
-        T1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+        T1.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 size_t i0 = label_to_spacemo_[block[0]][i[0]];
                 size_t i1 = label_to_spacemo_[block[1]][i[1]];
@@ -399,7 +399,7 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
     for (const std::string& block : cv_blocks_) {
         bool spin0 = std::islower(block[0]);
         const std::vector<double>& F0_ = spin0 ? Fa_ : Fb_;
-        T1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+        T1.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 size_t i0 = label_to_spacemo_[block[0]][i[0]];
                 size_t i1 = label_to_spacemo_[block[1]][i[1]];

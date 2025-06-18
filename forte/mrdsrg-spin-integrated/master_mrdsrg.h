@@ -279,10 +279,10 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     }
 
     /// Reserved for special treatment of ccvv blocks
-    std::unordered_set<std::string> cv_blocks_ = {"cv", "CV"};
-    std::unordered_set<std::string> ccvv_blocks_ = {"ccvv", "CCVV", "cCvV"};
-    std::unordered_set<std::string> vc_blocks_ = {"vc", "VC"};
-    std::unordered_set<std::string> vvcc_blocks_ = {"vvcc", "VVCC", "vVcC"};
+    const std::unordered_set<std::string> cv_blocks_ = {"cv", "CV"};
+    const std::unordered_set<std::string> ccvv_blocks_ = {"ccvv", "CCVV", "cCvV"};
+    const std::unordered_set<std::string> vc_blocks_ = {"vc", "VC"};
+    const std::unordered_set<std::string> vvcc_blocks_ = {"vvcc", "VVCC", "vVcC"};
 
 
     /// Alpha core label
