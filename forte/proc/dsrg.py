@@ -31,6 +31,7 @@ import warnings
 import math
 import json
 import psi4
+import os.path
 
 import forte
 from forte.proc.external_active_space_solver import write_external_active_space_file
@@ -49,7 +50,6 @@ class ProcedureDSRG:
         :param scf_info: the Forte SCFInfo object
         """
 
-        # Read options
         self.solver_type = options.get_str("CORRELATION_SOLVER")
         if self.solver_type in ["SA-MRDSRG", "SA_MRDSRG", "DSRG_MRPT", "DSRG-MRPT"]:
             self.rdm_type = forte.RDMsType.spin_free
@@ -179,9 +179,42 @@ class ProcedureDSRG:
                 self.mo_space_info, self.ints, self.scf_info, inactive_mix, active_mix, semi_threshold
             )
 
+    def write_to_fcidump(self):
+        "Writes integrals to FCIDUMP in PYSCF format"
+
+        if not os.path.exists('INTDUMP'):
+
+            mos = self.mo_space_info.corr_absolute_mo("CORRELATED") 
+            nmo = len(mos)
+            a = self.ints.oei_a_block(mos,mos)
+            ab = self.ints.tei_ab_block(mos,mos,mos,mos)
+            tol = 1.0e-15
+            fcidump_string = f"""&FCI NORB={nmo},NELEC={12},UHF=.FALSE.,ORBSYM={"1,"*(nmo)}MS2={0},ISYM=1
+&END
+"""
+            print("...writing integrals to INTDUMP")
+            #transform to chemist notation
+            for i in range(nmo):
+                for j in range(0, i+1):
+                    for k in range(0, nmo):
+                        for l in range(0, k+1):
+                            if abs(ab[i][k][j][l]) > tol:
+                                fcidump_string += f"{ab[i][k][j][l]:.20e} {i+1:4d}{j+1:4d}{k+1:4d}{l+1:4d}\n"
+            for i in range(0, nmo):
+                for j in range(0, i+1):
+                    if abs(a[i][j]) > tol:
+                        fcidump_string += f"{a[i][j]:.20e} {i+1:4d}{j+1:4d}{0:4d}{0:4d}\n"
+            fcidump_string += f"{self.ints.nuclear_repulsion_energy() + self.ints.frozen_core_energy()}  {0:4d}{0:4d}{0:4d}{0:4d}"
+
+            with open("INTDUMP", "w") as f:
+                f.write(fcidump_string)
+
+            raise psi4.p4util.PsiException("Written integrals to INTDUMP")
+
     def make_dsrg_solver(self):
-        """Make a DSRG solver."""
         args = (self.rdms, self.scf_info, self.options, self.ints, self.mo_space_info)
+
+        self.write_to_fcidump()
 
         if self.solver_type in ["MRDSRG", "DSRG-MRPT2", "DSRG-MRPT3", "THREE-DSRG-MRPT2"]:
             self.dsrg_solver = forte.make_dsrg_method(*args)
