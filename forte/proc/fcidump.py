@@ -37,7 +37,7 @@ from psi4.driver.procrouting.proc_util import check_iwl_file_from_scf_type
 from psi4 import core
 
 
-def fcidump(wfn, fname='INTDUMP', oe_ints=None, write_pntgrp=False):
+def fcidump(wfn, fname="INTDUMP", oe_ints=None, write_pntgrp=False):
     """Save integrals to file in FCIDUMP format as defined in Comp. Phys. Commun. 54 75 (1989)
     Additional one-electron integrals, including orbital energies, can also be saved.
     This latter format can be used with the HANDE QMC code but is not standard.
@@ -71,11 +71,11 @@ def fcidump(wfn, fname='INTDUMP', oe_ints=None, write_pntgrp=False):
 
     """
     # Get some options
-    reference = core.get_option('SCF', 'REFERENCE')
-    ints_tolerance = core.get_global_option('INTS_TOLERANCE')
+    reference = core.get_option("SCF", "REFERENCE")
+    ints_tolerance = core.get_global_option("INTS_TOLERANCE")
     # Some sanity checks
-    if reference not in ['RHF', 'UHF', 'ROHF']:
-        raise ValidationError('FCIDUMP not implemented for {} references\n'.format(reference))
+    if reference not in ["RHF", "UHF", "ROHF"]:
+        raise ValidationError("FCIDUMP not implemented for {} references\n".format(reference))
     if oe_ints is None:
         oe_ints = []
 
@@ -98,40 +98,40 @@ def fcidump(wfn, fname='INTDUMP', oe_ints=None, write_pntgrp=False):
         if n_socc % 2 == 1:
             wfn_irrep ^= h
 
-    core.print_out('Writing integrals in FCIDUMP format to ' + fname + '\n')
+    core.print_out("Writing integrals in FCIDUMP format to " + fname + "\n")
     # Generate FCIDUMP header
-    header = '&FCI\n'
-    header += 'NORB={:d},\n'.format(nbf)
-    header += 'NELEC={:d},\n'.format(nelectron)
-    header += 'MS2={:d},\n'.format(wfn.nalpha() - wfn.nbeta())
-    header += 'UHF=.{}.,\n'.format(not wfn.same_a_b_orbs()).upper()
-    orbsym = ''
+    header = "&FCI\n"
+    header += "NORB={:d},\n".format(nbf)
+    header += "NELEC={:d},\n".format(nelectron)
+    header += "MS2={:d},\n".format(wfn.nalpha() - wfn.nbeta())
+    header += "UHF=.{}.,\n".format(not wfn.same_a_b_orbs()).upper()
+    orbsym = ""
     for h in range(active_mopi.n()):
         for n in range(frzcpi[h], frzcpi[h] + active_mopi[h]):
-            orbsym += '{:d},'.format(irrep_map[h])
+            orbsym += "{:d},".format(irrep_map[h])
             if not wfn.same_a_b_orbs():
-                orbsym += '{:d},'.format(irrep_map[h])
-    header += 'ORBSYM={}\n'.format(orbsym)
-    header += 'ISYM={:d},\n'.format(irrep_map[wfn_irrep])
+                orbsym += "{:d},".format(irrep_map[h])
+    header += "ORBSYM={}\n".format(orbsym)
+    header += "ISYM={:d},\n".format(irrep_map[wfn_irrep])
     if write_pntgrp:
-        header += 'PNTGRP={},\n'.format(symm.upper())
-    header += '&END\n'
-    with open(fname, 'w') as intdump:
+        header += "PNTGRP={},\n".format(symm.upper())
+    header += "&END\n"
+    with open(fname, "w") as intdump:
         intdump.write(header)
 
     # Get an IntegralTransform object
-    check_iwl_file_from_scf_type(core.get_global_option('SCF_TYPE'), wfn)
+    check_iwl_file_from_scf_type(core.get_global_option("SCF_TYPE"), wfn)
     spaces = [core.MOSpace.all()]
     trans_type = core.IntegralTransform.TransformationType.Restricted
     if not wfn.same_a_b_orbs():
         trans_type = core.IntegralTransform.TransformationType.Unrestricted
     ints = core.IntegralTransform(wfn, spaces, trans_type)
     ints.transform_tei(core.MOSpace.all(), core.MOSpace.all(), core.MOSpace.all(), core.MOSpace.all())
-    core.print_out('Integral transformation complete!\n')
+    core.print_out("Integral transformation complete!\n")
 
-    DPD_info = {'instance_id': ints.get_dpd_id(), 'alpha_MO': ints.DPD_ID('[A>=A]+'), 'beta_MO': 0}
+    DPD_info = {"instance_id": ints.get_dpd_id(), "alpha_MO": ints.DPD_ID("[A>=A]+"), "beta_MO": 0}
     if not wfn.same_a_b_orbs():
-        DPD_info['beta_MO'] = ints.DPD_ID("[a>=a]+")
+        DPD_info["beta_MO"] = ints.DPD_ID("[a>=a]+")
     # Write TEI to fname in FCIDUMP format
     core.fcidump_tei_helper(nirrep, wfn.same_a_b_orbs(), DPD_info, ints_tolerance, fname)
 
@@ -142,10 +142,10 @@ def fcidump(wfn, fname='INTDUMP', oe_ints=None, write_pntgrp=False):
     alpha_mo_idx = lambda x: 2 * x + 1
     beta_mo_idx = lambda x: 2 * (x + 1)
 
-    with open(fname, 'a') as intdump:
-        core.print_out('Writing frozen core operator in FCIDUMP format to ' + fname + '\n')
-        if reference == 'RHF' or reference == 'ROHF':
-            PSIF_MO_FZC = 'MO-basis Frozen-Core Operator'
+    with open(fname, "a") as intdump:
+        core.print_out("Writing frozen core operator in FCIDUMP format to " + fname + "\n")
+        if reference == "RHF" or reference == "ROHF":
+            PSIF_MO_FZC = "MO-basis Frozen-Core Operator"
             moH = core.Matrix(PSIF_MO_FZC, wfn.nmopi(), wfn.nmopi())
             moH.load(core.IO.shared_object(), psif.PSIF_OEI)
             mo_slice = core.Slice(frzcpi, active_mopi)
@@ -156,17 +156,17 @@ def fcidump(wfn, fname='INTDUMP', oe_ints=None, write_pntgrp=False):
                 for index, x in np.ndenumerate(block[il]):
                     row = mo_idx(il[0][index] + offset)
                     col = mo_idx(il[1][index] + offset)
-                    if (abs(x) > ints_tolerance):
-                        intdump.write('{:29.20E} {:4d} {:4d} {:4d} {:4d}\n'.format(x, row, col, 0, 0))
+                    if abs(x) > ints_tolerance:
+                        intdump.write("{:29.20E} {:4d} {:4d} {:4d} {:4d}\n".format(x, row, col, 0, 0))
                 offset += block.shape[0]
             # Additional one-electron integrals as requested in oe_ints
             # Orbital energies
-            core.print_out('Writing orbital energies in FCIDUMP format to ' + fname + '\n')
-            if 'EIGENVALUES' in oe_ints:
+            core.print_out("Writing orbital energies in FCIDUMP format to " + fname + "\n")
+            if "EIGENVALUES" in oe_ints:
                 eigs_dump = write_eigenvalues(wfn.epsilon_a().get_block(mo_slice).to_array(), mo_idx)
                 intdump.write(eigs_dump)
         else:
-            PSIF_MO_A_FZC = 'MO-basis Alpha Frozen-Core Oper'
+            PSIF_MO_A_FZC = "MO-basis Alpha Frozen-Core Oper"
             moH_A = core.Matrix(PSIF_MO_A_FZC, wfn.nmopi(), wfn.nmopi())
             moH_A.load(core.IO.shared_object(), psif.PSIF_OEI)
             mo_slice = core.Slice(frzcpi, active_mopi)
@@ -177,10 +177,10 @@ def fcidump(wfn, fname='INTDUMP', oe_ints=None, write_pntgrp=False):
                 for index, x in np.ndenumerate(block[il]):
                     row = alpha_mo_idx(il[0][index] + offset)
                     col = alpha_mo_idx(il[1][index] + offset)
-                    if (abs(x) > ints_tolerance):
-                        intdump.write('{:29.20E} {:4d} {:4d} {:4d} {:4d}\n'.format(x, row, col, 0, 0))
+                    if abs(x) > ints_tolerance:
+                        intdump.write("{:29.20E} {:4d} {:4d} {:4d} {:4d}\n".format(x, row, col, 0, 0))
                 offset += block.shape[0]
-            PSIF_MO_B_FZC = 'MO-basis Beta Frozen-Core Oper'
+            PSIF_MO_B_FZC = "MO-basis Beta Frozen-Core Oper"
             moH_B = core.Matrix(PSIF_MO_B_FZC, wfn.nmopi(), wfn.nmopi())
             moH_B.load(core.IO.shared_object(), psif.PSIF_OEI)
             mo_slice = core.Slice(frzcpi, active_mopi)
@@ -191,72 +191,71 @@ def fcidump(wfn, fname='INTDUMP', oe_ints=None, write_pntgrp=False):
                 for index, x in np.ndenumerate(block[il]):
                     row = beta_mo_idx(il[0][index] + offset)
                     col = beta_mo_idx(il[1][index] + offset)
-                    if (abs(x) > ints_tolerance):
-                        intdump.write('{:29.20E} {:4d} {:4d} {:4d} {:4d}\n'.format(x, row, col, 0, 0))
+                    if abs(x) > ints_tolerance:
+                        intdump.write("{:29.20E} {:4d} {:4d} {:4d} {:4d}\n".format(x, row, col, 0, 0))
                 offset += block.shape[0]
             # Additional one-electron integrals as requested in oe_ints
             # Orbital energies
-            core.print_out('Writing orbital energies in FCIDUMP format to ' + fname + '\n')
-            if 'EIGENVALUES' in oe_ints:
+            core.print_out("Writing orbital energies in FCIDUMP format to " + fname + "\n")
+            if "EIGENVALUES" in oe_ints:
                 alpha_eigs_dump = write_eigenvalues(wfn.epsilon_a().get_block(mo_slice).to_array(), alpha_mo_idx)
                 beta_eigs_dump = write_eigenvalues(wfn.epsilon_b().get_block(mo_slice).to_array(), beta_mo_idx)
                 intdump.write(alpha_eigs_dump + beta_eigs_dump)
         # Dipole integrals
-        #core.print_out('Writing dipole moment OEI in FCIDUMP format to ' + fname + '\n')
+        # core.print_out('Writing dipole moment OEI in FCIDUMP format to ' + fname + '\n')
         # Traceless quadrupole integrals
-        #core.print_out('Writing traceless quadrupole moment OEI in FCIDUMP format to ' + fname + '\n')
+        # core.print_out('Writing traceless quadrupole moment OEI in FCIDUMP format to ' + fname + '\n')
         # Frozen core + nuclear repulsion energy
-        core.print_out('Writing frozen core + nuclear repulsion energy in FCIDUMP format to ' + fname + '\n')
+        core.print_out("Writing frozen core + nuclear repulsion energy in FCIDUMP format to " + fname + "\n")
         e_fzc = ints.get_frozen_core_energy()
         e_nuc = molecule.nuclear_repulsion_energy(wfn.get_dipole_field_strength())
-        intdump.write('{: 29.20E} {:4d} {:4d} {:4d} {:4d}\n'.format(e_fzc + e_nuc, 0, 0, 0, 0))
-    core.print_out('Done generating {} with integrals in FCIDUMP format.\n'.format(fname))
+        intdump.write("{: 29.20E} {:4d} {:4d} {:4d} {:4d}\n".format(e_fzc + e_nuc, 0, 0, 0, 0))
+    core.print_out("Done generating {} with integrals in FCIDUMP format.\n".format(fname))
 
 
 def write_eigenvalues(eigs, mo_idx):
-    """Prepare multi-line string with one-particle eigenvalues to be written to the FCIDUMP file.
-    """
-    eigs_dump = ''
+    """Prepare multi-line string with one-particle eigenvalues to be written to the FCIDUMP file."""
+    eigs_dump = ""
     iorb = 0
     for h, block in enumerate(eigs):
         for idx, x in np.ndenumerate(block):
-            eigs_dump += '{: 29.20E} {:4d} {:4d} {:4d} {:4d}\n'.format(x, mo_idx(iorb), 0, 0, 0)
+            eigs_dump += "{: 29.20E} {:4d} {:4d} {:4d} {:4d}\n".format(x, mo_idx(iorb), 0, 0, 0)
             iorb += 1
     return eigs_dump
 
 
 def _irrep_map(symm):
-    """Returns an array of irrep indices that maps from Psi4's ordering convention to the standard FCIDUMP convention.
-    """
-    psi2dump = {'c1' : [1],               # A
-                'ci' : [1,2],             # Ag Au
-                'c2' : [1,2],             # A  B
-                'cs' : [1,2],             # A' A"
-                'd2' : [1,4,3,2],         # A  B1  B2  B3
-                'c2v' : [1,4,2,3],        # A1 A2  B1  B2
-                'c2h' : [1,4,2,3],        # Ag Bg  Au  Bu
-                'd2h' : [1,4,6,7,8,5,3,2] # Ag B1g B2g B3g Au B1u B2u B3u
-                }
+    """Returns an array of irrep indices that maps from Psi4's ordering convention to the standard FCIDUMP convention."""
+    psi2dump = {
+        "c1": [1],  # A
+        "ci": [1, 2],  # Ag Au
+        "c2": [1, 2],  # A  B
+        "cs": [1, 2],  # A' A"
+        "d2": [1, 4, 3, 2],  # A  B1  B2  B3
+        "c2v": [1, 4, 2, 3],  # A1 A2  B1  B2
+        "c2h": [1, 4, 2, 3],  # Ag Bg  Au  Bu
+        "d2h": [1, 4, 6, 7, 8, 5, 3, 2],  # Ag B1g B2g B3g Au B1u B2u B3u
+    }
 
     irrep_map = psi2dump[symm.lower()]
-    return np.array(irrep_map, dtype='int')
+    return np.array(irrep_map, dtype="int")
 
 
 def _irrep_map_inverse(symm):
-    """Returns an array of irrep indices that maps from the standard FCIDUMP convention to the Psi4's ordering convention.
-    """
-    dump2psi = {'c1' : [-1,0],               # A
-                'ci' : [-1,0,1],             # Ag Au
-                'c2' : [-1,0,1],             # A  B
-                'cs' : [-1,0,1],             # A' A"
-                'd2' : [-1,0,3,2,1],         # A  B1  B2  B3
-                'c2v' : [-1,0,2,3,1],        # A1 A2  B1  B2
-                'c2h' : [-1,0,2,3,1],        # Ag Bg  Au  Bu
-                'd2h' : [-1,0,7,6,1,5,2,3,4] # Ag B1g B2g B3g Au B1u B2u B3u
-                }
+    """Returns an array of irrep indices that maps from the standard FCIDUMP convention to the Psi4's ordering convention."""
+    dump2psi = {
+        "c1": [-1, 0],  # A
+        "ci": [-1, 0, 1],  # Ag Au
+        "c2": [-1, 0, 1],  # A  B
+        "cs": [-1, 0, 1],  # A' A"
+        "d2": [-1, 0, 3, 2, 1],  # A  B1  B2  B3
+        "c2v": [-1, 0, 2, 3, 1],  # A1 A2  B1  B2
+        "c2h": [-1, 0, 2, 3, 1],  # Ag Bg  Au  Bu
+        "d2h": [-1, 0, 7, 6, 1, 5, 2, 3, 4],  # Ag B1g B2g B3g Au B1u B2u B3u
+    }
 
     irrep_map = dump2psi[symm.lower()]
-    return np.array(irrep_map, dtype='int')
+    return np.array(irrep_map, dtype="int")
 
 
 def fcidump_from_file(fname, convert_to_psi4=False):
@@ -282,47 +281,47 @@ def fcidump_from_file(fname, convert_to_psi4=False):
     be converted to the ordering used in psi4
     """
     intdump = {}
-    with open(fname, 'r') as handle:
-        assert '&FCI' == handle.readline().strip()
+    with open(fname, "r") as handle:
+        assert "&FCI" == handle.readline().strip()
 
         skiplines = 1
         read = True
         while True:
             skiplines += 1
             line = handle.readline()
-            if 'END' in line:
+            if "END" in line:
                 break
 
-            key, value = line.split('=')
-            value = value.strip().rstrip(',')
-            if key == 'UHF':
-                value = 'TRUE' in value
-            elif key == 'ORBSYM':
-                value = [int(x) for x in value.split(',')]                
-            elif key == 'PNTGRP':
+            key, value = line.split("=")
+            value = value.strip().rstrip(",")
+            if key == "UHF":
+                value = "TRUE" in value
+            elif key == "ORBSYM":
+                value = [int(x) for x in value.split(",")]
+            elif key == "PNTGRP":
                 pass
             else:
-                value = int(value.replace(',', ''))
+                value = int(value.replace(",", ""))
 
             intdump[key.lower()] = value
 
-    if convert_to_psi4 and ('pntgrp' in intdump) and ('orbsym' in intdump):
-        irrep_map_inverse = _irrep_map_inverse(intdump['pntgrp'])
-        psi4_irrep_map = map(lambda x: irrep_map_inverse[x], intdump['orbsym'])
-        intdump['orbsym'] = list(psi4_irrep_map)
-        intdump['isym'] = irrep_map_inverse[intdump['isym']]
+    if convert_to_psi4 and ("pntgrp" in intdump) and ("orbsym" in intdump):
+        irrep_map_inverse = _irrep_map_inverse(intdump["pntgrp"])
+        psi4_irrep_map = map(lambda x: irrep_map_inverse[x], intdump["orbsym"])
+        intdump["orbsym"] = list(psi4_irrep_map)
+        intdump["isym"] = irrep_map_inverse[intdump["isym"]]
 
     # Read the data and index, skip header
     raw_ints = np.genfromtxt(fname, skip_header=skiplines)
 
     # Read last line, i.e. Enuc + Efzc
-    intdump['enuc'] = raw_ints[-1, 0]
+    intdump["enuc"] = raw_ints[-1, 0]
 
     # Read in integrals and indices
     ints = raw_ints[:-1, 0]
 
     # Get dimensions and indices
-    nbf = intdump['norb']
+    nbf = intdump["norb"]
     idxs = raw_ints[:, 1:].astype(int) - 1
 
     # Slices
@@ -335,7 +334,7 @@ def fcidump_from_file(fname, convert_to_psi4=False):
     if one_index > 0:
         epsilon = np.zeros(nbf)
         epsilon[idxs[sl, 0]] = ints[sl]
-        intdump['epsilon'] = epsilon
+        intdump["epsilon"] = epsilon
 
     # Count how many 2-index intdump we have
     sl = slice(ints.shape[0] - one_index - nbf * nbf, sl.stop - one_index)
@@ -346,7 +345,7 @@ def fcidump_from_file(fname, convert_to_psi4=False):
     Hcore = np.zeros((nbf, nbf))
     Hcore[(idxs[sl, 0], idxs[sl, 1])] = ints[sl]
     Hcore[(idxs[sl, 1], idxs[sl, 0])] = ints[sl]
-    intdump['hcore'] = Hcore
+    intdump["hcore"] = Hcore
 
     # Extract ERIs
     sl = slice(0, sl.start)
@@ -359,6 +358,36 @@ def fcidump_from_file(fname, convert_to_psi4=False):
     eri[(idxs[sl, 3], idxs[sl, 2], idxs[sl, 0], idxs[sl, 1])] = ints[sl]
     eri[(idxs[sl, 2], idxs[sl, 3], idxs[sl, 1], idxs[sl, 0])] = ints[sl]
     eri[(idxs[sl, 3], idxs[sl, 2], idxs[sl, 1], idxs[sl, 0])] = ints[sl]
-    intdump['eri'] = eri
+    intdump["eri"] = eri
 
     return intdump
+
+
+def forte_ints_to_fcidump(fname, ints, mo_space_info, tol=1e-12):
+    """Writes a ForteIntegral object to FCIDUMP in PYSCF format"""
+
+    mos = mo_space_info.corr_absolute_mo("CORRELATED")
+    nmo = len(mos)
+    a = ints.oei_a_block(mos, mos)
+    ab = ints.tei_ab_block(mos, mos, mos, mos)
+    fcidump_string = f"""&FCI NORB={nmo},NELEC={12},UHF=.FALSE.,ORBSYM={"1,"*(nmo)}MS2={0},ISYM=1
+&END
+"""
+    # transform to chemist notation
+    for i in range(nmo):
+        for j in range(0, i + 1):
+            for k in range(0, nmo):
+                for l in range(0, k + 1):
+                    if abs(ab[i][k][j][l]) > tol:
+                        fcidump_string += f"{ab[i][k][j][l]:.20e} {i+1:4d}{j+1:4d}{k+1:4d}{l+1:4d}\n"
+    for i in range(0, nmo):
+        for j in range(0, i + 1):
+            if abs(a[i][j]) > tol:
+                fcidump_string += f"{a[i][j]:.20e} {i+1:4d}{j+1:4d}{0:4d}{0:4d}\n"
+    fcidump_string += (
+        f"{ints.nuclear_repulsion_energy() + ints.frozen_core_energy()}  {0:4d}{0:4d}{0:4d}{0:4d}"
+    )
+
+    with open(fname, "w") as f:
+        f.write(fcidump_string)
+

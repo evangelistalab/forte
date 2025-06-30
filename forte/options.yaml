@@ -143,6 +143,14 @@ Driver:
     type: bool
     default: False
     help: "Save orbitals to file if true"
+  WRITE_INTDUMP:
+    type: bool
+    default: False
+    help: "Write the ForteIntegral object to INTDUMP file in FCIDUMP format"
+  INTDUMP_NAME:
+    type: str
+    default: "INTDUMP"
+    help: "The name of the INTDUMP file to write to. Used only if WRITE_INTDUMP is true."
 
 AVAS:
   AVAS:
