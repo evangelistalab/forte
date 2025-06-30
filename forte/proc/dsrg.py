@@ -31,6 +31,7 @@ import warnings
 import math
 import json
 import psi4
+import os.path
 
 import forte
 from forte.proc.external_active_space_solver import write_external_active_space_file
@@ -49,7 +50,6 @@ class ProcedureDSRG:
         :param scf_info: the Forte SCFInfo object
         """
 
-        # Read options
         self.solver_type = options.get_str("CORRELATION_SOLVER")
         if self.solver_type in ["SA-MRDSRG", "SA_MRDSRG", "DSRG_MRPT", "DSRG-MRPT"]:
             self.rdm_type = forte.RDMsType.spin_free
@@ -180,7 +180,6 @@ class ProcedureDSRG:
             )
 
     def make_dsrg_solver(self):
-        """Make a DSRG solver."""
         args = (self.rdms, self.scf_info, self.options, self.ints, self.mo_space_info)
 
         if self.solver_type in ["MRDSRG", "DSRG-MRPT2", "DSRG-MRPT3", "THREE-DSRG-MRPT2"]:

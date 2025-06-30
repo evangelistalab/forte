@@ -60,6 +60,7 @@ from forte.proc.external_active_space_solver import (
     make_hamiltonian,
 )
 from forte.proc.dsrg import ProcedureDSRG
+from forte.proc.fcidump import forte_ints_to_fcidump
 from forte.proc.orbital_helpers import dump_orbitals, make_embedding_orbitals
 
 
@@ -109,6 +110,13 @@ def forte_driver(data: ForteData):
     if options.get_bool("SPIN_ANALYSIS"):
         data = ActiveSpaceRDMs(max_rdm_level=2, rdms_type=forte.RDMsType.spin_dependent).run(data)
         forte.perform_spin_analysis(data.rdms, options, mo_space_info, as_ints)
+
+    if options.get_bool("WRITE_INTDUMP"):
+        # Write the ForteIntegral object to INTDUMP file in FCIDUMP format
+        intdump_name = options.get_str("INTDUMP_NAME")
+        psi4.core.print_out(f"\n  Writing integrals to {intdump_name} in FCIDUMP format\n")
+        forte_ints_to_fcidump(intdump_name, ints, mo_space_info)
+        psi4.core.print_out(f"\n Done writing integrals to {intdump_name}\n")
 
     # solver for dynamical correlation from DSRG
     correlation_solver_type = options.get_str("CORRELATION_SOLVER")
