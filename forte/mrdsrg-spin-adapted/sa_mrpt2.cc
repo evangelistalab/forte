@@ -932,10 +932,7 @@ std::tuple<psi::Dimension, std::shared_ptr<psi::Matrix>> SA_MRPT2::build_fno() {
     print_h2("DSRG-MRPT2 Frozen Natural Orbitals");
 
     // patch 3-cumulant term before forming D1v
-    bool do_cu3 = do_cu3_;
-    do_cu3_ = do_cu3 && foptions_->get_bool("DSRG_FNO_PT2_CU3");
     auto D1v = build_1rdm_unrelaxed_virt();
-    do_cu3_ = do_cu3;
 
     auto dim_virt = D1v->rowspi();
     auto nirrep = dim_virt.n();

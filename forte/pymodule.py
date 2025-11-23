@@ -53,11 +53,14 @@ except ImportError:
     pass
 
 from forte.proc.external_active_space_solver import (
-    write_external_active_space_file,
+    write_active_ints_file,
+    write_active_rdms_files,
+    dump_active_wave_function,
     write_external_rdm_file,
     write_wavefunction,
     read_wavefunction,
     make_hamiltonian,
+    write_external_active_space_file,
 )
 from forte.proc.dsrg import ProcedureDSRG
 from forte.proc.orbital_helpers import dump_orbitals, make_embedding_orbitals
@@ -109,6 +112,12 @@ def forte_driver(data: ForteData):
     if options.get_bool("SPIN_ANALYSIS"):
         data = ActiveSpaceRDMs(max_rdm_level=2, rdms_type=forte.RDMsType.spin_dependent).run(data)
         forte.perform_spin_analysis(data.rdms, options, mo_space_info, as_ints)
+
+    if options.get_bool("DUMP_ACTIVE_INFO"):
+        write_wavefunction(data, "mo_coeff.json")
+        write_active_ints_file(as_ints, json_file="ref0_asints_phys.json")
+        dump_active_wave_function(data.active_space_solver, active_space_solver_type, "ref0")
+        write_active_rdms_files(data.active_space_solver, state_weights_map, "ref0_rdms.json")
 
     # solver for dynamical correlation from DSRG
     correlation_solver_type = options.get_str("CORRELATION_SOLVER")

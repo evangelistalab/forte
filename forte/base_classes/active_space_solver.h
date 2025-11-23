@@ -143,7 +143,7 @@ class ActiveSpaceSolver {
     /// Compute the state-averaged reference
     std::shared_ptr<RDMs>
     compute_average_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-                         int max_rdm_level, RDMsType rdm_type);
+                         int max_rdm_level, RDMsType rdm_type, bool set_diagonal_3rdm = false);
 
     /// Compute the overlap of two wave functions acted by complementary operators
     /// Return a map from state to roots of values
@@ -155,6 +155,15 @@ class ActiveSpaceSolver {
     compute_complementary_H2caa_overlap(ambit::Tensor Tbra, ambit::Tensor Tket,
                                         const std::vector<int>& p_syms, const std::string& name,
                                         bool load = false);
+    /// Compute the 3-RDM contribution of fully contracted term of two 2-body operators [H2,T2]0
+    /// batched over one active index and return a map from state to nroots of values.
+    /// There are two contributions:
+    /// core:     -Cbra("xmwy") * Cket("mzuv") * D3("xyzuwv");
+    /// virtual : +Vbra("xewy") * Vket("ezuv") * D3("xyzuwv");
+    std::map<StateInfo, std::vector<double>> compute_H2T2C0_3rdm_batched(ambit::Tensor Vbra,
+                                                                         ambit::Tensor Vket,
+                                                                         ambit::Tensor Cbra,
+                                                                         ambit::Tensor Cket);
 
     /// Print a summary of the computation information
     void print_options();
@@ -280,7 +289,7 @@ class ActiveSpaceSolver {
     /// Pairs of state info and the contracted CI eigen vectors
     std::map<StateInfo, std::shared_ptr<psi::Matrix>>
         state_contracted_evecs_map_; // TODO move outside?
-};                                   // namespace forte
+}; // namespace forte
 
 /**
  * @brief Make an active space solver object.

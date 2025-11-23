@@ -191,7 +191,7 @@ void SADSRG::read_options() {
     ccvv_source_ = foptions_->get_str("CCVV_SOURCE");
 
     do_cu3_ = foptions_->get_str("THREEPDC") != "ZERO";
-    L3_algorithm_ = foptions_->get_str("DSRG_3RDM_ALGORITHM");
+    L3_algorithm_ = foptions_->get_str("DSRG_CU3");
     store_cu3_ = do_cu3_ and (L3_algorithm_ == "EXPLICIT");
 
     ntamp_ = foptions_->get_int("NTAMP");
@@ -282,8 +282,10 @@ void SADSRG::set_ambit_MOSpace() {
 void SADSRG::check_init_memory() {
     mem_sys_ = psi::Process::environment.get_memory();
     int64_t mem_left = mem_sys_ * 0.9;
-    if (ints_->integral_type() != DiskDF and ints_->integral_type() != Cholesky) {
-        mem_left -= ints_->jk()->memory_estimate() * sizeof(double);
+    if (ints_->integral_type() != Custom) {
+        if (ints_->integral_type() != DiskDF and ints_->integral_type() != Cholesky) {
+            mem_left -= ints_->jk()->memory_estimate() * sizeof(double);
+        }
     }
 
     // integrals already stored by the ForteIntegrals
@@ -338,7 +340,19 @@ void SADSRG::check_init_memory() {
     if (store_cu3_) {
         dsrg_mem_.add_entry("1-, 2-, and 3-density cumulants", {"aa", "aa", "aaaa", "aaaaaa"});
     } else {
-        dsrg_mem_.add_entry("1- and 2-density cumulants", {"aa", "aa", "aaaa"});
+        if (L3_algorithm_ == "DIRECT") {
+            dsrg_mem_.add_entry("1- and 2-density cumulants", {"aa", "aa", "aaaa"});
+            dsrg_mem_.add_entry("Local intermediates for cu3 energy terms", {"vaaa"}, 4, false);
+        } else if (L3_algorithm_ == "APPROX") {
+            dsrg_mem_.add_entry("1-, 2-, and 3-density cumulants",
+                                {"aa", "aa", "aaaa", "aaaaa", "aaaaa"});
+            dsrg_mem_.add_entry("Local intermediates for cu3 energy terms", {"aaaaa", "vaaa"}, 3,
+                                false);
+        } else if (L3_algorithm_ == "BATCHED") {
+            dsrg_mem_.add_entry("1- and 2-density cumulants", {"aa", "aa", "aaaa"});
+            dsrg_mem_.add_entry("Local intermediates for cu3 energy terms", {"aaaaa", "vaaa"}, 2,
+                                false);
+        }
     }
 }
 
@@ -367,8 +381,16 @@ void SADSRG::fill_density() {
     L2_.block("aaaa")("pqrs") = rdms_->SF_L2()("pqrs");
 
     // 3-body density cumulants
-    if (store_cu3_)
+    if (store_cu3_) {
         L3_ = rdms_->SF_L3();
+    } else {
+        if (L3_algorithm_ == "APPROX") {
+            timer timer1("Compute 5-index L3d");
+            auto L3d = rdms_->SF_L3d();
+            L3d1_ = L3d[0];
+            L3d2_ = L3d[1];
+        }
+    }
 }
 
 void SADSRG::init_fock() {
@@ -721,6 +743,11 @@ ambit::BlockedTensor SADSRG::deGNO_Tamp(BlockedTensor& T1, BlockedTensor& T2, Bl
 void SADSRG::set_Uactv(ambit::Tensor& U) {
     Uactv_ = BTF_->build(tensor_type_, "Uactv", {"aa"});
     Uactv_.block("aa")("pq") = U("pq");
+}
+
+void SADSRG::set_L3d(ambit::Tensor& L3d1, ambit::Tensor& L3d2) {
+    L3d1_ = L3d1;
+    L3d2_ = L3d2;
 }
 
 void SADSRG::rotate_one_ints_to_original(BlockedTensor& H1) {

@@ -1055,15 +1055,15 @@ Type: bool
 
 Default value: True
 
-**DSRG_3RDM_ALGORITHM**
+**DSRG_CU3**
 
-Algorithm to compute 3-RDM contributions in fully contracted [H2, T2]
+Algorithm to compute 3-cumulant contributions in fully contracted [H2, T2]
 
 Type: str
 
 Default value: EXPLICIT
 
-Allowed values: ['EXPLICIT', 'DIRECT']
+Allowed values: ['EXPLICIT', 'DIRECT', 'APPROX']
 
 **DSRG_3RDM_BLOCK2_CPS_BOND_DIMENSION**
 

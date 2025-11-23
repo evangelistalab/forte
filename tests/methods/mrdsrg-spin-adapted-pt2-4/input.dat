@@ -62,7 +62,6 @@ set forte{
   relax_ref              twice
   e_convergence          12
   r_convergence          8
-  dsrg_3rdm_algorithm    direct
 }
 
 energy('forte', ref_wfn=wfn)

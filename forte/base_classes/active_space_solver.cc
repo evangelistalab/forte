@@ -874,8 +874,15 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
 
 std::shared_ptr<RDMs> ActiveSpaceSolver::compute_average_rdms(
     const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level,
-    RDMsType rdm_type) {
-    auto rdms = RDMs::build(max_rdm_level, mo_space_info_->size("ACTIVE"), rdm_type);
+    RDMsType rdm_type, bool set_diagonal_3rdm) {
+    auto na = mo_space_info_->size("ACTIVE");
+    auto rdms = RDMs::build(max_rdm_level, na, rdm_type);
+    bool store_g3d = (set_diagonal_3rdm and rdm_type == RDMsType::spin_free);
+    if (store_g3d) {
+        auto G3d1 = ambit::Tensor::build(ambit::CoreTensor, "G3d1", {na, na, na, na, na});
+        auto G3d2 = ambit::Tensor::build(ambit::CoreTensor, "G3d2", {na, na, na, na, na});
+        rdms->set_g3d({G3d1, G3d2});
+    }
 
     // Loop through references, add to master ref
     for (const auto& state_nroot : state_nroots_map_) {
@@ -893,9 +900,12 @@ std::shared_ptr<RDMs> ActiveSpaceSolver::compute_average_rdms(
                 continue;
 
             // Get the RDMs
-            std::vector<std::pair<size_t, size_t>> state_ids;
-            state_ids.emplace_back(r, r);
+            std::vector<std::pair<size_t, size_t>> state_ids{{r, r}};
             auto method_rdms = method->rdms(state_ids, max_rdm_level, rdm_type)[0];
+            if (store_g3d) {
+                auto g3d = method->three_rdms_diag1(state_ids, rdm_type)[0];
+                method_rdms->set_g3d(g3d);
+            }
 
             // Add contributions
             rdms->axpy(method_rdms, weights[r]);
@@ -919,6 +929,22 @@ ActiveSpaceSolver::compute_complementary_H2caa_overlap(ambit::Tensor Tbra, ambit
         const auto method = state_method_map_.at(state);
         out[state] =
             method->compute_complementary_H2caa_overlap(roots, Tbra, Tket, p_syms, name, load);
+    }
+    return out;
+}
+
+std::map<StateInfo, std::vector<double>>
+ActiveSpaceSolver::compute_H2T2C0_3rdm_batched(ambit::Tensor Vbra, ambit::Tensor Vket,
+                                               ambit::Tensor Cbra, ambit::Tensor Cket) {
+    std::map<StateInfo, std::vector<double>> out;
+    for (const auto& state_nroots : state_nroots_map_) {
+        const auto& state = state_nroots.first;
+
+        std::vector<size_t> roots(state_nroots.second);
+        std::iota(roots.begin(), roots.end(), 0);
+
+        const auto method = state_method_map_.at(state);
+        out[state] = method->compute_H2T2C0_3rdm_batched(roots, Vbra, Vket, Cbra, Cket);
     }
     return out;
 }
