@@ -144,6 +144,10 @@ Driver:
     type: bool
     default: False
     help: "Save orbitals to file if true"
+  DUMP_ACTIVE_INFO:
+    type: bool
+    default: False
+    help: "Dump orbital coefficients, spin-free active space integrals (in physicists' notation), and spin-dependent 1- and 2-RDMs to json files"
 
 AVAS:
   AVAS:

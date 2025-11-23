@@ -14,11 +14,11 @@ class NumpyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def write_wavefunction(data):
+def write_wavefunction(data, name="coeff.json"):
     # Ca = data.psi_wfn.Ca().to_array()
     Ca = data.scf_info.Ca().to_array()
 
-    with open("coeff.json", "w+") as f:
+    with open(name, "w") as f:
         json.dump({"Ca": Ca}, f, cls=NumpyEncoder)
 
 
@@ -39,6 +39,86 @@ def read_wavefunction(data):
     else:  # C1 no spatial symmetry, input is list(np.ndarray)
         C_mat = psi4.core.Matrix.from_array([np.asarray(C_list)])
     data.scf_info.update_orbitals(C_mat, C_mat, True)
+
+
+def dump_active_wave_function(active_space_solver, as_solver_type, dirname):
+    import os
+    import glob
+    import shutil
+    dump_failed = False
+    try:
+        active_space_solver.dump_wave_function()
+    except:
+        dump_failed = True
+    try:
+        os.mkdir(dirname)
+    except FileExistsError:
+        pass
+    if "BLOCK2" in as_solver_type.upper():
+        for i in glob.glob("block2*"):
+            if os.path.isdir(f"{dirname}/{i}"):
+                shutil.rmtree(f"{dirname}/{i}")
+            shutil.move(i, f"{dirname}/{i}")
+    else:
+        if not dump_failed:
+            for state, filename in active_space_solver.state_filename_map().items():
+                if os.path.isfile(f"{dirname}/{filename}"):
+                    os.remove(f"{dirname}/{filename}")
+                shutil.move(filename, f"{dirname}/{filename}")
+
+
+def write_active_ints_file(as_ints, phys=True, json_file="forte_asints.json"):
+    nmo = as_ints.nmo()
+    out = {'nmo': nmo}
+    out['oei'] = [(i, j, as_ints.oei_a(i, j)) for i in range(nmo) for j in range(nmo)]
+    if phys:
+        out['tei'] = [(i, j, k, l, as_ints.tei_ab(i, j, k, l)) for i in range(nmo) for j in range(nmo) for k in range(nmo) for l in range(nmo)]
+    else:
+        out['tei'] = [(i, k, j, l, as_ints.tei_ab(i, j, k, l)) for i in range(nmo) for j in range(nmo) for k in range(nmo) for l in range(nmo)]
+
+    with open(json_file, "w") as f:
+        json.dump(out, f, sort_keys=True, indent=2)
+
+
+def write_active_rdms_files(active_space_solver, state_weights_map, json_file="forte_rdms.json"):
+    out = {}
+    for state, weights in state_weights_map.items():
+        multi = state.multiplicity()
+        twice_ms = state.twice_ms()
+        irrep = state.irrep()
+        nroots = len(weights)
+        for i in range(nroots):
+            if weights[i] < 1.0e-15:
+                continue
+            name = f"m{multi}.z{twice_ms}.h{irrep}.r{i}"
+            out[name] = {}
+
+            swmap = {}
+            weights_tmp = [0.0] * nroots
+            weights_tmp[i] = 1.0
+            for state_ in state_weights_map:
+                if state_ == state:
+                    swmap[state] = weights_tmp
+                else:
+                    swmap[state_] = [0.0] * len(state_weights_map[state_])
+            rdms = active_space_solver.compute_average_rdms(swmap, 2, forte.RDMsType.spin_dependent, False)
+
+            g1a = rdms.g1a()
+            g1b = rdms.g1b()
+            g2aa = rdms.g2aa()
+            g2ab = rdms.g2ab()
+            g2bb = rdms.g2bb()
+
+            nact = g1a.shape[0]
+            out[name]["g1a"] = [(i, j, g1a[i][j]) for i in range(nact) for j in range(nact)]
+            out[name]["g1b"] = [(i, j, g1b[i][j]) for i in range(nact) for j in range(nact)]
+            out[name]["g2aa"] = [(i, j, k, l, g2aa[i, j, k, l]) for i in range(nact) for j in range(nact) for k in range(nact) for l in range(nact)]
+            out[name]["g2ab"] = [(i, j, k, l, g2ab[i, j, k, l]) for i in range(nact) for j in range(nact) for k in range(nact) for l in range(nact)]
+            out[name]["g2bb"] = [(i, j, k, l, g2bb[i, j, k, l]) for i in range(nact) for j in range(nact) for k in range(nact) for l in range(nact)]
+
+    out['nmo'] = nact
+    with open(json_file, "w+") as f:
+        json.dump(out, f, sort_keys=True, indent=2)
 
 
 def write_external_active_space_file(as_ints, state_map, mo_space_info, json_file="forte_ints.json"):

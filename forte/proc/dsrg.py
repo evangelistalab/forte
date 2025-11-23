@@ -33,8 +33,24 @@ import os
 import psi4
 
 import forte
-from forte.proc.external_active_space_solver import write_external_active_space_file
+from forte.proc.external_active_space_solver import (
+    write_external_active_space_file,
+    write_active_ints_file,
+    write_active_rdms_files,
+    dump_active_wave_function
+)
 from forte.proc.dsrg_fno import dsrg_fno_procrouting
+
+
+def mutual_correlation(rdms, name):
+    l2aa = rdms.L2aa()
+    l2ab = rdms.L2ab()
+    l2bb = rdms.L2bb()
+    l2ab_p = np.transpose(l2ab, (0,1,3,2))
+    t2 = l2aa ** 2 + 2 * l2ab ** 2 + 2 * l2ab_p ** 2 + l2bb ** 2
+    M2 = np.einsum('pqqq->pq', t2) + 0.5 * np.einsum('ppqq->pq', t2) + np.einsum('pqpq->pq', t2) + np.einsum('ppqp->pq', t2)
+    np.save(f"M2_{name}", M2)
+    return M2
 
 
 class ProcedureDSRG:
@@ -327,6 +343,12 @@ class ProcedureDSRG:
 
             e_relax = forte.compute_average_state_energy(state_energies_list, self.state_weights_map)
             self.energies.append((e_dsrg, e_relax))
+
+            # Dump active wavefunction
+            if self.options.get_bool("DUMP_ACTIVE_INFO"):
+                write_active_ints_file(ints_dressed, json_file=f"ref{n + 1}_asints_phys.json")
+                dump_active_wave_function(self.active_space_solver, self.options.get_str("ACTIVE_SPACE_SOLVER"), f"ref{n+1}")
+                write_active_rdms_files(self.active_space_solver, self.state_weights_map, f"ref{n + 1}_rdms.json")
 
             # Compute relaxed dipole
             if self.do_dipole:
