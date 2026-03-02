@@ -125,6 +125,20 @@ StateInfo make_state_info_from_options(std::shared_ptr<ForteOptions> options,
     return StateInfo(na, nb, multiplicity, twice_ms, irrep, irrep_label);
 }
 
+StateInfo make_state_info_from_arguments(const int nel, const size_t multiplicity,
+                                         const int twice_ms, const size_t irrep,
+                                         const Symmetry& symmetry) {
+    if (((nel - twice_ms) % 2) != 0) {
+        throw std::runtime_error("\n\n  make_state_info_from_arguments: Wrong value of M_s.\n\n");
+    }
+
+    size_t na = (nel + twice_ms) / 2;
+    size_t nb = nel - na;
+
+    std::string irrep_label = symmetry.irrep_label(irrep);
+    return StateInfo(na, nb, multiplicity, twice_ms, irrep, irrep_label);
+}
+
 std::string StateInfo::str() const {
     std::string gas_restrictions;
     if (gas_min_.size() > 0) {

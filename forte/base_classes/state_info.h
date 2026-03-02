@@ -115,4 +115,8 @@ class StateInfo {
 StateInfo make_state_info_from_options(std::shared_ptr<ForteOptions> options,
                                        const Symmetry& symmetry);
 
+StateInfo make_state_info_from_arguments(const int nel, const size_t multiplicity,
+                                         const int twice_ms, const size_t irrep,
+                                         const Symmetry& symmetry);
+
 } // namespace forte

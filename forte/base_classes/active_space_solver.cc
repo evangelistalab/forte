@@ -709,6 +709,8 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
         gas_max[i] = 2 * mo_space_info->size("GAS" + std::to_string(i + 1));
     }
 
+    int nel = options->get_int("NEL");
+
     // if AVG_STATE is not defined, do a state-specific computation
     if (avg_state.size() == 0) {
         // assign the weights (0,0,1_root,...) to do a state-specific computation
@@ -746,7 +748,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
         size_t nentry = avg_state.size();
         for (size_t i = 0; i < nentry; ++i) {
             py::list avg_state_list = avg_state[i];
-            if (avg_state_list.size() != 3) {
+            if (avg_state_list.size() < 3) {
                 psi::outfile->Printf("\n  Error: invalid input of AVG_STATE.");
                 psi::outfile->Printf("\n  Each entry should take an array of three numbers.");
                 throw std::runtime_error("Invalid input of AVG_STATE");
@@ -761,6 +763,11 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             int multi = py::cast<int>(avg_state_list[1]);
             // number of states with this irrep and multiplicity
             int nstates_this = py::cast<int>(avg_state_list[2]);
+            int twice_ms = state.twice_ms(); // default to low-spin
+            if (avg_state_list.size() > 3) {
+                double ms = py::cast<double>(avg_state_list[3]);
+                twice_ms = static_cast<int>(std::round(2.0 * ms));
+            }
 
             // check for errors
             int nirrep = mo_space_info->nirrep();
@@ -780,6 +787,9 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                     "\n  \"Number of states\" of a irrep and multiplicity must > 0.");
                 throw std::runtime_error("Invalid nstates in AVG_STATE.");
             }
+
+            StateInfo ref_state_this = make_state_info_from_arguments(
+                nel, multi, twice_ms, irrep, mo_space_info->point_group_label());
 
             std::vector<double> weights;
             py::list avg_weight = options->get_gen_list("AVG_WEIGHT");
@@ -840,8 +850,8 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                 }
             }
 
-            StateInfo state_this(state.na(), state.nb(), multi, state.twice_ms(), irrep,
-                                 irrep_label, gas_min, gas_max);
+            StateInfo state_this(ref_state_this.na(), ref_state_this.nb(), multi,
+                                 ref_state_this.twice_ms(), irrep, irrep_label, gas_min, gas_max);
             state_weights_map[state_this] = weights;
         }
 
